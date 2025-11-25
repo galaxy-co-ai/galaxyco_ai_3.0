@@ -1,0 +1,448 @@
+@import "tailwindcss";
+
+:root {
+  /* Base Colors */
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+  
+  /* Card Colors */
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  
+  /* Popover Colors */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  
+  /* Primary Colors - Soft Purple/Indigo */
+  --primary: #6366F1;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary Colors */
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #1c1c1e;
+  
+  /* Muted Colors */
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+  
+  /* Accent Colors */
+  --accent: #e9ebef;
+  --accent-foreground: #1c1c1e;
+  
+  /* Destructive Colors */
+  --destructive: #FF3B30;
+  --destructive-foreground: #ffffff;
+  
+  /* Border & Input */
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --switch-background: #cbced4;
+  
+  /* Ring/Focus - Softer purple */
+  --ring: #818CF8;
+  
+  /* Typography */
+  --font-size: 16px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  /* Border Radius - Increased for softer look */
+  --radius: 0.875rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  
+  /* Sidebar Colors */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: #007AFF;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: #007AFF;
+  
+  /* Chart Colors */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* Status Colors */
+  --status-success: #34C759;
+  --status-warning: #FF9500;
+  --status-error: #FF3B30;
+  --status-info: #007AFF;
+  
+  /* Lead Status Colors - Soft Pastel */
+  --lead-hot: #FCA5A5;
+  --lead-warm: #FCD34D;
+  --lead-cold: #93C5FD;
+  
+  /* Soft Color Palette */
+  --soft-purple: #C4B5FD;
+  --soft-indigo: #A5B4FC;
+  --soft-blue: #BFDBFE;
+  --soft-green: #A7F3D0;
+  --soft-amber: #FDE68A;
+  --soft-red: #FCA5A5;
+  
+  /* Soft Shadows */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-soft-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-soft-lg: 0 8px 24px rgba(0, 0, 0, 0.06);
+  
+  /* Campaign Status Colors */
+  --campaign-active: #34C759;
+  --campaign-draft: #8E8E93;
+  --campaign-paused: #FF9500;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-success: var(--status-success);
+  --color-status-warning: var(--status-warning);
+  --color-status-error: var(--status-error);
+  --color-status-info: var(--status-info);
+  --color-lead-hot: var(--lead-hot);
+  --color-lead-warm: var(--lead-warm);
+  --color-lead-cold: var(--lead-cold);
+  --color-campaign-active: var(--campaign-active);
+  --color-campaign-draft: var(--campaign-draft);
+  --color-campaign-paused: var(--campaign-paused);
+  
+  /* Typography */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  
+  /* Border Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  html {
+    font-size: var(--font-size);
+    scroll-behavior: smooth;
+  }
+}
+
+/* Typography Scale - Enhanced for Better Readability */
+@layer base {
+  h1 {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight;
+  }
+
+  h2 {
+    @apply text-2xl sm:text-3xl font-semibold tracking-tight leading-tight;
+  }
+
+  h3 {
+    @apply text-xl sm:text-2xl font-semibold tracking-tight leading-snug;
+  }
+
+  h4 {
+    @apply text-lg sm:text-xl font-semibold tracking-tight leading-snug;
+  }
+
+  h5 {
+    @apply text-base sm:text-lg font-semibold leading-snug;
+  }
+
+  h6 {
+    @apply text-sm sm:text-base font-semibold leading-snug;
+  }
+
+  p {
+    @apply text-base sm:text-base leading-relaxed;
+    line-height: 1.7;
+  }
+
+  label {
+    @apply text-sm sm:text-base font-medium;
+  }
+
+  button {
+    @apply text-sm sm:text-base font-medium;
+    min-height: 44px; /* Better touch targets */
+    min-width: 44px;
+  }
+
+  input {
+    @apply text-base sm:text-base;
+    min-height: 44px; /* Better touch targets */
+  }
+
+  /* Better readability for small text on mobile */
+  @media (max-width: 640px) {
+    .text-xs {
+      font-size: 0.8125rem; /* 13px instead of 12px */
+      line-height: 1.5;
+    }
+    
+    .text-sm {
+      font-size: 0.9375rem; /* 15px instead of 14px */
+      line-height: 1.6;
+    }
+  }
+}
+
+/* Scrollbar Styling - Custom Design System Scrollbars */
+/* Webkit browsers (Chrome, Safari, Edge) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Remove scrollbar arrows/buttons */
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark mode scrollbar */
+.dark * {
+  scrollbar-color: oklch(0.4 0 0) transparent;
+}
+
+.dark *::-webkit-scrollbar-thumb {
+  background: oklch(0.4 0 0);
+  background-clip: padding-box;
+}
+
+.dark *::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  background-clip: padding-box;
+}
+
+/* Hide scrollbar utility (for specific cases) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animations */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 30s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Performance Optimizations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Better Touch Targets on Mobile */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Larger tap targets for interactive elements */
+  [role="tab"],
+  [role="menuitem"] {
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Enhanced Focus States for Accessibility */
+@layer base {
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Skip to content link for screen readers */
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg;
+  }
+}
+
+/* Improved Card Spacing and Visual Separation - Soft Aesthetic */
+@layer components {
+  .card-enhanced {
+    @apply p-5 sm:p-6 lg:p-6 rounded-2xl;
+    @apply border-0;
+    @apply bg-white;
+    @apply transition-all duration-200;
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .card-enhanced:hover {
+    box-shadow: var(--shadow-soft-hover);
+  }
+  
+  /* Soft Shadow Utilities */
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-soft-hover {
+    box-shadow: var(--shadow-soft-hover);
+  }
+  
+  .shadow-soft-lg {
+    box-shadow: var(--shadow-soft-lg);
+  }
+}
+
+/* Prevent Layout Shift */
+img,
+video {
+  height: auto;
+  max-width: 100%;
+}

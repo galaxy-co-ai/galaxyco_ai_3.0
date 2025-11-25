@@ -1,0 +1,14 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { Landing } from "@/legacy-pages/Landing";
+
+export default function Home() {
+  const router = useRouter();
+
+  const handleEnterApp = () => {
+    router.push("/dashboard");
+  };
+
+  return <Landing onEnterApp={handleEnterApp} />;
+}
