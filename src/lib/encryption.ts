@@ -1,11 +1,14 @@
 import crypto from 'crypto';
 
-if (!process.env.ENCRYPTION_KEY) {
-  throw new Error('ENCRYPTION_KEY is required for API key encryption');
-}
-
-const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'hex');
 const ALGORITHM = 'aes-256-gcm';
+
+function getEncryptionKey(): Buffer {
+  const key = process.env.ENCRYPTION_KEY;
+  if (!key) {
+    throw new Error('ENCRYPTION_KEY is required for API key encryption');
+  }
+  return Buffer.from(key, 'hex');
+}
 
 /**
  * Encrypt API keys for secure storage in database
@@ -16,8 +19,9 @@ export function encryptApiKey(apiKey: string): {
   iv: string;
   authTag: string;
 } {
+  const encryptionKey = getEncryptionKey();
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, encryptionKey, iv);
 
   let encrypted = cipher.update(apiKey, 'utf8', 'hex');
   encrypted += cipher.final('hex');
@@ -39,9 +43,10 @@ export function decryptApiKey(
   iv: string,
   authTag: string
 ): string {
+  const encryptionKey = getEncryptionKey();
   const decipher = crypto.createDecipheriv(
     ALGORITHM,
-    ENCRYPTION_KEY,
+    encryptionKey,
     Buffer.from(iv, 'hex')
   );
 

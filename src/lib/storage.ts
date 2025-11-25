@@ -1,7 +1,11 @@
 import { put, del, list, head } from '@vercel/blob';
 
-if (!process.env.BLOB_READ_WRITE_TOKEN) {
-  throw new Error('BLOB_READ_WRITE_TOKEN required for file uploads');
+function getBlobToken(): string {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    throw new Error('BLOB_READ_WRITE_TOKEN required for file uploads');
+  }
+  return token;
 }
 
 /**
@@ -17,7 +21,7 @@ export async function uploadFile(
 ): Promise<{ url: string; pathname: string; downloadUrl: string }> {
   const blob = await put(pathname, file, {
     access: 'public',
-    token: process.env.BLOB_READ_WRITE_TOKEN,
+    token: getBlobToken(),
     addRandomSuffix: options?.addRandomSuffix ?? true,
     cacheControlMaxAge: options?.cacheControlMaxAge ?? 3600,
   });
@@ -39,7 +43,7 @@ export async function uploadBuffer(
 ): Promise<{ url: string; pathname: string }> {
   const blob = await put(pathname, buffer, {
     access: 'public',
-    token: process.env.BLOB_READ_WRITE_TOKEN,
+    token: getBlobToken(),
     contentType,
     addRandomSuffix: true,
   });
@@ -54,14 +58,14 @@ export async function uploadBuffer(
  * Delete a file from Vercel Blob Storage
  */
 export async function deleteFile(url: string): Promise<void> {
-  await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN });
+  await del(url, { token: getBlobToken() });
 }
 
 /**
  * Delete multiple files
  */
 export async function deleteFiles(urls: string[]): Promise<void> {
-  await del(urls, { token: process.env.BLOB_READ_WRITE_TOKEN });
+  await del(urls, { token: getBlobToken() });
 }
 
 /**
@@ -76,7 +80,7 @@ export async function listFiles(options?: {
     prefix: options?.prefix,
     limit: options?.limit ?? 1000,
     cursor: options?.cursor,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
+    token: getBlobToken(),
   });
 }
 
@@ -84,7 +88,7 @@ export async function listFiles(options?: {
  * Get file metadata
  */
 export async function getFileMetadata(url: string) {
-  return head(url, { token: process.env.BLOB_READ_WRITE_TOKEN });
+  return head(url, { token: getBlobToken() });
 }
 
 /**
