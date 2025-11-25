@@ -23,15 +23,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  
+  // Only wrap with ClerkProvider if key is available (allows build without env vars)
+  const content = (
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        {children}
+      </body>
+    </html>
   );
+
+  if (publishableKey) {
+    return <ClerkProvider>{content}</ClerkProvider>;
+  }
+
+  // During build without Clerk keys, render without ClerkProvider
+  // This allows the build to complete, but auth won't work until keys are added
+  return content;
 }
