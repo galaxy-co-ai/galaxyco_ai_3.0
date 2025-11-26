@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { ScrollArea } from '../ui/scroll-area';
 import { Clock, Target, Tag, Check, ArrowRight, ArrowLeft } from 'lucide-react';
-import { topics, type Topic } from '../../data/lunarLabsContent';
+import { topics, type Topic, type LearningPath } from '../../data/lunarLabsContent';
 import { WelcomeCard } from './WelcomeCard';
 import { LearningObjectives } from './LearningObjectives';
 import { TopicCompletionFlow } from './TopicCompletionFlow';
@@ -19,16 +19,6 @@ interface Suggestion {
   reason: string;
   topicId: string;
   priority: 'high' | 'medium' | 'low';
-}
-
-interface PathStep {
-  topicId: string;
-  required?: boolean;
-  prerequisites?: string[];
-}
-
-interface LearningPath {
-  steps: PathStep[];
 }
 
 interface ContentStageProps {
@@ -75,9 +65,9 @@ export function ContentStage({
     return (
       <div className="h-full">
         <WelcomeCard 
-          role={role}
-          path={path}
-          completedTopics={completedTopics}
+          role={role || 'user'}
+          path={path ?? null}
+          completedTopics={completedTopics || []}
           isFirstTimeUser={isFirstTimeUser}
           onStartPath={onStartPath}
           onSelectTopic={onSelectSuggestion}
@@ -99,7 +89,7 @@ export function ContentStage({
 
   // Get step information if in a path
   const pathStep = path?.steps.find(step => step.topicId === topic.id);
-  const stepIndex = pathStep ? path.steps.findIndex(step => step.topicId === topic.id) : -1;
+  const stepIndex = pathStep && path ? path.steps.findIndex(step => step.topicId === topic.id) : -1;
   const stepNumber = stepIndex >= 0 ? stepIndex + 1 : undefined;
   const totalSteps = path ? path.steps.filter(s => s.required !== false).length : undefined;
 

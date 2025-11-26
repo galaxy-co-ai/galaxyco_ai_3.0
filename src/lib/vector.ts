@@ -100,7 +100,8 @@ export async function queryVectors(
       vector: queryVector,
       topK,
       includeMetadata: options?.includeMetadata ?? true,
-      filter: options?.filter,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      filter: options?.filter as any,
     });
 
     return results.map((r) => ({

@@ -277,9 +277,9 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
                   <div className="relative h-full w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
                     <DemoWrapper scale={0.75} height={currentSlide === 2 ? 800 : 700} needsSidebar={false}>
                       {(() => {
-                        const SlideComponent = slides[currentSlide].component;
-                        const slideProps = slides[currentSlide].props;
-                        return <SlideComponent {...slideProps} />;
+                        const slide = slides[currentSlide];
+                        const SlideComponent = slide.component as React.ComponentType<typeof slide.props>;
+                        return <SlideComponent {...slide.props} />;
                       })()}
                     </DemoWrapper>
                   </div>
