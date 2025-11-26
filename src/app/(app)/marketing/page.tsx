@@ -4,6 +4,8 @@ import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { campaigns } from "@/db/schema";
 import { eq, desc, and, count, sum } from "drizzle-orm";
+import { logger } from "@/lib/logger";
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Marketing | GalaxyCo.ai',
@@ -72,22 +74,26 @@ export default async function MarketingPage() {
     };
 
     return (
-      <MarketingDashboard
-        initialCampaigns={mappedCampaigns}
-        initialContent={content}
-        initialChannels={channels}
-        stats={stats}
-      />
+      <ErrorBoundary>
+        <MarketingDashboard
+          initialCampaigns={mappedCampaigns}
+          initialContent={content}
+          initialChannels={channels}
+          stats={stats}
+        />
+      </ErrorBoundary>
     );
   } catch (error) {
-    console.error('Marketing page error:', error);
+    logger.error('Marketing page error', error);
     return (
-      <MarketingDashboard
-        initialCampaigns={[]}
-        initialContent={[]}
-        initialChannels={[]}
-        stats={{ activeCampaigns: 0, totalBudget: 0, totalImpressions: 0, avgROI: 0 }}
-      />
+      <ErrorBoundary>
+        <MarketingDashboard
+          initialCampaigns={[]}
+          initialContent={[]}
+          initialChannels={[]}
+          stats={{ activeCampaigns: 0, totalBudget: 0, totalImpressions: 0, avgROI: 0 }}
+        />
+      </ErrorBoundary>
     );
   }
 }

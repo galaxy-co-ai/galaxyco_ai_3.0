@@ -1,161 +1,74 @@
-import { client } from './client';
-import { db } from '@/lib/db';
-import { integrations } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+/**
+ * Trigger.dev Background Jobs
+ * 
+ * NOTE: This file contains job definitions that need to be migrated to Trigger.dev v3 API.
+ * Jobs are defined here as reference but are not currently active.
+ * See: https://trigger.dev/docs/v3/upgrading-from-v2
+ */
 
-// Gmail sync job
-client.defineJob({
-  id: 'sync-gmail',
-  name: 'Sync Gmail Messages',
-  version: '1.0.0',
-  trigger: {
-    type: 'scheduled',
-    cron: '*/15 * * * *', // Every 15 minutes
+import { logger } from '@/lib/logger';
+
+// Job definitions (for reference - to be implemented with v3 API)
+export const jobDefinitions = {
+  'sync-gmail': {
+    id: 'sync-gmail',
+    name: 'Sync Gmail Messages',
+    version: '1.0.0',
+    schedule: '*/15 * * * *', // Every 15 minutes
+    description: 'Syncs Gmail messages for all connected integrations',
   },
-  run: async (payload, io, ctx) => {
-    await io.logger.info('Starting Gmail sync...');
-
-    // Get all Gmail integrations
-    const gmailIntegrations = await db.query.integrations.findMany({
-      where: eq(integrations.provider, 'google'),
-    });
-
-    await io.logger.info(`Found ${gmailIntegrations.length} Gmail integrations`);
-
-    for (const integration of gmailIntegrations) {
-      try {
-        // TODO: Implement Gmail API sync
-        await io.logger.info(`Syncing Gmail for workspace ${integration.workspaceId}`);
-        
-        // Placeholder for actual sync logic
-        // 1. Get access token (refresh if needed)
-        // 2. Fetch new emails from Gmail API
-        // 3. Store in database
-        // 4. Trigger any automated workflows
-        
-      } catch (error) {
-        await io.logger.error(`Failed to sync Gmail for workspace ${integration.workspaceId}`, {
-          error,
-        });
-      }
-    }
-
-    return { synced: gmailIntegrations.length };
+  'sync-calendar': {
+    id: 'sync-calendar',
+    name: 'Sync Google Calendar',
+    version: '1.0.0',
+    schedule: '*/30 * * * *', // Every 30 minutes
+    description: 'Syncs Google Calendar events for all connected integrations',
   },
-});
-
-// Calendar sync job
-client.defineJob({
-  id: 'sync-calendar',
-  name: 'Sync Google Calendar',
-  version: '1.0.0',
-  trigger: {
-    type: 'scheduled',
-    cron: '*/30 * * * *', // Every 30 minutes
+  'send-email-campaign': {
+    id: 'send-email-campaign',
+    name: 'Send Email Campaign',
+    version: '1.0.0',
+    trigger: 'event:campaign.send',
+    description: 'Sends scheduled email campaigns',
   },
-  run: async (payload, io, ctx) => {
-    await io.logger.info('Starting Calendar sync...');
-
-    // TODO: Implement Calendar sync
-    const integrationCount = 0; // Placeholder
-
-    return { synced: integrationCount };
+  'enrich-crm-data': {
+    id: 'enrich-crm-data',
+    name: 'Enrich CRM Contact Data',
+    version: '1.0.0',
+    trigger: 'event:contact.created',
+    description: 'Enriches new contact data using external APIs',
   },
-});
-
-// Email campaign job
-client.defineJob({
-  id: 'send-email-campaign',
-  name: 'Send Email Campaign',
-  version: '1.0.0',
-  trigger: {
-    type: 'event',
-    name: 'campaign.send',
+  'execute-workflow': {
+    id: 'execute-workflow',
+    name: 'Execute Workflow',
+    version: '1.0.0',
+    trigger: 'event:workflow.trigger',
+    description: 'Executes automation workflows',
   },
-  run: async (payload: any, io, ctx) => {
-    await io.logger.info('Starting email campaign...', { campaignId: payload.campaignId });
-
-    // TODO: Implement email sending
-    // 1. Get campaign details
-    // 2. Get recipient list
-    // 3. Send emails in batches
-    // 4. Track opens/clicks
-    // 5. Update campaign stats
-
-    return { sent: 0, failed: 0 };
+  'generate-weekly-report': {
+    id: 'generate-weekly-report',
+    name: 'Generate Weekly Report',
+    version: '1.0.0',
+    schedule: '0 9 * * 1', // Every Monday at 9 AM
+    description: 'Generates and sends weekly analytics report',
   },
-});
+};
 
-// CRM data enrichment job
-client.defineJob({
-  id: 'enrich-crm-data',
-  name: 'Enrich CRM Contact Data',
-  version: '1.0.0',
-  trigger: {
-    type: 'event',
-    name: 'contact.created',
-  },
-  run: async (payload: any, io, ctx) => {
-    await io.logger.info('Enriching contact data...', { contactId: payload.contactId });
+/**
+ * Placeholder function to trigger a job
+ * In v3, use the Trigger.dev dashboard or API to trigger jobs
+ */
+export async function triggerJob(jobId: string, payload?: Record<string, unknown>): Promise<void> {
+  logger.info(`Job trigger requested: ${jobId}`, { payload });
+  
+  // TODO: Implement with Trigger.dev v3 API
+  // For now, just log the request
+  logger.warn('Trigger.dev v3 integration pending - job not executed');
+}
 
-    // TODO: Implement data enrichment
-    // 1. Get contact info
-    // 2. Call enrichment APIs (Clearbit, etc.)
-    // 3. Update contact with enriched data
-    // 4. Calculate lead score
-
-    return { enriched: true };
-  },
-});
-
-// Workflow execution job
-client.defineJob({
-  id: 'execute-workflow',
-  name: 'Execute Workflow',
-  version: '1.0.0',
-  trigger: {
-    type: 'event',
-    name: 'workflow.trigger',
-  },
-  run: async (payload: any, io, ctx) => {
-    await io.logger.info('Executing workflow...', { 
-      workflowId: payload.workflowId,
-      trigger: payload.trigger,
-    });
-
-    // TODO: Implement workflow execution
-    // This would call the workflow execution API
-
-    return { status: 'completed' };
-  },
-});
-
-// Report generation job
-client.defineJob({
-  id: 'generate-weekly-report',
-  name: 'Generate Weekly Report',
-  version: '1.0.0',
-  trigger: {
-    type: 'scheduled',
-    cron: '0 9 * * 1', // Every Monday at 9 AM
-  },
-  run: async (payload, io, ctx) => {
-    await io.logger.info('Generating weekly report...');
-
-    // TODO: Implement report generation
-    // 1. Gather data from last week
-    // 2. Generate insights using AI
-    // 3. Create PDF/email report
-    // 4. Send to stakeholders
-
-    return { generated: true };
-  },
-});
-
-export { client };
-
-
-
-
-
-
+/**
+ * Get all job definitions
+ */
+export function getJobDefinitions() {
+  return jobDefinitions;
+}

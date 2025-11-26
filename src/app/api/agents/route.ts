@@ -3,6 +3,8 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { agents } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET() {
   try {
@@ -18,7 +20,7 @@ export async function GET() {
     });
 
     return NextResponse.json(
-      agentsList.map((agent) => ({
+      agentsList.map((agent: typeof agentsList[0]) => ({
         id: agent.id,
         name: agent.name,
         description: agent.description,
@@ -29,13 +31,11 @@ export async function GET() {
       }))
     );
   } catch (error) {
-    console.error('Agents API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch agents' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get agents error');
   }
 }
+
+
 
 
 

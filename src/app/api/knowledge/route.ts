@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { knowledgeItems, knowledgeCollections } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(request: Request) {
   try {
@@ -28,11 +29,19 @@ export async function GET(request: Request) {
       limit: 100,
       with: {
         collection: true,
+        creator: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
       },
     });
 
     return NextResponse.json({
-      collections: collections.map((col) => ({
+      collections: collections.map((col: typeof collections[0]) => ({
         id: col.id,
         name: col.name,
         description: col.description,
@@ -40,23 +49,23 @@ export async function GET(request: Request) {
         color: col.color,
         icon: col.icon,
       })),
-      items: items.map((item) => ({
+      items: items.map((item: typeof items[0]) => ({
         id: item.id,
         name: item.title,
         type: item.type.toUpperCase(),
         project: item.collection?.name || 'Uncategorized',
-        createdBy: 'User', // TODO: Get from user relation
+        createdBy: item.creator
+          ? item.creator.firstName && item.creator.lastName
+            ? `${item.creator.firstName} ${item.creator.lastName}`
+            : item.creator.email
+          : 'User',
         createdAt: formatRelativeTime(item.createdAt),
         size: item.fileSize ? formatFileSize(item.fileSize) : 'N/A',
         description: item.summary || item.content?.substring(0, 100) || '',
       })),
     });
   } catch (error) {
-    console.error('Knowledge Base API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch knowledge base data' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Knowledge Base API error');
   }
 }
 
@@ -86,6 +95,8 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+
 
 
 

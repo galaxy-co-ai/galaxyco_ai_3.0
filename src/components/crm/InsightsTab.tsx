@@ -368,15 +368,15 @@ export default function InsightsTab({
                             </p>
                           </div>
                         )}
-                        {"score" in item && (
+                        {"score" in item && item.score !== undefined && (
                           <div>
                             <p className="text-xs text-muted-foreground mb-0.5">Score</p>
                             <Badge
                               variant="outline"
                               className={
-                                item.score >= 70
+                                (item.score ?? 0) >= 70
                                   ? "bg-red-50 text-red-700 border-red-200"
-                                  : item.score >= 50
+                                  : (item.score ?? 0) >= 50
                                     ? "bg-amber-50 text-amber-700 border-amber-200"
                                     : "bg-slate-50 text-slate-700 border-slate-200"
                               }
@@ -385,15 +385,15 @@ export default function InsightsTab({
                             </Badge>
                           </div>
                         )}
-                        {"probability" in item && (
+                        {"probability" in item && item.probability !== undefined && (
                           <div>
                             <p className="text-xs text-muted-foreground mb-0.5">Probability</p>
                             <p
                               className={cn(
                                 "text-sm font-semibold",
-                                item.probability >= 70
+                                (item.probability ?? 0) >= 70
                                   ? "text-green-600"
-                                  : item.probability >= 50
+                                  : (item.probability ?? 0) >= 50
                                     ? "text-amber-600"
                                     : "text-gray-600"
                               )}

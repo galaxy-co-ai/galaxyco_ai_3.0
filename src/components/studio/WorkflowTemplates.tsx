@@ -25,6 +25,7 @@ import {
   Sparkles,
   Check
 } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface WorkflowTemplate {
   id: string;
@@ -140,7 +141,7 @@ export function WorkflowTemplates() {
   });
 
   const handleUseTemplate = (templateId: string) => {
-    console.log("Using template:", templateId);
+    logger.debug("Using template", { templateId });
     setIsOpen(false);
     // In a real app, this would load the template into the canvas
   };

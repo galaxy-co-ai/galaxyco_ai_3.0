@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { 
   workspaces, 
   users, 
+  workspaceMembers,
   agents, 
   tasks, 
   contacts, 
@@ -39,10 +40,43 @@ export async function seedDatabase() {
 
     console.log(`✅ Created workspace: ${workspace.name}`);
 
+    // Create a demo user first (required for createdBy fields)
+    const [demoUser] = await db
+      .insert(users)
+      .values({
+        clerkUserId: 'demo_user_seed',
+        email: 'demo@galaxyco.ai',
+        firstName: 'Demo',
+        lastName: 'User',
+      })
+      .onConflictDoNothing()
+      .returning();
+
+    const userId = demoUser?.id || (await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.email, 'demo@galaxyco.ai'),
+    }))?.id;
+
+    if (!userId) {
+      throw new Error('Failed to create demo user');
+    }
+
+    // Add user to workspace as admin
+    await db
+      .insert(workspaceMembers)
+      .values({
+        workspaceId: workspace.id,
+        userId: userId,
+        role: 'admin',
+      })
+      .onConflictDoNothing();
+
+    console.log(`✅ Created demo user and added to workspace`);
+
     // Create demo agents
     const agentData = [
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         name: 'Sales Assistant',
         type: 'sales' as const,
         description: 'Helps with lead qualification and follow-ups',
@@ -51,6 +85,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         name: 'Content Writer',
         type: 'content' as const,
         description: 'Generates blog posts and marketing copy',
@@ -59,6 +94,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         name: 'Data Analyzer',
         type: 'data' as const,
         description: 'Analyzes CRM data and provides insights',
@@ -67,6 +103,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         name: 'Email Agent',
         type: 'email' as const,
         description: 'Automates email campaigns and follow-ups',
@@ -82,6 +119,7 @@ export async function seedDatabase() {
     const taskData = [
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         title: 'Follow up with hot leads',
         description: 'Contact all leads with score > 80',
         status: 'done' as const,
@@ -89,6 +127,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         title: 'Generate weekly report',
         description: 'Create analytics report for last week',
         status: 'done' as const,
@@ -96,6 +135,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         title: 'Update CRM data',
         description: 'Sync data from integrations',
         status: 'in_progress' as const,
@@ -103,6 +143,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         title: 'Draft product announcement',
         description: 'Write blog post for new feature launch',
         status: 'todo' as const,
@@ -110,6 +151,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         title: 'Review automation workflows',
         description: 'Check and optimize existing workflows',
         status: 'todo' as const,
@@ -211,7 +253,7 @@ export async function seedDatabase() {
         name: 'Enterprise Corp Expansion',
         company: 'Enterprise Corp',
         estimatedValue: 200000,
-        stage: 'lead' as const,
+        stage: 'new' as const,
         score: 65,
         notes: 'Initial interest shown. Need to schedule demo.',
       },
@@ -256,6 +298,7 @@ export async function seedDatabase() {
       .insert(knowledgeCollections)
       .values({
         workspaceId: workspace.id,
+        createdBy: userId,
         name: 'Product Documentation',
         description: 'Internal product docs and guides',
         color: '#3b82f6',
@@ -270,6 +313,7 @@ export async function seedDatabase() {
     const knowledgeData = [
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         collectionId: collection.id,
         title: 'Getting Started Guide',
         type: 'document' as const,
@@ -278,6 +322,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         collectionId: collection.id,
         title: 'API Documentation',
         type: 'document' as const,
@@ -286,6 +331,7 @@ export async function seedDatabase() {
       },
       {
         workspaceId: workspace.id,
+        createdBy: userId,
         collectionId: collection.id,
         title: 'Best Practices',
         type: 'document' as const,
@@ -298,10 +344,11 @@ export async function seedDatabase() {
     console.log(`✅ Created ${knowledgeData.length} knowledge items`);
 
     // Update collection item count
+    const { eq } = await import('drizzle-orm');
     await db
       .update(knowledgeCollections)
       .set({ itemCount: knowledgeData.length })
-      .where((collections, { eq }) => eq(collections.id, collection.id));
+      .where(eq(knowledgeCollections.id, collection.id));
 
     console.log('\n✅ Database seeding complete!');
     console.log(`📊 Summary:

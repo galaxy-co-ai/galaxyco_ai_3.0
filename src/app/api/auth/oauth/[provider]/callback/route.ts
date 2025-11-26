@@ -4,6 +4,9 @@ import { db } from '@/lib/db';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { integrations, oauthTokens } from '@/db/schema';
 import { encryptApiKey } from '@/lib/encryption';
+import { logger } from '@/lib/logger';
+import { redis } from '@/lib/upstash';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * OAuth callback handler
@@ -34,8 +37,22 @@ export async function GET(
       );
     }
 
-    // Validate state token (in production, check against stored state)
-    // TODO: Implement proper state validation with Redis
+    // Validate state token with Redis to prevent CSRF attacks
+    if (redis) {
+      const storedState = await redis.get(`oauth:state:${state}`);
+      if (!storedState || storedState !== state) {
+        logger.warn('OAuth state validation failed', { state, storedState });
+        return NextResponse.redirect(
+          `${process.env.NEXT_PUBLIC_APP_URL}/integrations?error=invalid_state`
+        );
+      }
+      // Delete state after validation (one-time use)
+      await redis.del(`oauth:state:${state}`);
+    } else {
+      // Fallback: Basic state validation if Redis is not configured
+      // In production, Redis should be configured for proper security
+      logger.warn('OAuth state validation skipped - Redis not configured');
+    }
 
     // Get current workspace
     const { workspaceId, user, userId } = await getCurrentWorkspace();
@@ -99,7 +116,7 @@ export async function GET(
       `${process.env.NEXT_PUBLIC_APP_URL}/integrations?success=${provider}`
     );
   } catch (error) {
-    console.error('OAuth callback error:', error);
+    logger.error('OAuth callback error', error);
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/integrations?error=callback_failed`
     );

@@ -6,6 +6,7 @@ import { eq, desc } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const dealSchema = z.object({
   name: z.string().min(1, 'Deal name is required'),
@@ -36,11 +37,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(dealsList);
   } catch (error) {
-    logger.error('Get deals error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch deals' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get deals error');
   }
 }
 
@@ -106,11 +103,7 @@ export async function POST(request: Request) {
       createdAt: deal.createdAt,
     }, { status: 201 });
   } catch (error) {
-    logger.error('Create deal error:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create deal' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create deal error');
   }
 }
 

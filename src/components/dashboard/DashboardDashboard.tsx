@@ -924,8 +924,8 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
     if (b.valueScore !== a.valueScore) {
       return b.valueScore - a.valueScore;
     }
-    const difficultyOrder = { Easy: 1, Medium: 2, Advanced: 3 };
-    return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+    const difficultyOrder: Record<string, number> = { Easy: 1, Medium: 2, Advanced: 3 };
+    return (difficultyOrder[a.difficulty] ?? 2) - (difficultyOrder[b.difficulty] ?? 2);
   });
 
   const getAutomationNodes = (automationId: string): AutomationNode[] => {

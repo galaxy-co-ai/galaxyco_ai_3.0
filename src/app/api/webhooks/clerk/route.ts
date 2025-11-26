@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { users, workspaces, workspaceMembers } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Get the webhook secret
     const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
     if (!webhookSecret) {
-      console.error('CLERK_WEBHOOK_SECRET is not set');
+      logger.error('CLERK_WEBHOOK_SECRET is not set');
       return NextResponse.json(
         { error: 'Webhook secret not configured' },
         { status: 500 }
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
         'svix-signature': svixSignature,
       });
     } catch (err) {
-      console.error('Webhook verification failed:', err);
+      logger.error('Webhook verification failed', err instanceof Error ? err : new Error(String(err)));
       return NextResponse.json(
         { error: 'Webhook verification failed' },
         { status: 400 }
@@ -60,8 +61,8 @@ export async function POST(request: NextRequest) {
     if (eventType === 'user.created' || eventType === 'user.updated') {
       // Sync user to database
       const clerkUserId = data.id;
-      const emailAddresses = data.email_addresses || [];
-      const email = emailAddresses.find((e: any) => e.id === data.primary_email_address_id)?.email_address 
+      const emailAddresses = (data.email_addresses || []) as Array<{ id: string; email_address: string }>;
+      const email = emailAddresses.find((e) => e.id === data.primary_email_address_id)?.email_address 
         || emailAddresses[0]?.email_address;
       const firstName = data.first_name;
       const lastName = data.last_name;
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
       const createdAt = data.created_at ? new Date(data.created_at * 1000) : new Date();
 
       if (!email) {
-        console.error('No email found for user:', clerkUserId);
+        logger.error('No email found for user', new Error('Missing email'), { clerkUserId });
         return NextResponse.json(
           { error: 'No email found' },
           { status: 400 }
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    logger.error('Webhook error', error);
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }

@@ -6,6 +6,15 @@ import { getOpenAI } from '@/lib/ai-providers';
 import { queryVectors } from '@/lib/vector';
 import { rateLimit } from '@/lib/rate-limit';
 import { eq, and, or, like, desc } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { createErrorResponse } from '@/lib/api-error-handler';
+
+const searchSchema = z.object({
+  query: z.string().min(1, 'Search query is required').max(500, 'Query too long'),
+  limit: z.number().int().min(1).max(50).optional().default(10),
+  collectionId: z.string().uuid().optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -26,14 +35,17 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { query, limit = 10, collectionId } = body;
 
-    if (!query || typeof query !== 'string') {
+    // Validate input
+    const validationResult = searchSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Query is required' },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
+
+    const { query, limit, collectionId } = validationResult.data;
 
     // Perform hybrid search: vector + keyword
 
@@ -86,7 +98,7 @@ export async function POST(request: Request) {
           metadata: itemMetadata.get(itemId),
         }));
     } catch (error) {
-      console.error('Vector search failed:', error);
+      logger.error('Vector search failed', error);
       // Continue with keyword search
     }
 
@@ -188,11 +200,7 @@ export async function POST(request: Request) {
       hasMore: mergedResults.size > limit,
     });
   } catch (error) {
-    console.error('Search error:', error);
-    return NextResponse.json(
-      { error: 'Search failed. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Knowledge search error');
   }
 }
 

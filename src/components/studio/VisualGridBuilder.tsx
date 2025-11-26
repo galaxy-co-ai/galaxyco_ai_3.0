@@ -11,6 +11,7 @@ import { TestResultsPanel, TestResult } from "./TestResultsPanel";
 import { WorkflowMinimap } from "./WorkflowMinimap";
 import { WorkflowTemplates } from "./WorkflowTemplates";
 import { KeyboardShortcuts } from "../shared/KeyboardShortcuts";
+import { logger } from "@/lib/logger";
 
 interface NodeType {
   id: number;
@@ -312,7 +313,7 @@ export function VisualGridBuilder() {
       // Cmd/Ctrl + S - Save
       if (modifier && e.key === 's') {
         e.preventDefault();
-        console.log('Save workflow');
+        logger.debug('Save workflow');
       }
 
       // Cmd/Ctrl + F - Fit to screen

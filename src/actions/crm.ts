@@ -5,6 +5,7 @@ import { contacts, projects, prospects, calendarEvents, users } from '@/db/schem
 import { eq, desc } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 import { getCacheOrFetch, invalidateCache } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 /**
  * Invalidate CRM cache when data is updated
@@ -30,7 +31,7 @@ export async function getContacts() {
     async () => {
       try {
         const data = await db.select().from(contacts).limit(20);
-        return data.map(c => ({
+        return data.map((c: typeof data[0]) => ({
           id: c.id,
           name: `${c.firstName} ${c.lastName}`,
           company: c.company || '',
@@ -48,7 +49,7 @@ export async function getContacts() {
           tags: c.tags || []
         }));
       } catch (error) {
-        console.error('Failed to fetch contacts:', error);
+        logger.error('Failed to fetch contacts', error);
         return [];
       }
     },
@@ -65,7 +66,7 @@ export async function getProjects() {
     async () => {
       try {
         const data = await db.select().from(projects).limit(20);
-        return data.map(p => ({
+        return data.map((p: typeof data[0]) => ({
           id: p.id,
           name: p.name,
           client: 'Unknown', // Need join with customer
@@ -76,7 +77,7 @@ export async function getProjects() {
           budget: p.budget ? `$${p.budget / 100}` : '$0'
         }));
       } catch (error) {
-        console.error('Failed to fetch projects:', error);
+        logger.error('Failed to fetch projects', error);
         return [];
       }
     },
@@ -93,7 +94,7 @@ export async function getDeals() {
     async () => {
       try {
         const data = await db.select().from(prospects).limit(20);
-        return data.map(p => ({
+        return data.map((p: typeof data[0]) => ({
           id: p.id,
           title: p.name,
           company: p.company || '',
@@ -104,7 +105,7 @@ export async function getDeals() {
           aiRisk: 'low'
         }));
       } catch (error) {
-        console.error('Failed to fetch deals:', error);
+        logger.error('Failed to fetch deals', error);
         return [];
       }
     },
@@ -124,7 +125,7 @@ export async function getInteractions() {
           .orderBy(desc(calendarEvents.startTime))
           .limit(10);
           
-        return data.map(e => ({
+        return data.map((e: typeof data[0]) => ({
           id: e.id,
           type: 'meeting',
           contactId: '',
@@ -137,7 +138,7 @@ export async function getInteractions() {
           sentiment: 'neutral'
         }));
       } catch (error) {
-        console.error('Failed to fetch interactions:', error);
+        logger.error('Failed to fetch interactions', error);
         return [];
       }
     },

@@ -5,6 +5,8 @@ import { projects } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const projectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
@@ -51,13 +53,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
-    console.error('Create project error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create project' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create project error');
   }
 }
+
+
 
 
 

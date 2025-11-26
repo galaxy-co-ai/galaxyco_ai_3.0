@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { knowledgeItems, knowledgeCollections } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { uploadFile } from '@/lib/storage';
 import { getOpenAI } from '@/lib/ai-providers';
 import { upsertVectors } from '@/lib/vector';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Helper to extract text from files
 async function extractText(file: File): Promise<string> {
@@ -78,23 +82,57 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file') as File | null;
     const collectionId = formData.get('collectionId') as string | null;
     const title = formData.get('title') as string | null;
 
+    // Validate input
     if (!file) {
       return NextResponse.json(
-        { error: 'No file provided' },
+        { error: 'File is required' },
         { status: 400 }
       );
     }
 
     // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { error: 'File size exceeds 10MB limit' },
         { status: 400 }
       );
+    }
+
+    // Validate file type (basic check)
+    const allowedTypes = [
+      'text/plain',
+      'text/markdown',
+      'application/json',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: 'File type not supported' },
+        { status: 400 }
+      );
+    }
+
+    // Validate collectionId if provided
+    if (collectionId) {
+      const collection = await db.query.knowledgeCollections.findFirst({
+        where: and(
+          eq(knowledgeCollections.id, collectionId),
+          eq(knowledgeCollections.workspaceId, workspaceId)
+        ),
+      });
+
+      if (!collection) {
+        return NextResponse.json(
+          { error: 'Collection not found' },
+          { status: 404 }
+        );
+      }
     }
 
     // Upload to Vercel Blob
@@ -130,7 +168,7 @@ export async function POST(request: Request) {
 
       summary = summaryResponse.choices[0]?.message?.content || 'AI-generated summary';
     } catch (error) {
-      console.error('Summary generation failed:', error);
+      logger.error('Summary generation failed', error);
       summary = 'Summary generation failed';
     }
 
@@ -185,22 +223,20 @@ export async function POST(request: Request) {
 
       await upsertVectors(vectors);
     } catch (error) {
-      console.error('Vector embedding failed:', error);
+      logger.error('Vector embedding failed', error);
       // Don't fail the upload if embedding fails
     }
 
     // Update collection item count if applicable
     if (collectionId) {
       const collection = await db.query.knowledgeCollections.findFirst({
-        where: (collections, { eq, and }) =>
-          and(
-            eq(collections.id, collectionId),
-            eq(collections.workspaceId, workspaceId)
-          ),
+        where: and(
+          eq(knowledgeCollections.id, collectionId),
+          eq(knowledgeCollections.workspaceId, workspaceId)
+        ),
       });
 
       if (collection) {
-        const { eq } = await import('drizzle-orm');
         await db
           .update(knowledgeCollections)
           .set({
@@ -220,11 +256,7 @@ export async function POST(request: Request) {
       createdAt: item.createdAt,
     });
   } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json(
-      { error: 'Failed to upload file. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Knowledge upload error');
   }
 }
 

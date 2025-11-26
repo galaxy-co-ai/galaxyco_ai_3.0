@@ -354,6 +354,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                           revenue: 50000000,
                           notes: "Key enterprise account, multiple stakeholders",
                           tags: ["enterprise", "priority"],
+                          lastContactedAt: new Date("2024-11-20"),
                         },
                         {
                           id: "2",
@@ -367,6 +368,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                           revenue: 25000000,
                           notes: "Fast-moving deal, high priority",
                           tags: ["high-priority", "technical"],
+                          lastContactedAt: new Date("2024-11-22"),
                         },
                         {
                           id: "3",
@@ -380,6 +382,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                           revenue: 10000000,
                           notes: "Growing rapidly, looking for automation",
                           tags: ["growth", "startup"],
+                          lastContactedAt: new Date("2024-11-18"),
                         },
                       ]}
                       initialContacts={[

@@ -3,6 +3,9 @@ import { getOAuthUrl } from '@/lib/oauth';
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
+import { redis } from '@/lib/upstash';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * Initiate OAuth flow for Google or Microsoft
@@ -29,13 +32,12 @@ export async function GET(
     // Generate state token for CSRF protection
     const state = crypto.randomBytes(32).toString('hex');
 
-    // Store state in session/redis for validation (simplified here)
-    // In production, store in Redis with expiration
-    const stateData = {
-      userId: user.id,
-      provider,
-      timestamp: Date.now(),
-    };
+    // Store state in Redis for validation (10 minute expiration)
+    if (redis) {
+      await redis.setex(`oauth:state:${state}`, 600, state); // 10 minutes TTL
+    } else {
+      logger.warn('Redis not configured - OAuth state validation will be skipped');
+    }
 
     // Build redirect URI
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/oauth/${provider}/callback`;
@@ -46,7 +48,7 @@ export async function GET(
     // Redirect to OAuth provider
     return NextResponse.redirect(authUrl);
   } catch (error) {
-    console.error('OAuth authorization error:', error);
+    logger.error('OAuth authorization error', error);
     return NextResponse.json(
       { error: 'Failed to initiate OAuth flow' },
       { status: 500 }

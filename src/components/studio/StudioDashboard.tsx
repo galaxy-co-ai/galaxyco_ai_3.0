@@ -34,6 +34,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Fetcher for SWR
@@ -141,7 +142,7 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-blue-500",
       nodeCount: 5,
       valueScore: 10,
-      difficulty: "Easy",
+      difficulty: "Easy" as const,
     },
     {
       id: "lead-qualifier",
@@ -152,7 +153,7 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-purple-500",
       nodeCount: 6,
       valueScore: 9,
-      difficulty: "Easy",
+      difficulty: "Easy" as const,
     },
     {
       id: "meeting-prep",
@@ -163,7 +164,7 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-green-500",
       nodeCount: 4,
       valueScore: 9,
-      difficulty: "Easy",
+      difficulty: "Easy" as const,
     },
     {
       id: "data-sync",
@@ -174,7 +175,7 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-cyan-500",
       nodeCount: 5,
       valueScore: 8,
-      difficulty: "Medium",
+      difficulty: "Medium" as const,
     },
     {
       id: "content-generator",
@@ -185,7 +186,7 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-orange-500",
       nodeCount: 4,
       valueScore: 8,
-      difficulty: "Easy",
+      difficulty: "Easy" as const,
     },
     {
       id: "analytics-agent",
@@ -196,7 +197,7 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-indigo-500",
       nodeCount: 6,
       valueScore: 7,
-      difficulty: "Advanced",
+      difficulty: "Advanced" as const,
     },
     {
       id: "customer-support",
@@ -207,7 +208,7 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-pink-500",
       nodeCount: 5,
       valueScore: 9,
-      difficulty: "Medium",
+      difficulty: "Medium" as const,
     },
     {
       id: "task-automation",
@@ -218,14 +219,14 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
       iconColor: "bg-amber-500",
       nodeCount: 4,
       valueScore: 8,
-      difficulty: "Easy",
+      difficulty: "Easy" as const,
     },
   ].sort((a, b) => {
     if (b.valueScore !== a.valueScore) {
       return b.valueScore - a.valueScore;
     }
-    const difficultyOrder = { Easy: 1, Medium: 2, Advanced: 3 };
-    return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+    const difficultyOrder: Record<string, number> = { Easy: 1, Medium: 2, Advanced: 3 };
+    return (difficultyOrder[a.difficulty] ?? 2) - (difficultyOrder[b.difficulty] ?? 2);
   });
 
   // Transform workflows to MyAgent format
@@ -511,13 +512,13 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('API Error:', response.status, errorData);
+        logger.error('API Error', { status: response.status, errorData });
         
         // Don't auto-build on API errors - let the AI ask questions instead
         throw new Error(errorData.error || 'Failed to get AI response');
       } else {
         data = await response.json();
-        console.log('API Response:', data); // Debug log
+        logger.debug('API Response', { data });
         
         // Try multiple possible response structures
         // API returns: { message: { content: string, ... }, ... }
@@ -527,7 +528,7 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
                            (typeof data === 'string' ? data : null) ||
                            "I'm here to help you create an agent. What problem are you trying to solve?";
         
-        console.log('Parsed assistant response:', assistantResponse); // Debug log
+        logger.debug('Parsed assistant response', { assistantResponse });
       }
 
       // Extract information from user input and assistant response
@@ -551,7 +552,7 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
       
       // Try to extract data sources
       if (!agentData.dataSources) {
-        const dataSourceMatches = [];
+        const dataSourceMatches: string[] = [];
         if (/(?:crm|salesforce|hubspot)/i.test(userInput)) dataSourceMatches.push('CRM');
         if (/(?:email|gmail|outlook)/i.test(userInput)) dataSourceMatches.push('Email');
         if (/(?:calendar|google calendar|outlook calendar)/i.test(userInput)) dataSourceMatches.push('Calendar');
@@ -659,7 +660,7 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
         setIsCreatingAgent(false);
       }
     } catch (error) {
-      console.error('Error getting AI response:', error);
+      logger.error('Error getting AI response', error);
       
       // On error, ask the user to provide more information instead of auto-building
       const errorMessage = {

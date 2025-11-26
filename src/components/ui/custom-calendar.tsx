@@ -28,7 +28,7 @@ function CustomCalendar({ selected, onSelect, className }: CustomCalendarProps) 
   const daysInPrevMonth = new Date(year, month, 0).getDate();
   
   // Build calendar grid
-  const days: (number | null)[] = [];
+  const days: number[] = [];
   
   // Previous month days
   for (let i = firstDay - 1; i >= 0; i--) {
@@ -159,6 +159,8 @@ function CustomCalendar({ selected, onSelect, className }: CustomCalendarProps) 
 }
 
 export { CustomCalendar };
+
+
 
 
 

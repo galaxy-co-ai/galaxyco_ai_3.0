@@ -1,110 +1,159 @@
-import { put, del, list, head } from '@vercel/blob';
+import { put, del, head } from '@vercel/blob';
+import { logger } from './logger';
 
-function getBlobToken(): string {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
-  if (!token) {
-    throw new Error('BLOB_READ_WRITE_TOKEN required for file uploads');
-  }
-  return token;
+/**
+ * File storage utilities using Vercel Blob
+ * Handles file uploads, deletions, and metadata retrieval
+ */
+
+export interface UploadResult {
+  url: string;
+  pathname: string;
+  size: number;
+  uploadedAt: Date;
 }
 
 /**
- * Upload a file to Vercel Blob Storage
+ * Upload a file to Vercel Blob storage
+ * 
+ * @param file - The file to upload (File object or Buffer)
+ * @param pathname - The path where the file should be stored (e.g., 'workspace-id/knowledge/filename.pdf')
+ * @param options - Optional upload options
+ * @returns Upload result with URL and metadata
+ * 
+ * @example
+ * ```typescript
+ * const { url } = await uploadFile(file, 'workspace-123/knowledge/doc.pdf');
+ * ```
  */
 export async function uploadFile(
-  file: File,
+  file: File | Buffer,
   pathname: string,
   options?: {
+    contentType?: string;
+    access?: 'public' | 'private';
     addRandomSuffix?: boolean;
-    cacheControlMaxAge?: number;
   }
-): Promise<{ url: string; pathname: string; downloadUrl: string }> {
-  const blob = await put(pathname, file, {
-    access: 'public',
-    token: getBlobToken(),
-    addRandomSuffix: options?.addRandomSuffix ?? true,
-    cacheControlMaxAge: options?.cacheControlMaxAge ?? 3600,
-  });
+): Promise<UploadResult> {
+  try {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    
+    if (!token) {
+      throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not configured');
+    }
 
-  return {
-    url: blob.url,
-    pathname: blob.pathname,
-    downloadUrl: blob.downloadUrl,
-  };
+    // Convert File to Buffer if needed
+    let fileBuffer: Buffer;
+    let contentType = options?.contentType;
+
+    if (file instanceof File) {
+      contentType = contentType || file.type;
+      const arrayBuffer = await file.arrayBuffer();
+      fileBuffer = Buffer.from(arrayBuffer);
+    } else {
+      fileBuffer = file;
+    }
+
+    // Upload to Vercel Blob
+    const blob = await put(pathname, fileBuffer, {
+      access: (options?.access || 'public') as 'public',
+      contentType: contentType || 'application/octet-stream',
+      addRandomSuffix: options?.addRandomSuffix ?? false,
+      token,
+    });
+
+    logger.info('File uploaded successfully', {
+      pathname: blob.pathname,
+      url: blob.url,
+    });
+
+    return {
+      url: blob.url,
+      pathname: blob.pathname,
+      size: fileBuffer.length,
+      uploadedAt: new Date(),
+    };
+  } catch (error) {
+    logger.error('File upload failed', error, { pathname });
+    throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 /**
- * Upload from buffer (for server-side processing)
+ * Delete a file from Vercel Blob storage
+ * 
+ * @param url - The URL of the file to delete
+ * @returns True if deletion was successful
+ * 
+ * @example
+ * ```typescript
+ * await deleteFile('https://blob.vercel-storage.com/...');
+ * ```
  */
-export async function uploadBuffer(
-  buffer: Buffer,
-  pathname: string,
-  contentType: string
-): Promise<{ url: string; pathname: string }> {
-  const blob = await put(pathname, buffer, {
-    access: 'public',
-    token: getBlobToken(),
-    contentType,
-    addRandomSuffix: true,
-  });
+export async function deleteFile(url: string): Promise<boolean> {
+  try {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    
+    if (!token) {
+      throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not configured');
+    }
 
-  return {
-    url: blob.url,
-    pathname: blob.pathname,
-  };
+    await del(url, { token });
+
+    logger.info('File deleted successfully', { url });
+    return true;
+  } catch (error) {
+    logger.error('File deletion failed', error, { url });
+    // Don't throw - deletion failures shouldn't break the flow
+    return false;
+  }
 }
 
 /**
- * Delete a file from Vercel Blob Storage
+ * Check if a file exists in Vercel Blob storage
+ * 
+ * @param url - The URL of the file to check
+ * @returns File metadata if exists, null otherwise
+ * 
+ * @example
+ * ```typescript
+ * const metadata = await fileExists('https://blob.vercel-storage.com/...');
+ * if (metadata) {
+ *   console.log('File size:', metadata.size);
+ * }
+ * ```
  */
-export async function deleteFile(url: string): Promise<void> {
-  await del(url, { token: getBlobToken() });
+export async function fileExists(url: string): Promise<{
+  size: number;
+  uploadedAt: Date;
+  pathname: string;
+} | null> {
+  try {
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    
+    if (!token) {
+      throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not configured');
+    }
+
+    const blob = await head(url, { token });
+
+    return {
+      size: blob.size,
+      uploadedAt: new Date(blob.uploadedAt),
+      pathname: blob.pathname,
+    };
+  } catch (error) {
+    // File doesn't exist or error occurred
+    logger.debug('File existence check failed', { url, error });
+    return null;
+  }
 }
 
 /**
- * Delete multiple files
+ * Check if storage is configured
+ * 
+ * @returns True if BLOB_READ_WRITE_TOKEN is set
  */
-export async function deleteFiles(urls: string[]): Promise<void> {
-  await del(urls, { token: getBlobToken() });
+export function isStorageConfigured(): boolean {
+  return !!process.env.BLOB_READ_WRITE_TOKEN;
 }
-
-/**
- * List files in Blob Storage
- */
-export async function listFiles(options?: {
-  prefix?: string;
-  limit?: number;
-  cursor?: string;
-}) {
-  return list({
-    prefix: options?.prefix,
-    limit: options?.limit ?? 1000,
-    cursor: options?.cursor,
-    token: getBlobToken(),
-  });
-}
-
-/**
- * Get file metadata
- */
-export async function getFileMetadata(url: string) {
-  return head(url, { token: getBlobToken() });
-}
-
-/**
- * Generate a structured path for uploaded files
- */
-export function generateFilePath(
-  workspaceId: string,
-  category: 'documents' | 'images' | 'avatars' | 'exports',
-  filename: string
-): string {
-  const timestamp = Date.now();
-  return `${workspaceId}/${category}/${timestamp}-${filename}`;
-}
-
-
-
-
-
-

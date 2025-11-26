@@ -104,9 +104,9 @@ export async function queryVectors(
     });
 
     return results.map((r) => ({
-      id: r.id,
+      id: String(r.id),
       score: r.score,
-      metadata: r.metadata,
+      metadata: r.metadata as Record<string, any> | undefined,
     }));
   } else {
     const index = getPineconeVector();

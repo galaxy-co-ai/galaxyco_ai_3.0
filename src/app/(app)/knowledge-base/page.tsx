@@ -4,6 +4,7 @@ import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { knowledgeItems, knowledgeCollections } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Knowledge Base | GalaxyCo.ai',
@@ -30,8 +31,9 @@ export default async function KnowledgeBasePage() {
     ]);
 
     return (
-      <KnowledgeBaseDashboard
-        initialCollections={collections.map((col) => ({
+      <ErrorBoundary>
+        <KnowledgeBaseDashboard
+          initialCollections={collections.map((col) => ({
           id: col.id,
           name: col.name,
           description: col.description || '',
@@ -51,11 +53,16 @@ export default async function KnowledgeBasePage() {
           content: item.content || undefined,
           url: item.sourceUrl || undefined,
         }))}
-      />
+        />
+      </ErrorBoundary>
     );
   } catch (error) {
     // Return empty data on error - component will handle gracefully
-    return <KnowledgeBaseDashboard initialCollections={[]} initialItems={[]} />;
+    return (
+      <ErrorBoundary>
+        <KnowledgeBaseDashboard initialCollections={[]} initialItems={[]} />
+      </ErrorBoundary>
+    );
   }
 }
 

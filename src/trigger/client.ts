@@ -1,20 +1,27 @@
-import { TriggerClient } from '@trigger.dev/sdk';
+// Trigger.dev v3 SDK uses a different pattern - configuration is in trigger.config.ts
+// This file provides backward-compatible exports for legacy code
 
-if (!process.env.TRIGGER_SECRET_KEY) {
-  throw new Error('TRIGGER_SECRET_KEY environment variable is required');
+import { logger } from '@/lib/logger';
+
+// Check for required environment variable
+const TRIGGER_SECRET_KEY = process.env.TRIGGER_SECRET_KEY;
+
+if (!TRIGGER_SECRET_KEY) {
+  logger.warn('TRIGGER_SECRET_KEY not configured - background jobs disabled');
 }
 
-export const client = new TriggerClient({
+/**
+ * Check if Trigger.dev is configured
+ */
+export function isTriggerConfigured(): boolean {
+  return !!TRIGGER_SECRET_KEY;
+}
+
+/**
+ * Placeholder client for backward compatibility
+ * In Trigger.dev v3, jobs are defined using the new API
+ */
+export const client = {
   id: 'galaxyco-ai',
-  apiKey: process.env.TRIGGER_SECRET_KEY,
-  apiUrl: process.env.TRIGGER_API_URL,
-});
-
-// Export job types for easy reference
-export type { Job } from '@trigger.dev/sdk';
-
-
-
-
-
-
+  isConfigured: isTriggerConfigured(),
+};

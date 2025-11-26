@@ -21,6 +21,16 @@ interface Suggestion {
   priority: 'high' | 'medium' | 'low';
 }
 
+interface PathStep {
+  topicId: string;
+  required?: boolean;
+  prerequisites?: string[];
+}
+
+interface LearningPath {
+  steps: PathStep[];
+}
+
 interface ContentStageProps {
   topicId: string | null;
   activeDemoId?: string | null;
@@ -30,7 +40,7 @@ interface ContentStageProps {
   onSelectSuggestion?: (topicId: string) => void;
   quickActions?: React.ReactNode;
   role?: string;
-  path?: any;
+  path?: LearningPath;
   completedTopics?: string[];
   isFirstTimeUser?: boolean;
   onStartPath?: () => void;

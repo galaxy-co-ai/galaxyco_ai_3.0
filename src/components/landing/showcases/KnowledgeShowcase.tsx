@@ -1,5 +1,5 @@
 import { DemoWrapper } from "../../shared/DemoWrapper";
-import { KnowledgeBase } from "../../../pages/KnowledgeBase";
+import { KnowledgeBase } from "../../../legacy-pages/KnowledgeBase";
 
 export function KnowledgeShowcase() {
   return (

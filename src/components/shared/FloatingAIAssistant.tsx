@@ -267,6 +267,9 @@ export function FloatingAIAssistant() {
     }
     abortControllerRef.current = new AbortController();
 
+    // Track full response for error handling
+    let fullResponse = '';
+
     // Add timeout (60 seconds)
     let timeoutId: NodeJS.Timeout | null = setTimeout(() => {
       if (abortControllerRef.current) {
@@ -325,7 +328,7 @@ export function FloatingAIAssistant() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      let fullResponse = '';
+      fullResponse = '';
       let hasReceivedContent = false;
       let streamTimeout: NodeJS.Timeout | null = setTimeout(() => {
         if (!hasReceivedContent) {
@@ -482,7 +485,6 @@ export function FloatingAIAssistant() {
       const errorDetails = error instanceof Error ? { message: error.message, stack: error.stack } : { error };
       
       logger.error('AI chat streaming error', errorDetails);
-      console.error('AI Assistant Error:', error);
       
       // Show user-friendly error message (but keep specific details for debugging)
       let userMessage = errorMessage;

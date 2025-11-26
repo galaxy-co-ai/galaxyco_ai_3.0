@@ -47,6 +47,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { logger } from "@/lib/logger";
 
 // Fetcher for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -109,14 +110,17 @@ export default function KnowledgeBaseDashboard({
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch knowledge items from API
-  const { data: knowledgeData, error: knowledgeError, mutate: mutateKnowledge } = useSWR('/api/knowledge', fetcher, {
+  const { data: knowledgeData, error: knowledgeError, mutate: mutateKnowledge } = useSWR<{
+    collections: Collection[];
+    items: KnowledgeItem[];
+  }>('/api/knowledge', fetcher, {
     refreshInterval: 30000, // Refresh every 30 seconds
     fallbackData: { collections: initialCollections, items: initialItems },
   });
 
   // Use API data if available, otherwise fall back to initial data
-  const currentItems = knowledgeData?.items || initialItems;
-  const currentCollections = knowledgeData?.collections || initialCollections;
+  const currentItems: KnowledgeItem[] = knowledgeData?.items || initialItems;
+  const currentCollections: Collection[] = knowledgeData?.collections || initialCollections;
 
   // Handle file upload
   const handleFileUpload = async (file: File, collectionId?: string) => {
@@ -151,7 +155,7 @@ export default function KnowledgeBaseDashboard({
       // Refresh knowledge items
       await mutateKnowledge();
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Upload error', error);
       toast.error(error instanceof Error ? error.message : 'Failed to upload file. Please try again.');
     } finally {
       setIsUploading(false);
@@ -204,7 +208,7 @@ export default function KnowledgeBaseDashboard({
           }))
         );
       } catch (error) {
-        console.error('Search error:', error);
+        logger.error('Search error', error);
         toast.error('Search failed. Please try again.');
         setSearchResults([]);
       } finally {

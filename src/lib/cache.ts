@@ -1,4 +1,5 @@
 import { redis } from '@/lib/upstash';
+import { logger } from '@/lib/logger';
 
 /**
  * Redis Cache Helper Utilities
@@ -27,7 +28,7 @@ export async function getCache<T>(key: string, options: CacheOptions = {}): Prom
 
     return null;
   } catch (error) {
-    console.error('Cache get error:', error);
+    logger.error('Cache get error', error);
     return null;
   }
 }
@@ -47,7 +48,7 @@ export async function setCache<T>(
     const cacheKey = `${prefix}:${key}`;
     await redis.setex(cacheKey, ttl, JSON.stringify(data));
   } catch (error) {
-    console.error('Cache set error:', error);
+    logger.error('Cache set error', error);
   }
 }
 
@@ -62,7 +63,7 @@ export async function invalidateCache(key: string, options: CacheOptions = {}): 
     const cacheKey = `${prefix}:${key}`;
     await redis.del(cacheKey);
   } catch (error) {
-    console.error('Cache invalidate error:', error);
+    logger.error('Cache invalidate error', error);
   }
 }
 
@@ -86,7 +87,7 @@ export async function invalidateCachePattern(
       await redis.del(...keys);
     }
   } catch (error) {
-    console.error('Cache pattern invalidate error:', error);
+    logger.error('Cache pattern invalidate error', error);
   }
 }
 
@@ -109,6 +110,8 @@ export async function getCacheOrFetch<T>(
   await setCache(key, data, options);
   return data;
 }
+
+
 
 
 

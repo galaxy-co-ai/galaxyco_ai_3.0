@@ -2,18 +2,32 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { workspaces, workspaceMembers, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 /**
- * Get the current user's workspace ID
- * Throws if user is not authenticated or has no workspace
+ * Gets the current authenticated user's workspace
  * 
- * TEMPORARY: For development, returns test workspace when no auth is present
+ * @returns Object containing workspaceId, workspace, userId, user, and membership
+ * @throws Error if user is not authenticated (unless ALLOW_DEV_BYPASS is enabled)
+ * 
+ * @remarks
+ * - Creates workspace automatically if user doesn't have one
+ * - Creates user record if it doesn't exist (for webhook race conditions)
+ * - Uses ALLOW_DEV_BYPASS env var for development (not NODE_ENV)
+ * 
+ * @example
+ * ```typescript
+ * const { workspaceId, workspace } = await getCurrentWorkspace();
+ * ```
  */
 export async function getCurrentWorkspace() {
   const { userId } = await auth();
   
   // TEMPORARY: Development bypass for testing
-  if (!userId && process.env.NODE_ENV === 'development') {
+  // Use explicit environment variable instead of NODE_ENV to prevent accidental production deployment
+  if (!userId && process.env.ALLOW_DEV_BYPASS === 'true') {
+    logger.warn('⚠️ DEV BYPASS ACTIVE - Remove before production!');
+    
     // Get or create test workspace
     let testWorkspace = await db.query.workspaces.findFirst({
       where: eq(workspaces.name, 'Test Workspace'),
@@ -171,13 +185,29 @@ export async function getCurrentWorkspace() {
 }
 
 /**
- * Get the current authenticated user
+ * Gets the current authenticated user from the database
+ * 
+ * @returns User object from database
+ * @throws Error if user is not authenticated or not found
+ * 
+ * @remarks
+ * - Uses ALLOW_DEV_BYPASS env var for development testing
+ * - Returns test user when bypass is enabled
+ * 
+ * @example
+ * ```typescript
+ * const user = await getCurrentUser();
+ * console.log(user.email);
+ * ```
  */
 export async function getCurrentUser() {
   const { userId } = await auth();
   
   // TEMPORARY: Development bypass for testing
-  if (!userId && process.env.NODE_ENV === 'development') {
+  // Use explicit environment variable instead of NODE_ENV to prevent accidental production deployment
+  if (!userId && process.env.ALLOW_DEV_BYPASS === 'true') {
+    logger.warn('⚠️ DEV BYPASS ACTIVE - Remove before production!');
+    
     // Return a test user object
     return {
       id: 'test-user',

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export function useOAuth() {
   const [isConnecting, setIsConnecting] = useState(false);
@@ -22,7 +23,7 @@ export function useOAuth() {
       const redirectUri = `${window.location.origin}/api/auth/oauth/${provider}/callback`;
       window.location.href = `/api/auth/oauth/${provider}/authorize?redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
     } catch (error) {
-      console.error('OAuth connection error:', error);
+      logger.error('OAuth connection error', error);
       toast.error('Failed to connect. Please try again.');
       setIsConnecting(false);
     }
@@ -41,7 +42,7 @@ export function useOAuth() {
       toast.success('Integration disconnected successfully');
       router.refresh();
     } catch (error) {
-      console.error('Disconnect error:', error);
+      logger.error('Disconnect error', error);
       toast.error('Failed to disconnect. Please try again.');
     }
   };
@@ -52,6 +53,8 @@ export function useOAuth() {
     isConnecting,
   };
 }
+
+
 
 
 

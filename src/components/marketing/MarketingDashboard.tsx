@@ -40,6 +40,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import MarketingAutomationsTab from "./MarketingAutomationsTab";
+import { logger } from "@/lib/logger";
 
 interface Campaign {
   id: string;
@@ -374,7 +375,7 @@ export default function MarketingDashboard({
         ? `\n\nCurrent campaign data collected so far:\n${JSON.stringify(campaignData, null, 2)}`
         : '';
 
-      console.log('Sending message to API...', { currentInput, conversationId });
+      logger.debug('Sending message to API', { currentInput, conversationId });
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -406,7 +407,7 @@ Be conversational and helpful. If they're testing or asking if something works, 
       });
 
       clearTimeout(timeoutId);
-      console.log('API response received:', { status: response.status, ok: response.ok });
+      logger.debug('API response received', { status: response.status, ok: response.ok });
 
       if (!response.ok) {
         let errorMessage = 'Failed to send message';
@@ -417,7 +418,7 @@ Be conversational and helpful. If they're testing or asking if something works, 
           // If response isn't JSON, use status text
           errorMessage = response.statusText || `Server error (${response.status})`;
         }
-        console.error('API error:', { status: response.status, message: errorMessage });
+        logger.error('API error', { status: response.status, message: errorMessage });
         throw new Error(errorMessage);
       }
 
@@ -446,7 +447,7 @@ Be conversational and helpful. If they're testing or asking if something works, 
 
       setChatMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('AI chat error:', error);
+      logger.error('AI chat error', error);
       
       let errorMessage = 'Failed to send message. Please try again.';
       if (error instanceof Error) {
@@ -535,7 +536,7 @@ Be conversational and helpful. If they're testing or asking if something works, 
           // If response isn't JSON, use status text
           errorMessage = response.statusText || `Server error (${response.status})`;
         }
-        console.error('API error:', { status: response.status, message: errorMessage });
+        logger.error('API error', { status: response.status, message: errorMessage });
         throw new Error(errorMessage);
       }
 
@@ -555,7 +556,7 @@ Be conversational and helpful. If they're testing or asking if something works, 
 
       setContentChatMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('AI content chat error:', error);
+      logger.error('AI content chat error', error);
       toast.error(error instanceof Error ? error.message : 'Failed to send message. Please try again.');
       
       // Remove user message on error

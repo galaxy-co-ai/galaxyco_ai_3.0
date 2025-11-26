@@ -5,6 +5,26 @@ import { prospects } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { createErrorResponse } from '@/lib/api-error-handler';
+
+const scoreSchema = z.object({
+  prospectId: z.string().uuid().optional(),
+  prospectData: z.object({
+    id: z.string().optional(),
+    name: z.string().optional(),
+    email: z.string().email().optional(),
+    company: z.string().optional(),
+    stage: z.string().optional(),
+    estimatedValue: z.number().optional(),
+    score: z.number().optional(),
+    notes: z.string().optional(),
+  }).optional(),
+}).refine(
+  (data) => data.prospectId || data.prospectData,
+  { message: 'Either prospectId or prospectData is required' }
+);
 
 export async function POST(request: Request) {
   try {
@@ -19,7 +39,17 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { prospectId, prospectData } = body;
+
+    // Validate input
+    const validationResult = scoreSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { prospectId, prospectData } = validationResult.data;
 
     let prospect;
     
@@ -41,11 +71,6 @@ export async function POST(request: Request) {
     } else if (prospectData) {
       // Score hypothetical prospect
       prospect = prospectData;
-    } else {
-      return NextResponse.json(
-        { error: 'Either prospectId or prospectData is required' },
-        { status: 400 }
-      );
     }
 
     // Generate AI score
@@ -87,7 +112,7 @@ Respond with a JSON object:
     );
 
     // Update prospect score if it's an existing one
-    if (prospectId && prospect.id) {
+    if (prospectId && prospect && 'id' in prospect && prospect.id) {
       await db
         .update(prospects)
         .set({
@@ -101,7 +126,7 @@ Respond with a JSON object:
     }
 
     return NextResponse.json({
-      prospectId: prospect.id,
+      prospectId: prospect && 'id' in prospect ? prospect.id : undefined,
       score: result.score,
       priority: result.priority,
       reasoning: result.reasoning,
@@ -111,13 +136,11 @@ Respond with a JSON object:
       scoredAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Lead scoring error:', error);
-    return NextResponse.json(
-      { error: 'Failed to score lead' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Lead scoring error');
   }
 }
+
+
 
 
 

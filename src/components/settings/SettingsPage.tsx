@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Settings, 
@@ -15,7 +16,8 @@ import {
   Globe,
   Check,
   LogOut,
-  Laptop
+  Laptop,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +29,43 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { CosmicBackground } from "@/components/shared/CosmicBackground";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useClerk } from "@clerk/nextjs";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+// Settings context for sharing data between components
+interface SettingsContextType {
+  workspace: {
+    id: string;
+    name: string;
+    slug: string;
+    plan: string;
+    settings: Record<string, unknown>;
+  } | null;
+  profile: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string;
+  } | null;
+  isLoading: boolean;
+  isSaving: boolean;
+  saveWorkspace: (data: Record<string, unknown>) => Promise<void>;
+  saveProfile: (data: Record<string, unknown>) => Promise<void>;
+  mutate: () => void;
+}
+
+const SettingsContext = React.createContext<SettingsContextType | null>(null);
+
+function useSettings() {
+  const context = React.useContext(SettingsContext);
+  if (!context) {
+    throw new Error("useSettings must be used within SettingsProvider");
+  }
+  return context;
+}
 
 const SETTINGS_TABS = [
   { id: "general", label: "General", icon: Settings },
@@ -40,8 +79,70 @@ const SETTINGS_TABS = [
 
 export function SettingsPage() {
   const [activeTab, setActiveTab] = React.useState("general");
+  const [isSaving, setIsSaving] = React.useState(false);
+  const { signOut } = useClerk();
+
+  // Fetch settings from API
+  const { data, error, isLoading, mutate } = useSWR('/api/settings', fetcher);
+
+  const saveWorkspace = async (workspaceData: Record<string, unknown>) => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workspace: workspaceData }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save');
+      }
+
+      toast.success('Workspace settings saved');
+      mutate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save settings');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveProfile = async (profileData: Record<string, unknown>) => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: profileData }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save');
+      }
+
+      toast.success('Profile saved');
+      mutate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const contextValue: SettingsContextType = {
+    workspace: data?.workspace || null,
+    profile: data?.profile || null,
+    isLoading,
+    isSaving,
+    saveWorkspace,
+    saveProfile,
+    mutate,
+  };
 
   return (
+    <SettingsContext.Provider value={contextValue}>
     <div className="relative h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
       <div className="absolute inset-0 z-0 opacity-50">
         <CosmicBackground />
@@ -88,15 +189,25 @@ export function SettingsPage() {
           <div className="mt-auto p-4 border-t border-border/50">
             <div className="flex items-center gap-3 px-2 py-3 mb-2">
               <Avatar className="h-9 w-9 border">
-                <AvatarImage src="/avatars/user.png" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarImage src={data?.profile?.avatarUrl || "/avatars/user.png"} />
+                <AvatarFallback>
+                  {data?.profile?.firstName?.[0] || ''}{data?.profile?.lastName?.[0] || 'U'}
+                </AvatarFallback>
               </Avatar>
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium truncate">John Doe</p>
-                <p className="text-xs text-muted-foreground truncate">john@galaxyco.ai</p>
+                <p className="text-sm font-medium truncate">
+                  {data?.profile?.firstName && data?.profile?.lastName 
+                    ? `${data.profile.firstName} ${data.profile.lastName}`
+                    : 'Loading...'}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{data?.profile?.email || ''}</p>
               </div>
             </div>
-            <Button variant="ghost" className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+              onClick={() => signOut({ redirectUrl: '/' })}
+            >
               <LogOut className="h-4 w-4" />
               Sign Out
             </Button>
@@ -128,12 +239,28 @@ export function SettingsPage() {
         </main>
       </div>
     </div>
+    </SettingsContext.Provider>
   );
 }
 
 /* --- Sub-components for Sections --- */
 
 function GeneralSettings() {
+  const { workspace, isLoading, isSaving, saveWorkspace } = useSettings();
+  const [name, setName] = React.useState("");
+  const [slug, setSlug] = React.useState("");
+
+  React.useEffect(() => {
+    if (workspace) {
+      setName(workspace.name || "");
+      setSlug(workspace.slug || "");
+    }
+  }, [workspace]);
+
+  const handleSave = () => {
+    saveWorkspace({ name, slug });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -150,7 +277,13 @@ function GeneralSettings() {
         <CardContent className="space-y-4">
           <div className="grid gap-2">
             <Label htmlFor="workspace-name">Workspace Name</Label>
-            <Input id="workspace-name" defaultValue="GalaxyCo HQ" />
+            <Input 
+              id="workspace-name" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={isLoading}
+              placeholder={isLoading ? "Loading..." : "Workspace name"}
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="workspace-url">Workspace URL</Label>
@@ -158,12 +291,20 @@ function GeneralSettings() {
               <span className="text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md border">
                 galaxyco.ai/
               </span>
-              <Input id="workspace-url" defaultValue="galaxy-hq" />
+              <Input 
+                id="workspace-url" 
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                disabled={isLoading}
+                placeholder={isLoading ? "Loading..." : "workspace-url"}
+              />
             </div>
           </div>
         </CardContent>
         <CardFooter className="border-t px-6 py-4 bg-muted/20">
-          <Button>Save Changes</Button>
+          <Button onClick={handleSave} disabled={isSaving || isLoading}>
+            {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Changes"}
+          </Button>
         </CardFooter>
       </Card>
 
@@ -190,6 +331,21 @@ function GeneralSettings() {
 }
 
 function ProfileSettings() {
+  const { profile, isLoading, isSaving, saveProfile } = useSettings();
+  const [firstName, setFirstName] = React.useState("");
+  const [lastName, setLastName] = React.useState("");
+
+  React.useEffect(() => {
+    if (profile) {
+      setFirstName(profile.firstName || "");
+      setLastName(profile.lastName || "");
+    }
+  }, [profile]);
+
+  const handleSave = () => {
+    saveProfile({ firstName, lastName });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -203,33 +359,51 @@ function ProfileSettings() {
           <div className="flex flex-col md:flex-row gap-8 items-start">
             <div className="flex flex-col items-center gap-3">
               <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-                <AvatarImage src="/avatars/user.png" />
-                <AvatarFallback className="text-2xl">JD</AvatarFallback>
+                <AvatarImage src={profile?.avatarUrl || "/avatars/user.png"} />
+                <AvatarFallback className="text-2xl">
+                  {firstName?.[0] || ''}{lastName?.[0] || 'U'}
+                </AvatarFallback>
               </Avatar>
               <Button variant="outline" size="sm">Change Avatar</Button>
             </div>
             <div className="flex-1 space-y-4 w-full">
               <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" defaultValue="John Doe" />
+                <Label htmlFor="firstName">First Name</Label>
+                <Input 
+                  id="firstName" 
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  disabled={isLoading}
+                  placeholder={isLoading ? "Loading..." : "First name"}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input 
+                  id="lastName" 
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  disabled={isLoading}
+                  placeholder={isLoading ? "Loading..." : "Last name"}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" defaultValue="john@galaxyco.ai" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
-                <Input id="role" defaultValue="Product Designer" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Input id="bio" defaultValue="Building the future of AI at GalaxyCo." />
+                <Input 
+                  id="email" 
+                  value={profile?.email || ""}
+                  disabled
+                  className="bg-muted/50"
+                />
+                <p className="text-xs text-muted-foreground">Email is managed by your authentication provider</p>
               </div>
             </div>
           </div>
         </CardContent>
         <CardFooter className="justify-end border-t px-6 py-4 bg-muted/20">
-          <Button>Save Profile</Button>
+          <Button onClick={handleSave} disabled={isSaving || isLoading}>
+            {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : "Save Profile"}
+          </Button>
         </CardFooter>
       </Card>
     </div>
@@ -530,6 +704,8 @@ function PlusIcon(props: any) {
       </svg>
     )
   }
+
+
 
 
 

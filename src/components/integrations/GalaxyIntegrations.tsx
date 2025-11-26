@@ -25,6 +25,7 @@ import { GalaxyIntegrationCard } from "./GalaxyIntegrationCard";
 import { cn } from "@/lib/utils";
 import { useOAuth } from "@/hooks/useOAuth";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 // Fetcher for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -127,7 +128,7 @@ export function GalaxyIntegrations() {
       await connect(provider);
       // Status will update via SWR after redirect/refresh
     } catch (error) {
-      console.error('Connect error:', error);
+      logger.error('Connect error', error);
       toast.error('Failed to connect. Please try again.');
       setConnectingId(null);
     }
@@ -150,7 +151,7 @@ export function GalaxyIntegrations() {
       await mutateStatus(); // Refresh status
       toast.success('Integration disconnected successfully');
     } catch (error) {
-      console.error('Disconnect error:', error);
+      logger.error('Disconnect error', error);
       toast.error('Failed to disconnect. Please try again.');
     }
   };

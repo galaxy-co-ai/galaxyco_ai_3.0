@@ -5,6 +5,7 @@ import { agents, tasks, agentExecutions, chatMessages, calendarEvents, users } f
 import { eq, count, desc, and } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 import { getCacheOrFetch, invalidateCache } from '@/lib/cache';
+import { logger } from '@/lib/logger';
 
 export async function getDashboardStats() {
   const { userId } = await auth();
@@ -33,7 +34,7 @@ export async function getDashboardStats() {
           hoursSaved: hoursSaved
         };
       } catch (error) {
-        console.error('Failed to fetch dashboard stats:', error);
+        logger.error('Failed to fetch dashboard stats', error);
         return { activeAgents: 0, tasksCompleted: 0, hoursSaved: 0 };
       }
     },
@@ -61,7 +62,7 @@ export async function getRecentMessages() {
 
         return []; 
       } catch (error) {
-        console.error('Failed to fetch messages:', error);
+        logger.error('Failed to fetch messages', error);
         return [];
       }
     },
@@ -80,7 +81,7 @@ export async function getDashboardAgents() {
         const data = await db.select().from(agents)
           .limit(5); // Top 5 agents
           
-        return data.map(a => ({
+        return data.map((a: typeof data[0]) => ({
           id: a.id,
           name: a.name,
           initials: a.name.substring(0, 2).toUpperCase(),
@@ -93,7 +94,7 @@ export async function getDashboardAgents() {
           conversation: [] // Empty history for summary
         }));
       } catch (error) {
-        console.error('Failed to fetch agents:', error);
+        logger.error('Failed to fetch agents', error);
         return [];
       }
     },
@@ -114,7 +115,7 @@ export async function getUpcomingEvents() {
           .orderBy(desc(calendarEvents.startTime))
           .limit(5);
           
-        return events.map(e => ({
+        return events.map((e: typeof events[0]) => ({
           id: e.id,
           title: e.title,
           time: e.startTime.toLocaleTimeString(),

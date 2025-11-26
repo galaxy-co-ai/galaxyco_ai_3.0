@@ -6,6 +6,7 @@ import { eq, desc } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const customerSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -45,11 +46,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(customersList);
   } catch (error) {
-    logger.error('Get customers error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch customers' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get customers error');
   }
 }
 
@@ -114,21 +111,7 @@ export async function POST(request: Request) {
       createdAt: customer.createdAt,
     }, { status: 201 });
   } catch (error) {
-    logger.error('Create customer error:', error);
-    
-    // Check for unique constraint violation
-    if (error instanceof Error && (error.message.includes('unique') || error.message.includes('duplicate'))) {
-      return NextResponse.json(
-        { error: 'A customer with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create customer';
-    return NextResponse.json(
-      { error: errorMessage },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create customer error');
   }
 }
 

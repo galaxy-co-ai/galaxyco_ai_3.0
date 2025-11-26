@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Note: This requires adding workflow tables to your schema
 // For now, we'll store workflows in a JSON structure
@@ -37,11 +39,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    console.error('Get workflows error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch workflows' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get workflows error');
   }
 }
 
@@ -89,13 +87,11 @@ export async function POST(request: Request) {
       createdAt: workflow.createdAt,
     }, { status: 201 });
   } catch (error) {
-    console.error('Create workflow error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create workflow error');
   }
 }
+
+
 
 
 

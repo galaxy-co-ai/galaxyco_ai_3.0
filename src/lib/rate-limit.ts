@@ -1,4 +1,5 @@
 import { redis } from '@/lib/upstash';
+import { logger } from '@/lib/logger';
 
 /**
  * Rate Limiting Utility using Upstash Redis
@@ -59,7 +60,7 @@ export async function rateLimit(
       reset,
     };
   } catch (error) {
-    console.error('Rate limit error:', error);
+    logger.error('Rate limit error', error);
     // On error, allow the request
     return {
       success: true,
@@ -97,6 +98,8 @@ export async function expensiveOperationLimit(
 ): Promise<RateLimitResult> {
   return rateLimit(identifier, 10, 60); // 10 requests per minute
 }
+
+
 
 
 

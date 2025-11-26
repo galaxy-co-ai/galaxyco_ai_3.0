@@ -2,20 +2,32 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { aiConversations, aiMessages } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { z } from 'zod';
+import { createErrorResponse } from '@/lib/api-error-handler';
+
+const chatSchema = z.object({
+  message: z.string().min(1, 'Message is required').max(10000, 'Message too long'),
+  conversationId: z.string().uuid().optional(),
+  context: z.object({
+    workspace: z.string().optional(),
+    feature: z.string().optional(),
+  }).optional(),
+});
 
 export async function POST(request: Request) {
   const startTime = Date.now();
   try {
-    console.log('[AI Chat] Request received');
+    logger.debug('[AI Chat] Request received');
     
     const { workspaceId } = await getCurrentWorkspace();
-    console.log('[AI Chat] Workspace retrieved:', workspaceId);
+    logger.debug('[AI Chat] Workspace retrieved', { workspaceId });
     
     const user = await getCurrentUser();
-    console.log('[AI Chat] User retrieved:', user.id);
+    logger.debug('[AI Chat] User retrieved', { userId: user.id });
 
     // Rate limit expensive AI operations
     const rateLimitResult = await rateLimit(
@@ -25,26 +37,30 @@ export async function POST(request: Request) {
     );
 
     if (!rateLimitResult.success) {
-      console.log('[AI Chat] Rate limit exceeded');
+      logger.warn('[AI Chat] Rate limit exceeded', { userId: user.id });
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again in a moment.' },
         { status: 429 }
       );
     }
     
-    console.log('[AI Chat] Rate limit check passed');
+    logger.debug('[AI Chat] Rate limit check passed');
 
     const body = await request.json();
-    const { message, conversationId, context } = body;
-    console.log('[AI Chat] Request body parsed:', { messageLength: message?.length, conversationId, context });
+    logger.debug('[AI Chat] Request body received');
 
-    if (!message || typeof message !== 'string') {
-      console.log('[AI Chat] Invalid message');
+    // Validate input
+    const validationResult = chatSchema.safeParse(body);
+    if (!validationResult.success) {
+      logger.warn('[AI Chat] Validation failed', { errors: validationResult.error.errors });
       return NextResponse.json(
-        { error: 'Message is required' },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
+
+    const { message, conversationId, context } = validationResult.data;
+    logger.debug('[AI Chat] Request body parsed', { messageLength: message.length, conversationId, context });
 
     // Get or create conversation
     let conversation;
@@ -94,7 +110,7 @@ export async function POST(request: Request) {
     // Get conversation history for context
     const history = await db.query.aiMessages.findMany({
       where: eq(aiMessages.conversationId, conversation.id),
-      orderBy: (messages, { asc }) => [asc(messages.createdAt)],
+      orderBy: [asc(aiMessages.createdAt)],
       limit: 20, // Last 20 messages for context
     });
 
@@ -168,7 +184,7 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
         role: 'system' as const,
         content: systemPrompt,
       },
-      ...history.slice(-10).map((msg) => ({
+      ...history.slice(-10).map((msg: typeof history[0]) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
       })),
@@ -176,14 +192,14 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
 
     // Call OpenAI - use more tokens for agent creation to allow brainstorming
     const maxTokens = context?.feature === 'agent-creation' ? 500 : 300;
-    console.log('[AI Chat] Calling OpenAI...', { messageCount: messages.length, maxTokens });
+    logger.debug('[AI Chat] Calling OpenAI', { messageCount: messages.length, maxTokens });
     const completion = await openai.chat.completions.create({
       model: 'gpt-4-turbo-preview',
       messages,
       temperature: context?.feature === 'agent-creation' ? 0.8 : 0.7, // Slightly more creative for brainstorming
       max_tokens: maxTokens,
     });
-    console.log('[AI Chat] OpenAI response received:', { 
+    logger.debug('[AI Chat] OpenAI response received', { 
       hasContent: !!completion.choices[0]?.message?.content,
       tokens: completion.usage?.total_tokens 
     });
@@ -211,7 +227,7 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
       .where(eq(aiConversations.id, conversation.id));
 
     const duration = Date.now() - startTime;
-    console.log(`[AI Chat] Success in ${duration}ms`);
+    logger.info('[AI Chat] Success', { duration: `${duration}ms`, conversationId: conversation.id });
     
     return NextResponse.json({
       conversationId: conversation.id,
@@ -229,47 +245,7 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
     });
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[AI Chat] Error after ${duration}ms:`, error);
-    
-    // Handle specific error types
-    if (error instanceof Error) {
-      // Authentication errors
-      if (error.message.includes('Unauthorized') || error.message.includes('authentication')) {
-        return NextResponse.json(
-          { error: 'Authentication required. Please sign in.' },
-          { status: 401 }
-        );
-      }
-      
-      // API key errors
-      if (error.message.includes('API key') || error.message.includes('OPENAI_API_KEY')) {
-        return NextResponse.json(
-          { error: 'AI service is not configured. Please configure OpenAI API key in environment variables.' },
-          { status: 503 }
-        );
-      }
-      
-      // Database errors
-      if (error.message.includes('database') || error.message.includes('query')) {
-        return NextResponse.json(
-          { error: 'Database error. Please try again.' },
-          { status: 500 }
-        );
-      }
-      
-      // Return the actual error message for debugging (in development)
-      if (process.env.NODE_ENV === 'development') {
-        return NextResponse.json(
-          { error: error.message || 'Failed to process message. Please try again.' },
-          { status: 500 }
-        );
-      }
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to process message. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, `AI Chat error (duration: ${duration}ms)`);
   }
 }
 

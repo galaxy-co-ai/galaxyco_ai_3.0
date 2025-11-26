@@ -45,6 +45,7 @@ import InsightsTab from "./InsightsTab";
 import AutomationsTab from "./AutomationsTab";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 export interface Lead {
   id: string;
@@ -395,11 +396,11 @@ export default function CRMDashboard({
             setLeads(transformed);
           }
         } catch (error) {
-          console.error('Failed to refresh leads:', error);
+          logger.error('Failed to refresh leads', error);
         }
       }, 1000);
     } catch (error) {
-      console.error('Failed to delete lead:', error);
+      logger.error('Failed to delete lead', error);
       toast.error(error instanceof Error ? error.message : 'Failed to delete lead. Please try again.');
     }
   };
@@ -444,11 +445,11 @@ export default function CRMDashboard({
             setContacts(transformed);
           }
         } catch (error) {
-          console.error('Failed to refresh contacts:', error);
+          logger.error('Failed to refresh contacts', error);
         }
       }, 1000);
     } catch (error) {
-      console.error('Failed to delete contact:', error);
+      logger.error('Failed to delete contact', error);
       toast.error(error instanceof Error ? error.message : 'Failed to delete contact. Please try again.');
     }
   };
@@ -1195,12 +1196,12 @@ export default function CRMDashboard({
                           });
                         }
                       } catch (error) {
-                        console.error('Failed to refresh leads:', error);
+                        logger.error('Failed to refresh leads', error);
                         // Don't show error to user - optimistic update already succeeded
                       }
                     }, 2000);
                   } catch (error) {
-                    console.error('Failed to create lead:', error);
+                    logger.error('Failed to create lead', error);
                     const errorMessage = error instanceof Error ? error.message : 'Failed to create lead. Please try again.';
                     toast.error(errorMessage);
                   } finally {
@@ -1416,11 +1417,11 @@ export default function CRMDashboard({
                           });
                         }
                       } catch (error) {
-                        console.error('Failed to refresh organizations:', error);
+                        logger.error('Failed to refresh organizations', error);
                       }
                     }, 2000);
                   } catch (error) {
-                    console.error('Failed to create organization:', error);
+                    logger.error('Failed to create organization', error);
                     toast.error(error instanceof Error ? error.message : 'Failed to create organization. Please try again.');
                   } finally {
                     setIsAddingOrg(false);
@@ -1604,11 +1605,11 @@ export default function CRMDashboard({
                           });
                         }
                       } catch (error) {
-                        console.error('Failed to refresh contacts:', error);
+                        logger.error('Failed to refresh contacts', error);
                       }
                     }, 2000);
                   } catch (error) {
-                    console.error('Failed to create contact:', error);
+                    logger.error('Failed to create contact', error);
                     toast.error(error instanceof Error ? error.message : 'Failed to create contact. Please try again.');
                   } finally {
                     setIsAddingContact(false);
@@ -1818,11 +1819,11 @@ export default function CRMDashboard({
                           });
                         }
                       } catch (error) {
-                        console.error('Failed to refresh deals:', error);
+                        logger.error('Failed to refresh deals', error);
                       }
                     }, 2000);
                   } catch (error) {
-                    console.error('Failed to create deal:', error);
+                    logger.error('Failed to create deal', error);
                     toast.error(error instanceof Error ? error.message : 'Failed to create deal. Please try again.');
                   } finally {
                     setIsAddingDeal(false);

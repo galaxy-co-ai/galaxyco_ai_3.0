@@ -2,8 +2,9 @@ import { Metadata } from 'next';
 import DashboardDashboard from '@/components/dashboard/DashboardDashboard';
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { agents, agentExecutions, tasks } from "@/db/schema";
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { agents, agentExecutions, tasks, calendarEvents } from "@/db/schema";
+import { eq, and, desc, count, sql, gte } from "drizzle-orm";
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Dashboard | GalaxyCo.ai',
@@ -53,6 +54,21 @@ export default async function DashboardPage() {
       limit: 5,
     });
 
+    // Get upcoming calendar events (next 7 days)
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+
+    const upcomingEvents = await db.query.calendarEvents.findMany({
+      where: and(
+        eq(calendarEvents.workspaceId, workspaceId),
+        gte(calendarEvents.startTime, today),
+        sql`${calendarEvents.startTime} <= ${nextWeek}`
+      ),
+      orderBy: [desc(calendarEvents.startTime)],
+      limit: 10,
+    });
+
     const dashboardData = {
       stats: {
         activeAgents: activeAgentsCount[0]?.count ?? 0,
@@ -71,12 +87,30 @@ export default async function DashboardPage() {
         role: agent.type,
         conversation: [],
       })),
-      events: [], // TODO: Implement calendar events
+      events: upcomingEvents.map((event) => ({
+        id: event.id,
+        title: event.title,
+        time: event.startTime.toISOString(),
+        type: 'meeting' as const,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        location: event.location,
+        meetingUrl: event.meetingUrl,
+        isAllDay: event.isAllDay,
+      })),
     };
 
-    return <DashboardDashboard initialData={dashboardData} />;
+    return (
+      <ErrorBoundary>
+        <DashboardDashboard initialData={dashboardData} />
+      </ErrorBoundary>
+    );
   } catch (error) {
     // Return empty data on error - component will handle gracefully
-    return <DashboardDashboard initialData={{ stats: { activeAgents: 0, tasksCompleted: 0, hoursSaved: 0 }, agents: [], events: [] }} />;
+    return (
+      <ErrorBoundary>
+        <DashboardDashboard initialData={{ stats: { activeAgents: 0, tasksCompleted: 0, hoursSaved: 0 }, agents: [], events: [] }} />
+      </ErrorBoundary>
+    );
   }
 }

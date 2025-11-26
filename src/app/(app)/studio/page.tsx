@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import StudioDashboard from '@/components/studio/StudioDashboard';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'Studio | GalaxyCo.ai',
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function StudioPage() {
-  return <StudioDashboard />;
+  return (
+    <ErrorBoundary>
+      <StudioDashboard />
+    </ErrorBoundary>
+  );
 }

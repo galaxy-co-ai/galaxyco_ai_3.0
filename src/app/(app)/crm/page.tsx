@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { contacts, customers, prospects } from "@/db/schema";
 import { eq, desc, sql, count, and, gte, sum } from "drizzle-orm";
 import CRMDashboard from "@/components/crm/CRMDashboard";
+import { logger } from "@/lib/logger";
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export default async function CRMPage() {
   try {
@@ -61,8 +63,9 @@ export default async function CRMPage() {
     };
 
     return (
-      <CRMDashboard
-        initialLeads={leads.map((lead) => ({
+      <ErrorBoundary>
+        <CRMDashboard
+          initialLeads={leads.map((lead) => ({
           id: lead.id,
           name: lead.name,
           email: lead.email || "",
@@ -122,18 +125,21 @@ export default async function CRMPage() {
           totalOrgs: stats.totalOrgs,
           totalValue: stats.totalValue,
         }}
-      />
+        />
+      </ErrorBoundary>
     );
   } catch (error) {
-    console.error("CRM page error:", error);
+    logger.error("CRM page error", error);
     return (
-      <CRMDashboard
-        initialLeads={[]}
-        initialOrganizations={[]}
-        initialContacts={[]}
-        initialDeals={[]}
-        stats={{ totalLeads: 0, hotLeads: 0, totalOrgs: 0, totalValue: 0 }}
-      />
+      <ErrorBoundary>
+        <CRMDashboard
+          initialLeads={[]}
+          initialOrganizations={[]}
+          initialContacts={[]}
+          initialDeals={[]}
+          stats={{ totalLeads: 0, hotLeads: 0, totalOrgs: 0, totalValue: 0 }}
+        />
+      </ErrorBoundary>
     );
   }
 }
