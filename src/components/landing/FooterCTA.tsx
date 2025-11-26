@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -8,16 +9,33 @@ interface FooterCTAProps {
   onEnterApp: () => void;
 }
 
-// Animated stars background for CTA
+interface StarData {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  duration: number;
+  delay: number;
+}
+
+// Animated stars background for CTA - generates positions only on client to avoid hydration mismatch
 const CTAStarField = () => {
-  const stars = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 2 + 1,
-    duration: Math.random() * 3 + 2,
-    delay: Math.random() * 2
-  }));
+  const [stars, setStars] = useState<StarData[]>([]);
+
+  useEffect(() => {
+    // Generate star positions only on client side to avoid hydration mismatch
+    const generatedStars = Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2 + 1,
+      duration: Math.random() * 3 + 2,
+      delay: Math.random() * 2
+    }));
+    setStars(generatedStars);
+  }, []);
+
+  if (stars.length === 0) return null;
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">

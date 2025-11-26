@@ -78,7 +78,7 @@ export default function ContactDetailView({ contact, formatDate, onDelete }: Con
           {contact.title && (
             <p className="text-xs text-slate-600 mb-2">{contact.title}</p>
           )}
-          {contact.tags.length > 0 && (
+          {contact.tags && contact.tags.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap mt-2">
               {contact.tags.map((tag) => (
                 <Badge
@@ -146,7 +146,7 @@ export default function ContactDetailView({ contact, formatDate, onDelete }: Con
       </div>
 
       {/* Tags */}
-      {contact.tags.length > 0 && (
+      {contact.tags && contact.tags.length > 0 && (
         <Card className="p-4">
           <h3 className="text-xs font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
             <Tag className="h-3.5 w-3.5" />
@@ -188,6 +188,8 @@ export default function ContactDetailView({ contact, formatDate, onDelete }: Con
     </div>
   );
 }
+
+
 
 
 

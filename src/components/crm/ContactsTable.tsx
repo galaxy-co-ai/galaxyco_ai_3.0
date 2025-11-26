@@ -80,7 +80,7 @@ export default function ContactsTable({
                 )}
               </div>
 
-              {contact.tags.length > 0 && (
+              {contact.tags && contact.tags.length > 0 && (
                 <div className="flex items-center gap-2 mt-3">
                   {contact.tags.slice(0, 3).map((tag) => (
                     <Badge
@@ -100,6 +100,8 @@ export default function ContactsTable({
     </div>
   );
 }
+
+
 
 
 

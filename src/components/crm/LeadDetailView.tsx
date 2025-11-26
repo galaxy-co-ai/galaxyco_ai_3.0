@@ -207,7 +207,7 @@ export default function LeadDetailView({ lead, formatDate, formatCurrency, onDel
       </div>
 
       {/* Source & Tags */}
-      {(lead.source || lead.tags.length > 0) && (
+      {(lead.source || (lead.tags && lead.tags.length > 0)) && (
         <Card className="p-4">
           <h3 className="text-xs font-semibold text-slate-900 mb-3">Details</h3>
           <div className="space-y-2">
@@ -217,7 +217,7 @@ export default function LeadDetailView({ lead, formatDate, formatCurrency, onDel
                 <span className="text-slate-700">{lead.source}</span>
               </div>
             )}
-            {lead.tags.length > 0 && (
+            {lead.tags && lead.tags.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
                 <Tag className="h-3 w-3 text-slate-400" />
                 {lead.tags.map((tag) => (

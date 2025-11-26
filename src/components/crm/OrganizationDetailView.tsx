@@ -183,7 +183,7 @@ export default function OrganizationDetailView({
       </div>
 
       {/* Tags */}
-      {organization.tags.length > 0 && (
+      {organization.tags && organization.tags.length > 0 && (
         <Card className="p-4">
           <h3 className="text-xs font-semibold text-slate-900 mb-3 flex items-center gap-1.5">
             <Tag className="h-3.5 w-3.5" />
