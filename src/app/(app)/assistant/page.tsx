@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { Card } from "@/components/ui/card";
@@ -49,7 +49,7 @@ interface Conversation {
   messageCount: number;
 }
 
-export default function AssistantPage() {
+function AssistantContent() {
   const searchParams = useSearchParams();
   const showHistoryParam = searchParams.get("history") === "true";
   
@@ -645,5 +645,26 @@ export default function AssistantPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function AssistantLoading() {
+  return (
+    <div className="h-full bg-gray-50/50 flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-4" />
+        <p className="text-muted-foreground">Loading assistant...</p>
+      </div>
+    </div>
+  );
+}
+
+// Default export with Suspense boundary for useSearchParams
+export default function AssistantPage() {
+  return (
+    <Suspense fallback={<AssistantLoading />}>
+      <AssistantContent />
+    </Suspense>
   );
 }
