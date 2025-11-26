@@ -5,6 +5,14 @@ import { contacts, prospects, projects } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
+import { z } from 'zod';
+
+const insightsSchema = z.object({
+  type: z.enum(['pipeline', 'contacts', 'scoring']).optional().default('pipeline'),
+  context: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +28,17 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { type = 'pipeline', context } = body;
+
+    // Validate input
+    const validationResult = insightsSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const { type, context } = validationResult.data;
 
     // Gather CRM data
     const contactsList = await db.query.contacts.findMany({
@@ -46,29 +64,29 @@ export async function POST(request: Request) {
       contacts: contactsList.length,
       prospects: {
         total: prospectsList.length,
-        byStage: prospectsList.reduce((acc, p) => {
+        byStage: prospectsList.reduce((acc: Record<string, number>, p: typeof prospectsList[0]) => {
           acc[p.stage] = (acc[p.stage] || 0) + 1;
           return acc;
         }, {} as Record<string, number>),
-        totalValue: prospectsList.reduce((sum, p) => sum + (p.estimatedValue || 0), 0),
+        totalValue: prospectsList.reduce((sum: number, p: typeof prospectsList[0]) => sum + (p.estimatedValue || 0), 0),
       },
       projects: {
         total: projectsList.length,
-        byStatus: projectsList.reduce((acc, p) => {
+        byStatus: projectsList.reduce((acc: Record<string, number>, p: typeof projectsList[0]) => {
           acc[p.status] = (acc[p.status] || 0) + 1;
           return acc;
         }, {} as Record<string, number>),
       },
-      recentContacts: contactsList.slice(0, 5).map(c => ({
+      recentContacts: contactsList.slice(0, 5).map((c: typeof contactsList[0]) => ({
         name: `${c.firstName} ${c.lastName}`,
         company: c.company,
         lastContacted: c.lastContactedAt,
       })),
       topDeals: prospectsList
-        .filter(p => p.estimatedValue)
-        .sort((a, b) => (b.estimatedValue || 0) - (a.estimatedValue || 0))
+        .filter((p: typeof prospectsList[0]) => p.estimatedValue)
+        .sort((a: typeof prospectsList[0], b: typeof prospectsList[0]) => (b.estimatedValue || 0) - (a.estimatedValue || 0))
         .slice(0, 5)
-        .map(p => ({
+        .map((p: typeof prospectsList[0]) => ({
           name: p.name,
           company: p.company,
           value: p.estimatedValue,
@@ -152,13 +170,11 @@ Provide:
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('AI insights error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate insights' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Generate insights error');
   }
 }
+
+
 
 
 

@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Temporary storage (same as route.ts)
 const workflows = new Map<string, any>();
 const executions = new Map<string, any>();
+
+const updateWorkflowSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  nodes: z.array(z.any()).optional(),
+  edges: z.array(z.any()).optional(),
+  isActive: z.boolean().optional(),
+});
 
 export async function GET(
   request: Request,
@@ -25,11 +35,7 @@ export async function GET(
 
     return NextResponse.json(workflow);
   } catch (error) {
-    console.error('Get workflow error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get workflow error');
   }
 }
 
@@ -42,6 +48,15 @@ export async function PUT(
     const { id: workflowId } = await params;
     const body = await request.json();
 
+    // Validate input
+    const validationResult = updateWorkflowSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.errors },
+        { status: 400 }
+      );
+    }
+
     const workflow = workflows.get(workflowId);
 
     if (!workflow || workflow.workspaceId !== workspaceId) {
@@ -51,10 +66,12 @@ export async function PUT(
       );
     }
 
+    const data = validationResult.data;
+
     // Update workflow
     const updated = {
       ...workflow,
-      ...body,
+      ...data,
       updatedAt: new Date().toISOString(),
       version: workflow.version + 1,
     };
@@ -63,11 +80,7 @@ export async function PUT(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error('Update workflow error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Update workflow error');
   }
 }
 
@@ -92,11 +105,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete workflow error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete workflow error');
   }
 }
 

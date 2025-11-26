@@ -5,6 +5,8 @@ import { contacts, customers, prospects, projects, tasks, calendarEvents } from 
 import { eq, and, desc, or, like } from 'drizzle-orm';
 import { getCacheOrFetch } from '@/lib/cache';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(request: Request) {
   try {
@@ -42,7 +44,7 @@ export async function GET(request: Request) {
               limit: 100,
             });
 
-            return contactsList.map((contact) => ({
+            return contactsList.map((contact: typeof contactsList[0]) => ({
               id: contact.id,
               name: `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || contact.email,
               company: contact.company || '',
@@ -79,7 +81,7 @@ export async function GET(request: Request) {
               limit: 100,
             });
 
-            return prospectsList.map((prospect) => ({
+            return prospectsList.map((prospect: typeof prospectsList[0]) => ({
               id: prospect.id,
               title: prospect.name,
               company: prospect.company || '',
@@ -102,7 +104,7 @@ export async function GET(request: Request) {
               limit: 100,
             });
 
-            return projectsList.map((project) => ({
+            return projectsList.map((project: typeof projectsList[0]) => ({
               id: project.id,
               name: project.name,
               client: '',
@@ -128,11 +130,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
-    console.error('CRM API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch CRM data' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get CRM data error');
   }
 }
 

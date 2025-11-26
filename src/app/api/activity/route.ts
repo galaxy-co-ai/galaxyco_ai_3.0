@@ -3,6 +3,10 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { agentExecutions, agents } from '@/db/schema';
 import { eq, and, desc, count, sql, gte, lte } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
+
+type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 export async function GET(request: Request) {
   try {
@@ -22,7 +26,11 @@ export async function GET(request: Request) {
     const conditions = [eq(agentExecutions.workspaceId, workspaceId)];
 
     if (status && status !== 'all') {
-      conditions.push(eq(agentExecutions.status, status as any));
+      // Validate status is a valid execution status
+      const validStatuses: ExecutionStatus[] = ['pending', 'running', 'completed', 'failed', 'cancelled'];
+      if (validStatuses.includes(status as ExecutionStatus)) {
+        conditions.push(eq(agentExecutions.status, status as ExecutionStatus));
+      }
     }
 
     if (agentId && agentId !== 'all') {
@@ -66,7 +74,7 @@ export async function GET(request: Request) {
     // Filter by search if provided (client-side filtering for agent name)
     let filteredExecutions = executions;
     if (search) {
-      filteredExecutions = executions.filter((exec) =>
+      filteredExecutions = executions.filter((exec: typeof executions[0]) =>
         exec.agent.name.toLowerCase().includes(search.toLowerCase())
       );
     }
@@ -87,13 +95,13 @@ export async function GET(request: Request) {
       .where(eq(agentExecutions.workspaceId, workspaceId))
       .groupBy(agentExecutions.status);
 
-    const statsMap = stats.reduce((acc, stat) => {
-      acc[stat.status] = stat.count;
+    const statsMap = stats.reduce((acc: Record<string, number>, stat: typeof stats[0]) => {
+      acc[stat.status] = stat.count as number;
       return acc;
     }, {} as Record<string, number>);
 
     // Calculate success rate
-    const total = Object.values(statsMap).reduce((sum, count) => sum + count, 0);
+    const total = Object.values(statsMap).reduce((sum: number, count: number) => sum + count, 0);
     const successCount = statsMap['completed'] || 0;
     const successRate = total > 0 ? (successCount / total) * 100 : 0;
 
@@ -170,13 +178,11 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error('Activity API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch activity data' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get activity error');
   }
 }
+
+
 
 
 

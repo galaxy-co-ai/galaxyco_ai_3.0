@@ -6,6 +6,7 @@ import { eq, and, desc } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const prospectSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -39,11 +40,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(prospectsList);
   } catch (error) {
-    logger.error('Get prospects error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch prospects' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get prospects error');
   }
 }
 
@@ -106,22 +103,7 @@ export async function POST(request: Request) {
       createdAt: prospect.createdAt,
     }, { status: 201 });
   } catch (error) {
-    logger.error('Create prospect error:', error);
-    
-    // Check for unique constraint violation (duplicate email)
-    if (error instanceof Error && (error.message.includes('unique') || error.message.includes('duplicate'))) {
-      return NextResponse.json(
-        { error: 'A prospect with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    // More detailed error for debugging
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create prospect';
-    return NextResponse.json(
-      { error: errorMessage, details: error instanceof Error ? error.stack : undefined },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create prospect error');
   }
 }
 

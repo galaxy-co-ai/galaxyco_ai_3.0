@@ -1,13 +1,19 @@
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { aiConversations, aiMessages, aiUserPreferences } from '@/db/schema';
-import { eq, and, desc, sql, ne } from 'drizzle-orm';
+import { eq, and, desc, asc, sql, ne } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
 // Note: Removed 'edge' runtime to allow database access
 // Edge runtime has limitations with some database operations
+
+const streamMessageSchema = z.object({
+  message: z.string().min(1, 'Message is required'),
+  conversationId: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -92,14 +98,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { message, conversationId } = body;
 
-    if (!message) {
+    // Validate input
+    const validationResult = streamMessageSchema.safeParse(body);
+    if (!validationResult.success) {
       const encoder = new TextEncoder();
       const errorStream = new ReadableStream({
         start(controller) {
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ error: 'Message is required' })}\n\n`)
+            encoder.encode(`data: ${JSON.stringify({ 
+              error: 'Validation failed', 
+              details: validationResult.error.errors 
+            })}\n\n`)
           );
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
@@ -114,6 +124,8 @@ export async function POST(request: Request) {
         },
       });
     }
+
+    const { message, conversationId } = validationResult.data;
 
     // Get or create conversation
     let conversation;
@@ -230,7 +242,7 @@ export async function POST(request: Request) {
     try {
       history = await db.query.aiMessages.findMany({
         where: eq(aiMessages.conversationId, conversation.id),
-        orderBy: (messages, { asc }) => [asc(messages.createdAt)],
+        orderBy: [asc(aiMessages.createdAt)],
         limit: 25,
       });
     } catch (dbError) {
@@ -353,9 +365,11 @@ Remember: You're their partner. Help them accomplish their goal, one step at a t
           
           for await (const chunk of stream) {
             // Check for errors in the chunk
-            if ((chunk as any).error) {
-              const errorMsg = (chunk as any).error?.message || 'An error occurred while generating the response';
-              logger.error('OpenAI stream error', (chunk as any).error);
+            // OpenAI stream chunks can have an error property
+            const chunkWithError = chunk as { error?: { message?: string } };
+            if (chunkWithError.error) {
+              const errorMsg = chunkWithError.error.message || 'An error occurred while generating the response';
+              logger.error('OpenAI stream error', chunkWithError.error);
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify({ error: errorMsg })}\n\n`)
               );

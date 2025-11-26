@@ -3,6 +3,8 @@ import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { aiConversations, aiMessages } from '@/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(
   request: Request,
@@ -41,7 +43,7 @@ export async function GET(
       lastMessageAt: conversation.lastMessageAt,
       messageCount: conversation.messageCount,
       isPinned: conversation.isPinned,
-      messages: conversation.messages.map((msg) => ({
+      messages: conversation.messages.map((msg: typeof conversation.messages[0]) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
@@ -49,11 +51,7 @@ export async function GET(
       })),
     });
   } catch (error) {
-    console.error('Get conversation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch conversation' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get conversation error');
   }
 }
 
@@ -94,11 +92,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete conversation error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete conversation' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete conversation error');
   }
 }
 

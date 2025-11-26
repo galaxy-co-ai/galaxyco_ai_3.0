@@ -5,6 +5,8 @@ import { contacts } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const contactSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -29,7 +31,7 @@ export async function GET(request: Request) {
     });
 
     // Transform to match frontend expectations
-    const transformed = contactsList.map((c) => ({
+    const transformed = contactsList.map((c: typeof contactsList[0]) => ({
       id: c.id,
       name: `${c.firstName || ''} ${c.lastName || ''}`.trim() || c.email,
       firstName: c.firstName,
@@ -54,11 +56,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(transformed);
   } catch (error) {
-    console.error('Get contacts error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch contacts' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get contacts error');
   }
 }
 
@@ -96,7 +94,7 @@ export async function POST(request: Request) {
 
     // Invalidate cache in background (non-blocking)
     invalidateCRMCache(userId).catch(err => {
-      console.error('Cache invalidation failed (non-critical):', err);
+      logger.error('Cache invalidation failed (non-critical)', err);
     });
 
     return NextResponse.json({
@@ -111,20 +109,7 @@ export async function POST(request: Request) {
       createdAt: contact.createdAt,
     }, { status: 201 });
   } catch (error) {
-    console.error('Create contact error:', error);
-    
-    // Check for unique constraint violation (duplicate email)
-    if (error instanceof Error && error.message.includes('unique')) {
-      return NextResponse.json(
-        { error: 'A contact with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to create contact' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create contact error');
   }
 }
 

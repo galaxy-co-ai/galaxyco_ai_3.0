@@ -5,6 +5,8 @@ import { agents, agentExecutions, tasks, customers, prospects, contacts } from '
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import { getCacheOrFetch } from '@/lib/cache';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(request: Request) {
   try {
@@ -89,14 +91,14 @@ export async function GET(request: Request) {
             tasksCompleted: completedTasksCount[0]?.count ?? 0,
             hoursSaved,
           },
-          recentActivity: recentExecutions.map((exec) => ({
+          recentActivity: recentExecutions.map((exec: typeof recentExecutions[0]) => ({
             id: exec.id,
             agentName: exec.agent.name,
             agentType: exec.agent.type,
             status: exec.status,
             createdAt: exec.createdAt,
           })),
-          pipeline: pipelineStats.reduce((acc, stat) => {
+          pipeline: pipelineStats.reduce((acc: Record<string, number>, stat: typeof pipelineStats[0]) => {
             acc[stat.stage] = stat.count;
             return acc;
           }, {} as Record<string, number>),
@@ -112,11 +114,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (error) {
-    console.error('Dashboard API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch dashboard data' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get dashboard error');
   }
 }
 

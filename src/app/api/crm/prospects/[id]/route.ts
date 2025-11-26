@@ -5,6 +5,7 @@ import { prospects } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function DELETE(
   request: Request,
@@ -48,13 +49,11 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('Delete prospect error:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to delete lead' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete prospect error');
   }
 }
+
+
 
 
 

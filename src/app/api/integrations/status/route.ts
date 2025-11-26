@@ -3,6 +3,8 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { integrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET() {
   try {
@@ -14,15 +16,15 @@ export async function GET() {
 
     // Map to show connection status
     const integrationStatus = {
-      google: workspaceIntegrations.some((i) => i.provider === 'google' && i.status === 'active'),
-      microsoft: workspaceIntegrations.some((i) => i.provider === 'microsoft' && i.status === 'active'),
-      slack: workspaceIntegrations.some((i) => i.provider === 'slack' && i.status === 'active'),
-      salesforce: workspaceIntegrations.some((i) => i.provider === 'salesforce' && i.status === 'active'),
-      hubspot: workspaceIntegrations.some((i) => i.provider === 'hubspot' && i.status === 'active'),
+      google: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'google' && i.status === 'active'),
+      microsoft: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'microsoft' && i.status === 'active'),
+      slack: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'slack' && i.status === 'active'),
+      salesforce: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'salesforce' && i.status === 'active'),
+      hubspot: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'hubspot' && i.status === 'active'),
     };
 
     return NextResponse.json({
-      integrations: workspaceIntegrations.map((i) => ({
+      integrations: workspaceIntegrations.map((i: typeof workspaceIntegrations[0]) => ({
         id: i.id,
         provider: i.provider,
         status: i.status,
@@ -32,11 +34,7 @@ export async function GET() {
       status: integrationStatus,
     });
   } catch (error) {
-    console.error('Get integrations error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch integrations' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get integrations error');
   }
 }
 

@@ -5,6 +5,8 @@ import { contacts } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const updateContactSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -42,11 +44,7 @@ export async function GET(
 
     return NextResponse.json(contact);
   } catch (error) {
-    console.error('Get contact error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch contact' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get contact error');
   }
 }
 
@@ -104,11 +102,7 @@ export async function PUT(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error('Update contact error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update contact' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Update contact error');
   }
 }
 
@@ -148,11 +142,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Delete contact error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete contact' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete contact error');
   }
 }
 

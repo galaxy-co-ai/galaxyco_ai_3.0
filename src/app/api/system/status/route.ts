@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkBackendIntegrations, getBackendHealthScore } from '@/lib/integration-status';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * Backend Integration Status API
@@ -19,15 +20,11 @@ export async function GET() {
       integrations,
     });
   } catch (error) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to check integration status',
-      },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get system status error');
   }
 }
+
+
 
 
 

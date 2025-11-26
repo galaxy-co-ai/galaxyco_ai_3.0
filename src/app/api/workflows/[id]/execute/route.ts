@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
+import { z } from 'zod';
 
 // Temporary storage
 const workflows = new Map<string, any>();
 const executions = new Map<string, any>();
+
+const executeWorkflowSchema = z.object({
+  input: z.record(z.unknown()).optional().default({}),
+});
 
 // Simple workflow execution engine
 async function executeNode(node: any, input: any, context: any): Promise<any> {
@@ -116,7 +123,17 @@ export async function POST(
     }
 
     const body = await request.json();
-    const input = body.input || {};
+
+    // Validate input
+    const validationResult = executeWorkflowSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationResult.error.errors },
+        { status: 400 }
+      );
+    }
+
+    const input = validationResult.data.input;
 
     // Create execution record
     const executionId = `exec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -209,11 +226,7 @@ export async function POST(
       }, { status: 500 });
     }
   } catch (error) {
-    console.error('Workflow execution error:', error);
-    return NextResponse.json(
-      { error: 'Failed to execute workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Workflow execution error');
   }
 }
 
