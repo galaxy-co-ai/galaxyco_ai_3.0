@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Home,
   LayoutDashboard,
   Workflow,
   BookOpen,
@@ -27,7 +26,6 @@ import { Separator } from "@/components/ui/separator";
 
 // Main navigation items
 const mainNavItems = [
-  { icon: Home, label: "Landing", href: "/", id: "landing" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", id: "dashboard" },
   { icon: Activity, label: "Activity", href: "/activity", id: "activity" },
   { icon: Workflow, label: "Studio", href: "/studio", id: "studio" },
@@ -88,14 +86,14 @@ export function Sidebar({ className, user }: SidebarProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        <div className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
+        <Link href="/" className={cn("flex items-center gap-2 hover:opacity-80 transition-opacity", isCollapsed && "justify-center")}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
             <Bot className="h-5 w-5 text-sidebar-primary-foreground" />
           </div>
           {!isCollapsed && (
-            <h2 className="text-base font-semibold text-sidebar-foreground">GalaxyCo.ai</h2>
+            <h2 className="text-base font-semibold text-sidebar-foreground cursor-pointer">GalaxyCo.ai</h2>
           )}
-        </div>
+        </Link>
         <Button
           variant="ghost"
           size="icon"
