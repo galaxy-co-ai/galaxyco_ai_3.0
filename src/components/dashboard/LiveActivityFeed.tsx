@@ -211,15 +211,37 @@ export function LiveActivityFeed() {
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-1.5">
           {filteredActivities.length === 0 ? (
-            <div className="text-center py-12">
-              <Activity className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-50" />
-              <p className="text-sm text-muted-foreground">
-                {filterStatus ? 'No matching activities' : 'No activity yet'}
-              </p>
-              {isPaused && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Activity feed is paused
-                </p>
+            <div className="text-center py-12 px-6">
+              {filterStatus ? (
+                <>
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                    <Filter className="h-6 w-6 text-slate-400" />
+                  </div>
+                  <h3 className="font-medium text-gray-900 mb-1">No matching activities</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    No events match your current filter.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setFilterStatus(null)}
+                    className="text-xs"
+                  >
+                    Clear filter
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
+                    <Zap className="h-7 w-7 text-blue-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Waiting for activity</h3>
+                  <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
+                    {isPaused 
+                      ? 'Feed is paused. Click play to resume.' 
+                      : 'When your agents run, their activity will stream here in real-time.'}
+                  </p>
+                </>
               )}
             </div>
           ) : (

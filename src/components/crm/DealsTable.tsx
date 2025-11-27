@@ -2,7 +2,8 @@
 
 import { Deal } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
-import { Building2, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, TrendingUp, Calendar, DollarSign, Plus, Rocket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DealsTableProps {
@@ -41,12 +42,24 @@ export default function DealsTable({
 
   if (deals.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-center px-6">
-        <div>
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-            <DollarSign className="h-6 w-6 text-muted-foreground" />
+      <div className="flex items-center justify-center h-full text-center px-6 py-8">
+        <div className="max-w-xs">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mx-auto mb-4">
+            <Rocket className="h-8 w-8 text-green-600" />
           </div>
-          <p className="text-sm text-muted-foreground">No deals found</p>
+          <h3 className="font-semibold text-gray-900 mb-2">Close your first deal</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Track opportunities from first contact to closed-won. See your revenue grow!
+          </p>
+          <div className="flex flex-col gap-2">
+            <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700">
+              <Plus className="h-4 w-4" />
+              Create Deal
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Deals can be created from leads or contacts
+            </p>
+          </div>
         </div>
       </div>
     );

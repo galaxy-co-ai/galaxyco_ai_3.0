@@ -2,8 +2,9 @@
 
 import { Lead } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sparkles, Mail, Phone } from "lucide-react";
+import { Sparkles, Mail, Phone, UserPlus, Target, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LeadsTableProps {
@@ -51,12 +52,24 @@ export default function LeadsTable({
 
   if (leads.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-center px-6">
-        <div>
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-            <Mail className="h-6 w-6 text-muted-foreground" />
+      <div className="flex items-center justify-center h-full text-center px-6 py-8">
+        <div className="max-w-xs">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
+            <Target className="h-8 w-8 text-blue-600" />
           </div>
-          <p className="text-sm text-muted-foreground">No leads found</p>
+          <h3 className="font-semibold text-gray-900 mb-2">Start building your pipeline</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Add your first lead to begin tracking prospects and growing your business.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700">
+              <UserPlus className="h-4 w-4" />
+              Add Your First Lead
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Or ask Neptune: "Create a lead for..."
+            </p>
+          </div>
         </div>
       </div>
     );

@@ -2,8 +2,9 @@
 
 import { Contact } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, Building2 } from "lucide-react";
+import { Mail, Phone, Building2, Users, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ContactsTableProps {
@@ -23,12 +24,24 @@ export default function ContactsTable({
 
   if (contacts.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-center px-6">
-        <div>
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-            <Mail className="h-6 w-6 text-muted-foreground" />
+      <div className="flex items-center justify-center h-full text-center px-6 py-8">
+        <div className="max-w-xs">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-4">
+            <Users className="h-8 w-8 text-emerald-600" />
           </div>
-          <p className="text-sm text-muted-foreground">No contacts found</p>
+          <h3 className="font-semibold text-gray-900 mb-2">Build your network</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Contacts are the people you do business with. Import or add them here.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+              <UserPlus className="h-4 w-4" />
+              Add Contact
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Import from CSV or sync with your email
+            </p>
+          </div>
         </div>
       </div>
     );

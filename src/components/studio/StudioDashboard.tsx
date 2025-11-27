@@ -1657,10 +1657,25 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
                         </Button>
                       </div>
                     ) : myAgents.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Bot className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No workflows yet</p>
-                        <p className="text-xs mt-1">Create your first workflow to get started</p>
+                      <div className="text-center py-10 px-6">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center mx-auto mb-4">
+                          <Bot className="h-8 w-8 text-emerald-600" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-2">Create your first workflow</h3>
+                        <p className="text-sm text-muted-foreground mb-4 max-w-[240px] mx-auto">
+                          Build AI agents that automate tasks like email handling, lead scoring, and data processing.
+                        </p>
+                        <div className="flex flex-col gap-2 items-center">
+                          <Button 
+                            size="sm" 
+                            className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                            onClick={() => setActiveTab('create')}
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            Start with Neptune
+                          </Button>
+                          <span className="text-xs text-muted-foreground">or pick a template →</span>
+                        </div>
                       </div>
                     ) : (
                       myAgents.map((agent) => {

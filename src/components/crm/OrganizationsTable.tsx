@@ -2,8 +2,9 @@
 
 import { Organization } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Building2, Mail, Phone, Globe } from "lucide-react";
+import { Building2, Mail, Phone, Globe, Plus, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrganizationsTableProps {
@@ -42,12 +43,24 @@ export default function OrganizationsTable({
 
   if (organizations.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-center px-6">
-        <div>
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-            <Building2 className="h-6 w-6 text-muted-foreground" />
+      <div className="flex items-center justify-center h-full text-center px-6 py-8">
+        <div className="max-w-xs">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 flex items-center justify-center mx-auto mb-4">
+            <Briefcase className="h-8 w-8 text-purple-600" />
           </div>
-          <p className="text-sm text-muted-foreground">No organizations found</p>
+          <h3 className="font-semibold text-gray-900 mb-2">Track your accounts</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Organizations help you manage company relationships and track multiple contacts per account.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Button size="sm" className="gap-2 bg-purple-600 hover:bg-purple-700">
+              <Plus className="h-4 w-4" />
+              Add Organization
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Great for B2B sales and account management
+            </p>
+          </div>
         </div>
       </div>
     );

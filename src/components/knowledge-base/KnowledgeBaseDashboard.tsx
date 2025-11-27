@@ -788,9 +788,42 @@ export default function KnowledgeBaseDashboard({
                         );
                       })
                     ) : (
-                      <div className="text-center py-12 text-muted-foreground text-sm">
-                        <FileText className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                        <p>No {activeTab === 'favorites' ? 'favorites' : activeTab === 'recent' ? 'recent items' : 'articles'} found{searchQuery ? ' matching your search' : ''}.</p>
+                      <div className="text-center py-12 px-6">
+                        {activeTab === 'favorites' ? (
+                          <>
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center mx-auto mb-4">
+                              <Star className="h-7 w-7 text-amber-500" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-2">No favorites yet</h3>
+                            <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
+                              Star your most important documents to access them quickly here.
+                            </p>
+                          </>
+                        ) : activeTab === 'recent' ? (
+                          <>
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center mx-auto mb-4">
+                              <Clock className="h-7 w-7 text-cyan-600" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-2">Nothing recent</h3>
+                            <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
+                              Documents you view or edit will show up here for quick access.
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
+                              <FileText className="h-7 w-7 text-blue-600" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-2">
+                              {searchQuery ? 'No matches found' : 'No articles yet'}
+                            </h3>
+                            <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
+                              {searchQuery 
+                                ? `Try a different search term or browse categories.`
+                                : `Go to the Create tab to start building your knowledge base.`}
+                            </p>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1001,9 +1034,18 @@ export default function KnowledgeBaseDashboard({
                         );
                       })
                     ) : (
-                      <div className="text-center py-12 text-muted-foreground text-sm">
-                        <Folder className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                        <p>No categories found.</p>
+                      <div className="text-center py-12 px-6">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 flex items-center justify-center mx-auto mb-4">
+                          <Folder className="h-7 w-7 text-purple-600" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-2">Organize your content</h3>
+                        <p className="text-sm text-muted-foreground max-w-[200px] mx-auto mb-4">
+                          Categories help you group related documents for easy navigation.
+                        </p>
+                        <Button size="sm" variant="outline" className="gap-2 text-purple-700 border-purple-200 hover:bg-purple-50">
+                          <Plus className="h-4 w-4" />
+                          Create Category
+                        </Button>
                       </div>
                     )}
                   </div>
@@ -1070,9 +1112,14 @@ export default function KnowledgeBaseDashboard({
                               })}
                             </div>
                           ) : (
-                            <div className="text-center py-12 text-muted-foreground text-sm">
-                              <FileText className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                              <p>No documents in this category.</p>
+                            <div className="text-center py-12 px-6">
+                              <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                                <FileText className="h-6 w-6 text-slate-400" />
+                              </div>
+                              <h3 className="font-medium text-gray-900 mb-1">Empty category</h3>
+                              <p className="text-sm text-muted-foreground max-w-[180px] mx-auto">
+                                Add documents to this category to keep things organized.
+                              </p>
                             </div>
                           );
                         })()}

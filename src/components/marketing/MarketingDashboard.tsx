@@ -710,9 +710,18 @@ Be conversational and helpful. If they're testing or asking if something works, 
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-12 text-muted-foreground text-sm">
-                          <Megaphone className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                          <p>No campaigns found.</p>
+                        <div className="text-center py-12 px-6">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center mx-auto mb-4">
+                            <Megaphone className="h-7 w-7 text-pink-600" />
+                          </div>
+                          <h3 className="font-semibold text-gray-900 mb-2">Launch your first campaign</h3>
+                          <p className="text-sm text-muted-foreground mb-4 max-w-[200px] mx-auto">
+                            Create targeted marketing campaigns to reach your audience.
+                          </p>
+                          <Button size="sm" className="gap-2 bg-pink-600 hover:bg-pink-700">
+                            <Plus className="h-4 w-4" />
+                            New Campaign
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -1111,9 +1120,18 @@ Be conversational and helpful. If they're testing or asking if something works, 
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-12 text-muted-foreground text-sm">
-                          <FileText className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                          <p>No content found.</p>
+                        <div className="text-center py-12 px-6">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center mx-auto mb-4">
+                            <FileText className="h-7 w-7 text-orange-600" />
+                          </div>
+                          <h3 className="font-semibold text-gray-900 mb-2">Create your first content</h3>
+                          <p className="text-sm text-muted-foreground mb-4 max-w-[200px] mx-auto">
+                            Write blog posts, social media content, and email templates with Neptune.
+                          </p>
+                          <Button size="sm" className="gap-2 bg-orange-600 hover:bg-orange-700">
+                            <Sparkles className="h-4 w-4" />
+                            Generate Content
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -1424,9 +1442,18 @@ Be conversational and helpful. If they're testing or asking if something works, 
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-12 text-muted-foreground text-sm">
-                          <Share2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                          <p>No channels found.</p>
+                        <div className="text-center py-12 px-6">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-violet-100 flex items-center justify-center mx-auto mb-4">
+                            <Share2 className="h-7 w-7 text-indigo-600" />
+                          </div>
+                          <h3 className="font-semibold text-gray-900 mb-2">Connect your channels</h3>
+                          <p className="text-sm text-muted-foreground mb-4 max-w-[200px] mx-auto">
+                            Link social media, email providers, and other platforms to distribute content.
+                          </p>
+                          <Button size="sm" className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                            <Plus className="h-4 w-4" />
+                            Add Channel
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -1849,9 +1876,23 @@ Be conversational and helpful. If they're testing or asking if something works, 
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-12 text-muted-foreground text-sm">
-                          <BarChart3 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                          <p>No campaigns found.</p>
+                        <div className="text-center py-12 px-6">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-100 to-teal-100 flex items-center justify-center mx-auto mb-4">
+                            <BarChart3 className="h-7 w-7 text-cyan-600" />
+                          </div>
+                          <h3 className="font-semibold text-gray-900 mb-2">No campaigns to analyze</h3>
+                          <p className="text-sm text-muted-foreground mb-4 max-w-[200px] mx-auto">
+                            Once you launch campaigns, their performance metrics will appear here.
+                          </p>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="gap-2"
+                            onClick={() => setActiveTab('campaigns')}
+                          >
+                            <Megaphone className="h-4 w-4" />
+                            Go to Campaigns
+                          </Button>
                         </div>
                       )}
                     </div>

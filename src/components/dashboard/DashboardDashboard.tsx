@@ -2360,8 +2360,19 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                     </div>
                   ) : agentsList.length === 0 ? (
                     <div className="p-8 text-center">
-                      <Bot className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">No agents found</p>
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
+                        <Bot className="h-7 w-7 text-blue-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">No active agents</h3>
+                      <p className="text-sm text-muted-foreground mb-4 max-w-[220px] mx-auto">
+                        Agents automate repetitive tasks. Create one in the Studio to get started.
+                      </p>
+                      <Link href="/studio" passHref>
+                        <Button size="sm" variant="outline" className="gap-2 text-blue-600 border-blue-200 hover:bg-blue-50">
+                          <Sparkles className="h-4 w-4" />
+                          Go to Studio
+                        </Button>
+                      </Link>
                     </div>
                   ) : (
                     agentsList.map((agent, index) => (
