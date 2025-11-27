@@ -108,6 +108,18 @@ export default function KnowledgeBaseDashboard({
   const [searchResults, setSearchResults] = useState<KnowledgeItem[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Neptune chat state (when no template selected)
+  const [neptuneChatMessages, setNeptuneChatMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: Date }>>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: "Hey! 👋 I'm Neptune. What would you like to create today? I can help you draft articles, SOPs, proposals, meeting notes, or any document you need. Just tell me what you're working on!",
+      timestamp: new Date(),
+    }
+  ]);
+  const [neptuneChatInput, setNeptuneChatInput] = useState("");
+  const [isNeptuneTyping, setIsNeptuneTyping] = useState(false);
 
   // Fetch knowledge items from API
   const { data: knowledgeData, error: knowledgeError, mutate: mutateKnowledge } = useSWR<{
@@ -520,6 +532,58 @@ export default function KnowledgeBaseDashboard({
 
       return newData;
     });
+  };
+
+  // Handle Neptune chat message (when no template selected)
+  const handleSendNeptuneMessage = async () => {
+    if (!neptuneChatInput.trim()) return;
+
+    const userInput = neptuneChatInput.trim();
+    const userMessage = {
+      id: Date.now().toString(),
+      role: 'user' as const,
+      content: userInput,
+      timestamp: new Date(),
+    };
+
+    setNeptuneChatMessages(prev => [...prev, userMessage]);
+    setNeptuneChatInput("");
+    setIsNeptuneTyping(true);
+
+    // Simulate Neptune's intelligent response
+    setTimeout(() => {
+      // Check if user mentioned a document type
+      const lowerInput = userInput.toLowerCase();
+      let response = "";
+      let suggestedTemplate: string | null = null;
+
+      if (lowerInput.includes('article') || lowerInput.includes('blog')) {
+        response = "An article sounds great! I can help you structure that. Would you like me to start with an Article template? It includes sections for introduction, main points, and conclusion. Just click on 'Article' in the templates, or tell me what your article is about and I'll help you get started right here!";
+        suggestedTemplate = 'article';
+      } else if (lowerInput.includes('sop') || lowerInput.includes('procedure') || lowerInput.includes('process')) {
+        response = "Perfect! SOPs are my specialty. I'll help you create clear, step-by-step procedures. You can select 'SOP Template' from the list, or describe the process you want to document and I'll structure it for you.";
+        suggestedTemplate = 'sop';
+      } else if (lowerInput.includes('proposal') || lowerInput.includes('pitch')) {
+        response = "A proposal! Let's make it compelling. I can help you with executive summary, problem statement, proposed solution, and pricing. Select 'Proposal' from the templates or tell me about your project!";
+        suggestedTemplate = 'proposal';
+      } else if (lowerInput.includes('meeting') || lowerInput.includes('notes') || lowerInput.includes('minutes')) {
+        response = "Meeting notes coming right up! I'll help you capture attendees, agenda items, decisions, and action items. Pick 'Meeting Notes' from the templates or just paste your notes and I'll organize them.";
+        suggestedTemplate = 'meeting-notes';
+      } else if (lowerInput.includes('faq') || lowerInput.includes('questions')) {
+        response = "FAQ documentation is super useful! I'll help you organize common questions with clear answers. Select 'FAQ Document' or tell me the topic and I'll suggest some questions to cover.";
+        suggestedTemplate = 'faq';
+      } else {
+        response = "I can help with that! To get started, you can either:\n\n• Pick a template from the list on the left\n• Or just describe what you need and I'll help you create it from scratch\n\nWhat would you like to create?";
+      }
+
+      setNeptuneChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response,
+        timestamp: new Date(),
+      }]);
+      setIsNeptuneTyping(false);
+    }, 1200);
   };
 
   // Handle document click - open in floating dialog
@@ -1272,17 +1336,99 @@ export default function KnowledgeBaseDashboard({
                       </div>
                     </>
                   ) : (
-                    <div className="flex-1 flex items-center justify-center p-8">
-                      <div className="text-center max-w-sm">
-                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                          <FileText className="h-8 w-8 text-slate-400" />
+                    <>
+                      {/* Neptune Chat Header */}
+                      <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex items-center justify-between flex-shrink-0">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
+                            <Sparkles className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-sm text-gray-900">Neptune</h3>
+                            <p className="text-xs text-indigo-600 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                              Ready to help you create
+                            </p>
+                          </div>
                         </div>
-                        <h3 className="text-base font-semibold text-gray-900 mb-2">Select a template</h3>
-                        <p className="text-sm text-gray-500">
-                          Choose a document template from the list to start creating. I'll guide you through the process step by step.
-                        </p>
                       </div>
-                    </div>
+
+                      {/* Neptune Chat Messages */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
+                        {neptuneChatMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div className={`max-w-[80%] rounded-lg p-3 ${
+                              message.role === 'user'
+                                ? 'bg-indigo-500 text-white rounded-br-md'
+                                : 'bg-white text-gray-700 shadow-sm border border-slate-100 rounded-bl-md'
+                            }`}>
+                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            </div>
+                          </div>
+                        ))}
+                        {isNeptuneTyping && (
+                          <div className="flex justify-start">
+                            <div className="bg-white text-gray-700 shadow-sm border border-slate-100 rounded-lg rounded-bl-md p-3">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Quick Suggestions */}
+                      <div className="px-4 py-2 border-t bg-slate-50/50 flex gap-2 flex-wrap">
+                        {['Write an article', 'Create SOP', 'Draft proposal', 'Meeting notes'].map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => {
+                              setNeptuneChatInput(suggestion);
+                              setTimeout(() => handleSendNeptuneMessage(), 100);
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Neptune Chat Input */}
+                      <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
+                        <Input
+                          placeholder="Tell me what you want to create..."
+                          value={neptuneChatInput}
+                          onChange={(e) => setNeptuneChatInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey && !isNeptuneTyping) {
+                              e.preventDefault();
+                              handleSendNeptuneMessage();
+                            }
+                          }}
+                          className="flex-1 rounded-full"
+                          disabled={isNeptuneTyping}
+                          aria-label="Message Neptune"
+                        />
+                        <Button
+                          size="icon"
+                          onClick={handleSendNeptuneMessage}
+                          disabled={!neptuneChatInput.trim() || isNeptuneTyping}
+                          className="bg-indigo-500 hover:bg-indigo-600 rounded-full"
+                          aria-label="Send message"
+                        >
+                          {isNeptuneTyping ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
