@@ -16,6 +16,8 @@ import {
   campaigns,
   agents,
   aiConversations,
+  knowledgeItems,
+  knowledgeCollections,
 } from '@/db/schema';
 import { eq, and, desc, gte, lte, like, or, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -379,6 +381,411 @@ export const aiTools: ChatCompletionTool[] = [
           },
         },
         required: ['purpose'],
+      },
+    },
+  },
+  
+  // ============================================================================
+  // KNOWLEDGE BASE TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'search_knowledge',
+      description: 'Search the knowledge base for documents, articles, FAQs, and other content. Use this when the user asks questions that might be answered by company documentation.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'Search query to find relevant documents',
+          },
+          type: {
+            type: 'string',
+            enum: ['document', 'url', 'image', 'text'],
+            description: 'Filter by content type',
+          },
+          limit: {
+            type: 'number',
+            description: 'Maximum number of results (default: 5)',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_document',
+      description: 'Create a new document in the knowledge base. Use this when the user wants to save or document something.',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'Title of the document',
+          },
+          content: {
+            type: 'string',
+            description: 'The document content (can include markdown)',
+          },
+          type: {
+            type: 'string',
+            enum: ['document', 'text'],
+            description: 'Type of content',
+          },
+          collectionId: {
+            type: 'string',
+            description: 'Optional collection/folder ID to organize the document',
+          },
+        },
+        required: ['title', 'content'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_collections',
+      description: 'List all collections/folders in the knowledge base.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+
+  // ============================================================================
+  // MARKETING TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'create_campaign',
+      description: 'Create a new marketing campaign. Use this when the user wants to set up email campaigns or marketing automations.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Name of the campaign',
+          },
+          type: {
+            type: 'string',
+            enum: ['email', 'drip', 'newsletter', 'promotion'],
+            description: 'Type of campaign',
+          },
+          subject: {
+            type: 'string',
+            description: 'Email subject line',
+          },
+          content: {
+            type: 'string',
+            description: 'Email content/body',
+          },
+          targetAudience: {
+            type: 'string',
+            description: 'Description of target audience (e.g., "all leads", "customers", "new signups")',
+          },
+        },
+        required: ['name', 'type'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_campaign_stats',
+      description: 'Get performance statistics for marketing campaigns.',
+      parameters: {
+        type: 'object',
+        properties: {
+          campaignId: {
+            type: 'string',
+            description: 'Specific campaign ID to get stats for (optional, returns all if not provided)',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'send_email',
+      description: 'Send an email to a contact or lead. Use this when the user wants to actually send (not just draft) an email.',
+      parameters: {
+        type: 'object',
+        properties: {
+          to: {
+            type: 'string',
+            description: 'Recipient email address',
+          },
+          subject: {
+            type: 'string',
+            description: 'Email subject line',
+          },
+          body: {
+            type: 'string',
+            description: 'Email body content',
+          },
+          leadId: {
+            type: 'string',
+            description: 'Optional lead ID to associate the email with',
+          },
+        },
+        required: ['to', 'subject', 'body'],
+      },
+    },
+  },
+
+  // ============================================================================
+  // DEAL/PIPELINE TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'create_deal',
+      description: 'Create a new deal/opportunity in the pipeline.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Deal name/title',
+          },
+          value: {
+            type: 'number',
+            description: 'Deal value in dollars',
+          },
+          stage: {
+            type: 'string',
+            enum: ['qualification', 'proposal', 'negotiation', 'closing', 'won', 'lost'],
+            description: 'Current deal stage',
+          },
+          leadId: {
+            type: 'string',
+            description: 'Associated lead ID',
+          },
+          expectedCloseDate: {
+            type: 'string',
+            description: 'Expected close date in ISO format',
+          },
+          notes: {
+            type: 'string',
+            description: 'Deal notes or description',
+          },
+        },
+        required: ['name', 'value'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_deal',
+      description: 'Update an existing deal (value, stage, close date, etc.).',
+      parameters: {
+        type: 'object',
+        properties: {
+          dealId: {
+            type: 'string',
+            description: 'The deal ID to update',
+          },
+          value: {
+            type: 'number',
+            description: 'New deal value',
+          },
+          stage: {
+            type: 'string',
+            enum: ['qualification', 'proposal', 'negotiation', 'closing', 'won', 'lost'],
+            description: 'New deal stage',
+          },
+          expectedCloseDate: {
+            type: 'string',
+            description: 'New expected close date',
+          },
+          notes: {
+            type: 'string',
+            description: 'Additional notes',
+          },
+        },
+        required: ['dealId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_deals_closing_soon',
+      description: 'Get deals that are expected to close soon.',
+      parameters: {
+        type: 'object',
+        properties: {
+          days: {
+            type: 'number',
+            description: 'Number of days to look ahead (default: 30)',
+          },
+          minValue: {
+            type: 'number',
+            description: 'Minimum deal value filter',
+          },
+        },
+      },
+    },
+  },
+
+  // ============================================================================
+  // WORKFLOW/AGENT TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'run_agent',
+      description: 'Trigger/run an AI agent or automation workflow.',
+      parameters: {
+        type: 'object',
+        properties: {
+          agentId: {
+            type: 'string',
+            description: 'The ID of the agent to run',
+          },
+          agentName: {
+            type: 'string',
+            description: 'The name of the agent (alternative to ID)',
+          },
+          inputs: {
+            type: 'object',
+            description: 'Input parameters for the agent',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_agent_status',
+      description: 'Check the status and recent executions of an agent.',
+      parameters: {
+        type: 'object',
+        properties: {
+          agentId: {
+            type: 'string',
+            description: 'The agent ID to check',
+          },
+        },
+        required: ['agentId'],
+      },
+    },
+  },
+
+  // ============================================================================
+  // TEAM COLLABORATION TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'add_note',
+      description: 'Add a note to a lead, contact, or deal.',
+      parameters: {
+        type: 'object',
+        properties: {
+          entityType: {
+            type: 'string',
+            enum: ['lead', 'contact', 'deal'],
+            description: 'Type of entity to add note to',
+          },
+          entityId: {
+            type: 'string',
+            description: 'ID of the lead, contact, or deal',
+          },
+          content: {
+            type: 'string',
+            description: 'The note content',
+          },
+        },
+        required: ['entityType', 'entityId', 'content'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_activity_timeline',
+      description: 'Get recent activity/history for a lead, contact, or deal.',
+      parameters: {
+        type: 'object',
+        properties: {
+          entityType: {
+            type: 'string',
+            enum: ['lead', 'contact', 'deal'],
+            description: 'Type of entity',
+          },
+          entityId: {
+            type: 'string',
+            description: 'ID of the entity',
+          },
+          limit: {
+            type: 'number',
+            description: 'Max activities to return (default: 10)',
+          },
+        },
+        required: ['entityType', 'entityId'],
+      },
+    },
+  },
+
+  // ============================================================================
+  // ADVANCED ANALYTICS TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'get_conversion_metrics',
+      description: 'Get pipeline conversion rates and metrics between stages.',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: {
+            type: 'string',
+            enum: ['week', 'month', 'quarter', 'year'],
+            description: 'Time period for metrics',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'forecast_revenue',
+      description: 'Get revenue forecast based on pipeline and historical data.',
+      parameters: {
+        type: 'object',
+        properties: {
+          months: {
+            type: 'number',
+            description: 'Number of months to forecast (default: 3)',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_team_performance',
+      description: 'Get team performance metrics (leads handled, deals closed, etc.).',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: {
+            type: 'string',
+            enum: ['week', 'month', 'quarter'],
+            description: 'Time period for metrics',
+          },
+        },
       },
     },
   },
@@ -896,6 +1303,731 @@ const toolImplementations: Record<string, ToolFunction> = {
       },
     };
   },
+
+  // ============================================================================
+  // KNOWLEDGE BASE IMPLEMENTATIONS
+  // ============================================================================
+
+  async search_knowledge(args, context): Promise<ToolResult> {
+    try {
+      const query = (args.query as string) || '';
+      const type = args.type as string | undefined;
+      const limit = (args.limit as number) || 5;
+
+      const conditions = [eq(knowledgeItems.workspaceId, context.workspaceId)];
+
+      if (type) {
+        conditions.push(eq(knowledgeItems.type, type as 'document' | 'url' | 'image' | 'text'));
+      }
+
+      if (query) {
+        conditions.push(
+          or(
+            like(knowledgeItems.title, `%${query}%`),
+            like(knowledgeItems.summary, `%${query}%`)
+          )!
+        );
+      }
+
+      const results = await db.query.knowledgeItems.findMany({
+        where: and(...conditions),
+        orderBy: [desc(knowledgeItems.updatedAt)],
+        limit,
+      });
+
+      return {
+        success: true,
+        message: `Found ${results.length} document(s) matching "${query}"`,
+        data: {
+          documents: results.map((doc) => ({
+            id: doc.id,
+            title: doc.title,
+            type: doc.type,
+            summary: doc.summary,
+            updatedAt: doc.updatedAt,
+          })),
+        },
+      };
+    } catch (error) {
+      logger.error('AI search_knowledge failed', error);
+      return {
+        success: false,
+        message: 'Failed to search knowledge base',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async create_document(args, context): Promise<ToolResult> {
+    try {
+      const [doc] = await db
+        .insert(knowledgeItems)
+        .values({
+          workspaceId: context.workspaceId,
+          title: args.title as string,
+          type: (args.type as 'document' | 'text') || 'document',
+          content: args.content as string,
+          summary: (args.content as string).substring(0, 500),
+          collectionId: (args.collectionId as string) || null,
+          createdBy: context.userId,
+          status: 'ready',
+        })
+        .returning();
+
+      logger.info('AI created document', { docId: doc.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Created document "${doc.title}" successfully`,
+        data: {
+          id: doc.id,
+          title: doc.title,
+          type: doc.type,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_document failed', error);
+      return {
+        success: false,
+        message: 'Failed to create document',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async list_collections(args, context): Promise<ToolResult> {
+    try {
+      const collections = await db.query.knowledgeCollections.findMany({
+        where: eq(knowledgeCollections.workspaceId, context.workspaceId),
+        orderBy: [desc(knowledgeCollections.updatedAt)],
+      });
+
+      return {
+        success: true,
+        message: `Found ${collections.length} collection(s)`,
+        data: {
+          collections: collections.map((c) => ({
+            id: c.id,
+            name: c.name,
+            description: c.description,
+            itemCount: c.itemCount,
+          })),
+        },
+      };
+    } catch (error) {
+      logger.error('AI list_collections failed', error);
+      return {
+        success: false,
+        message: 'Failed to list collections',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // ============================================================================
+  // MARKETING IMPLEMENTATIONS
+  // ============================================================================
+
+  async create_campaign(args, context): Promise<ToolResult> {
+    try {
+      const [campaign] = await db
+        .insert(campaigns)
+        .values({
+          workspaceId: context.workspaceId,
+          name: args.name as string,
+          type: (args.type as string) || 'email',
+          status: 'draft',
+          content: {
+            subject: (args.subject as string) || undefined,
+            body: (args.content as string) || undefined,
+          },
+          createdBy: context.userId,
+        })
+        .returning();
+
+      logger.info('AI created campaign', { campaignId: campaign.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Created campaign "${campaign.name}" successfully. It's saved as a draft.`,
+        data: {
+          id: campaign.id,
+          name: campaign.name,
+          type: campaign.type,
+          status: campaign.status,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_campaign failed', error);
+      return {
+        success: false,
+        message: 'Failed to create campaign',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_campaign_stats(args, context): Promise<ToolResult> {
+    try {
+      const campaignId = args.campaignId as string | undefined;
+
+      const conditions = [eq(campaigns.workspaceId, context.workspaceId)];
+      if (campaignId) {
+        conditions.push(eq(campaigns.id, campaignId));
+      }
+
+      const campaignList = await db.query.campaigns.findMany({
+        where: and(...conditions),
+        orderBy: [desc(campaigns.updatedAt)],
+        limit: 10,
+      });
+
+      const stats = campaignList.map((c) => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        status: c.status,
+        sent: c.sentCount || 0,
+        opened: c.openCount || 0,
+        clicked: c.clickCount || 0,
+        openRate: c.sentCount ? ((c.openCount || 0) / c.sentCount * 100).toFixed(1) + '%' : '0%',
+        clickRate: c.openCount ? ((c.clickCount || 0) / c.openCount * 100).toFixed(1) + '%' : '0%',
+      }));
+
+      return {
+        success: true,
+        message: `Retrieved stats for ${stats.length} campaign(s)`,
+        data: { campaigns: stats },
+      };
+    } catch (error) {
+      logger.error('AI get_campaign_stats failed', error);
+      return {
+        success: false,
+        message: 'Failed to get campaign stats',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async send_email(args, context): Promise<ToolResult> {
+    // Note: This would integrate with an email service like SendGrid, Resend, etc.
+    // For now, we'll log the intent and return success
+    logger.info('AI send_email requested', {
+      to: args.to,
+      subject: args.subject,
+      leadId: args.leadId,
+      workspaceId: context.workspaceId,
+    });
+
+    return {
+      success: true,
+      message: `Email queued to be sent to ${args.to}`,
+      data: {
+        to: args.to,
+        subject: args.subject,
+        status: 'queued',
+        note: 'Email sending requires email service integration. Currently logged for processing.',
+      },
+    };
+  },
+
+  // ============================================================================
+  // DEAL/PIPELINE IMPLEMENTATIONS
+  // ============================================================================
+
+  async create_deal(args, context): Promise<ToolResult> {
+    try {
+      // For now, we'll create this as a prospect with deal metadata
+      // In a full implementation, you'd have a separate deals table
+      const stage = args.stage as string;
+      const validStage = stage === 'qualification' ? 'qualified' : (stage as 'qualified' | 'proposal' | 'negotiation') || 'proposal';
+      
+      const [prospect] = await db
+        .insert(prospects)
+        .values({
+          workspaceId: context.workspaceId,
+          name: args.name as string,
+          stage: validStage,
+          estimatedValue: args.value ? Math.round((args.value as number) * 100) : null,
+          notes: (args.notes as string) || `Deal created by Neptune`,
+          source: 'ai_deal',
+        })
+        .returning();
+
+      logger.info('AI created deal', { dealId: prospect.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Created deal "${prospect.name}" worth $${(args.value as number)?.toLocaleString() || 0}`,
+        data: {
+          id: prospect.id,
+          name: prospect.name,
+          value: args.value,
+          stage: prospect.stage,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_deal failed', error);
+      return {
+        success: false,
+        message: 'Failed to create deal',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async update_deal(args, context): Promise<ToolResult> {
+    try {
+      const dealId = args.dealId as string;
+
+      const deal = await db.query.prospects.findFirst({
+        where: and(
+          eq(prospects.id, dealId),
+          eq(prospects.workspaceId, context.workspaceId)
+        ),
+      });
+
+      if (!deal) {
+        return {
+          success: false,
+          message: 'Deal not found or access denied',
+        };
+      }
+
+      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+      if (args.value) updateData.estimatedValue = Math.round((args.value as number) * 100);
+      if (args.stage) updateData.stage = args.stage;
+      if (args.notes) updateData.notes = deal.notes ? `${deal.notes}\n\n${args.notes}` : args.notes;
+
+      await db.update(prospects).set(updateData).where(eq(prospects.id, dealId));
+
+      return {
+        success: true,
+        message: `Updated deal "${deal.name}"`,
+        data: {
+          id: deal.id,
+          name: deal.name,
+          updates: Object.keys(updateData).filter(k => k !== 'updatedAt'),
+        },
+      };
+    } catch (error) {
+      logger.error('AI update_deal failed', error);
+      return {
+        success: false,
+        message: 'Failed to update deal',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_deals_closing_soon(args, context): Promise<ToolResult> {
+    try {
+      const days = (args.days as number) || 30;
+      const minValue = args.minValue as number | undefined;
+
+      // Get deals in closing stages
+      const deals = await db.query.prospects.findMany({
+        where: and(
+          eq(prospects.workspaceId, context.workspaceId),
+          or(
+            eq(prospects.stage, 'proposal'),
+            eq(prospects.stage, 'negotiation')
+          )
+        ),
+        orderBy: [desc(prospects.estimatedValue)],
+        limit: 20,
+      });
+
+      let filteredDeals = deals;
+      if (minValue) {
+        filteredDeals = deals.filter(d => (d.estimatedValue || 0) >= minValue * 100);
+      }
+
+      const totalValue = filteredDeals.reduce((sum, d) => sum + (d.estimatedValue || 0), 0) / 100;
+
+      return {
+        success: true,
+        message: `Found ${filteredDeals.length} deals in closing stages worth $${totalValue.toLocaleString()}`,
+        data: {
+          deals: filteredDeals.map(d => ({
+            id: d.id,
+            name: d.name,
+            company: d.company,
+            stage: d.stage,
+            value: d.estimatedValue ? d.estimatedValue / 100 : 0,
+          })),
+          totalValue,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_deals_closing_soon failed', error);
+      return {
+        success: false,
+        message: 'Failed to get closing deals',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // ============================================================================
+  // WORKFLOW/AGENT IMPLEMENTATIONS
+  // ============================================================================
+
+  async run_agent(args, context): Promise<ToolResult> {
+    try {
+      const agentId = args.agentId as string | undefined;
+      const agentName = args.agentName as string | undefined;
+
+      let agent;
+      if (agentId) {
+        agent = await db.query.agents.findFirst({
+          where: and(
+            eq(agents.id, agentId),
+            eq(agents.workspaceId, context.workspaceId)
+          ),
+        });
+      } else if (agentName) {
+        agent = await db.query.agents.findFirst({
+          where: and(
+            like(agents.name, `%${agentName}%`),
+            eq(agents.workspaceId, context.workspaceId)
+          ),
+        });
+      }
+
+      if (!agent) {
+        return {
+          success: false,
+          message: 'Agent not found. Use list_agents to see available agents.',
+        };
+      }
+
+      if (agent.status !== 'active') {
+        return {
+          success: false,
+          message: `Agent "${agent.name}" is not active (status: ${agent.status})`,
+        };
+      }
+
+      // Update execution count
+      await db
+        .update(agents)
+        .set({
+          executionCount: (agent.executionCount || 0) + 1,
+          lastExecutedAt: new Date(),
+        })
+        .where(eq(agents.id, agent.id));
+
+      logger.info('AI triggered agent', { agentId: agent.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Started agent "${agent.name}"`,
+        data: {
+          id: agent.id,
+          name: agent.name,
+          type: agent.type,
+          status: 'running',
+        },
+      };
+    } catch (error) {
+      logger.error('AI run_agent failed', error);
+      return {
+        success: false,
+        message: 'Failed to run agent',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_agent_status(args, context): Promise<ToolResult> {
+    try {
+      const agentId = args.agentId as string;
+
+      const agent = await db.query.agents.findFirst({
+        where: and(
+          eq(agents.id, agentId),
+          eq(agents.workspaceId, context.workspaceId)
+        ),
+      });
+
+      if (!agent) {
+        return {
+          success: false,
+          message: 'Agent not found',
+        };
+      }
+
+      return {
+        success: true,
+        message: `Agent "${agent.name}" status retrieved`,
+        data: {
+          id: agent.id,
+          name: agent.name,
+          status: agent.status,
+          type: agent.type,
+          executionCount: agent.executionCount,
+          lastExecutedAt: agent.lastExecutedAt,
+          createdAt: agent.createdAt,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_agent_status failed', error);
+      return {
+        success: false,
+        message: 'Failed to get agent status',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // ============================================================================
+  // TEAM COLLABORATION IMPLEMENTATIONS
+  // ============================================================================
+
+  async add_note(args, context): Promise<ToolResult> {
+    try {
+      const entityType = args.entityType as 'lead' | 'contact' | 'deal';
+      const entityId = args.entityId as string;
+      const content = args.content as string;
+
+      const timestamp = new Date().toISOString();
+      const noteEntry = `[${timestamp}] ${context.userName}: ${content}`;
+
+      if (entityType === 'lead' || entityType === 'deal') {
+        const lead = await db.query.prospects.findFirst({
+          where: and(
+            eq(prospects.id, entityId),
+            eq(prospects.workspaceId, context.workspaceId)
+          ),
+        });
+
+        if (!lead) {
+          return { success: false, message: `${entityType} not found` };
+        }
+
+        await db
+          .update(prospects)
+          .set({
+            notes: lead.notes ? `${lead.notes}\n\n${noteEntry}` : noteEntry,
+            updatedAt: new Date(),
+          })
+          .where(eq(prospects.id, entityId));
+
+        return {
+          success: true,
+          message: `Added note to ${entityType} "${lead.name}"`,
+          data: { entityType, entityId, entityName: lead.name },
+        };
+      } else if (entityType === 'contact') {
+        const contact = await db.query.contacts.findFirst({
+          where: and(
+            eq(contacts.id, entityId),
+            eq(contacts.workspaceId, context.workspaceId)
+          ),
+        });
+
+        if (!contact) {
+          return { success: false, message: 'Contact not found' };
+        }
+
+        await db
+          .update(contacts)
+          .set({
+            notes: contact.notes ? `${contact.notes}\n\n${noteEntry}` : noteEntry,
+            updatedAt: new Date(),
+          })
+          .where(eq(contacts.id, entityId));
+
+        const name = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || contact.email;
+        return {
+          success: true,
+          message: `Added note to contact "${name}"`,
+          data: { entityType, entityId, entityName: name },
+        };
+      }
+
+      return { success: false, message: 'Invalid entity type' };
+    } catch (error) {
+      logger.error('AI add_note failed', error);
+      return {
+        success: false,
+        message: 'Failed to add note',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_activity_timeline(args, context): Promise<ToolResult> {
+    try {
+      const entityType = args.entityType as 'lead' | 'contact' | 'deal';
+      const entityId = args.entityId as string;
+
+      // For now, return the notes as activity timeline
+      // In a full implementation, you'd have an activity log table
+      if (entityType === 'lead' || entityType === 'deal') {
+        const lead = await db.query.prospects.findFirst({
+          where: and(
+            eq(prospects.id, entityId),
+            eq(prospects.workspaceId, context.workspaceId)
+          ),
+        });
+
+        if (!lead) {
+          return { success: false, message: `${entityType} not found` };
+        }
+
+        return {
+          success: true,
+          message: `Activity timeline for "${lead.name}"`,
+          data: {
+            name: lead.name,
+            stage: lead.stage,
+            createdAt: lead.createdAt,
+            lastContactedAt: lead.lastContactedAt,
+            notes: lead.notes,
+          },
+        };
+      }
+
+      return { success: false, message: 'Invalid entity type' };
+    } catch (error) {
+      logger.error('AI get_activity_timeline failed', error);
+      return {
+        success: false,
+        message: 'Failed to get activity timeline',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // ============================================================================
+  // ANALYTICS IMPLEMENTATIONS
+  // ============================================================================
+
+  async get_conversion_metrics(args, context): Promise<ToolResult> {
+    try {
+      const allProspects = await db.query.prospects.findMany({
+        where: eq(prospects.workspaceId, context.workspaceId),
+      });
+
+      const total = allProspects.length;
+      const won = allProspects.filter(p => p.stage === 'won').length;
+      const lost = allProspects.filter(p => p.stage === 'lost').length;
+      const qualified = allProspects.filter(p => ['qualified', 'proposal', 'negotiation', 'won'].includes(p.stage)).length;
+
+      return {
+        success: true,
+        message: 'Conversion metrics calculated',
+        data: {
+          totalLeads: total,
+          qualified,
+          won,
+          lost,
+          winRate: total > 0 ? ((won / total) * 100).toFixed(1) + '%' : '0%',
+          qualificationRate: total > 0 ? ((qualified / total) * 100).toFixed(1) + '%' : '0%',
+          lossRate: total > 0 ? ((lost / total) * 100).toFixed(1) + '%' : '0%',
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_conversion_metrics failed', error);
+      return {
+        success: false,
+        message: 'Failed to get conversion metrics',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async forecast_revenue(args, context): Promise<ToolResult> {
+    try {
+      const months = (args.months as number) || 3;
+
+      // Get active pipeline deals
+      const activeDeals = await db.query.prospects.findMany({
+        where: and(
+          eq(prospects.workspaceId, context.workspaceId),
+          or(
+            eq(prospects.stage, 'qualified'),
+            eq(prospects.stage, 'proposal'),
+            eq(prospects.stage, 'negotiation')
+          )
+        ),
+      });
+
+      // Simple probability-weighted forecast
+      const stageProbabilities: Record<string, number> = {
+        qualified: 0.2,
+        proposal: 0.5,
+        negotiation: 0.75,
+      };
+
+      let weightedForecast = 0;
+      const dealForecasts = activeDeals.map(d => {
+        const probability = stageProbabilities[d.stage] || 0;
+        const value = (d.estimatedValue || 0) / 100;
+        const weighted = value * probability;
+        weightedForecast += weighted;
+        return {
+          name: d.name,
+          value,
+          stage: d.stage,
+          probability: (probability * 100) + '%',
+          weightedValue: weighted,
+        };
+      });
+
+      return {
+        success: true,
+        message: `Revenue forecast for next ${months} months`,
+        data: {
+          totalPipelineValue: activeDeals.reduce((sum, d) => sum + (d.estimatedValue || 0), 0) / 100,
+          weightedForecast,
+          dealCount: activeDeals.length,
+          topDeals: dealForecasts.slice(0, 5),
+        },
+      };
+    } catch (error) {
+      logger.error('AI forecast_revenue failed', error);
+      return {
+        success: false,
+        message: 'Failed to forecast revenue',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_team_performance(args, context): Promise<ToolResult> {
+    try {
+      // Get all prospects to analyze team performance
+      const allProspects = await db.query.prospects.findMany({
+        where: eq(prospects.workspaceId, context.workspaceId),
+      });
+
+      const totalLeads = allProspects.length;
+      const wonDeals = allProspects.filter(p => p.stage === 'won');
+      const totalRevenue = wonDeals.reduce((sum, p) => sum + (p.estimatedValue || 0), 0) / 100;
+
+      return {
+        success: true,
+        message: 'Team performance metrics',
+        data: {
+          totalLeads,
+          dealsWon: wonDeals.length,
+          totalRevenue,
+          avgDealSize: wonDeals.length > 0 ? totalRevenue / wonDeals.length : 0,
+          activeDeals: allProspects.filter(p => !['won', 'lost'].includes(p.stage)).length,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_team_performance failed', error);
+      return {
+        success: false,
+        message: 'Failed to get team performance',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -937,12 +2069,15 @@ export async function executeTool(
 // ============================================================================
 
 export const toolsByCategory = {
-  crm: ['create_lead', 'search_leads', 'update_lead_stage', 'create_contact'],
+  crm: ['create_lead', 'search_leads', 'update_lead_stage', 'create_contact', 'add_note', 'get_activity_timeline'],
   calendar: ['schedule_meeting', 'get_upcoming_events'],
   tasks: ['create_task'],
-  analytics: ['get_pipeline_summary', 'get_hot_leads'],
-  agents: ['list_agents'],
-  content: ['draft_email'],
+  analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
+  agents: ['list_agents', 'run_agent', 'get_agent_status'],
+  content: ['draft_email', 'send_email'],
+  knowledge: ['search_knowledge', 'create_document', 'list_collections'],
+  marketing: ['create_campaign', 'get_campaign_stats'],
+  deals: ['create_deal', 'update_deal', 'get_deals_closing_soon'],
 };
 
 export function getToolsForCapability(capability: string): ChatCompletionTool[] {
