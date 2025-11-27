@@ -316,13 +316,15 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
       );
       
       if (!res.ok) {
-        throw new Error('Failed to fetch events');
+        // Silently handle auth or server errors - just show empty calendar
+        setCalendarEvents([]);
+        return;
       }
       
       const data = await res.json();
       setCalendarEvents(data.events || []);
-    } catch (error) {
-      console.error('Failed to fetch calendar events:', error);
+    } catch {
+      // Network or parsing error - show empty calendar
       setCalendarEvents([]);
     } finally {
       setIsLoadingEvents(false);
