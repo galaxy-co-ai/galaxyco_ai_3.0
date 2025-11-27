@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { Badge } from "../components/ui/badge";
 import { Sparkles, Activity } from "lucide-react";
 import { motion } from "framer-motion";
@@ -22,6 +23,10 @@ interface LandingProps {
 }
 
 export function Landing({ onEnterApp }: LandingProps = {}) {
+  // Scroll to top on mount to ensure page starts at the top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
