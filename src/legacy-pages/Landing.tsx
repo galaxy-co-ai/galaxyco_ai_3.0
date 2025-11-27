@@ -11,6 +11,7 @@ import { EnhancedBenefits } from "../components/landing/EnhancedBenefits";
 import { SectionDivider } from "../components/shared/SectionDivider";
 import { StockTickerStandalone } from "../components/landing/StockTicker";
 import { DemoWrapper } from "../components/shared/DemoWrapper";
+import { FloatingSalesChat } from "../components/landing/FloatingSalesChat";
 import DashboardDashboard from "../components/dashboard/DashboardDashboard";
 import CRMDashboard from "../components/crm/CRMDashboard";
 import StudioDashboard from "../components/studio/StudioDashboard";
@@ -352,6 +353,9 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
 
       {/* Footer */}
       <Footer />
+
+      {/* Floating Sales Chat */}
+      <FloatingSalesChat />
     </div>
   );
 }
