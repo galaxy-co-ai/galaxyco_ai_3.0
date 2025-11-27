@@ -18,8 +18,8 @@ import {
   FileText,
   Rocket
 } from "lucide-react";
-import { IntegrationCard } from "./IntegrationCard";
-import { QuickIntegrationCard } from "./QuickIntegrationCard";
+import { IntegrationCard } from "@/components/integrations/IntegrationCard";
+import { QuickIntegrationCard } from "@/components/integrations/QuickIntegrationCard";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
