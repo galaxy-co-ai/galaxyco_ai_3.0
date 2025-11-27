@@ -85,7 +85,7 @@ export default function KnowledgeBaseDashboard({
   initialCollections,
   initialItems,
 }: KnowledgeBaseDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('articles');
+  const [activeTab, setActiveTab] = useState<TabType>('create');
   const [selectedItem, setSelectedItem] = useState<KnowledgeItem | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -327,10 +327,10 @@ export default function KnowledgeBaseDashboard({
 
   // Tab configuration
   const tabs = [
-    { id: 'articles' as TabType, label: 'Articles', icon: FileText, activeColor: 'bg-blue-100 text-blue-700' },
-    { id: 'categories' as TabType, label: 'Categories', icon: Folder, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'create' as TabType, label: 'Create', icon: Plus, activeColor: 'bg-green-100 text-green-700' },
     { id: 'favorites' as TabType, label: 'Favorites', icon: Star, badge: '12', badgeColor: 'bg-amber-500', activeColor: 'bg-amber-100 text-amber-700' },
+    { id: 'categories' as TabType, label: 'Categories', icon: Folder, activeColor: 'bg-purple-100 text-purple-700' },
+    { id: 'articles' as TabType, label: 'Articles', icon: FileText, activeColor: 'bg-blue-100 text-blue-700' },
     { id: 'recent' as TabType, label: 'Recent', icon: Clock, activeColor: 'bg-cyan-100 text-cyan-700' },
   ];
 
