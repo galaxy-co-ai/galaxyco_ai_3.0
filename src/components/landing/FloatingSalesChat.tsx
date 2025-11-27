@@ -33,13 +33,13 @@ const initialMessages: Message[] = [
   {
     id: "1",
     role: "assistant",
-    content: "Hey there! 👋 I'm Galaxy, your AI guide. I can answer any questions about our platform, show you what's possible, or help you find the right plan. What brings you here today?",
+    content: "Hey there! 👋 I'm Galaxy, your AI guide to GalaxyCo.ai. I know everything about our platform — from Neptune AI (our intelligent assistant that actually takes action) to our CRM, Marketing tools, and Workflow Studio. Ask me anything!",
     timestamp: new Date(),
     suggestions: [
-      "What can GalaxyCo.ai do?",
-      "How does pricing work?",
-      "See a quick demo",
-      "Talk to sales"
+      "What is Neptune AI?",
+      "Show me pricing",
+      "What makes you different?",
+      "Start free trial"
     ],
   },
 ];
