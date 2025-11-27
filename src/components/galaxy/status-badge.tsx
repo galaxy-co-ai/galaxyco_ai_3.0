@@ -1,8 +1,8 @@
 import * as React from "react";
-import { Badge, BadgeProps } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export interface StatusBadgeProps extends Omit<BadgeProps, "variant"> {
+export interface StatusBadgeProps extends React.ComponentProps<"span"> {
   status: "active" | "draft" | "paused" | "hot" | "warm" | "cold" | "success" | "warning" | "error" | "info";
   showDot?: boolean;
 }
