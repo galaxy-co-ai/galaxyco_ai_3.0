@@ -1,7 +1,7 @@
 import type { TriggerConfig } from "@trigger.dev/sdk/v3";
 
 export const config: TriggerConfig = {
-  project: "proj_kztbsnnuypnyibmslcvd",
+  project: "proj_wqyglesiexqbjxkbvxff",
   maxDuration: 300, // 5 minutes max per task
   retries: {
     enabledInDev: true,
