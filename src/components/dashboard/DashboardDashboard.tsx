@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -2519,9 +2520,25 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                   </>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                      <p className="text-sm text-muted-foreground">Select an agent to view conversation</p>
+                    <div className="text-center max-w-sm px-6">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center mx-auto mb-4">
+                        <Bot className="h-8 w-8 text-emerald-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">No agent selected</h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Select an agent from the list, or create a new one from our templates to get started.
+                      </p>
+                      <Link href="/studio">
+                        <Button 
+                          variant="outline" 
+                          className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                          aria-label="Browse agent templates in Studio"
+                        >
+                          <Sparkles className="h-4 w-4" aria-hidden="true" />
+                          Browse Templates
+                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 )}
