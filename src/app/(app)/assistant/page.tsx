@@ -89,18 +89,20 @@ export default function AssistantPage() {
     error: conversationsError, 
     mutate: mutateConversations,
     isLoading: isLoadingConversations 
-  } = useSWR<Conversation[]>('/api/assistant/conversations', fetcher);
+  } = useSWR('/api/assistant/conversations', fetcher);
 
-  // Map API data to local format
-  const conversations: Conversation[] = conversationsData?.map((conv) => ({
-    ...conv,
-    messages: conv.messages?.map((msg) => ({
-      ...msg,
-      timestamp: new Date(msg.timestamp),
-    })) || [],
-    createdAt: new Date(conv.createdAt),
-    updatedAt: new Date(conv.updatedAt),
-  })) || [];
+  // Map API data to local format (handle both array response and error response)
+  const conversations: Conversation[] = Array.isArray(conversationsData) 
+    ? conversationsData.map((conv: Conversation) => ({
+        ...conv,
+        messages: conv.messages?.map((msg) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        })) || [],
+        createdAt: new Date(conv.createdAt),
+        updatedAt: new Date(conv.updatedAt),
+      }))
+    : [];
 
   const capabilities: AssistantCapability[] = [
     {
