@@ -73,14 +73,14 @@ export async function POST(request: Request) {
         workspaceId,
         createdBy: user.id,
         name: data.name,
-        description: data.description || null,
+        description: data.description || undefined,
         type: data.type,
         status: 'draft',
         config: {
           nodes: data.nodes || [],
           edges: data.edges || [],
-          trigger: data.trigger || null,
-          systemPrompt: data.systemPrompt || null,
+          trigger: data.trigger || undefined,
+          systemPrompt: data.systemPrompt || undefined,
         },
       })
       .returning();
