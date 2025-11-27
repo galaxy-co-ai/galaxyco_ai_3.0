@@ -36,13 +36,13 @@ const initialMessages: Message[] = [
   {
     id: "1",
     role: "assistant",
-    content: "Hi! I'm your AI Assistant. I'm here to help you build workflows, automate tasks, and manage your AI agents. Just describe what you want to create, and I'll build it for you step-by-step. Try saying things like: • \"Create a workflow that monitors my inbox for invoices\" • \"Build an agent that transcribes meetings\" • \"Set up automation for CRM data sync\" What would you like to build?",
+    content: "Hey! 👋 I'm Neptune, your AI sidekick. I can take action for you — create leads, schedule meetings, analyze your pipeline, draft emails — just tell me what you need.",
     timestamp: "Just now",
     suggestions: [
-      "Build an email automation workflow",
-      "Create a CRM data sync agent",
-      "Set up meeting transcription",
-      "Add a new node to my workflow"
+      "What's on my calendar today?",
+      "Show me my hot leads",
+      "I need to follow up with someone",
+      "Help me get organized"
     ]
   }
 ];
@@ -73,12 +73,12 @@ export function FloatingAIAssistant() {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "I understand you want to work on that. Let me help you get started. I can create a custom workflow or generate the necessary documentation for this task.",
+        content: "On it! Let me look into that for you. What else would you like me to help with?",
         timestamp: "Just now",
         suggestions: [
-          "Build a workflow for this",
-          "Generate documentation",
-          "Show me an example"
+          "Tell me more",
+          "What else can you do?",
+          "Thanks, that's all for now"
         ]
       };
       setMessages(prev => [...prev, aiResponse]);
@@ -151,10 +151,10 @@ export function FloatingAIAssistant() {
                   <Sparkles className="h-4.5 w-4.5 text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-white text-sm">AI Assistant</h3>
+                  <h3 className="text-white text-sm font-medium">Neptune</h3>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="h-1.5 w-1.5 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-xs text-white/80">Online</span>
+                    <span className="text-xs text-white/80">Ready to help</span>
                   </div>
                 </div>
               </div>

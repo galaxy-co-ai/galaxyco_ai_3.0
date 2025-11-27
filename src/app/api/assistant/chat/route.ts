@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { aiConversations, aiMessages } from '@/db/schema';
+import { aiConversations, aiMessages, users } from '@/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
@@ -9,35 +9,104 @@ import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
+// AI Module imports
+import { aiTools, executeTool, getToolsForCapability, type ToolContext } from '@/lib/ai/tools';
+import { gatherAIContext, getQuickContext } from '@/lib/ai/context';
+import { generateSystemPrompt } from '@/lib/ai/system-prompt';
+import { trackFrequentQuestion, analyzeConversationForLearning, updateUserPreferencesFromInsights } from '@/lib/ai/memory';
+
+import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
+
+// ============================================================================
+// SCHEMA VALIDATION
+// ============================================================================
+
 const chatSchema = z.object({
   message: z.string().min(1, 'Message is required').max(10000, 'Message too long'),
   conversationId: z.string().uuid().optional(),
   context: z.object({
     workspace: z.string().optional(),
     feature: z.string().optional(),
+    page: z.string().optional(),
   }).optional(),
 });
 
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Process tool calls from GPT-4 response
+ */
+async function processToolCalls(
+  toolCalls: Array<{
+    id: string;
+    type: string;
+    function?: { name: string; arguments: string };
+  }>,
+  toolContext: ToolContext
+): Promise<Array<{ toolCallId: string; name: string; result: string }>> {
+  const results = [];
+
+  for (const toolCall of toolCalls) {
+    const { id, function: func } = toolCall;
+    
+    if (!func) {
+      continue; // Skip non-function tool calls
+    }
+    
+    try {
+      const args = JSON.parse(func.arguments);
+      const result = await executeTool(func.name, args, toolContext);
+      
+      results.push({
+        toolCallId: id,
+        name: func.name,
+        result: JSON.stringify(result),
+      });
+    } catch (error) {
+      logger.error('Failed to execute tool call', { toolName: func.name, error });
+      results.push({
+        toolCallId: id,
+        name: func.name,
+        result: JSON.stringify({
+          success: false,
+          message: 'Tool execution failed',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }),
+      });
+    }
+  }
+
+  return results;
+}
+
+// ============================================================================
+// MAIN CHAT ENDPOINT
+// ============================================================================
+
 export async function POST(request: Request) {
   const startTime = Date.now();
+  
   try {
     logger.debug('[AI Chat] Request received');
     
-    const { workspaceId } = await getCurrentWorkspace();
+    // Get workspace and user context
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     logger.debug('[AI Chat] Workspace retrieved', { workspaceId });
     
-    const user = await getCurrentUser();
-    logger.debug('[AI Chat] User retrieved', { userId: user.id });
+    const currentUser = await getCurrentUser();
+    logger.debug('[AI Chat] User retrieved', { userId: currentUser.id });
 
     // Rate limit expensive AI operations
     const rateLimitResult = await rateLimit(
-      `ai:chat:${user.id}`,
+      `ai:chat:${currentUser.id}`,
       20, // 20 requests
       60  // per minute
     );
 
     if (!rateLimitResult.success) {
-      logger.warn('[AI Chat] Rate limit exceeded', { userId: user.id });
+      logger.warn('[AI Chat] Rate limit exceeded', { userId: currentUser.id });
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again in a moment.' },
         { status: 429 }
@@ -46,11 +115,10 @@ export async function POST(request: Request) {
     
     logger.debug('[AI Chat] Rate limit check passed');
 
+    // Parse and validate request body
     const body = await request.json();
-    logger.debug('[AI Chat] Request body received');
-
-    // Validate input
     const validationResult = chatSchema.safeParse(body);
+    
     if (!validationResult.success) {
       logger.warn('[AI Chat] Validation failed', { errors: validationResult.error.errors });
       return NextResponse.json(
@@ -60,7 +128,31 @@ export async function POST(request: Request) {
     }
 
     const { message, conversationId, context } = validationResult.data;
-    logger.debug('[AI Chat] Request body parsed', { messageLength: message.length, conversationId, context });
+    logger.debug('[AI Chat] Request validated', { 
+      messageLength: message.length, 
+      conversationId, 
+      feature: context?.feature 
+    });
+
+    // Get user's database record
+    const userRecord = await db.query.users.findFirst({
+      where: eq(users.clerkUserId, clerkUserId),
+    });
+
+    if (!userRecord) {
+      return NextResponse.json(
+        { error: 'User not found in database' },
+        { status: 404 }
+      );
+    }
+
+    // Gather comprehensive AI context
+    const aiContext = await gatherAIContext(workspaceId, clerkUserId);
+    logger.debug('[AI Chat] AI context gathered', { hasContext: !!aiContext });
+
+    // Generate system prompt with full context
+    const systemPrompt = generateSystemPrompt(aiContext, context?.feature);
+    logger.debug('[AI Chat] System prompt generated', { promptLength: systemPrompt.length });
 
     // Get or create conversation
     let conversation;
@@ -69,7 +161,7 @@ export async function POST(request: Request) {
         where: and(
           eq(aiConversations.id, conversationId),
           eq(aiConversations.workspaceId, workspaceId),
-          eq(aiConversations.userId, user.id)
+          eq(aiConversations.userId, userRecord.id)
         ),
       });
 
@@ -87,14 +179,19 @@ export async function POST(request: Request) {
         .insert(aiConversations)
         .values({
           workspaceId,
-          userId: user.id,
+          userId: userRecord.id,
           title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
           lastMessageAt: new Date(),
           messageCount: 0,
+          context: {
+            page: context?.page,
+            timestamp: new Date().toISOString(),
+          },
         })
         .returning();
 
       conversation = newConv;
+      logger.debug('[AI Chat] Created new conversation', { conversationId: newConv.id });
     }
 
     // Save user message
@@ -107,105 +204,127 @@ export async function POST(request: Request) {
       })
       .returning();
 
+    // Track frequent question (async, non-blocking)
+    trackFrequentQuestion(workspaceId, userRecord.id, message).catch(() => {});
+
     // Get conversation history for context
     const history = await db.query.aiMessages.findMany({
       where: eq(aiMessages.conversationId, conversation.id),
       orderBy: [asc(aiMessages.createdAt)],
-      limit: 20, // Last 20 messages for context
+      limit: 20,
     });
 
     // Build messages array for OpenAI
-    const openai = getOpenAI();
-    
-    // Build context-aware system prompt
-    let systemPrompt = `You are Galaxy AI, a concise and action-oriented assistant. Be brief, direct, and get things done.`;
-    
-    if (context?.feature === 'agent-creation') {
-      systemPrompt += `\n\nYou're helping create an AI agent. Your role is to BRAINSTORM and ask thoughtful questions to create a highly customized agent.
-
-CRITICAL RULES:
-1. **NEVER build immediately** - Always ask at least 3-5 clarifying questions before suggesting to build
-2. **One question at a time** - Ask ONE thoughtful, specific question per response
-3. **Be conversational and curious** - This is a collaborative brainstorming session
-4. **Dig deeper** - Don't accept surface-level answers. Ask follow-ups to understand the "why" and "how"
-5. **Only suggest building** when you have collected: problem statement, trigger type, data sources, desired outcome, and error handling approach
-
-QUESTION FRAMEWORK - Ask questions in this order based on what you know:
-
-**Phase 1: Understanding the Problem (ALWAYS start here)**
-- "What specific problem are you trying to solve with this agent?"
-- "What's currently happening that you want to change?"
-- "Who will be using this agent, and what's their workflow like?"
-- "What would success look like for this agent?"
-
-**Phase 2: Understanding the Context (After you know the problem)**
-- "What triggers this agent? (new email, scheduled time, webhook, manual button, etc.)"
-- "What data sources does this agent need access to? (CRM, email, calendar, database, APIs)"
-- "Are there any specific integrations or tools this needs to connect with?"
-- "What information does the agent need to make decisions?"
-
-**Phase 3: Understanding the Logic (After you know context)**
-- "What decisions or conditions should the agent consider?"
-- "Are there edge cases or exceptions to handle?"
-- "What should happen if something goes wrong or data is missing?"
-- "Should the agent notify someone, or handle errors silently?"
-
-**Phase 4: Understanding the Output (Before building)**
-- "What should the agent do when it completes? (send email, update database, create record, etc.)"
-- "Who should be notified about the agent's actions?"
-- "Are there any specific formatting or requirements for the output?"
-
-**Phase 5: Ready to Build**
-- Only after collecting information from phases 1-4, summarize what you understand
-- Ask: "Does this sound right? Should I build the workflow now?"
-- Only suggest building when the user confirms
-
-EXAMPLES OF GOOD QUESTIONS:
-- "I see you want to automate email responses. What types of emails should it respond to automatically, and which ones should it flag for human review?"
-- "For lead qualification, what criteria make a lead 'hot' vs 'warm'? Do you have specific scoring rules?"
-- "When this agent processes customer feedback, what should it do with positive vs negative feedback? Should it route them differently?"
-
-EXAMPLES OF BAD RESPONSES (DON'T DO THIS):
-- "I'll build that for you right away!" (too fast, no questions)
-- "What do you want the agent to do?" (too vague)
-- "Here are 5 questions: 1) ... 2) ... 3) ..." (overwhelming)
-
-Be curious, helpful, and guide them to think through their use case thoroughly. The goal is a highly customized agent that solves their specific problem perfectly.`;
-    } else if (context?.feature === 'campaign-creation') {
-      systemPrompt += `\n\nYou're helping create a marketing campaign. Guide the user through the process quickly. Ask one question at a time. Keep responses under 2 sentences unless summarizing.`;
-    } else if (context?.feature === 'content-creation') {
-      systemPrompt += `\n\nYou're helping create marketing content. Guide the user through the process quickly. Ask one question at a time. Keep responses under 2 sentences unless summarizing.`;
-    } else {
-      systemPrompt += `\n\nCurrent workspace: ${context?.workspace || 'General'}. Keep responses brief and actionable.`;
-    }
-    
-    const messages = [
+    const messages: ChatCompletionMessageParam[] = [
       {
-        role: 'system' as const,
+        role: 'system',
         content: systemPrompt,
       },
-      ...history.slice(-10).map((msg: typeof history[0]) => ({
+      ...history.slice(-15).map((msg) => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content,
       })),
     ];
 
-    // Call OpenAI - use more tokens for agent creation to allow brainstorming
-    const maxTokens = context?.feature === 'agent-creation' ? 500 : 300;
-    logger.debug('[AI Chat] Calling OpenAI', { messageCount: messages.length, maxTokens });
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages,
-      temperature: context?.feature === 'agent-creation' ? 0.8 : 0.7, // Slightly more creative for brainstorming
-      max_tokens: maxTokens,
-    });
-    logger.debug('[AI Chat] OpenAI response received', { 
-      hasContent: !!completion.choices[0]?.message?.content,
-      tokens: completion.usage?.total_tokens 
+    // Select tools based on feature context
+    const tools: ChatCompletionTool[] = context?.feature
+      ? getToolsForCapability(context.feature)
+      : aiTools;
+
+    // Setup tool context
+    const toolContext: ToolContext = {
+      workspaceId,
+      userId: clerkUserId,
+      userEmail: userRecord.email,
+      userName: [userRecord.firstName, userRecord.lastName].filter(Boolean).join(' ') || userRecord.email.split('@')[0],
+    };
+
+    // Call OpenAI with function calling
+    const openai = getOpenAI();
+    logger.debug('[AI Chat] Calling OpenAI', { 
+      messageCount: messages.length, 
+      toolCount: tools.length 
     });
 
-    const assistantMessage = completion.choices[0]?.message?.content || 
-      "I apologize, but I couldn't generate a response. Please try again.";
+    let assistantMessage: string;
+    let toolCallsMade: string[] = [];
+
+    try {
+      // First API call
+      let completion = await openai.chat.completions.create({
+        model: 'gpt-4-turbo-preview',
+        messages,
+        tools: tools.length > 0 ? tools : undefined,
+        tool_choice: tools.length > 0 ? 'auto' : undefined,
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      let responseMessage = completion.choices[0]?.message;
+      
+      // Handle tool calls (may require multiple rounds)
+      let iterations = 0;
+      const maxIterations = 5; // Safety limit
+
+      while (responseMessage?.tool_calls && iterations < maxIterations) {
+        iterations++;
+        logger.debug('[AI Chat] Processing tool calls', { 
+          count: responseMessage.tool_calls.length,
+          iteration: iterations 
+        });
+
+        // Execute all tool calls
+        const toolResults = await processToolCalls(
+          responseMessage.tool_calls,
+          toolContext
+        );
+
+        // Track which tools were called
+        toolCallsMade.push(...toolResults.map(r => r.name));
+
+        // Add assistant message with tool calls
+        messages.push({
+          role: 'assistant',
+          content: responseMessage.content,
+          tool_calls: responseMessage.tool_calls,
+        });
+
+        // Add tool results
+        for (const result of toolResults) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: result.toolCallId,
+            content: result.result,
+          });
+        }
+
+        // Call OpenAI again with tool results
+        completion = await openai.chat.completions.create({
+          model: 'gpt-4-turbo-preview',
+          messages,
+          tools: tools.length > 0 ? tools : undefined,
+          tool_choice: tools.length > 0 ? 'auto' : undefined,
+          temperature: 0.7,
+          max_tokens: 1000,
+        });
+
+        responseMessage = completion.choices[0]?.message;
+      }
+
+      assistantMessage = responseMessage?.content || 
+        "I apologize, but I couldn't generate a response. Please try again.";
+
+      logger.debug('[AI Chat] OpenAI response received', { 
+        hasContent: !!assistantMessage,
+        tokens: completion.usage?.total_tokens,
+        toolCallCount: toolCallsMade.length,
+      });
+    } catch (openaiError) {
+      logger.error('[AI Chat] OpenAI API error', openaiError);
+      
+      // Provide a helpful fallback message
+      assistantMessage = "I encountered an issue while processing your request. Please try again, or let me know if you'd like help with something else.";
+    }
 
     // Save assistant message
     const [aiMessage] = await db
@@ -214,6 +333,15 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
         conversationId: conversation.id,
         role: 'assistant',
         content: assistantMessage,
+        metadata: toolCallsMade.length > 0 
+          ? { 
+              functionCalls: toolCallsMade.map(name => ({ 
+                name, 
+                args: {}, 
+                result: {} 
+              }))
+            }
+          : undefined,
       })
       .returning();
 
@@ -223,11 +351,28 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
       .set({
         lastMessageAt: new Date(),
         messageCount: conversation.messageCount + 2,
+        updatedAt: new Date(),
       })
       .where(eq(aiConversations.id, conversation.id));
 
+    // Trigger background learning after 5+ message exchanges
+    if (conversation.messageCount >= 10) {
+      // Async, non-blocking
+      analyzeConversationForLearning(conversation.id, workspaceId, userRecord.id)
+        .then((insights) => {
+          if (insights.length > 0) {
+            return updateUserPreferencesFromInsights(workspaceId, userRecord.id, insights);
+          }
+        })
+        .catch((err) => logger.error('Background learning failed', err));
+    }
+
     const duration = Date.now() - startTime;
-    logger.info('[AI Chat] Success', { duration: `${duration}ms`, conversationId: conversation.id });
+    logger.info('[AI Chat] Success', { 
+      duration: `${duration}ms`, 
+      conversationId: conversation.id,
+      toolsUsed: toolCallsMade,
+    });
     
     return NextResponse.json({
       conversationId: conversation.id,
@@ -237,10 +382,9 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
         content: assistantMessage,
         createdAt: aiMessage.createdAt,
       },
-      usage: {
-        promptTokens: completion.usage?.prompt_tokens,
-        completionTokens: completion.usage?.completion_tokens,
-        totalTokens: completion.usage?.total_tokens,
+      context: {
+        userName: toolContext.userName,
+        toolsExecuted: toolCallsMade,
       },
     });
   } catch (error) {
@@ -248,5 +392,3 @@ Be curious, helpful, and guide them to think through their use case thoroughly. 
     return createErrorResponse(error, `AI Chat error (duration: ${duration}ms)`);
   }
 }
-
-
