@@ -1,7 +1,7 @@
 import type { TriggerConfig } from "@trigger.dev/sdk/v3";
 
 export const config: TriggerConfig = {
-  project: "galaxyco-ai",
+  project: "proj_kztbsnnuypnyibmslcvd",
   maxDuration: 300, // 5 minutes max per task
   retries: {
     enabledInDev: true,
