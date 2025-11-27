@@ -5,61 +5,109 @@ import { knowledgeItems, knowledgeCollections } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { uploadFile } from '@/lib/storage';
 import { getOpenAI } from '@/lib/ai-providers';
-import { upsertVectors } from '@/lib/vector';
+import { indexKnowledgeDocument, isVectorConfigured } from '@/lib/vector';
 import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
-import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
-// Helper to extract text from files
+// Helper to extract text from PDF files
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  try {
+    // Dynamic import for pdf-parse
+    // Using require-style for compatibility with pdf-parse's module system
+    const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
+    const data = await pdfParse(buffer);
+    return data.text || '';
+  } catch (error) {
+    logger.error('PDF extraction failed', { 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+    throw new Error('Failed to extract text from PDF');
+  }
+}
+
+// Helper to extract text from DOCX files
+async function extractDocxText(buffer: Buffer): Promise<string> {
+  try {
+    // Dynamic import for mammoth
+    const mammoth = await import('mammoth');
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value || '';
+  } catch (error) {
+    logger.error('DOCX extraction failed', { 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    });
+    throw new Error('Failed to extract text from DOCX');
+  }
+}
+
+// Main text extraction function
 async function extractText(file: File): Promise<string> {
   const fileType = file.type;
-  const content = await file.text();
 
-  // For now, handle text-based files directly
+  // Handle text-based files directly
   if (
     fileType === 'text/plain' ||
     fileType === 'text/markdown' ||
     fileType === 'application/json'
   ) {
-    return content;
+    return await file.text();
   }
 
-  // For PDF/DOCX, we'd need additional libraries
-  // For MVP, return a message
+  // For PDF files - use pdf-parse
   if (fileType === 'application/pdf') {
-    return '[PDF content - text extraction requires additional setup]';
-  }
-
-  if (
-    fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  ) {
-    return '[DOCX content - text extraction requires additional setup]';
-  }
-
-  return content;
-}
-
-// Chunk text for vector embedding
-function chunkText(text: string, chunkSize: number = 500): string[] {
-  const chunks: string[] = [];
-  const sentences = text.split(/[.!?]+\s+/);
-  let currentChunk = '';
-
-  for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > chunkSize && currentChunk) {
-      chunks.push(currentChunk.trim());
-      currentChunk = sentence;
-    } else {
-      currentChunk += (currentChunk ? ' ' : '') + sentence;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const text = await extractPdfText(buffer);
+      
+      if (!text || text.trim().length === 0) {
+        logger.warn('PDF extraction returned empty text', { fileName: file.name });
+        return '[PDF contained no extractable text - may be scanned/image-based]';
+      }
+      
+      logger.info('PDF text extracted successfully', { 
+        fileName: file.name, 
+        textLength: text.length 
+      });
+      return text;
+    } catch (error) {
+      logger.error('PDF extraction error', { fileName: file.name, error });
+      return '[PDF text extraction failed - file may be corrupted or protected]';
     }
   }
 
-  if (currentChunk) {
-    chunks.push(currentChunk.trim());
+  // For DOCX files - use mammoth
+  if (
+    fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  ) {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const text = await extractDocxText(buffer);
+      
+      if (!text || text.trim().length === 0) {
+        logger.warn('DOCX extraction returned empty text', { fileName: file.name });
+        return '[DOCX contained no extractable text]';
+      }
+      
+      logger.info('DOCX text extracted successfully', { 
+        fileName: file.name, 
+        textLength: text.length 
+      });
+      return text;
+    } catch (error) {
+      logger.error('DOCX extraction error', { fileName: file.name, error });
+      return '[DOCX text extraction failed - file may be corrupted]';
+    }
   }
 
-  return chunks.filter((chunk) => chunk.length > 0);
+  // Fallback for other file types
+  try {
+    return await file.text();
+  } catch {
+    return '[Unable to extract text from this file type]';
+  }
 }
 
 export async function POST(request: Request) {
@@ -193,35 +241,25 @@ export async function POST(request: Request) {
       })
       .returning();
 
-    // Generate embeddings and store in vector database
+    // Index document in vector database for semantic search
     try {
-      const chunks = chunkText(content, 500);
-      const embeddings: number[][] = [];
-
-      // Generate embeddings for each chunk
-      for (const chunk of chunks.slice(0, 20)) { // Limit to 20 chunks for cost
-        const embeddingResponse = await openai.embeddings.create({
-          model: 'text-embedding-3-small',
-          input: chunk,
-        });
-
-        embeddings.push(embeddingResponse.data[0].embedding);
-      }
-
-      // Store in vector database
-      const vectors = embeddings.map((embedding, index) => ({
-        id: `${item.id}_chunk_${index}`,
-        values: embedding,
-        metadata: {
-          itemId: item.id,
+      if (isVectorConfigured()) {
+        const { chunksIndexed } = await indexKnowledgeDocument(
+          item.id,
           workspaceId,
-          title: item.title,
-          chunk: chunks[index],
-          chunkIndex: index,
-        },
-      }));
-
-      await upsertVectors(vectors);
+          item.title,
+          content,
+          {
+            type: item.type,
+            mimeType: file.type,
+            fileName: file.name,
+          }
+        );
+        logger.info('Document indexed in vector DB', { 
+          itemId: item.id, 
+          chunksIndexed 
+        });
+      }
     } catch (error) {
       logger.error('Vector embedding failed', error);
       // Don't fail the upload if embedding fails

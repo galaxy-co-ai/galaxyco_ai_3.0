@@ -1395,6 +1395,65 @@ const toolImplementations: Record<string, ToolFunction> = {
       const type = args.type as string | undefined;
       const limit = (args.limit as number) || 5;
 
+      // Import vector search function
+      const { searchKnowledge, isVectorConfigured } = await import('@/lib/vector');
+
+      // Try semantic vector search first if configured
+      if (isVectorConfigured() && query.trim().length > 0) {
+        try {
+          const vectorResults = await searchKnowledge(
+            context.workspaceId,
+            query,
+            { topK: limit, minScore: 0.5, type }
+          );
+
+          if (vectorResults.results.length > 0) {
+            // Fetch full document details for matched items
+            const itemIds = vectorResults.results.map((r) => r.itemId);
+            const documents = await db.query.knowledgeItems.findMany({
+              where: and(
+                eq(knowledgeItems.workspaceId, context.workspaceId),
+                sql`${knowledgeItems.id} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`
+              ),
+            });
+
+            // Map results with vector scores and relevant content
+            const enrichedResults = vectorResults.results.map((vr) => {
+              const doc = documents.find((d) => d.id === vr.itemId);
+              return {
+                id: vr.itemId,
+                title: vr.title,
+                type: doc?.type || 'document',
+                summary: doc?.summary || '',
+                relevantContent: vr.chunk, // The most relevant chunk for RAG
+                relevanceScore: Math.round(vr.score * 100) + '%',
+                updatedAt: doc?.updatedAt,
+              };
+            });
+
+            logger.info('AI search_knowledge (vector)', { 
+              query: query.slice(0, 50), 
+              resultsCount: enrichedResults.length 
+            });
+
+            return {
+              success: true,
+              message: `Found ${enrichedResults.length} relevant document(s) using semantic search`,
+              data: {
+                documents: enrichedResults,
+                searchType: 'semantic',
+              },
+            };
+          }
+        } catch (vectorError) {
+          logger.warn('Vector search failed, falling back to SQL search', { 
+            error: vectorError instanceof Error ? vectorError.message : 'Unknown error' 
+          });
+          // Fall through to SQL-based search
+        }
+      }
+
+      // Fallback: SQL-based keyword search
       const conditions = [eq(knowledgeItems.workspaceId, context.workspaceId)];
 
       if (type) {
@@ -1405,7 +1464,8 @@ const toolImplementations: Record<string, ToolFunction> = {
         conditions.push(
           or(
             like(knowledgeItems.title, `%${query}%`),
-            like(knowledgeItems.summary, `%${query}%`)
+            like(knowledgeItems.summary, `%${query}%`),
+            like(knowledgeItems.content, `%${query}%`)
           )!
         );
       }
@@ -1425,8 +1485,10 @@ const toolImplementations: Record<string, ToolFunction> = {
             title: doc.title,
             type: doc.type,
             summary: doc.summary,
+            relevantContent: doc.content?.slice(0, 500), // Include snippet for RAG
             updatedAt: doc.updatedAt,
           })),
+          searchType: 'keyword',
         },
       };
     } catch (error) {
@@ -1978,25 +2040,120 @@ A: [Detailed answer]`,
   },
 
   async send_email(args, context): Promise<ToolResult> {
-    // Note: This would integrate with an email service like SendGrid, Resend, etc.
-    // For now, we'll log the intent and return success
-    logger.info('AI send_email requested', {
-      to: args.to,
-      subject: args.subject,
-      leadId: args.leadId,
-      workspaceId: context.workspaceId,
-    });
+    try {
+      const { sendEmail, isEmailConfigured, textToHtml, isValidEmail } = await import('@/lib/email');
+      
+      const to = args.to as string;
+      const subject = args.subject as string;
+      const body = args.body as string;
+      const leadId = args.leadId as string | undefined;
 
-    return {
-      success: true,
-      message: `Email queued to be sent to ${args.to}`,
-      data: {
-        to: args.to,
-        subject: args.subject,
-        status: 'queued',
-        note: 'Email sending requires email service integration. Currently logged for processing.',
-      },
-    };
+      // Validate email address
+      if (!isValidEmail(to)) {
+        return {
+          success: false,
+          message: `Invalid email address: ${to}`,
+        };
+      }
+
+      // Check if email service is configured
+      if (!isEmailConfigured()) {
+        logger.warn('AI send_email - Resend not configured', {
+          to,
+          subject,
+          workspaceId: context.workspaceId,
+        });
+        return {
+          success: false,
+          message: 'Email service is not configured. Please add RESEND_API_KEY to your environment.',
+          data: {
+            to,
+            subject,
+            status: 'not_configured',
+          },
+        };
+      }
+
+      // Send the email
+      const result = await sendEmail({
+        to,
+        subject,
+        html: textToHtml(body),
+        text: body,
+        replyTo: context.userEmail,
+        tags: [
+          { name: 'source', value: 'neptune_ai' },
+          { name: 'workspace', value: context.workspaceId },
+          ...(leadId ? [{ name: 'lead_id', value: leadId }] : []),
+        ],
+      });
+
+      if (result.success) {
+        logger.info('AI sent email successfully', {
+          to,
+          subject,
+          messageId: result.messageId,
+          workspaceId: context.workspaceId,
+        });
+
+        // Update lead's last contacted time if leadId provided
+        if (leadId) {
+          try {
+            await db
+              .update(prospects)
+              .set({ 
+                lastContactedAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(and(
+                eq(prospects.id, leadId),
+                eq(prospects.workspaceId, context.workspaceId)
+              ));
+          } catch (updateError) {
+            logger.warn('Failed to update lead lastContactedAt', { 
+              error: updateError instanceof Error ? updateError.message : 'Unknown error' 
+            });
+          }
+        }
+
+        return {
+          success: true,
+          message: `✅ Email sent successfully to ${to}`,
+          data: {
+            to,
+            subject,
+            messageId: result.messageId,
+            status: 'sent',
+            sentAt: new Date().toISOString(),
+          },
+        };
+      } else {
+        logger.error('AI send_email failed', {
+          to,
+          subject,
+          error: result.error,
+          workspaceId: context.workspaceId,
+        });
+
+        return {
+          success: false,
+          message: `Failed to send email: ${result.error}`,
+          data: {
+            to,
+            subject,
+            status: 'failed',
+            error: result.error,
+          },
+        };
+      }
+    } catch (error) {
+      logger.error('AI send_email exception', error);
+      return {
+        success: false,
+        message: 'Failed to send email due to an unexpected error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   },
 
   // ============================================================================

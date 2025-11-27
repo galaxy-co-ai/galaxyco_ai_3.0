@@ -1,159 +1,169 @@
 # Background Jobs Documentation
 
-This document describes the background jobs structure and implementation status.
+This document describes the background jobs implemented using Trigger.dev v4.
 
 ## Overview
 
-Background jobs are implemented using Trigger.dev and are defined in `src/trigger/jobs.ts`. These jobs handle asynchronous tasks like syncing external services, sending emails, and processing data.
+Background jobs are defined in `src/trigger/` and are automatically discovered by Trigger.dev. The configuration is in `trigger.config.ts` at the project root.
 
-## Job Structure
+## Setup
 
-All jobs follow this pattern:
+1. Get a Trigger.dev account at [trigger.dev](https://trigger.dev)
+2. Create a project and get your API key
+3. Add to `.env`:
+   ```env
+   TRIGGER_SECRET_KEY=tr_dev_xxxxxxxxxxxx
+   ```
+4. Run the dev server:
+   ```bash
+   npm run trigger:dev
+   ```
+
+## Implemented Jobs
+
+### 1. Lead Scoring (`lead-scoring.ts`)
+
+**Tasks:**
+- `score-lead` - Scores a single lead based on multiple factors
+- `bulk-score-leads` - Scores all unscored leads in a workspace
+- `scheduled-lead-scoring` - Daily cron job (2 AM) to score all leads
+
+**Scoring Factors:**
+- Email presence (+15, +10 for corporate email)
+- Phone presence (+10)
+- Company name (+10)
+- Job title (+10, +15 for C-level/VP)
+- Estimated value (+10 to +20)
+- Stage progression (0 to +50)
+- Recent activity (+5 to +10)
+
+**Usage:**
 ```typescript
-client.defineJob({
-  id: 'job-id',
-  name: 'Human Readable Name',
-  version: '1.0.0',
-  trigger: { /* trigger configuration */ },
-  run: async (payload, io, ctx) => { /* job logic */ },
+import { scoreLeadTask, bulkScoreLeadsTask } from "@/trigger/jobs";
+
+// Score a single lead
+await scoreLeadTask.trigger({ 
+  prospectId: "...", 
+  workspaceId: "..." 
+});
+
+// Score all leads in workspace
+await bulkScoreLeadsTask.trigger({ 
+  workspaceId: "..." 
 });
 ```
 
-## Jobs Status
+### 2. Document Indexing (`document-indexing.ts`)
 
-### 1. Gmail Sync (`sync-gmail`)
-**Status:** Stubbed - Structure defined, implementation pending  
-**Trigger:** Scheduled (every 15 minutes)  
-**Purpose:** Sync emails from Gmail integrations  
-**Implementation Needed:**
-- Get OAuth access tokens (with refresh if needed)
-- Fetch new emails from Gmail API
-- Store emails in database
-- Trigger automated workflows based on email content
-- Handle rate limits and errors gracefully
+**Tasks:**
+- `index-document` - Indexes a single document in vector DB
+- `bulk-index-documents` - Indexes all unindexed documents
+- `reindex-all-documents` - Forces re-indexing of all documents
 
-**Dependencies:**
-- OAuth token management
-- Gmail API integration
-- Email storage schema
-- Workflow trigger system
+**Usage:**
+```typescript
+import { indexDocumentTask, bulkIndexDocumentsTask } from "@/trigger/jobs";
 
-### 2. Calendar Sync (`sync-calendar`)
-**Status:** Stubbed - Structure defined, implementation pending  
-**Trigger:** Scheduled (every 30 minutes)  
-**Purpose:** Sync calendar events from Google Calendar/Microsoft Calendar  
-**Implementation Needed:**
-- Get OAuth access tokens
-- Fetch calendar events from provider API
-- Store/update events in `calendarEvents` table
-- Handle recurring events
-- Sync attendee responses
-- Detect conflicts
+// Index a single document
+await indexDocumentTask.trigger({ 
+  itemId: "...", 
+  workspaceId: "..." 
+});
 
-**Dependencies:**
-- OAuth token management
-- Calendar API integration (Google/Microsoft)
-- Calendar events schema (already exists)
+// Bulk index (force = re-index existing)
+await bulkIndexDocumentsTask.trigger({ 
+  workspaceId: "...", 
+  force: false 
+});
+```
 
-### 3. Email Campaign (`send-email-campaign`)
-**Status:** Stubbed - Structure defined, implementation pending  
-**Trigger:** Event-based (`campaign.send`)  
-**Purpose:** Send email campaigns to recipients  
-**Implementation Needed:**
-- Get campaign details from database
-- Get recipient list
-- Send emails in batches (respect rate limits)
-- Track opens/clicks using tracking pixels
-- Update campaign statistics
-- Handle bounces and unsubscribes
+### 3. Campaign Sending (`campaign-sender.ts`)
 
-**Dependencies:**
-- Email service provider (SendGrid, Resend, etc.)
-- Campaign schema
-- Email tracking system
-- Rate limiting
+**Tasks:**
+- `send-campaign` - Sends an email campaign to its audience
+- `schedule-campaign` - Schedules a campaign for future sending
 
-### 4. CRM Data Enrichment (`enrich-crm-data`)
-**Status:** Stubbed - Structure defined, implementation pending  
-**Trigger:** Event-based (`contact.created`)  
-**Purpose:** Enrich contact data with external APIs  
-**Implementation Needed:**
-- Get contact information
-- Call enrichment APIs (Clearbit, Hunter.io, etc.)
-- Update contact with enriched data
-- Calculate lead score based on enriched data
-- Handle API rate limits
+**Features:**
+- Target audience selection (all leads, new leads, qualified leads, contacts)
+- Batch sending with rate limiting
+- Campaign status tracking
+- Automatic stats updating
 
-**Dependencies:**
-- Data enrichment API keys
-- Contact schema
-- Lead scoring algorithm
+**Usage:**
+```typescript
+import { sendCampaignTask, scheduleCampaignTask } from "@/trigger/jobs";
 
-### 5. Workflow Execution (`execute-workflow`)
-**Status:** Stubbed - Structure defined, implementation pending  
-**Trigger:** Event-based (`workflow.trigger`)  
-**Purpose:** Execute automated workflows  
-**Implementation Needed:**
-- Get workflow definition
-- Execute workflow nodes in order
-- Handle conditional branches
-- Process data transformations
-- Call external APIs
-- Handle errors and retries
+// Send immediately
+await sendCampaignTask.trigger({ 
+  campaignId: "...", 
+  workspaceId: "..." 
+});
 
-**Dependencies:**
-- Workflow execution engine
-- Workflow schema
-- Node execution handlers
+// Schedule for later
+await scheduleCampaignTask.trigger({ 
+  campaignId: "...", 
+  workspaceId: "...",
+  scheduledFor: "2024-01-15T10:00:00Z"
+});
+```
 
-### 6. Weekly Report Generation (`generate-weekly-report`)
-**Status:** Stubbed - Structure defined, implementation pending  
-**Trigger:** Scheduled (Mondays at 9 AM)  
-**Purpose:** Generate and send weekly reports  
-**Implementation Needed:**
-- Gather data from last week (agents, tasks, deals, etc.)
-- Generate insights using AI
-- Create PDF report
-- Email to stakeholders
-- Store report in database
+### 4. Workflow Execution (`workflow-executor.ts`)
 
-**Dependencies:**
-- Report generation library (PDF)
-- Email service
-- AI for insights
-- Report storage
+**Tasks:**
+- `execute-agent` - Executes an AI agent with inputs
+- `process-active-agents` - Lists/processes active agents
+- `scheduled-agent-health-check` - Hourly health check cron
 
-## Implementation Priority
+**Features:**
+- Execution history tracking
+- Input/output logging
+- Agent stats updating
+- Error handling with detailed logs
 
-1. **High Priority:**
-   - Gmail Sync (enables email automation)
-   - Calendar Sync (enables calendar integration)
+**Usage:**
+```typescript
+import { executeAgentTask } from "@/trigger/jobs";
 
-2. **Medium Priority:**
-   - Email Campaign (marketing feature)
-   - CRM Data Enrichment (data quality)
+await executeAgentTask.trigger({
+  agentId: "...",
+  workspaceId: "...",
+  inputs: { someParam: "value" },
+  triggeredBy: "user-id-or-system"
+});
+```
 
-3. **Low Priority:**
-   - Workflow Execution (complex, requires full workflow engine)
-   - Weekly Reports (nice-to-have feature)
+## Scheduled Jobs Summary
 
-## Notes
+| Job | Schedule | Purpose |
+|-----|----------|---------|
+| `scheduled-lead-scoring` | Daily 2 AM | Score all leads across workspaces |
+| `scheduled-agent-health-check` | Hourly | Monitor agent status and stats |
 
-- All jobs should handle errors gracefully and log to Trigger.dev dashboard
-- Jobs should respect rate limits for external APIs
-- Jobs should be idempotent where possible
-- Use database transactions for data consistency
-- Consider retry logic for transient failures
+## Environment Variables
+
+```env
+# Required for Trigger.dev
+TRIGGER_SECRET_KEY=tr_dev_xxxxxxxxxxxx
+
+# Optional: Trigger.dev API URL (default: https://api.trigger.dev)
+TRIGGER_API_URL=https://api.trigger.dev
+```
 
 ## Testing
 
-Jobs can be tested locally using Trigger.dev CLI:
+Run the Trigger.dev dev server:
 ```bash
-npx trigger.dev@latest dev
+npm run trigger:dev
 ```
 
-Jobs can also be triggered manually from the Trigger.dev dashboard for testing.
+Jobs can be triggered:
+1. Via Trigger.dev dashboard
+2. Programmatically with `.trigger()` method
+3. Via API endpoints (create your own)
 
+## Notes
 
-
-
+- All jobs include retry logic (default: 3 attempts)
+- Jobs respect multi-tenant isolation via workspaceId
+- Long-running jobs are split into smaller tasks
+- Error details are logged to Trigger.dev dashboard

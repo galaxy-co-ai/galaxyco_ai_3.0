@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { knowledgeItems } from '@/db/schema';
-import { getOpenAI } from '@/lib/ai-providers';
-import { queryVectors } from '@/lib/vector';
+import { searchKnowledge, isVectorConfigured } from '@/lib/vector';
 import { rateLimit } from '@/lib/rate-limit';
 import { eq, and, or, like, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -49,58 +48,26 @@ export async function POST(request: Request) {
 
     // Perform hybrid search: vector + keyword
 
-    // 1. Vector similarity search
-    const openai = getOpenAI();
-    let vectorResults: any[] = [];
+    // 1. Vector similarity search using new helper with namespace isolation
+    let vectorResults: Array<{ itemId: string; score: number; chunk: string }> = [];
 
-    try {
-      const embeddingResponse = await openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: query,
-      });
+    if (isVectorConfigured()) {
+      try {
+        const semanticResults = await searchKnowledge(
+          workspaceId,
+          query,
+          { topK: limit * 2, minScore: 0.4 }
+        );
 
-      const queryVector = embeddingResponse.data[0].embedding;
-
-      // Search vector database
-      const similarChunks = await queryVectors(
-        queryVector,
-        {
-          topK: limit * 2, // Get more results for merging
-          filter: collectionId
-            ? { collectionId, workspaceId }
-            : { workspaceId },
-          includeMetadata: true,
-        }
-      );
-
-      // Group chunks by item and get top results
-      const itemScores = new Map<string, number>();
-      const itemMetadata = new Map<string, any>();
-
-      for (const chunk of similarChunks) {
-        const metadata = chunk.metadata as Record<string, unknown> | undefined;
-        const itemId = metadata?.itemId;
-        if (typeof itemId === 'string') {
-          const currentScore = itemScores.get(itemId) || 0;
-          if (chunk.score && chunk.score > currentScore) {
-            itemScores.set(itemId, chunk.score);
-            itemMetadata.set(itemId, metadata);
-          }
-        }
-      }
-
-      // Get top items by score
-      vectorResults = Array.from(itemScores.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, limit)
-        .map(([itemId, score]) => ({
-          itemId,
-          score,
-          metadata: itemMetadata.get(itemId),
+        vectorResults = semanticResults.results.map((r) => ({
+          itemId: r.itemId,
+          score: r.score,
+          chunk: r.chunk,
         }));
-    } catch (error) {
-      logger.error('Vector search failed', error);
-      // Continue with keyword search
+      } catch (error) {
+        logger.error('Vector search failed', error);
+        // Continue with keyword search
+      }
     }
 
     // 2. Keyword search in database
@@ -135,12 +102,28 @@ export async function POST(request: Request) {
     });
 
     // 3. Merge and rank results
-    const mergedResults = new Map<string, any>();
+    const mergedResults = new Map<string, {
+      id: string;
+      title: string;
+      type: string;
+      summary: string | null;
+      content: string | null;
+      url: string | null;
+      collection: { name: string; color: string | null } | null;
+      createdAt: Date;
+      score: number;
+      matchType: string;
+      relevantChunk?: string;
+    }>();
 
     // Add vector results with high weight
-    for (const result of vectorResults) {
-      const item = await db.query.knowledgeItems.findFirst({
-        where: eq(knowledgeItems.id, result.itemId),
+    if (vectorResults.length > 0) {
+      const vectorItemIds = vectorResults.map((r) => r.itemId);
+      const vectorItems = await db.query.knowledgeItems.findMany({
+        where: and(
+          eq(knowledgeItems.workspaceId, workspaceId),
+          or(...vectorItemIds.map((id) => eq(knowledgeItems.id, id)))
+        ),
         with: {
           collection: {
             columns: {
@@ -151,12 +134,23 @@ export async function POST(request: Request) {
         },
       });
 
-      if (item) {
-        mergedResults.set(item.id, {
-          ...item,
-          score: result.score * 10, // Boost vector score
-          matchType: 'semantic',
-        });
+      for (const result of vectorResults) {
+        const item = vectorItems.find((i) => i.id === result.itemId);
+        if (item) {
+          mergedResults.set(item.id, {
+            id: item.id,
+            title: item.title,
+            type: item.type,
+            summary: item.summary,
+            content: item.content,
+            url: item.sourceUrl,
+            collection: item.collection,
+            createdAt: item.createdAt,
+            score: result.score * 10, // Boost vector score
+            matchType: 'semantic',
+            relevantChunk: result.chunk,
+          });
+        }
       }
     }
 
@@ -164,15 +158,24 @@ export async function POST(request: Request) {
     for (const item of keywordResults) {
       if (!mergedResults.has(item.id)) {
         mergedResults.set(item.id, {
-          ...item,
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          summary: item.summary,
+          content: item.content,
+          url: item.sourceUrl,
+          collection: item.collection,
+          createdAt: item.createdAt,
           score: 5, // Base keyword score
           matchType: 'keyword',
         });
       } else {
         // Boost existing result if it also matches keywords
         const existing = mergedResults.get(item.id);
-        existing.score += 5;
-        existing.matchType = 'hybrid';
+        if (existing) {
+          existing.score += 5;
+          existing.matchType = 'hybrid';
+        }
       }
     }
 
@@ -185,7 +188,8 @@ export async function POST(request: Request) {
         title: item.title,
         type: item.type,
         summary: item.summary,
-        content: item.content?.substring(0, 300) + '...',
+        content: item.content ? item.content.substring(0, 300) + '...' : '',
+        relevantChunk: item.relevantChunk,
         url: item.url,
         collection: item.collection?.name || 'Uncategorized',
         collectionColor: item.collection?.color,
