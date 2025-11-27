@@ -30,6 +30,7 @@ import {
   Database,
   MessageSquare,
   Activity,
+  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -846,19 +847,19 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
 
         {/* Floating Tab Bar */}
         <div className="flex justify-center">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-2 inline-flex gap-1">
+          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                   activeTab === tab.id
-                    ? `${tab.activeColor} shadow-md`
+                    ? `${tab.activeColor} shadow-sm`
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 aria-label={`Switch to ${tab.label} tab`}
               >
-                <tab.icon className="h-3 w-3" />
+                <tab.icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -881,68 +882,93 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
             <Card className="p-8 shadow-lg border-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left: Templates List */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[600px] rounded-xl border bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
-                        <FileText className="h-5 w-5" />
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
+                          <FileText className="h-5 w-5" aria-hidden="true" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-[15px] text-gray-900">Agent Templates</h3>
+                          <p className="text-[13px] text-blue-600 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" aria-hidden="true"></span>
+                            {agentTemplates.length} templates
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-[15px] text-gray-900">Agent Templates</h3>
-                        <p className="text-[13px] text-blue-600 flex items-center gap-1">
-                          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                          {agentTemplates.length} templates
-                        </p>
-                      </div>
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        <Sparkles className="h-3 w-3 mr-1" aria-hidden="true" />
+                        AI Ready
+                      </Badge>
                     </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Select a template to view its workflow and start building.
+                    </p>
                   </div>
 
                   {/* Templates List */}
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {agentTemplates.map((template) => {
                       const isSelected = selectedTemplate === template.id;
+                      const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+                        "bg-blue-500": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-600" },
+                        "bg-purple-500": { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-600" },
+                        "bg-green-500": { bg: "bg-green-50", border: "border-green-200", text: "text-green-600" },
+                        "bg-amber-500": { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-600" },
+                        "bg-indigo-500": { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-600" },
+                        "bg-cyan-500": { bg: "bg-cyan-50", border: "border-cyan-200", text: "text-cyan-600" },
+                        "bg-rose-500": { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-600" },
+                        "bg-emerald-500": { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-600" },
+                      };
+                      const colors = colorMap[template.iconColor] || { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-600" };
+                      
                       return (
                         <button
                           key={template.id}
                           onClick={() => setSelectedTemplate(template.id)}
-                          className={cn(
-                            "w-full p-3 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-                            isSelected
-                              ? "border-blue-300 bg-blue-50/30 shadow-sm"
-                              : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
-                          )}
+                          className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ${
+                            isSelected 
+                              ? `${colors.bg} ${colors.border} shadow-md` 
+                              : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                          }`}
                           aria-label={`Select template: ${template.name}`}
                           aria-pressed={isSelected}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${template.iconColor} flex-shrink-0`}>
-                              <template.icon className="h-4 w-4 text-white" />
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg ${colors.bg}`}>
+                              <template.icon className={`h-5 w-5 ${colors.text}`} aria-hidden="true" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-sm font-semibold text-gray-900">{template.name}</p>
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "text-[10px] px-1.5 py-0 h-4",
-                                    template.difficulty === "Easy"
-                                      ? "bg-green-50 text-green-700 border-green-200"
-                                      : template.difficulty === "Medium"
-                                      ? "bg-amber-50 text-amber-700 border-amber-200"
-                                      : "bg-red-50 text-red-700 border-red-200"
-                                  )}
-                                >
-                                  {template.difficulty}
-                                </Badge>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <h4 className={`font-semibold text-sm ${isSelected ? colors.text : "text-gray-900"}`}>
+                                    {template.name}
+                                  </h4>
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      "text-[10px] px-1.5 py-0 h-4",
+                                      template.difficulty === "Easy"
+                                        ? "bg-green-50 text-green-700 border-green-200"
+                                        : template.difficulty === "Medium"
+                                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                                        : "bg-red-50 text-red-700 border-red-200"
+                                    )}
+                                  >
+                                    {template.difficulty}
+                                  </Badge>
+                                </div>
+                                <ChevronRight className={`h-4 w-4 transition-transform ${isSelected ? `${colors.text} rotate-90` : "text-gray-400"}`} aria-hidden="true" />
                               </div>
-                              <p className="text-xs text-gray-500 mb-1">{template.description}</p>
-                              <div className="flex items-center gap-3 text-[10px] text-gray-400">
-                                <span>{template.category}</span>
-                                <span className="flex items-center gap-1">
-                                  <Bot className="h-3 w-3" />
+                              <p className="text-xs text-gray-500 mt-0.5">{template.description}</p>
+                              <div className="flex items-center gap-3 mt-2">
+                                <span className={`text-xs ${isSelected ? colors.text : "text-gray-600"}`}>
                                   {template.nodeCount} steps
                                 </span>
+                                <span className="text-xs text-gray-400">•</span>
+                                <span className="text-xs text-gray-500">{template.category}</span>
                               </div>
                             </div>
                           </div>
@@ -954,112 +980,154 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
 
                 {/* Right: Template Flow */}
                 <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0 flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold text-gray-900 mb-1">
-                        {agentTemplates.find(t => t.id === selectedTemplate)?.name || "Select a template"}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {agentTemplates.find(t => t.id === selectedTemplate)?.description || "Choose a template to view its workflow"}
-                      </p>
-                    </div>
-                    <Button
-                      size="icon"
-                      className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-blue-200 text-blue-600 hover:text-blue-700 shadow-sm flex-shrink-0"
-                      aria-label="Use template"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Flow Diagram */}
-                  <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
-                    {(() => {
-                      const nodes = getTemplateNodes(selectedTemplate);
-                      if (nodes.length === 0) {
-                        return (
-                          <div className="flex items-center justify-center h-full">
-                            <div className="text-center max-w-sm">
-                              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                                <Bot className="h-8 w-8 text-slate-400" />
-                              </div>
-                              <h3 className="text-base font-semibold text-gray-900 mb-2">Select a template</h3>
-                              <p className="text-sm text-gray-500">
-                                Choose an agent template from the list to view its workflow steps.
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      }
-
+                  {(() => {
+                    const selectedTemplateData = agentTemplates.find(t => t.id === selectedTemplate);
+                    const nodes = getTemplateNodes(selectedTemplate);
+                    
+                    if (!selectedTemplateData || nodes.length === 0) {
                       return (
-                        <div className="relative min-h-full">
-                          <div className="flex flex-col gap-6">
-                            {nodes.map((node, index) => {
-                              const isLast = index === nodes.length - 1;
-
-                              const getGradientClasses = () => {
-                                switch (node.type) {
-                                  case "trigger":
-                                    return "from-blue-500 to-blue-600";
-                                  case "action":
-                                    return "from-green-500 to-green-600";
-                                  case "condition":
-                                    return "from-purple-500 to-purple-600";
-                                  case "llm":
-                                    return "from-indigo-500 to-indigo-600";
-                                  case "tool":
-                                    return "from-amber-500 to-amber-600";
-                                  default:
-                                    return "from-slate-500 to-slate-600";
-                                }
-                              };
-
-                              return (
-                                <div key={node.id} className="relative">
-                                  <div className="flex items-start gap-4">
-                                    {/* Node with gradient */}
-                                    <div className="relative flex-shrink-0">
-                                      <div
-                                        className={cn(
-                                          "w-16 h-16 rounded-xl bg-gradient-to-br shadow-lg flex items-center justify-center",
-                                          getGradientClasses()
-                                        )}
-                                      >
-                                        <node.icon className="h-7 w-7 text-white" />
-                                      </div>
-                                      
-                                      {/* Connector line */}
-                                      {!isLast && (
-                                        <div className="absolute left-1/2 top-16 -translate-x-1/2 w-0.5 h-6 bg-blue-400">
-                                          <div className="absolute left-1/2 top-full -translate-x-1/2 w-2 h-2 rounded-full bg-blue-400"></div>
-                                        </div>
-                                      )}
-                                    </div>
-
-                                    {/* Node Info */}
-                                    <div className="flex-1 min-w-0 pt-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <p className="text-sm font-semibold text-gray-900">{node.title}</p>
-                                        <Badge
-                                          variant="outline"
-                                          className={cn("text-[10px] px-1.5 py-0 h-4", getNodeTypeColor(node.type))}
-                                        >
-                                          {getNodeTypeLabel(node.type)}
-                                        </Badge>
-                                      </div>
-                                      <p className="text-xs text-gray-500">{node.description}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                        <div className="flex-1 flex items-center justify-center p-8">
+                          <div className="text-center max-w-sm">
+                            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                              <Bot className="h-8 w-8 text-slate-400" aria-hidden="true" />
+                            </div>
+                            <h3 className="text-base font-semibold text-gray-900 mb-2">Select a template</h3>
+                            <p className="text-sm text-gray-500">
+                              Choose an agent template from the list to view its workflow steps.
+                            </p>
                           </div>
                         </div>
                       );
-                    })()}
-                  </div>
+                    }
+
+                    const colorMap: Record<string, { bg: string; border: string; text: string }> = {
+                      "bg-blue-500": { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-600" },
+                      "bg-purple-500": { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-600" },
+                      "bg-green-500": { bg: "bg-green-50", border: "border-green-200", text: "text-green-600" },
+                      "bg-amber-500": { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-600" },
+                      "bg-indigo-500": { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-600" },
+                      "bg-cyan-500": { bg: "bg-cyan-50", border: "border-cyan-200", text: "text-cyan-600" },
+                      "bg-rose-500": { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-600" },
+                      "bg-emerald-500": { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-600" },
+                    };
+                    const colors = colorMap[selectedTemplateData.iconColor] || { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-600" };
+
+                    return (
+                      <>
+                        {/* Detail Header */}
+                        <div className={`px-6 py-4 border-b ${colors.bg}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`p-3 rounded-xl ${colors.bg} border ${colors.border}`}>
+                                <selectedTemplateData.icon className={`h-6 w-6 ${colors.text}`} aria-hidden="true" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-lg text-gray-900">{selectedTemplateData.name}</h3>
+                                <p className="text-sm text-gray-500">{selectedTemplateData.description}</p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              aria-label="Use this template"
+                            >
+                              <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
+                              Use Template
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="p-6 space-y-5">
+                          {/* Stats - Inline subtle display */}
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-gray-400">Steps:</span>
+                              <span className="font-medium text-gray-700">{selectedTemplateData.nodeCount}</span>
+                            </div>
+                            <span className="text-gray-300">•</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-gray-400">Category:</span>
+                              <span className="font-medium text-gray-700">{selectedTemplateData.category}</span>
+                            </div>
+                            <span className="text-gray-300">•</span>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] px-1.5 py-0 h-4 font-normal",
+                                selectedTemplateData.difficulty === "Easy"
+                                  ? "bg-green-50 text-green-600 border-green-200"
+                                  : selectedTemplateData.difficulty === "Medium"
+                                  ? "bg-amber-50 text-amber-600 border-amber-200"
+                                  : "bg-red-50 text-red-600 border-red-200"
+                              )}
+                            >
+                              {selectedTemplateData.difficulty}
+                            </Badge>
+                          </div>
+
+                          {/* Workflow Steps */}
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                              <Bot className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                              Workflow Steps
+                            </h4>
+                            <div className="space-y-3">
+                              {nodes.map((node, index) => {
+                                const isLast = index === nodes.length - 1;
+                                
+                                const getNodeStyles = () => {
+                                  switch (node.type) {
+                                    case "trigger":
+                                      return { bg: "bg-blue-500", badge: "bg-blue-50 text-blue-700 border-blue-200" };
+                                    case "action":
+                                      return { bg: "bg-green-500", badge: "bg-green-50 text-green-700 border-green-200" };
+                                    case "condition":
+                                      return { bg: "bg-purple-500", badge: "bg-purple-50 text-purple-700 border-purple-200" };
+                                    case "llm":
+                                      return { bg: "bg-indigo-500", badge: "bg-indigo-50 text-indigo-700 border-indigo-200" };
+                                    case "tool":
+                                      return { bg: "bg-amber-500", badge: "bg-amber-50 text-amber-700 border-amber-200" };
+                                    default:
+                                      return { bg: "bg-slate-500", badge: "bg-slate-50 text-slate-700 border-slate-200" };
+                                  }
+                                };
+
+                                const styles = getNodeStyles();
+                                
+                                return (
+                                  <div key={node.id} className="relative">
+                                    <div className="flex items-start gap-3">
+                                      {/* Step indicator */}
+                                      <div className="relative flex-shrink-0">
+                                        <div className={`w-10 h-10 rounded-lg ${styles.bg} flex items-center justify-center shadow-sm`}>
+                                          <node.icon className="h-5 w-5 text-white" aria-hidden="true" />
+                                        </div>
+                                        {/* Connector line */}
+                                        {!isLast && (
+                                          <div className="absolute left-1/2 top-10 -translate-x-1/2 w-0.5 h-3 bg-gray-200" aria-hidden="true" />
+                                        )}
+                                      </div>
+
+                                      {/* Step content */}
+                                      <div className="flex-1 min-w-0 pb-3">
+                                        <div className="flex items-center gap-2 mb-0.5">
+                                          <p className="text-sm font-medium text-gray-900">{node.title}</p>
+                                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-4 ${styles.badge}`}>
+                                            {getNodeTypeLabel(node.type)}
+                                          </Badge>
+                                        </div>
+                                        <p className="text-xs text-gray-500">{node.description}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </Card>

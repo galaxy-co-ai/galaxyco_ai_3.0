@@ -12,9 +12,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Activity,
+  BarChart3,
   Bot, 
+  Brain,
+  Calendar,
   CheckCircle2, 
+  ChevronRight,
   Clock, 
+  History,
   Lightbulb,
   Sparkles,
   CalendarDays,
@@ -29,6 +34,7 @@ import {
   ArrowRight,
   Zap,
   Loader2,
+  Trash2,
   TrendingUp,
   Users,
   DollarSign,
@@ -37,7 +43,8 @@ import {
   Star,
   RefreshCw,
   Megaphone,
-  Plus
+  Plus,
+  Workflow,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -46,35 +53,45 @@ import type { DashboardData } from "@/types/dashboard";
 // Fetcher for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-type TabType = 'tips' | 'snapshot' | 'automations' | 'planner' | 'messages' | 'agents';
+type TabType = 'assistant' | 'snapshot' | 'automations' | 'planner' | 'messages' | 'agents';
 
 interface DashboardDashboardProps {
   initialData?: DashboardData;
   initialTab?: TabType;
 }
 
-interface Tip {
+interface AssistantMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
+
+interface AssistantConversation {
+  id: string;
+  title: string;
+  preview: string;
+  capability: string;
+  messages: AssistantMessage[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface AssistantCapability {
   id: string;
   title: string;
   description: string;
+  icon: typeof Mail;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  examples: string[];
   category: string;
-  icon: typeof Mail;
-  iconColor: string;
-  timeSaved: string;
-  difficulty: "Easy" | "Medium" | "Advanced";
 }
 
-interface TipStep {
-  id: string;
-  step: number;
-  title: string;
-  description: string;
-  details: string[];
-  icon: typeof Mail;
-  iconColor: string;
-}
+type AssistantLeftPanelView = "capabilities" | "history";
 
-export default function DashboardDashboard({ initialData, initialTab = 'tips' }: DashboardDashboardProps) {
+export default function DashboardDashboard({ initialData, initialTab = 'assistant' }: DashboardDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [date, setDate] = useState<Date | undefined>(new Date(2025, 10, 7)); // November 7, 2025
   const [messageInput, setMessageInput] = useState("");
@@ -177,468 +194,75 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
 
   // Tab configuration
   const tabs = [
-    { id: 'tips' as TabType, label: 'Tips', icon: Lightbulb, badge: '4', badgeColor: 'bg-purple-500', activeColor: 'bg-purple-100 text-purple-700' },
-    { id: 'snapshot' as TabType, label: 'Snapshot', icon: Sparkles, activeColor: 'bg-blue-100 text-blue-700' },
+    { id: 'assistant' as TabType, label: 'AI Assistant', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
+    { id: 'snapshot' as TabType, label: 'Snapshot', icon: BarChart3, activeColor: 'bg-blue-100 text-blue-700' },
     { id: 'automations' as TabType, label: 'Automations', icon: Bot, activeColor: 'bg-green-100 text-green-700' },
     { id: 'planner' as TabType, label: 'Planner', icon: CalendarDays, badge: '4', badgeColor: 'bg-orange-500', activeColor: 'bg-orange-100 text-orange-700' },
     { id: 'messages' as TabType, label: 'Messages', icon: MessageSquare, activeColor: 'bg-cyan-100 text-cyan-700' },
     { id: 'agents' as TabType, label: 'Agents', icon: Bot, badge: '3', badgeColor: 'bg-emerald-500', activeColor: 'bg-emerald-100 text-emerald-700' },
   ];
 
-  // Tips data
-  const [selectedTip, setSelectedTip] = useState<string>("auto-email");
+  // AI Assistant data
+  const [assistantLeftView, setAssistantLeftView] = useState<AssistantLeftPanelView>("capabilities");
+  const [selectedCapability, setSelectedCapability] = useState<string>("workflow");
+  const [selectedConvoId, setSelectedConvoId] = useState<string | null>(null);
+  const [assistantMessages, setAssistantMessages] = useState<AssistantMessage[]>([]);
+  const [assistantInput, setAssistantInput] = useState("");
+  const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const assistantMessagesEndRef = useRef<HTMLDivElement>(null);
 
-  const tips: Tip[] = [
-    {
-      id: "auto-email",
-      title: "Automate Email Responses",
-      description: "Set up AI to automatically respond to common email inquiries",
-      category: "Email Automation",
-      icon: Mail,
-      iconColor: "bg-blue-500",
-      timeSaved: "2-3 hours/week",
-      difficulty: "Easy",
-    },
-    {
-      id: "lead-scoring",
-      title: "Implement Smart Lead Scoring",
-      description: "Use AI to automatically score and prioritize leads based on engagement",
-      category: "Sales Intelligence",
-      icon: Target,
-      iconColor: "bg-purple-500",
-      timeSaved: "5+ hours/week",
-      difficulty: "Medium",
-    },
-    {
-      id: "meeting-prep",
-      title: "Auto-Generate Meeting Briefs",
-      description: "Create comprehensive meeting prep from contact history and context",
-      category: "Meeting Efficiency",
-      icon: FileText,
-      iconColor: "bg-green-500",
-      timeSaved: "30 min/meeting",
-      difficulty: "Easy",
-    },
-    {
-      id: "crm-sync",
-      title: "Sync Contacts to CRM",
-      description: "Automatically sync and deduplicate contacts across platforms",
-      category: "Data Management",
-      icon: Database,
-      iconColor: "bg-cyan-500",
-      timeSaved: "1-2 hours/week",
-      difficulty: "Medium",
-    },
-    {
-      id: "daily-digest",
-      title: "Create Daily Action Digest",
-      description: "Get a morning summary with top priorities and actionable tasks",
-      category: "Productivity",
-      icon: List,
-      iconColor: "bg-orange-500",
-      timeSaved: "15 min/day",
-      difficulty: "Easy",
-    },
-    {
-      id: "follow-up-reminders",
-      title: "Set Up Follow-Up Reminders",
-      description: "Automatically remind you to follow up with leads after 7 days",
-      category: "Sales Automation",
-      icon: Clock,
-      iconColor: "bg-amber-500",
-      timeSaved: "1 hour/week",
-      difficulty: "Easy",
-    },
-    {
-      id: "data-enrichment",
-      title: "Enrich Lead Data Automatically",
-      description: "Auto-populate missing company and contact information",
-      category: "Data Quality",
-      icon: Sparkles,
-      iconColor: "bg-indigo-500",
-      timeSaved: "2 hours/week",
-      difficulty: "Medium",
-    },
-    {
-      id: "deal-advancement",
-      title: "Auto-Advance Deal Stages",
-      description: "Move deals to next stage based on activity and probability",
-      category: "Sales Pipeline",
-      icon: TrendingUp,
-      iconColor: "bg-emerald-500",
-      timeSaved: "1 hour/week",
-      difficulty: "Advanced",
-    },
+  const [assistantConversations, setAssistantConversations] = useState<AssistantConversation[]>([
+    { id: "conv-1", title: "Lead follow-up workflow", preview: "Create a workflow to follow up...", capability: "workflow", messages: [{ id: "1", role: "user", content: "Create a workflow to follow up with leads", timestamp: new Date(Date.now() - 86400000) }, { id: "2", role: "assistant", content: "I can help you create that workflow!", timestamp: new Date(Date.now() - 86400000) }], createdAt: new Date(Date.now() - 86400000), updatedAt: new Date(Date.now() - 86400000) },
+    { id: "conv-2", title: "Sales pipeline analysis", preview: "Analyze my sales pipeline...", capability: "insights", messages: [{ id: "1", role: "user", content: "Analyze my sales pipeline", timestamp: new Date(Date.now() - 172800000) }, { id: "2", role: "assistant", content: "Your pipeline health is strong at $1.2M", timestamp: new Date(Date.now() - 172800000) }], createdAt: new Date(Date.now() - 172800000), updatedAt: new Date(Date.now() - 172800000) },
+    { id: "conv-3", title: "Email draft for John", preview: "Write a follow-up email...", capability: "content", messages: [{ id: "1", role: "user", content: "Write a follow-up email", timestamp: new Date(Date.now() - 259200000) }, { id: "2", role: "assistant", content: "I've drafted a professional follow-up email", timestamp: new Date(Date.now() - 259200000) }], createdAt: new Date(Date.now() - 259200000), updatedAt: new Date(Date.now() - 259200000) },
+  ]);
+
+  const assistantCapabilities: AssistantCapability[] = [
+    { id: "workflow", title: "Workflow Automation", description: "Create automated workflows", icon: Workflow, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200", examples: ["Create a workflow to follow up with leads", "Automate my email responses"], category: "Automation" },
+    { id: "insights", title: "Data Insights", description: "Get AI-powered analytics", icon: BarChart3, color: "text-purple-600", bgColor: "bg-purple-50", borderColor: "border-purple-200", examples: ["Analyze my sales pipeline", "Show me top performing campaigns"], category: "Analytics" },
+    { id: "content", title: "Content Generation", description: "Generate emails and documents", icon: FileText, color: "text-green-600", bgColor: "bg-green-50", borderColor: "border-green-200", examples: ["Write a follow-up email", "Draft a proposal"], category: "Content" },
+    { id: "scheduling", title: "Smart Scheduling", description: "Manage calendar and meetings", icon: Calendar, color: "text-orange-600", bgColor: "bg-orange-50", borderColor: "border-orange-200", examples: ["Find a time to meet", "Block focus time"], category: "Productivity" },
+    { id: "leads", title: "Lead Intelligence", description: "Score and prioritize leads", icon: Target, color: "text-cyan-600", bgColor: "bg-cyan-50", borderColor: "border-cyan-200", examples: ["Who are my hottest leads?", "Score the leads"], category: "Sales" },
+    { id: "research", title: "Research Assistant", description: "Research companies and contacts", icon: Brain, color: "text-indigo-600", bgColor: "bg-indigo-50", borderColor: "border-indigo-200", examples: ["Research Acme Corp", "Find decision makers"], category: "Research" },
   ];
 
-  const getTipSteps = (tipId: string): TipStep[] => {
-    switch (tipId) {
-      case "auto-email":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Enable Email Integration",
-            description: "Connect your email account to the platform",
-            details: [
-              "Go to Settings → Integrations → Email",
-              "Authorize access to your email account",
-              "Select which folders to monitor (Inbox, Priority, etc.)",
-              "Enable auto-response feature"
-            ],
-            icon: Mail,
-            iconColor: "bg-blue-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Configure Response Rules",
-            description: "Set up when and how to auto-respond",
-            details: [
-              "Define trigger conditions (e.g., specific keywords, sender domains)",
-              "Set response templates for common inquiries",
-              "Choose response tone (professional, friendly, etc.)",
-              "Enable AI to customize responses based on email content"
-            ],
-            icon: Target,
-            iconColor: "bg-purple-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Review & Approve",
-            description: "Set up approval workflow for responses",
-            details: [
-              "Choose review mode: Auto-send or Queue for review",
-              "For sensitive emails, always queue for manual approval",
-              "Set up notifications for queued responses",
-              "Review response quality and adjust templates as needed"
-            ],
-            icon: CheckCircle2,
-            iconColor: "bg-green-500",
-          },
-        ];
-      case "lead-scoring":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Define Scoring Criteria",
-            description: "Set up what factors contribute to lead score",
-            details: [
-              "Company size and industry fit (0-30 points)",
-              "Engagement level: email opens, clicks, website visits (0-25 points)",
-              "Budget and timeline indicators (0-20 points)",
-              "Decision-maker status and title (0-15 points)",
-              "Response time and interaction quality (0-10 points)"
-            ],
-            icon: Target,
-            iconColor: "bg-purple-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Configure AI Scoring",
-            description: "Enable AI to automatically calculate scores",
-            details: [
-              "Go to CRM → Settings → Lead Scoring",
-              "Enable automatic scoring for new leads",
-              "Set score thresholds: Hot (≥70), Warm (50-69), Cold (<50)",
-              "Configure auto-enrichment to gather scoring data"
-            ],
-            icon: Sparkles,
-            iconColor: "bg-indigo-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Set Up Alerts & Actions",
-            description: "Automate actions based on lead scores",
-            details: [
-              "Create alerts for high-score leads (≥70)",
-              "Auto-assign hot leads to sales team",
-              "Set up automated nurture sequences for warm leads",
-              "Schedule follow-up reminders based on score changes"
-            ],
-            icon: Zap,
-            iconColor: "bg-amber-500",
-          },
-        ];
-      case "meeting-prep":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Connect Calendar",
-            description: "Link your calendar to enable meeting detection",
-            details: [
-              "Go to Settings → Integrations → Calendar",
-              "Connect Google Calendar, Outlook, or other calendar",
-              "Enable automatic meeting detection",
-              "Set notification preferences (e.g., 1 hour before meeting)"
-            ],
-            icon: CalendarDays,
-            iconColor: "bg-blue-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Configure Brief Generation",
-            description: "Set up what information to include in briefs",
-            details: [
-              "Select data sources: CRM history, emails, notes, deals",
-              "Choose brief length: Summary (1 page) or Detailed (3+ pages)",
-              "Enable AI to identify key talking points",
-              "Include action items from previous interactions"
-            ],
-            icon: FileText,
-            iconColor: "bg-green-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Review & Customize",
-            description: "Review generated briefs and refine",
-            details: [
-              "Briefs are generated 1 hour before each meeting",
-              "Review and edit briefs as needed",
-              "Add custom notes or talking points",
-              "Share briefs with team members if needed"
-            ],
-            icon: CheckCircle2,
-            iconColor: "bg-purple-500",
-          },
-        ];
-      case "crm-sync":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Connect CRM Platform",
-            description: "Link your CRM (Salesforce, HubSpot, etc.)",
-            details: [
-              "Go to Settings → Integrations → CRM",
-              "Select your CRM platform",
-              "Authorize API access with OAuth",
-              "Test connection to verify sync capability"
-            ],
-            icon: Database,
-            iconColor: "bg-cyan-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Configure Sync Rules",
-            description: "Set up what data to sync and how",
-            details: [
-              "Choose sync direction: One-way or Bi-directional",
-              "Select fields to sync: Name, Email, Phone, Company, etc.",
-              "Set sync frequency: Real-time, Hourly, or Daily",
-              "Enable duplicate detection and merging"
-            ],
-            icon: Target,
-            iconColor: "bg-purple-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Resolve Duplicates",
-            description: "Clean up existing duplicate contacts",
-            details: [
-              "Run duplicate detection scan",
-              "Review detected duplicates",
-              "Choose merge strategy: Keep most recent, most complete, or manual",
-              "Set up auto-merge rules for future duplicates"
-            ],
-            icon: CheckCircle2,
-            iconColor: "bg-green-500",
-          },
-        ];
-      case "daily-digest":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Enable Daily Digest",
-            description: "Turn on automatic morning summaries",
-            details: [
-              "Go to Dashboard → Settings → Daily Digest",
-              "Enable daily digest feature",
-              "Set delivery time (default: 8:00 AM)",
-              "Choose delivery method: Email or In-app notification"
-            ],
-            icon: CalendarDays,
-            iconColor: "bg-orange-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Customize Digest Content",
-            description: "Select what to include in your digest",
-            details: [
-              "Top 10 priorities for the day",
-              "Hot leads needing follow-up",
-              "Deals closing this week",
-              "Overdue tasks and action items",
-              "Key metrics and KPIs"
-            ],
-            icon: List,
-            iconColor: "bg-blue-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Review & Act",
-            description: "Use digest to plan your day",
-            details: [
-              "Digest arrives at your chosen time",
-              "Review priorities and tasks",
-              "Click items to jump directly to relevant pages",
-              "Mark items as complete as you work through them"
-            ],
-            icon: CheckCircle2,
-            iconColor: "bg-green-500",
-          },
-        ];
-      case "follow-up-reminders":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Set Follow-Up Rules",
-            description: "Define when follow-ups are needed",
-            details: [
-              "Go to CRM → Settings → Follow-Up Rules",
-              "Set follow-up window (default: 7 days)",
-              "Choose which lead stages need follow-up",
-              "Exclude leads that have been contacted recently"
-            ],
-            icon: Clock,
-            iconColor: "bg-amber-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Configure Reminders",
-            description: "Set up how you want to be notified",
-            details: [
-              "Choose notification method: Email, In-app, or Both",
-              "Set reminder timing: Day of, 1 day before, or both",
-              "Include lead context in reminder (company, last contact, etc.)",
-              "Enable team-wide reminders for shared leads"
-            ],
-            icon: Mail,
-            iconColor: "bg-blue-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Track & Complete",
-            description: "Manage follow-up tasks",
-            details: [
-              "Reminders appear in your task list",
-              "Click reminder to view lead details",
-              "Mark as complete after following up",
-              "System automatically resets timer for next follow-up"
-            ],
-            icon: CheckCircle2,
-            iconColor: "bg-green-500",
-          },
-        ];
-      case "data-enrichment":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Enable Auto-Enrichment",
-            description: "Turn on automatic data enrichment",
-            details: [
-              "Go to CRM → Settings → Data Enrichment",
-              "Enable auto-enrichment for new leads",
-              "Choose data sources: LinkedIn, Company databases, etc.",
-              "Set enrichment triggers: On lead creation, after 24 hours, etc."
-            ],
-            icon: Sparkles,
-            iconColor: "bg-indigo-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Select Data Fields",
-            description: "Choose what information to enrich",
-            details: [
-              "Company: Industry, size, revenue, location",
-              "Contact: Job title, LinkedIn profile, phone number",
-              "Technographics: Tech stack, software used",
-              "Firmographics: Funding, news, recent changes"
-            ],
-            icon: Database,
-            iconColor: "bg-cyan-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Review & Verify",
-            description: "Monitor enrichment quality",
-            details: [
-              "Review enriched data in lead profiles",
-              "Verify accuracy of enriched information",
-              "Flag incorrect data for correction",
-              "System learns from your corrections over time"
-            ],
-            icon: CheckCircle2,
-            iconColor: "bg-green-500",
-          },
-        ];
-      case "deal-advancement":
-        return [
-          {
-            id: "1",
-            step: 1,
-            title: "Define Stage Criteria",
-            description: "Set conditions for advancing deals",
-            details: [
-              "Go to CRM → Settings → Deal Stages",
-              "Define criteria for each stage transition",
-              "Set probability thresholds (e.g., 70%+ to advance)",
-              "Include activity requirements (meetings, emails, etc.)"
-            ],
-            icon: Target,
-            iconColor: "bg-emerald-500",
-          },
-          {
-            id: "2",
-            step: 2,
-            title: "Enable Auto-Advancement",
-            description: "Turn on automatic stage progression",
-            details: [
-              "Enable auto-advancement feature",
-              "Set review mode: Auto-advance or Suggest for review",
-              "Configure activity detection (emails, calls, meetings)",
-              "Set minimum time in stage before advancement"
-            ],
-            icon: TrendingUp,
-            iconColor: "bg-blue-500",
-          },
-          {
-            id: "3",
-            step: 3,
-            title: "Monitor & Adjust",
-            description: "Track advancement accuracy",
-            details: [
-              "Review suggested advancements",
-              "Approve or reject stage changes",
-              "System learns from your decisions",
-              "Adjust criteria based on conversion data"
-            ],
-            icon: CheckCircle2,
-            iconColor: "bg-green-500",
-          },
-        ];
-      default:
-        return [];
-    }
+  const selectedCapabilityData = assistantCapabilities.find(c => c.id === selectedCapability) || assistantCapabilities[0];
+  
+  const scrollAssistantToBottom = () => { assistantMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); };
+  useEffect(() => { scrollAssistantToBottom(); }, [assistantMessages]);
+
+  const getAssistantResponse = (capability: string): string => {
+    const responses: Record<string, string> = {
+      workflow: "I can help you create that workflow! Let me set up an automation that:\n\n1. Triggers on new lead\n2. Sends welcome email\n3. Waits 2 days, then follows up\n\nShall I create this?",
+      insights: "Based on your data:\n\n📈 **Pipeline**: $1.2M value\n🎯 **Win Rate**: 23.5%\n🔥 **Hot Leads**: 42\n\nWant me to dig deeper?",
+      content: "I've drafted a follow-up email:\n\n**Subject**: Great connecting!\n\nHi [Name],\n\nIt was wonderful speaking with you...\n\nWant me to personalize this further?",
+      scheduling: "I found 3 available slots:\n\n1. Tomorrow 2:00 PM\n2. Thursday 10:00 AM\n3. Friday 3:30 PM\n\nWhich works best?",
+      leads: "Here are your hottest leads:\n\n🔥 **Sarah Chen** - Score: 94\n🔥 **Mike Johnson** - Score: 91\n🔥 **Lisa Park** - Score: 88\n\nWant me to draft outreach?",
+      research: "Here's what I found:\n\n📍 **Industry**: Enterprise Software\n👥 **Size**: 500-1000 employees\n💰 **Revenue**: ~$50M ARR\n\nWant their contact info?",
+    };
+    return responses[capability] || responses.workflow;
   };
+
+  const handleAssistantSend = () => {
+    if (!assistantInput.trim() || isAssistantLoading) return;
+    const userMsg: AssistantMessage = { id: Date.now().toString(), role: "user", content: assistantInput, timestamp: new Date() };
+    setAssistantMessages(prev => [...prev, userMsg]);
+    setAssistantInput("");
+    setIsAssistantLoading(true);
+    setTimeout(() => {
+      const aiMsg: AssistantMessage = { id: (Date.now() + 1).toString(), role: "assistant", content: getAssistantResponse(selectedCapability), timestamp: new Date() };
+      setAssistantMessages(prev => [...prev, aiMsg]);
+      setIsAssistantLoading(false);
+    }, 1200);
+  };
+
+  const handleSelectConvo = (conv: AssistantConversation) => { setSelectedConvoId(conv.id); setSelectedCapability(conv.capability); setAssistantMessages(conv.messages); setAssistantLeftView("history"); };
+  const handleNewConvo = () => { setSelectedConvoId(null); setAssistantMessages([]); setAssistantLeftView("capabilities"); toast.success("Started new conversation"); };
+  const handleDeleteConvo = (convId: string, e: React.MouseEvent) => { e.stopPropagation(); setAssistantConversations(prev => prev.filter(c => c.id !== convId)); if (selectedConvoId === convId) { setSelectedConvoId(null); setAssistantMessages([]); } toast.success("Conversation deleted"); };
+  const formatRelativeTime = (date: Date) => { const diffDays = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)); if (diffDays === 0) return "Today"; if (diffDays === 1) return "Yesterday"; if (diffDays < 7) return `${diffDays} days ago`; return date.toLocaleDateString(); };
+  const getCapIcon = (capId: string) => assistantCapabilities.find(c => c.id === capId)?.icon || MessageSquare;
+  const getCapColor = (capId: string) => assistantCapabilities.find(c => c.id === capId)?.color || "text-gray-600";
+  const getCapBgColor = (capId: string) => assistantCapabilities.find(c => c.id === capId)?.bgColor || "bg-gray-50";
 
   // Snapshot categories
   const [selectedCategory, setSelectedCategory] = useState<string>("sales");
@@ -1652,18 +1276,18 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                   activeTab === tab.id
-                    ? `${tab.activeColor} shadow-md`
+                    ? `${tab.activeColor} shadow-sm`
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 aria-label={`Switch to ${tab.label} tab`}
               >
-                <tab.icon className="h-3 w-3" />
+                <tab.icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <Badge 
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0 h-5 min-w-[20px]`}
+                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0 h-4 min-w-[18px]`}
                   >
                     {tab.badge}
                   </Badge>
@@ -1684,168 +1308,163 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
           transition={{ duration: 0.2 }}
           className="max-w-7xl mx-auto px-6 pb-6"
         >
-          {/* TIPS TAB */}
-          {activeTab === 'tips' && (
+          {/* AI ASSISTANT TAB */}
+          {activeTab === 'assistant' && (
             <Card className="p-8 shadow-lg border-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left: Tips List */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-md">
-                        <Lightbulb className="h-4 w-4" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[600px]">
+                {/* Left: Capabilities / History */}
+                <div className="flex flex-col rounded-xl border bg-white overflow-hidden shadow-sm">
+                  {/* Header with Tabs */}
+                  <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex-shrink-0">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
+                          <Sparkles className="h-5 w-5" aria-hidden="true" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-[15px] text-gray-900">Pro Tips</h3>
-                        <p className="text-[13px] text-purple-600 flex items-center gap-1">
-                          <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
-                          {tips.length} tips available
+                          <h3 className="font-semibold text-[15px] text-gray-900">AI Assistant</h3>
+                          <p className="text-[13px] text-indigo-600 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" aria-hidden="true" />
+                            {assistantLeftView === "capabilities" ? `${assistantCapabilities.length} capabilities` : `${assistantConversations.length} conversations`}
                         </p>
                       </div>
                     </div>
+                      <Button size="sm" onClick={handleNewConvo} className="bg-indigo-600 hover:bg-indigo-700 text-white" aria-label="New conversation">
+                        <Plus className="h-4 w-4 mr-1" aria-hidden="true" />New
+                      </Button>
                   </div>
-
-                  {/* Tips List */}
+                    {/* Tab Toggle */}
+                    <div className="flex gap-1 p-1 bg-white/60 rounded-lg">
+                      <button onClick={() => setAssistantLeftView("capabilities")} className={cn("flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2", assistantLeftView === "capabilities" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900")} aria-label="View capabilities" aria-pressed={assistantLeftView === "capabilities"}>
+                        <Sparkles className="h-4 w-4" aria-hidden="true" />Capabilities
+                      </button>
+                      <button onClick={() => setAssistantLeftView("history")} className={cn("flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2", assistantLeftView === "history" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900")} aria-label="View history" aria-pressed={assistantLeftView === "history"}>
+                        <History className="h-4 w-4" aria-hidden="true" />History
+                        {assistantConversations.length > 0 && <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-indigo-50 text-indigo-600 border-indigo-200">{assistantConversations.length}</Badge>}
+                      </button>
+                    </div>
+                  </div>
+                  {/* Content */}
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {tips.map((tip) => {
-                      const isSelected = selectedTip === tip.id;
+                    {assistantLeftView === "capabilities" ? (
+                      assistantCapabilities.map((cap) => {
+                        const isSelected = selectedCapability === cap.id && !selectedConvoId;
+                        const CapIcon = cap.icon;
                       return (
-                        <button
-                          key={tip.id}
-                          onClick={() => setSelectedTip(tip.id)}
-                          className={`w-full p-2 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 ${
-                            isSelected
-                              ? 'border-purple-300 bg-purple-50/30 shadow-sm'
-                              : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
-                          }`}
-                          aria-label={`Select tip: ${tip.title}`}
-                          aria-pressed={isSelected}
-                        >
+                          <button key={cap.id} onClick={() => { setSelectedCapability(cap.id); setSelectedConvoId(null); setAssistantMessages([]); }} className={cn("w-full text-left p-4 rounded-lg border-2 transition-all duration-200", isSelected ? `${cap.bgColor} ${cap.borderColor} shadow-md` : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50")} aria-label={`Select ${cap.title}`} aria-pressed={isSelected}>
+                            <div className="flex items-start gap-3">
+                              <div className={cn("p-2 rounded-lg", cap.bgColor)}><CapIcon className={cn("h-5 w-5", cap.color)} aria-hidden="true" /></div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-full ${tip.iconColor} flex-shrink-0`}>
-                              <tip.icon className="h-4 w-4 text-white" />
+                                    <h4 className={cn("font-semibold text-sm", isSelected ? cap.color : "text-gray-900")}>{cap.title}</h4>
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-gray-50 text-gray-600 border-gray-200">{cap.category}</Badge>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-sm font-semibold text-gray-900">{tip.title}</p>
-                                <Badge
-                                  variant="outline"
-                                  className={`text-[10px] px-1.5 py-0 h-4 ${
-                                    tip.difficulty === "Easy"
-                                      ? "bg-green-50 text-green-700 border-green-200"
-                                      : tip.difficulty === "Medium"
-                                      ? "bg-amber-50 text-amber-700 border-amber-200"
-                                      : "bg-red-50 text-red-700 border-red-200"
-                                  }`}
-                                >
-                                  {tip.difficulty}
-                                </Badge>
+                                  <ChevronRight className={cn("h-4 w-4 transition-transform", isSelected ? `${cap.color} rotate-90` : "text-gray-400")} aria-hidden="true" />
                               </div>
-                              <p className="text-xs text-gray-500 mb-1">{tip.description}</p>
-                              <div className="flex items-center gap-3 text-[10px] text-gray-400">
-                                <span className="flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  {tip.timeSaved}
-                                </span>
-                                <span>{tip.category}</span>
-                              </div>
+                                <p className="text-xs text-gray-500 mt-0.5">{cap.description}</p>
                             </div>
                           </div>
                         </button>
                       );
-                    })}
+                      })
+                    ) : assistantConversations.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4"><History className="h-8 w-8 text-gray-400" aria-hidden="true" /></div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-2">No conversations yet</h3>
+                        <p className="text-sm text-gray-500 max-w-xs">Start a new conversation to see your chat history here.</p>
+                        <Button size="sm" onClick={() => setAssistantLeftView("capabilities")} className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">Start a conversation</Button>
                   </div>
-                </div>
-
-                {/* Right: Implementation Details */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
-                    <div className="flex items-start justify-between gap-4">
+                    ) : (
+                      assistantConversations.map((conv) => {
+                        const isSelected = selectedConvoId === conv.id;
+                        const ConvIcon = getCapIcon(conv.capability);
+                        return (
+                          <button key={conv.id} onClick={() => handleSelectConvo(conv)} className={cn("w-full text-left p-4 rounded-lg border-2 transition-all duration-200 group", isSelected ? `${getCapBgColor(conv.capability)} border-indigo-200 shadow-md` : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50")} aria-label={`View conversation: ${conv.title}`} aria-pressed={isSelected}>
+                            <div className="flex items-start gap-3">
+                              <div className={cn("p-2 rounded-lg", getCapBgColor(conv.capability))}><ConvIcon className={cn("h-5 w-5", getCapColor(conv.capability))} aria-hidden="true" /></div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-semibold text-gray-900 mb-1">
-                          {tips.find(t => t.id === selectedTip)?.title || "Select a tip"}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {tips.find(t => t.id === selectedTip)?.description || "Choose a tip from the list to see implementation steps"}
-                        </p>
+                                <div className="flex items-center justify-between mb-1">
+                                  <h4 className="font-semibold text-sm text-gray-900 truncate pr-2">{conv.title}</h4>
+                                  <button onClick={(e) => handleDeleteConvo(conv.id, e)} className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 transition-all" aria-label={`Delete conversation: ${conv.title}`}><Trash2 className="h-3.5 w-3.5 text-red-500" aria-hidden="true" /></button>
                       </div>
+                                <p className="text-xs text-gray-500 truncate mb-2">{conv.preview}</p>
+                                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                                  <Clock className="h-3 w-3" aria-hidden="true" />{formatRelativeTime(conv.updatedAt)}<span className="text-gray-300">•</span><span>{conv.messages.length} messages</span>
                     </div>
                   </div>
-
-                  {/* Implementation Steps */}
-                  <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
-                    {(() => {
-                      const steps = getTipSteps(selectedTip);
-                      if (steps.length === 0) {
-                        return (
-                          <div className="flex items-center justify-center h-full">
-                            <div className="text-center max-w-sm">
-                              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                                <Lightbulb className="h-8 w-8 text-slate-400" />
                               </div>
-                              <h3 className="text-base font-semibold text-gray-900 mb-2">Select a tip</h3>
-                              <p className="text-sm text-gray-500">
-                                Choose a tip from the list to view detailed implementation steps and best practices.
-                              </p>
+                          </button>
+                        );
+                      })
+                    )}
                             </div>
                           </div>
-                        );
-                      }
-                      return (
-                        <div className="relative min-h-full">
-                          <div className="flex flex-col gap-6">
-                            {steps.map((step, index) => {
-                              const isLast = index === steps.length - 1;
-                            return (
-                              <div key={step.id} className="relative">
-                                <div className="flex items-start gap-4">
-                                  {/* Step Number with gradient */}
-                                  <div className="relative flex-shrink-0">
-                                    <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${step.iconColor} shadow-lg flex items-center justify-center`}>
-                                      <step.icon className="h-7 w-7 text-white" />
+                {/* Right: Chat Interface */}
+                <div className="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                  {/* Header */}
+                  <div className={cn("px-6 py-4 border-b flex-shrink-0", selectedCapabilityData.bgColor)}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn("p-2.5 rounded-lg border", selectedCapabilityData.bgColor, selectedCapabilityData.borderColor)}>
+                          <selectedCapabilityData.icon className={cn("h-5 w-5", selectedCapabilityData.color)} aria-hidden="true" />
                                     </div>
-                                    
-                                    {/* Connector line */}
-                                    {!isLast && (
-                                      <div className="absolute left-1/2 top-16 -translate-x-1/2 w-0.5 h-6 bg-purple-400">
-                                        <div className="absolute left-1/2 top-full -translate-x-1/2 w-2 h-2 rounded-full bg-purple-400"></div>
+                        <div>
+                          <h3 className="font-semibold text-[15px] text-gray-900">{selectedCapabilityData.title}</h3>
+                          <p className="text-xs text-gray-500">{selectedCapabilityData.description}</p>
                                       </div>
-                                    )}
                                   </div>
-
-                                  {/* Step Info */}
-                                  <div className="flex-1 min-w-0 pt-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <p className="text-sm font-semibold text-gray-900">{step.title}</p>
-                                      <Badge
-                                        variant="outline"
-                                        className="text-[10px] px-1.5 py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
-                                      >
-                                        Step {step.step}
-                                      </Badge>
+                      <Button size="sm" variant="outline" className={cn(selectedCapabilityData.bgColor, selectedCapabilityData.color, selectedCapabilityData.borderColor)} onClick={() => { setAssistantMessages([]); setSelectedConvoId(null); toast.success("Conversation cleared"); }} aria-label="Clear conversation">Clear</Button>
                                     </div>
-                                    <p className="text-xs text-gray-600 mb-3 leading-relaxed">{step.description}</p>
-                                    
-                                    {/* Step Details */}
-                                    <div className="space-y-2">
-                                      {step.details.map((detail, detailIndex) => (
-                                        <div key={detailIndex} className="flex items-start gap-2">
-                                          <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-purple-400 flex-shrink-0" />
-                                          <p className="text-xs text-gray-600 leading-relaxed">{detail}</p>
                                         </div>
+                  {/* Chat Area */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                    {assistantMessages.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center px-4">
+                        <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center mb-4", selectedCapabilityData.bgColor)}>
+                          <selectedCapabilityData.icon className={cn("h-8 w-8", selectedCapabilityData.color)} aria-hidden="true" />
+                        </div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-2">Start a conversation</h3>
+                        <p className="text-sm text-gray-500 mb-6 max-w-xs">Ask me anything about {selectedCapabilityData.title.toLowerCase()} or try an example:</p>
+                        <div className="space-y-2 w-full max-w-sm">
+                          {selectedCapabilityData.examples.map((ex, i) => (
+                            <button key={i} onClick={() => setAssistantInput(ex)} className="w-full p-3 text-left text-sm text-gray-600 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors" aria-label={`Use example: ${ex}`}>
+                              <div className="flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500 flex-shrink-0" aria-hidden="true" /><span>{ex}</span></div>
+                            </button>
                                       ))}
                                     </div>
                                   </div>
+                    ) : (
+                      <>
+                        {assistantMessages.map((msg) => (
+                          <div key={msg.id} className={cn("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}>
+                            {msg.role === "assistant" && <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", selectedCapabilityData.bgColor)}><Bot className={cn("h-4 w-4", selectedCapabilityData.color)} aria-hidden="true" /></div>}
+                            <div className={cn("max-w-[80%] rounded-2xl px-4 py-3 text-sm", msg.role === "user" ? "bg-indigo-600 text-white rounded-br-md" : "bg-white border border-gray-200 text-gray-700 rounded-bl-md")}>
+                              <p className="whitespace-pre-wrap">{msg.content}</p>
+                              <p className={cn("text-[10px] mt-2", msg.role === "user" ? "text-indigo-200" : "text-gray-400")}>{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                 </div>
+                            {msg.role === "user" && <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0"><Users className="h-4 w-4 text-indigo-600" aria-hidden="true" /></div>}
                               </div>
-                            );
-                            })}
+                        ))}
+                        {isAssistantLoading && (
+                          <div className="flex gap-3 justify-start">
+                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", selectedCapabilityData.bgColor)}><Bot className={cn("h-4 w-4", selectedCapabilityData.color)} aria-hidden="true" /></div>
+                            <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3"><div className="flex items-center gap-2 text-sm text-gray-500"><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />Thinking...</div></div>
                           </div>
+                        )}
+                        <div ref={assistantMessagesEndRef} />
+                      </>
+                    )}
                         </div>
-                      );
-                    })()}
+                  {/* Input */}
+                  <div className="p-4 border-t bg-white flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <Input value={assistantInput} onChange={(e) => setAssistantInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAssistantSend(); } }} placeholder={`Ask about ${selectedCapabilityData.title.toLowerCase()}...`} className="flex-1 h-11 bg-slate-50 border-slate-200 focus:border-indigo-300 focus:ring-indigo-200" disabled={isAssistantLoading} aria-label="Type your message" />
+                      <Button onClick={handleAssistantSend} disabled={!assistantInput.trim() || isAssistantLoading} className="h-11 px-4 bg-indigo-600 hover:bg-indigo-700 text-white" aria-label="Send message">
+                        {isAssistantLoading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <Send className="h-5 w-5" aria-hidden="true" />}
+                      </Button>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-2 text-center">Press Enter to send • AI responses are simulated</p>
                   </div>
                 </div>
               </div>
@@ -1915,30 +1534,15 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
 
                 {/* Right: Performance Breakdown */}
                 <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-semibold text-gray-900 mb-1">
-                          {categories.find(c => c.id === selectedCategory)?.name || "Select a category"}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {categories.find(c => c.id === selectedCategory)?.description || "Choose a category to view performance metrics"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Performance Metrics */}
-                  <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
                     {(() => {
                       const category = categories.find(c => c.id === selectedCategory);
+                    
                       if (!category) {
                         return (
-                          <div className="flex items-center justify-center h-full">
+                        <div className="flex-1 flex items-center justify-center p-8">
                             <div className="text-center max-w-sm">
                               <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                                <Sparkles className="h-8 w-8 text-slate-400" />
+                              <Sparkles className="h-8 w-8 text-slate-400" aria-hidden="true" />
                               </div>
                               <h3 className="text-base font-semibold text-gray-900 mb-2">Select a category</h3>
                               <p className="text-sm text-gray-500">
@@ -1950,96 +1554,101 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
                       }
 
                       return (
-                        <div className="space-y-4">
-                          {/* Score Card */}
-                          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-1 shadow-lg">
-                            <div className="relative bg-white/95 backdrop-blur-xl rounded-xl p-6 flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className="relative h-16 w-16 flex items-center justify-center">
-                                  <svg className="h-full w-full transform -rotate-90" aria-label={`${category.name} Score: ${category.score}`}>
-                                    <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-gray-100" />
+                      <>
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2.5 rounded-lg ${category.iconColor}`}>
+                                <category.icon className="h-5 w-5 text-white" aria-hidden="true" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-[15px] text-gray-900">{category.name}</h3>
+                                <p className="text-xs text-gray-500">{category.description}</p>
+                              </div>
+                            </div>
+                            {/* Score Badge */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-blue-200 shadow-sm">
+                              <div className="relative h-8 w-8 flex items-center justify-center">
+                                <svg className="h-full w-full transform -rotate-90" aria-label={`Score: ${category.score}`}>
+                                  <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-gray-100" />
                                     <circle 
-                                      cx="32" cy="32" r="28" 
+                                    cx="16" cy="16" r="14" 
                                       stroke="currentColor" 
-                                      strokeWidth="6" 
+                                    strokeWidth="3" 
                                       fill="transparent" 
-                                      strokeDasharray={175.9} 
-                                      strokeDashoffset={175.9 * (1 - category.score / 100)} 
+                                    strokeDasharray={87.96} 
+                                    strokeDashoffset={87.96 * (1 - category.score / 100)} 
                                       className="text-blue-500" 
                                       strokeLinecap="round" 
                                     />
                                   </svg>
-                                  <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                    <span className="text-xl font-bold text-blue-600">{category.score}</span>
-                                    <span className="text-[9px] font-medium text-gray-500 uppercase">Score</span>
+                                <span className="absolute text-xs font-bold text-blue-600">{category.score}</span>
                                   </div>
-                                </div>
-                                <div>
-                                  <h4 className="text-lg font-bold text-gray-900">{category.name}</h4>
-                                  <p className="text-sm text-gray-500 mt-0.5">Overall performance score</p>
-                                </div>
+                              <span className="text-xs text-gray-500 font-medium">Score</span>
                               </div>
                             </div>
                           </div>
 
-                          {/* Metrics Grid */}
-                          <div>
-                            <h4 className="text-sm font-semibold text-gray-900 mb-4">Key Metrics</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {category.metrics.map((metric, index) => (
+                        {/* Performance Metrics */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                          {/* Key Metrics - Compact Grid */}
+                          <div className="mb-5">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                              <BarChart3 className="h-4 w-4 text-blue-500" aria-hidden="true" />
+                              Key Metrics
+                            </h4>
+                            <div className="grid grid-cols-3 gap-2">
+                              {category.metrics.map((metric, index) => {
+                                const MetricIcon = metric.icon;
+                                return (
                                 <div
                                   key={index}
-                                  className="p-4 rounded-lg border border-slate-200 bg-white hover:shadow-sm transition-all"
-                                >
-                                  <div className="flex items-start justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <div className={`p-1.5 rounded-lg bg-blue-50`}>
-                                        <metric.icon className="h-4 w-4 text-blue-600" />
+                                    className="p-3 rounded-lg bg-slate-50/70 hover:bg-slate-100/70 transition-colors"
+                                  >
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                      <MetricIcon className="h-3.5 w-3.5 text-gray-400" aria-hidden="true" />
+                                      <span className="text-[11px] text-gray-500 truncate">{metric.label}</span>
                                       </div>
-                                      <span className="text-xs font-medium text-gray-600">{metric.label}</span>
-                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                      <span className="text-base font-semibold text-gray-900">{metric.value}</span>
                                     {metric.change && (
-                                      <Badge
-                                        variant="outline"
-                                        className={`text-[10px] px-1.5 py-0 h-4 ${
-                                          metric.trend === "up"
-                                            ? "bg-green-50 text-green-700 border-green-200"
-                                            : metric.trend === "down"
-                                            ? "bg-red-50 text-red-700 border-red-200"
-                                            : "bg-gray-50 text-gray-700 border-gray-200"
-                                        }`}
-                                      >
+                                        <span className={`text-[10px] font-medium ${
+                                          metric.trend === "up" ? "text-green-600" : 
+                                          metric.trend === "down" ? "text-red-600" : "text-gray-500"
+                                        }`}>
                                         {metric.change}
-                                      </Badge>
+                                        </span>
                                     )}
                                   </div>
-                                  <p className="text-lg font-bold text-gray-900">{metric.value}</p>
                                 </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
 
-                          {/* Insights */}
+                          {/* Insights - Compact List */}
                           <div>
-                            <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                              <Lightbulb className="h-4 w-4 text-blue-500" />
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                              <Lightbulb className="h-4 w-4 text-blue-500" aria-hidden="true" />
                               Key Insights
                             </h4>
                             <div className="space-y-2">
                               {category.insights.map((insight, index) => (
-                                <div key={index} className="p-3 rounded-lg bg-white border border-slate-200 hover:border-blue-200 transition-colors">
-                                  <div className="flex gap-2">
-                                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                                <div 
+                                  key={index} 
+                                  className="flex items-start gap-2 py-2 px-3 rounded-lg bg-slate-50/70 hover:bg-blue-50/50 transition-colors"
+                                >
+                                  <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-blue-400 flex-shrink-0" aria-hidden="true" />
                                     <p className="text-xs text-gray-600 leading-relaxed">{insight}</p>
-                                  </div>
                                 </div>
                               ))}
                             </div>
                           </div>
                         </div>
+                      </>
                       );
                     })()}
-                  </div>
                 </div>
               </div>
             </Card>
@@ -2134,35 +1743,16 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
 
                 {/* Right: Automation Flow */}
                 <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex-shrink-0 flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold text-gray-900 mb-1">
-                        {automations.find(a => a.id === selectedAutomation)?.title || "Select an automation"}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {automations.find(a => a.id === selectedAutomation)?.description || "Choose an automation to view its workflow"}
-                      </p>
-                    </div>
-                    <Button
-                      size="icon"
-                      className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-green-200 text-green-600 shadow-sm hover:bg-green-50 hover:text-green-700 transition-all flex-shrink-0"
-                      aria-label="Setup automation"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Flow Diagram */}
-                  <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
                     {(() => {
+                    const selectedAuto = automations.find(a => a.id === selectedAutomation);
                       const nodes = getAutomationNodes(selectedAutomation);
-                      if (nodes.length === 0) {
+                    
+                    if (!selectedAuto || nodes.length === 0) {
                         return (
-                          <div className="flex items-center justify-center h-full">
+                        <div className="flex-1 flex items-center justify-center p-8">
                             <div className="text-center max-w-sm">
                               <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                                <Bot className="h-8 w-8 text-slate-400" />
+                              <Bot className="h-8 w-8 text-slate-400" aria-hidden="true" />
                               </div>
                               <h3 className="text-base font-semibold text-gray-900 mb-2">Select an automation</h3>
                               <p className="text-sm text-gray-500">
@@ -2174,52 +1764,97 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
                       }
 
                       return (
-                        <div className="relative min-h-full">
-                          <div className="flex flex-col gap-6">
+                      <>
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex-shrink-0">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2.5 rounded-lg ${selectedAuto.iconColor}`}>
+                                <selectedAuto.icon className="h-5 w-5 text-white" aria-hidden="true" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-[15px] text-gray-900">{selectedAuto.title}</h3>
+                                <p className="text-xs text-gray-500">{selectedAuto.description}</p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                              aria-label="Setup automation"
+                            >
+                              <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
+                              Setup
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Inline Stats */}
+                        <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-400">Steps:</span>
+                            <span className="font-medium text-gray-700">{selectedAuto.nodeCount}</span>
+                          </div>
+                          <span className="text-gray-300">•</span>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="h-3.5 w-3.5 text-green-500" aria-hidden="true" />
+                            <span className="text-gray-400">Saves:</span>
+                            <span className="font-medium text-green-600">{selectedAuto.timeSaved}</span>
+                          </div>
+                          <span className="text-gray-300">•</span>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] px-1.5 py-0 h-4 font-normal ${
+                              selectedAuto.difficulty === "Easy"
+                                ? "bg-green-50 text-green-600 border-green-200"
+                                : selectedAuto.difficulty === "Medium"
+                                ? "bg-amber-50 text-amber-600 border-amber-200"
+                                : "bg-red-50 text-red-600 border-red-200"
+                            }`}
+                          >
+                            {selectedAuto.difficulty}
+                          </Badge>
+                        </div>
+
+                        {/* Workflow Steps */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <Bot className="h-4 w-4 text-green-500" aria-hidden="true" />
+                            Workflow Steps
+                          </h4>
+                          <div className="space-y-3">
                             {nodes.map((node, index) => {
                               const isLast = index === nodes.length - 1;
+                              const NodeIcon = node.icon;
 
-                              const getGradientClasses = () => {
+                              const getNodeBgColor = () => {
                                 switch (node.type) {
-                                  case "trigger":
-                                    return "from-blue-500 to-blue-600";
-                                  case "action":
-                                    return "from-green-500 to-green-600";
-                                  case "condition":
-                                    return "from-purple-500 to-purple-600";
-                                  case "delay":
-                                    return "from-amber-500 to-amber-600";
-                                  default:
-                                    return "from-slate-500 to-slate-600";
+                                  case "trigger": return "bg-blue-500";
+                                  case "action": return "bg-green-500";
+                                  case "condition": return "bg-purple-500";
+                                  case "delay": return "bg-amber-500";
+                                  default: return "bg-slate-500";
                                 }
                               };
 
                               return (
                                 <div key={node.id} className="relative">
-                                  <div className="flex items-start gap-4">
-                                    {/* Node with gradient */}
+                                  <div className="flex items-start gap-3">
+                                    {/* Compact Node */}
                                     <div className="relative flex-shrink-0">
-                                      <div
-                                        className={cn(
-                                          "w-16 h-16 rounded-xl bg-gradient-to-br shadow-lg flex items-center justify-center",
-                                          getGradientClasses()
-                                        )}
-                                      >
-                                        <node.icon className="h-7 w-7 text-white" />
+                                      <div className={`w-10 h-10 rounded-lg ${getNodeBgColor()} flex items-center justify-center shadow-sm`}>
+                                        <NodeIcon className="h-5 w-5 text-white" aria-hidden="true" />
                                       </div>
-                                      
                                       {/* Connector line */}
                                       {!isLast && (
-                                        <div className="absolute left-1/2 top-16 -translate-x-1/2 w-0.5 h-6 bg-green-400">
-                                          <div className="absolute left-1/2 top-full -translate-x-1/2 w-2 h-2 rounded-full bg-green-400"></div>
-                                        </div>
+                                        <div className="absolute left-1/2 top-10 -translate-x-1/2 w-0.5 h-3 bg-gray-200" aria-hidden="true" />
                                       )}
                                     </div>
 
                                     {/* Node Info */}
-                                    <div className="flex-1 min-w-0 pt-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <p className="text-sm font-semibold text-gray-900">{node.title}</p>
+                                    <div className="flex-1 min-w-0 pb-3">
+                                      <div className="flex items-center gap-2 mb-0.5">
+                                        <p className="text-sm font-medium text-gray-900">{node.title}</p>
                                         <Badge
                                           variant="outline"
                                           className={cn("text-[10px] px-1.5 py-0 h-4", getNodeTypeColor(node.type))}
@@ -2235,9 +1870,9 @@ export default function DashboardDashboard({ initialData, initialTab = 'tips' }:
                             })}
                           </div>
                         </div>
+                      </>
                       );
                     })()}
-                  </div>
                 </div>
               </div>
             </Card>

@@ -2,26 +2,30 @@
 
 import * as React from "react";
 import useSWR from "swr";
-import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, 
-  Sparkles, 
   Mail, 
   Calendar, 
   MessageSquare, 
   FileText, 
   Database, 
   Users, 
-  Filter,
-  Grid2X2,
-  Plus
+  Plus,
+  CheckCircle2,
+  Loader2,
+  ExternalLink,
+  Plug,
+  Zap,
+  Settings,
+  ChevronRight,
+  Globe,
+  Shield,
+  Clock
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { CosmicBackground } from "@/components/shared/CosmicBackground";
-import { GalaxyIntegrationCard } from "./GalaxyIntegrationCard";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useOAuth } from "@/hooks/useOAuth";
 import { toast } from "sonner";
@@ -30,73 +34,126 @@ import { logger } from "@/lib/logger";
 // Fetcher for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+// Integration type
+interface Integration {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ElementType;
+  iconColor: string;
+  iconBg: string;
+  category: string;
+  features: string[];
+  popularity: "high" | "medium" | "low";
+}
+
 // Mock Data
-const INTEGRATIONS = [
+const INTEGRATIONS: Integration[] = [
   {
     id: "gmail",
     name: "Gmail",
     description: "Sync emails, extract action items, and automate follow-ups directly from your inbox.",
-    icon: <Mail className="h-6 w-6 text-red-500" />,
+    icon: Mail,
+    iconColor: "text-red-600",
+    iconBg: "bg-red-50",
     category: "Communication",
+    features: ["Email sync", "Auto-responses", "Action items"],
+    popularity: "high",
   },
   {
     id: "calendar",
     name: "Google Calendar",
     description: "Coordinate schedules, auto-book meetings, and prevent conflicts across teams.",
-    icon: <Calendar className="h-6 w-6 text-blue-500" />,
+    icon: Calendar,
+    iconColor: "text-blue-600",
+    iconBg: "bg-blue-50",
     category: "Productivity",
+    features: ["Schedule sync", "Auto-booking", "Reminders"],
+    popularity: "high",
   },
   {
     id: "slack",
     name: "Slack",
     description: "Real-time notifications and command-based actions for your entire workspace.",
-    icon: <MessageSquare className="h-6 w-6 text-purple-500" />,
+    icon: MessageSquare,
+    iconColor: "text-purple-600",
+    iconBg: "bg-purple-50",
     category: "Communication",
+    features: ["Notifications", "Commands", "Channels"],
+    popularity: "high",
   },
   {
     id: "notion",
     name: "Notion",
     description: "Access knowledge bases and sync documentation for context-aware AI responses.",
-    icon: <FileText className="h-6 w-6 text-foreground" />,
+    icon: FileText,
+    iconColor: "text-gray-700",
+    iconBg: "bg-gray-100",
     category: "Knowledge",
+    features: ["Docs sync", "Knowledge base", "Templates"],
+    popularity: "medium",
   },
   {
     id: "salesforce",
     name: "Salesforce",
     description: "Two-way sync for CRM records, deal tracking, and automated pipeline updates.",
-    icon: <Users className="h-6 w-6 text-blue-400" />,
+    icon: Users,
+    iconColor: "text-sky-600",
+    iconBg: "bg-sky-50",
     category: "Sales",
+    features: ["CRM sync", "Deal tracking", "Pipeline"],
+    popularity: "medium",
   },
   {
     id: "hubspot",
     name: "HubSpot",
     description: "Marketing automation triggers and contact management synchronization.",
-    icon: <Database className="h-6 w-6 text-orange-500" />,
+    icon: Database,
+    iconColor: "text-orange-600",
+    iconBg: "bg-orange-50",
     category: "Marketing",
+    features: ["Automation", "Contacts", "Analytics"],
+    popularity: "medium",
   },
 ];
 
-const CATEGORIES = ["All", "Communication", "Productivity", "Sales", "Marketing", "Knowledge"];
+interface Category {
+  id: string;
+  name: string;
+  icon: React.ElementType;
+  count: number;
+  color: string;
+}
+
+const CATEGORIES: Category[] = [
+  { id: "all", name: "All Integrations", icon: Plug, count: 6, color: "text-indigo-600" },
+  { id: "Communication", name: "Communication", icon: MessageSquare, count: 2, color: "text-purple-600" },
+  { id: "Productivity", name: "Productivity", icon: Zap, count: 1, color: "text-blue-600" },
+  { id: "Sales", name: "Sales", icon: Users, count: 1, color: "text-emerald-600" },
+  { id: "Marketing", name: "Marketing", icon: Globe, count: 1, color: "text-orange-600" },
+  { id: "Knowledge", name: "Knowledge", icon: FileText, count: 1, color: "text-gray-600" },
+];
 
 export function GalaxyIntegrations() {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [activeCategory, setActiveCategory] = React.useState("All");
+  const [activeCategory, setActiveCategory] = React.useState("all");
+  const [selectedIntegration, setSelectedIntegration] = React.useState<Integration | null>(null);
   const [connectingId, setConnectingId] = React.useState<string | null>(null);
   const { connect, disconnect, isConnecting } = useOAuth();
 
   // Fetch integration status
-  const { data: statusData, error: statusError, mutate: mutateStatus } = useSWR('/api/integrations/status', fetcher, {
-    refreshInterval: 30000, // Refresh every 30 seconds
+  const { data: statusData, mutate: mutateStatus } = useSWR('/api/integrations/status', fetcher, {
+    refreshInterval: 30000,
   });
 
   // Map integration IDs to provider names
   const providerMap: Record<string, 'google' | 'microsoft'> = {
     'gmail': 'google',
     'calendar': 'google',
-    'slack': 'microsoft', // Update based on actual provider
-    'notion': 'microsoft', // Update based on actual provider
-    'salesforce': 'microsoft', // Update based on actual provider
-    'hubspot': 'microsoft', // Update based on actual provider
+    'slack': 'microsoft',
+    'notion': 'microsoft',
+    'salesforce': 'microsoft',
+    'hubspot': 'microsoft',
   };
 
   // Get connected IDs from API status
@@ -105,7 +162,6 @@ export function GalaxyIntegrations() {
     const connected = new Set<string>();
     Object.entries(statusData.status).forEach(([provider, isConnected]) => {
       if (isConnected) {
-        // Find integration IDs that match this provider
         Object.entries(providerMap).forEach(([id, prov]) => {
           if (prov === provider) {
             connected.add(id);
@@ -126,7 +182,6 @@ export function GalaxyIntegrations() {
     setConnectingId(id);
     try {
       await connect(provider);
-      // Status will update via SWR after redirect/refresh
     } catch (error) {
       logger.error('Connect error', error);
       toast.error('Failed to connect. Please try again.');
@@ -135,8 +190,7 @@ export function GalaxyIntegrations() {
   };
 
   const handleDisconnect = async (id: string) => {
-    // Find integration ID from status data
-    const integration = statusData?.integrations?.find((i: any) => {
+    const integration = statusData?.integrations?.find((i: { provider: string }) => {
       const prov = providerMap[id];
       return i.provider === prov;
     });
@@ -148,8 +202,8 @@ export function GalaxyIntegrations() {
 
     try {
       await disconnect(integration.id);
-      await mutateStatus(); // Refresh status
-      toast.success('Integration disconnected successfully');
+      await mutateStatus();
+      toast.success('Integration disconnected');
     } catch (error) {
       logger.error('Disconnect error', error);
       toast.error('Failed to disconnect. Please try again.');
@@ -159,117 +213,271 @@ export function GalaxyIntegrations() {
   const filteredIntegrations = INTEGRATIONS.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === "All" || item.category === activeCategory;
+    const matchesCategory = activeCategory === "all" || item.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
 
+  const connectedCount = connectedIds.size;
+
   return (
-    <div className="relative h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
-      <div className="absolute inset-0 z-0 opacity-50">
-        <CosmicBackground />
+    <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Integrations</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Connect your favorite tools to supercharge your workflow</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200">
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+            {connectedCount} Connected
+          </Badge>
+          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Plus className="h-4 w-4 mr-1.5" />
+            Request App
+          </Button>
+        </div>
       </div>
 
-      {/* Header Section */}
-      <div className="relative z-10 flex flex-col gap-6 px-6 py-8 md:px-12 lg:py-12 border-b bg-background/40 backdrop-blur-md">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Grid2X2 className="h-8 w-8 text-primary" />
-              Integrations
-            </h1>
-            <p className="text-muted-foreground mt-2 max-w-xl">
-              Supercharge your workflow by connecting your favorite tools. 
-              Our AI agents work seamlessly across your entire stack.
-            </p>
-          </div>
+      {/* Main Content - Two Panel Layout */}
+      <Card className="p-6 shadow-lg border-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
           
-          <div className="flex items-center gap-3">
-             <div className="bg-background/50 backdrop-blur-sm border rounded-full px-4 py-1.5 text-sm text-muted-foreground shadow-sm">
-                <span className="font-medium text-foreground">
-                  {statusData ? connectedIds.size : '...'}
-                </span> Active Connections
-             </div>
-             <Button className="rounded-full shadow-lg shadow-primary/20">
-                <Plus className="mr-2 h-4 w-4" />
-                Request App
-             </Button>
+          {/* Left Panel - Categories */}
+          <div className="lg:col-span-3 flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <span className="text-sm font-medium text-gray-900">Categories</span>
+            </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {CATEGORIES.map((category) => {
+                const isActive = activeCategory === category.id;
+                const CategoryIcon = category.icon;
+                
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => setActiveCategory(category.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all",
+                      isActive
+                        ? "bg-indigo-50 border border-indigo-200"
+                        : "hover:bg-gray-50"
+                    )}
+                    aria-label={`Filter by ${category.name}`}
+                    aria-pressed={isActive}
+                  >
+                    <div className={cn(
+                      "p-1.5 rounded-md",
+                      isActive ? "bg-indigo-100" : "bg-gray-100"
+                    )}>
+                      <CategoryIcon className={cn(
+                        "h-4 w-4",
+                        isActive ? "text-indigo-600" : "text-gray-500"
+                      )} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={cn(
+                        "text-sm truncate",
+                        isActive ? "font-medium text-indigo-900" : "text-gray-700"
+                      )}>
+                        {category.name}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      "text-xs px-1.5 py-0.5 rounded",
+                      isActive ? "bg-indigo-100 text-indigo-700" : "bg-gray-100 text-gray-500"
+                    )}>
+                      {category.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick Stats */}
+            <div className="p-3 border-t border-gray-100 bg-gray-50 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500 flex items-center gap-1.5">
+                  <Shield className="h-3 w-3" />
+                  Secure OAuth
+                </span>
+                <span className="text-green-600">Enabled</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500 flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" />
+                  Sync Interval
+                </span>
+                <span className="text-gray-700">Real-time</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel - Integrations Grid */}
+          <div className="lg:col-span-9 flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden">
+            {/* Header with Search */}
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-900">
+                  {activeCategory === "all" ? "All Apps" : activeCategory}
+                </span>
+                <span className="text-xs text-gray-400">({filteredIntegrations.length})</span>
+              </div>
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                <Input
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 text-sm bg-gray-50 border-gray-200"
+                />
+              </div>
+            </div>
+
+            {/* Integrations Grid */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {filteredIntegrations.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {filteredIntegrations.map((integration) => {
+                    const isConnected = connectedIds.has(integration.id);
+                    const isLoading = connectingId === integration.id || (isConnecting && connectingId === integration.id);
+                    const IntegrationIcon = integration.icon;
+                    const isSelected = selectedIntegration?.id === integration.id;
+
+                    return (
+                      <button
+                        key={integration.id}
+                        onClick={() => setSelectedIntegration(isSelected ? null : integration)}
+                        className={cn(
+                          "text-left p-4 rounded-xl border transition-all duration-200 group",
+                          isSelected
+                            ? "bg-indigo-50 border-indigo-200 shadow-sm"
+                            : isConnected
+                            ? "bg-green-50/50 border-green-200 hover:border-green-300"
+                            : "bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm"
+                        )}
+                        aria-label={`${integration.name} integration`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={cn("p-2 rounded-lg", integration.iconBg)}>
+                            <IntegrationIcon className={cn("h-5 w-5", integration.iconColor)} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-sm font-medium text-gray-900">{integration.name}</h3>
+                              {isConnected && (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{integration.description}</p>
+                            
+                            {/* Feature Pills */}
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {integration.features.slice(0, 2).map((feature) => (
+                                <span key={feature} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                                  {feature}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <ChevronRight className={cn(
+                            "h-4 w-4 text-gray-300 transition-transform flex-shrink-0",
+                            isSelected && "rotate-90 text-indigo-500"
+                          )} />
+                        </div>
+
+                        {/* Expanded Actions */}
+                        {isSelected && (
+                          <div className="mt-3 pt-3 border-t border-indigo-100 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                            {isConnected ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="flex-1 h-8 text-xs"
+                                  onClick={() => handleDisconnect(integration.id)}
+                                >
+                                  Disconnect
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Settings className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="flex-1 h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
+                                onClick={() => handleConnect(integration.id)}
+                                disabled={isLoading}
+                              >
+                                {isLoading ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                                    Connecting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus className="h-3 w-3 mr-1.5" />
+                                    Connect
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                  <div className="p-3 rounded-full bg-gray-100 mb-3">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-900">No integrations found</h3>
+                  <p className="text-xs text-gray-500 mt-1 max-w-xs">
+                    Try adjusting your search or category filter
+                  </p>
+                  <Button 
+                    variant="link" 
+                    size="sm"
+                    onClick={() => { setSearchQuery(""); setActiveCategory("all"); }}
+                    className="mt-2 text-xs"
+                  >
+                    Clear filters
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Stats */}
+            <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5">
+                  <Plug className="h-3 w-3" />
+                  {INTEGRATIONS.length} available
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3 w-3 text-green-600" />
+                  {connectedCount} connected
+                </span>
+              </div>
+              <span className="text-gray-400">Last synced: Just now</span>
+            </div>
           </div>
         </div>
-
-        {/* Filters & Search */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
-              {CATEGORIES.map((cat) => (
-                <Button
-                  key={cat}
-                  variant={activeCategory === cat ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveCategory(cat)}
-                  className={cn(
-                    "rounded-full text-xs",
-                    activeCategory === cat ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-background/50"
-                  )}
-                >
-                  {cat}
-                </Button>
-              ))}
-           </div>
-
-           <div className="relative w-full md:w-64">
-             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-             <Input 
-               placeholder="Search integrations..." 
-               value={searchQuery}
-               onChange={(e) => setSearchQuery(e.target.value)}
-               className="pl-9 bg-background/50 border-white/10 focus:bg-background/80 rounded-full transition-all"
-             />
-           </div>
-        </div>
-      </div>
-
-      {/* Content Grid */}
-      <ScrollArea className="relative z-10 flex-1">
-        <div className="p-6 md:p-12">
-          <AnimatePresence mode="popLayout">
-            {filteredIntegrations.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-                {filteredIntegrations.map((integration) => (
-                  <GalaxyIntegrationCard
-                    key={integration.id}
-                    {...integration}
-                    isConnected={connectedIds.has(integration.id)}
-                    isConnecting={connectingId === integration.id || (isConnecting && connectingId === integration.id)}
-                    onConnect={() => handleConnect(integration.id)}
-                    onDisconnect={() => handleDisconnect(integration.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center py-20 text-center"
-              >
-                <div className="p-4 rounded-full bg-muted/30 mb-4">
-                  <Search className="h-8 w-8 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-semibold">No integrations found</h3>
-                <p className="text-muted-foreground max-w-sm mt-2">
-                  Try adjusting your search or category filter to find what you're looking for.
-                </p>
-                <Button 
-                  variant="link" 
-                  onClick={() => { setSearchQuery(""); setActiveCategory("All"); }}
-                  className="mt-4"
-                >
-                  Clear filters
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </ScrollArea>
+      </Card>
     </div>
   );
 }
-

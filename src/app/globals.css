@@ -252,13 +252,10 @@
 
   button {
     @apply text-sm sm:text-base font-medium;
-    min-height: 44px; /* Better touch targets */
-    min-width: 44px;
   }
 
   input {
     @apply text-base sm:text-base;
-    min-height: 44px; /* Better touch targets */
   }
 
   /* Better readability for small text on mobile */

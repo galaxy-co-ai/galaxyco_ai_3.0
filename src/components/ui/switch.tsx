@@ -1,30 +1,74 @@
 "use client";
 
 import * as React from "react";
-import * as SwitchPrimitive from "@radix-ui/react-switch";
-
 import { cn } from "../../lib/utils";
 
+interface SwitchProps {
+  checked?: boolean;
+  defaultChecked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  disabled?: boolean;
+  className?: string;
+  "aria-label"?: string;
+}
+
 function Switch({
+  checked,
+  defaultChecked = false,
+  onCheckedChange,
+  disabled = false,
   className,
-  ...props
-}: React.ComponentProps<typeof SwitchPrimitive.Root>) {
+  "aria-label": ariaLabel,
+}: SwitchProps) {
+  const [internalChecked, setInternalChecked] = React.useState(defaultChecked);
+  const isControlled = checked !== undefined;
+  const isChecked = isControlled ? checked : internalChecked;
+
+  const handleToggle = () => {
+    if (disabled) return;
+    
+    if (!isControlled) {
+      setInternalChecked(!internalChecked);
+    }
+    onCheckedChange?.(!isChecked);
+  };
+
+  // Using a div with role="switch" to avoid global button styles
+  // that enforce min-height: 44px and min-width: 44px
   return (
-    <SwitchPrimitive.Root
-      data-slot="switch"
+    <div
+      role="switch"
+      aria-checked={isChecked}
+      aria-label={ariaLabel}
+      tabIndex={disabled ? -1 : 0}
+      onClick={handleToggle}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleToggle();
+        }
+      }}
       className={cn(
-        "peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-switch-background focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-        className,
+        "relative inline-flex cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+        isChecked ? "bg-indigo-600" : "bg-gray-300",
+        disabled && "cursor-not-allowed opacity-50",
+        className
       )}
-      {...props}
+      style={{
+        height: '18px',
+        width: '44px',
+        flexShrink: 0,
+      }}
     >
-      <SwitchPrimitive.Thumb
-        data-slot="switch-thumb"
-        className={cn(
-          "bg-card dark:data-[state=unchecked]:bg-card-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0",
-        )}
+      <span
+        className="pointer-events-none inline-block rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-in-out absolute top-1/2"
+        style={{
+          height: '14px',
+          width: '14px',
+          transform: `translateY(-50%) translateX(${isChecked ? '28px' : '2px'})`,
+        }}
       />
-    </SwitchPrimitive.Root>
+    </div>
   );
 }
 

@@ -555,23 +555,23 @@ export default function KnowledgeBaseDashboard({
 
         {/* Floating Tab Bar - Matching CRM/Marketing */}
         <div className="flex justify-center">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-2 inline-flex gap-1">
+          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                   activeTab === tab.id
-                    ? `${tab.activeColor} shadow-md`
+                    ? `${tab.activeColor} shadow-sm`
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 aria-label={`Switch to ${tab.label} tab`}
               >
-                <tab.icon className="h-3 w-3" />
+                <tab.icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <Badge
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0 h-5 min-w-[20px]`}
+                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0 h-4 min-w-[18px]`}
                   >
                     {tab.badge}
                   </Badge>
