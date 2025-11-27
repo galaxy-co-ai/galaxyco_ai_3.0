@@ -1349,8 +1349,8 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
   };
 
   // Use API agents if available, otherwise fall back to initialData or empty array
-  const agentsList = agentsData && Array.isArray(agentsData) 
-    ? transformAgents(agentsData)
+  const agentsList = agentsData?.agents && Array.isArray(agentsData.agents) 
+    ? transformAgents(agentsData.agents)
     : (initialData?.agents || []);
 
   // Tab configuration (defined after agentsList for proper access)

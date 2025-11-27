@@ -201,7 +201,7 @@ export default function ActivityPage() {
   );
 
   // Transform API data to local format
-  const agents: Agent[] = agentsData?.map(transformApiAgent) || [];
+  const agents: Agent[] = agentsData?.agents?.map(transformApiAgent) || [];
   const activities: AgentActivity[] = activityData?.executions?.map(transformApiExecution) || [];
 
   // Refresh data periodically when live

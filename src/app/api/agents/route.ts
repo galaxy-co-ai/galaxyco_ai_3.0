@@ -11,16 +11,14 @@ export async function GET() {
     const { workspaceId } = await getCurrentWorkspace();
 
     const agentsList = await db.query.agents.findMany({
-      where: and(
-        eq(agents.workspaceId, workspaceId),
-        eq(agents.status, 'active')
-      ),
+      where: eq(agents.workspaceId, workspaceId),
       orderBy: [desc(agents.createdAt)],
       limit: 50,
     });
 
-    return NextResponse.json(
-      agentsList.map((agent: typeof agentsList[0]) => ({
+    // Return wrapped in an object with 'agents' key for consistent API response
+    return NextResponse.json({
+      agents: agentsList.map((agent: typeof agentsList[0]) => ({
         id: agent.id,
         name: agent.name,
         description: agent.description,
@@ -28,8 +26,9 @@ export async function GET() {
         status: agent.status,
         executionCount: agent.executionCount,
         lastExecutedAt: agent.lastExecutedAt,
-      }))
-    );
+        createdAt: agent.createdAt,
+      })),
+    });
   } catch (error) {
     return createErrorResponse(error, 'Get agents error');
   }
