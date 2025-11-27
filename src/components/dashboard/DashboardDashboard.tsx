@@ -93,12 +93,27 @@ type AssistantLeftPanelView = "capabilities" | "history";
 
 export default function DashboardDashboard({ initialData, initialTab = 'assistant' }: DashboardDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
-  const [date, setDate] = useState<Date | undefined>(new Date(2025, 10, 7)); // November 7, 2025
+  const [date, setDate] = useState<Date | undefined>(new Date()); // Current date
   const [messageInput, setMessageInput] = useState("");
   const [agentMessageInput, setAgentMessageInput] = useState("");
   const [selectedConversation, setSelectedConversation] = useState(0); // Track selected conversation
   const [selectedAgent, setSelectedAgent] = useState(0); // Track selected agent
   const [isLoadingChat, setIsLoadingChat] = useState(false); // Loading state for AI chat
+  const [isLoadingAgentChat, setIsLoadingAgentChat] = useState(false); // Loading state for agent chat
+  const [agentConversations, setAgentConversations] = useState<Record<string, Array<{ id: string; role: string; content: string; timestamp: Date }>>>({});
+  const [agentConversationIds, setAgentConversationIds] = useState<Record<string, string>>({});
+  const [calendarEvents, setCalendarEvents] = useState<Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    startTime: string;
+    endTime: string;
+    location: string | null;
+    meetingUrl: string | null;
+    isAllDay: boolean;
+    tags: string[];
+  }>>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
   // Fetch live dashboard stats (refreshes every 30 seconds)
   const { data: liveStats, error: statsError, isLoading: isLoadingStats } = useSWR('/api/dashboard', fetcher, {
@@ -185,6 +200,142 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
     }
   };
 
+  // Agent Chat: Load conversation history when selecting an agent
+  const loadAgentConversation = async (agentId: string) => {
+    try {
+      const res = await fetch(`/api/agents/${agentId}/chat`);
+      if (!res.ok) return;
+      
+      const data = await res.json();
+      if (data.messages && data.messages.length > 0) {
+        setAgentConversations(prev => ({
+          ...prev,
+          [agentId]: data.messages,
+        }));
+        if (data.conversation?.id) {
+          setAgentConversationIds(prev => ({
+            ...prev,
+            [agentId]: data.conversation.id,
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load agent conversation:', error);
+    }
+  };
+
+  // Agent Chat: Send message to agent
+  const sendToAgent = async (agentId: string, message: string) => {
+    if (!message.trim() || isLoadingAgentChat) return;
+    
+    const userMessage = {
+      id: `temp-${Date.now()}`,
+      role: 'user',
+      content: message.trim(),
+      timestamp: new Date(),
+    };
+    
+    // Optimistically add user message
+    setAgentConversations(prev => ({
+      ...prev,
+      [agentId]: [...(prev[agentId] || []), userMessage],
+    }));
+    setAgentMessageInput('');
+    setIsLoadingAgentChat(true);
+    
+    try {
+      const res = await fetch(`/api/agents/${agentId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: message.trim(),
+          conversationId: agentConversationIds[agentId],
+        }),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to send message');
+      }
+      
+      const data = await res.json();
+      
+      // Save conversation ID for future messages
+      if (data.conversationId) {
+        setAgentConversationIds(prev => ({
+          ...prev,
+          [agentId]: data.conversationId,
+        }));
+      }
+      
+      // Add assistant response
+      const assistantMessage = {
+        id: data.message.id,
+        role: 'assistant',
+        content: data.message.content,
+        timestamp: new Date(data.message.timestamp),
+      };
+      
+      setAgentConversations(prev => ({
+        ...prev,
+        [agentId]: [...(prev[agentId] || []), assistantMessage],
+      }));
+    } catch (error) {
+      console.error('Failed to send message to agent:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send message');
+      // Remove the optimistic user message on error
+      setAgentConversations(prev => ({
+        ...prev,
+        [agentId]: (prev[agentId] || []).filter(m => m.id !== userMessage.id),
+      }));
+    } finally {
+      setIsLoadingAgentChat(false);
+    }
+  };
+
+  // Agent Chat: Handle enter key press
+  const handleAgentKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, agentId: string) => {
+    if (e.key === 'Enter' && !isLoadingAgentChat) {
+      sendToAgent(agentId, agentMessageInput);
+    }
+  };
+
+  // Planner: Fetch calendar events for selected date
+  const fetchCalendarEvents = async (selectedDate: Date) => {
+    setIsLoadingEvents(true);
+    try {
+      // Get start and end of the selected day
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const res = await fetch(
+        `/api/calendar/events?startDate=${startOfDay.toISOString()}&endDate=${endOfDay.toISOString()}`
+      );
+      
+      if (!res.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      
+      const data = await res.json();
+      setCalendarEvents(data.events || []);
+    } catch (error) {
+      console.error('Failed to fetch calendar events:', error);
+      setCalendarEvents([]);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
+
+  // Fetch events when date changes
+  useEffect(() => {
+    if (date) {
+      fetchCalendarEvents(date);
+    }
+  }, [date]);
+
   // Top stat badges (using live stats)
   const statBadges = [
     { label: `${stats?.activeAgents ?? 0} Active Agents`, icon: Activity, color: "bg-blue-100 text-blue-700" },
@@ -192,15 +343,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
     { label: `${stats?.hoursSaved ?? 0} Hours Saved`, icon: Clock, color: "bg-purple-100 text-purple-700" },
   ];
 
-  // Tab configuration
-  const tabs = [
-    { id: 'assistant' as TabType, label: 'AI Assistant', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
-    { id: 'snapshot' as TabType, label: 'Snapshot', icon: BarChart3, activeColor: 'bg-blue-100 text-blue-700' },
-    { id: 'automations' as TabType, label: 'Automations', icon: Bot, activeColor: 'bg-green-100 text-green-700' },
-    { id: 'planner' as TabType, label: 'Planner', icon: CalendarDays, badge: '4', badgeColor: 'bg-orange-500', activeColor: 'bg-orange-100 text-orange-700' },
-    { id: 'messages' as TabType, label: 'Messages', icon: MessageSquare, activeColor: 'bg-cyan-100 text-cyan-700' },
-    { id: 'agents' as TabType, label: 'Agents', icon: Bot, badge: '3', badgeColor: 'bg-emerald-500', activeColor: 'bg-emerald-100 text-emerald-700' },
-  ];
+  // Tab configuration (note: actual tabs array is defined after agentsList for proper access)
 
   // AI Assistant data
   const [assistantLeftView, setAssistantLeftView] = useState<AssistantLeftPanelView>("capabilities");
@@ -861,41 +1004,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
     }
   };
 
-  // Events for Planner tab
-  const events = [
-    {
-      icon: FileText,
-      iconColor: 'bg-blue-100 text-blue-600',
-      title: "Product Strategy Meeting",
-      time: "10:00 AM - 11:00 AM • Conference Room A",
-      badge: "Meeting",
-      badgeColor: "bg-blue-100 text-blue-700 hover:bg-blue-200"
-    },
-    {
-      icon: CheckCircle2,
-      iconColor: 'bg-green-100 text-green-600',
-      title: "Update sales pipeline",
-      time: "11:30 AM • CRM cleanup",
-      badge: "Task",
-      badgeColor: "bg-green-100 text-green-700 hover:bg-green-200"
-    },
-    {
-      icon: Target,
-      iconColor: 'bg-purple-100 text-purple-600',
-      title: "StartupXYZ - Seed Round",
-      time: "2:00 PM • $500K opportunity",
-      badge: "Opportunity",
-      badgeColor: "bg-purple-100 text-purple-700 hover:bg-purple-200"
-    },
-    {
-      icon: FileText,
-      iconColor: 'bg-green-100 text-green-600',
-      title: "Prepare weekly report",
-      time: "4:00 PM • Analytics review",
-      badge: "Task",
-      badgeColor: "bg-green-100 text-green-700 hover:bg-green-200"
-    },
-  ];
+  // Events for Planner tab are now fetched dynamically via fetchCalendarEvents
 
   // Messages data with conversations for each person
   const messagesList = [
@@ -1243,6 +1352,26 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
   const agentsList = agentsData && Array.isArray(agentsData) 
     ? transformAgents(agentsData)
     : (initialData?.agents || []);
+
+  // Tab configuration (defined after agentsList for proper access)
+  const tabs = [
+    { id: 'assistant' as TabType, label: 'AI Assistant', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
+    { id: 'snapshot' as TabType, label: 'Snapshot', icon: BarChart3, activeColor: 'bg-blue-100 text-blue-700' },
+    { id: 'automations' as TabType, label: 'Automations', icon: Bot, activeColor: 'bg-green-100 text-green-700' },
+    { id: 'planner' as TabType, label: 'Planner', icon: CalendarDays, badge: calendarEvents.length > 0 ? String(calendarEvents.length) : undefined, badgeColor: 'bg-orange-500', activeColor: 'bg-orange-100 text-orange-700' },
+    { id: 'messages' as TabType, label: 'Messages', icon: MessageSquare, activeColor: 'bg-cyan-100 text-cyan-700' },
+    { id: 'agents' as TabType, label: 'Agents', icon: Bot, badge: agentsList.length > 0 ? String(agentsList.length) : undefined, badgeColor: 'bg-emerald-500', activeColor: 'bg-emerald-100 text-emerald-700' },
+  ];
+
+  // Load agent conversation when selected agent changes
+  useEffect(() => {
+    if (agentsList.length > 0 && agentsList[selectedAgent]) {
+      const agentId = agentsList[selectedAgent].id;
+      if (agentId && !agentConversations[agentId]) {
+        loadAgentConversation(agentId);
+      }
+    }
+  }, [selectedAgent, agentsList]);
 
   return (
     <div className="min-h-0 bg-gray-50/50 overflow-hidden">
@@ -1897,40 +2026,151 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                 {/* Events List */}
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-1">November 7</h3>
-                    <p className="text-sm text-muted-foreground">All events, tasks, and opportunities</p>
+                    <h3 className="text-lg font-semibold mb-1">
+                      {date ? date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'Select a date'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {calendarEvents.length} event{calendarEvents.length !== 1 ? 's' : ''} scheduled
+                    </p>
                   </div>
 
-                  <div>
-                    <h4 className="text-sm font-medium text-muted-foreground mb-3">Morning</h4>
-                    <div className="space-y-3">
-                      {events.map((event, index) => (
-                        <div 
-                          key={index}
-                          className="flex items-start gap-3 p-4 rounded-lg border hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`${event.title} - ${event.time}`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              // Handle event click
-                            }
-                          }}
-                        >
-                          <div className={`p-2 rounded-lg ${event.iconColor}`}>
-                            <event.icon className="h-5 w-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-sm mb-1">{event.title}</h4>
-                            <p className="text-xs text-muted-foreground mb-2">{event.time}</p>
-                            <Badge className={`${event.badgeColor} border-0 text-xs`}>
-                              {event.badge}
-                            </Badge>
+                  <div className="space-y-3">
+                    {isLoadingEvents ? (
+                      // Loading skeletons
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="flex items-start gap-3 p-4 rounded-lg border">
+                          <Skeleton className="h-9 w-9 rounded-lg" />
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-3 w-1/2" />
+                            <Skeleton className="h-5 w-16" />
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      ))
+                    ) : calendarEvents.length === 0 ? (
+                      // Empty state
+                      <div className="text-center py-12">
+                        <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                        <p className="text-sm text-muted-foreground">No events scheduled</p>
+                        <p className="text-xs text-muted-foreground mt-1">Click below to add an event</p>
+                        <Button
+                          size="sm"
+                          className="mt-4"
+                          onClick={() => toast.info('Event creation coming soon!')}
+                        >
+                          <Plus className="h-4 w-4 mr-1.5" />
+                          Add Event
+                        </Button>
+                      </div>
+                    ) : (
+                      // Event list
+                      <>
+                        {/* Group events by time of day */}
+                        {(() => {
+                          const morning = calendarEvents.filter(e => {
+                            const hour = new Date(e.startTime).getHours();
+                            return hour < 12;
+                          });
+                          const afternoon = calendarEvents.filter(e => {
+                            const hour = new Date(e.startTime).getHours();
+                            return hour >= 12 && hour < 17;
+                          });
+                          const evening = calendarEvents.filter(e => {
+                            const hour = new Date(e.startTime).getHours();
+                            return hour >= 17;
+                          });
+
+                          const renderEventGroup = (title: string, events: typeof calendarEvents) => {
+                            if (events.length === 0) return null;
+                            return (
+                              <div key={title}>
+                                <h4 className="text-sm font-medium text-muted-foreground mb-3">{title}</h4>
+                                <div className="space-y-3">
+                                  {events.map((event) => {
+                                    const startTime = new Date(event.startTime);
+                                    const endTime = new Date(event.endTime);
+                                    const timeStr = event.isAllDay
+                                      ? 'All Day'
+                                      : `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+                                    
+                                    // Determine icon and colors based on tags or title
+                                    const isMeeting = event.title.toLowerCase().includes('meeting') || event.meetingUrl;
+                                    const isTask = event.tags?.includes('task') || event.title.toLowerCase().includes('task');
+                                    
+                                    const iconColor = isMeeting ? 'bg-blue-100 text-blue-600' : 
+                                                      isTask ? 'bg-green-100 text-green-600' : 
+                                                      'bg-purple-100 text-purple-600';
+                                    const badgeColor = isMeeting ? 'bg-blue-100 text-blue-700' : 
+                                                       isTask ? 'bg-green-100 text-green-700' : 
+                                                       'bg-purple-100 text-purple-700';
+                                    const badgeText = isMeeting ? 'Meeting' : isTask ? 'Task' : 'Event';
+                                    const EventIcon = isMeeting ? CalendarDays : isTask ? CheckCircle2 : Target;
+
+                                    return (
+                                      <div 
+                                        key={event.id}
+                                        className="flex items-start gap-3 p-4 rounded-lg border hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`${event.title} - ${timeStr}`}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            toast.info(`Opening event: ${event.title}`);
+                                          }
+                                        }}
+                                        onClick={() => toast.info(`Opening event: ${event.title}`)}
+                                      >
+                                        <div className={`p-2 rounded-lg ${iconColor}`}>
+                                          <EventIcon className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className="font-medium text-sm mb-1">{event.title}</h4>
+                                          <p className="text-xs text-muted-foreground mb-2">
+                                            {timeStr}
+                                            {event.location && ` • ${event.location}`}
+                                          </p>
+                                          <div className="flex items-center gap-2">
+                                            <Badge className={`${badgeColor} border-0 text-xs`}>
+                                              {badgeText}
+                                            </Badge>
+                                            {event.meetingUrl && (
+                                              <Badge className="bg-cyan-100 text-cyan-700 border-0 text-xs">
+                                                Video Call
+                                              </Badge>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          };
+
+                          return (
+                            <>
+                              {renderEventGroup('Morning', morning)}
+                              {renderEventGroup('Afternoon', afternoon)}
+                              {renderEventGroup('Evening', evening)}
+                            </>
+                          );
+                        })()}
+                        
+                        {/* Add Event Button */}
+                        <div className="pt-4 border-t">
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => toast.info('Event creation coming soon!')}
+                          >
+                            <Plus className="h-4 w-4 mr-1.5" />
+                            Add Event for {date?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2190,32 +2430,49 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                     {/* Messages Area */}
                     <div className="flex-1 overflow-y-scroll px-6 py-4" style={{ maxHeight: 'calc(600px - 140px)' }}>
                       <div className="space-y-3">
-                        {agentsList[selectedAgent]?.conversation && agentsList[selectedAgent].conversation.length > 0 ? (
-                          agentsList[selectedAgent].conversation.map((msg, index) => (
-                            <div 
-                              key={index}
-                              className={`flex ${msg.isUser ? 'justify-end' : 'justify-start'}`}
-                            >
-                              <div className={`max-w-[75%] ${msg.isUser ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                                <div className={`px-4 py-2.5 shadow-sm ${
-                                  msg.isUser 
-                                    ? 'bg-blue-500 text-white rounded-[18px] rounded-br-md' 
-                                    : 'bg-gray-100 text-gray-900 rounded-[18px] rounded-bl-md border border-gray-200/50'
-                                }`}>
-                                  <p className="text-[15px] leading-relaxed">{msg.message}</p>
+                        {(() => {
+                          const agentId = agentsList[selectedAgent]?.id;
+                          const messages = agentId ? agentConversations[agentId] : [];
+                          
+                          if (messages && messages.length > 0) {
+                            return messages.map((msg, index) => (
+                              <div 
+                                key={msg.id || index}
+                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div className={`max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                                  <div className={`px-4 py-2.5 shadow-sm ${
+                                    msg.role === 'user'
+                                      ? 'bg-blue-500 text-white rounded-[18px] rounded-br-md' 
+                                      : 'bg-gray-100 text-gray-900 rounded-[18px] rounded-bl-md border border-gray-200/50'
+                                  }`}>
+                                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                                  </div>
+                                  <p className={`text-[11px] text-gray-500 px-3 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                                    {new Date(msg.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                  </p>
                                 </div>
-                                <p className={`text-[11px] text-gray-500 px-3 ${msg.isUser ? 'text-right' : 'text-left'}`}>
-                                  {msg.time}
-                                </p>
+                              </div>
+                            ));
+                          }
+                          
+                          return (
+                            <div className="flex items-center justify-center h-full text-center p-8">
+                              <div>
+                                <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                                <p className="text-sm text-muted-foreground">No conversation history</p>
+                                <p className="text-xs text-muted-foreground mt-1">Start a conversation with this agent</p>
                               </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-center p-8">
-                            <div>
-                              <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                              <p className="text-sm text-muted-foreground">No conversation history</p>
-                              <p className="text-xs text-muted-foreground mt-1">Start a conversation with this agent</p>
+                          );
+                        })()}
+                        {isLoadingAgentChat && (
+                          <div className="flex justify-start">
+                            <div className="bg-gray-100 text-gray-900 rounded-[18px] rounded-bl-md border border-gray-200/50 px-4 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span className="text-[15px]">Thinking...</span>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -2230,16 +2487,30 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                             placeholder="Message"
                             value={agentMessageInput}
                             onChange={(e) => setAgentMessageInput(e.target.value)}
-                            className="w-full rounded-full border-gray-300 bg-gray-50 px-4 py-2.5 text-[15px] focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                            onKeyDown={(e) => {
+                              const agentId = agentsList[selectedAgent]?.id;
+                              if (agentId) handleAgentKeyPress(e, agentId);
+                            }}
+                            disabled={isLoadingAgentChat}
+                            className="w-full rounded-full border-gray-300 bg-gray-50 px-4 py-2.5 text-[15px] focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none disabled:opacity-50"
                             aria-label="Type message to agent"
                           />
                         </div>
                         <Button 
                           size="icon"
-                          className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 flex-shrink-0"
+                          className="h-9 w-9 rounded-full bg-blue-500 hover:bg-blue-600 flex-shrink-0 disabled:opacity-50"
                           aria-label="Send message"
+                          disabled={isLoadingAgentChat || !agentMessageInput.trim()}
+                          onClick={() => {
+                            const agentId = agentsList[selectedAgent]?.id;
+                            if (agentId) sendToAgent(agentId, agentMessageInput);
+                          }}
                         >
-                          <Send className="h-4 w-4" />
+                          {isLoadingAgentChat ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </div>

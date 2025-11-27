@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Activity,
   Bot,
@@ -40,6 +42,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
+
+// Fetcher for SWR
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 // Types
 interface AgentActivity {
@@ -78,233 +84,137 @@ interface WorkflowStep {
   icon: typeof Mail;
 }
 
-// Mock Data
-const mockAgents: Agent[] = [
-  {
-    id: "agent-1",
-    name: "Email Responder",
-    description: "Automatically responds to customer inquiries",
-    type: "communication",
-    status: "active",
-    icon: Mail,
-    color: "text-blue-600",
-    bgColor: "bg-blue-50",
-    currentTask: "Sending follow-up to John Smith...",
-    progress: 75,
-    tasksToday: 23,
-    timeSaved: "2.3 hrs",
-    lastActive: new Date(),
-    workflow: [
-      { id: "w1", name: "Receive Email", status: "completed", icon: Mail },
-      { id: "w2", name: "Analyze Content", status: "completed", icon: Brain },
-      { id: "w3", name: "Draft Response", status: "current", icon: FileText },
-      { id: "w4", name: "Send Email", status: "pending", icon: Mail },
-    ],
-  },
-  {
-    id: "agent-2",
-    name: "Lead Scorer",
-    description: "Scores and prioritizes new leads automatically",
-    type: "sales",
-    status: "active",
-    icon: Target,
-    color: "text-purple-600",
-    bgColor: "bg-purple-50",
-    currentTask: "Analyzing lead: Sarah Chen (TechCorp)",
-    progress: 45,
-    tasksToday: 67,
-    timeSaved: "4.1 hrs",
-    lastActive: new Date(Date.now() - 30000),
-    workflow: [
-      { id: "w1", name: "New Lead Detected", status: "completed", icon: Users },
-      { id: "w2", name: "Data Enrichment", status: "current", icon: Database },
-      { id: "w3", name: "Calculate Score", status: "pending", icon: Target },
-      { id: "w4", name: "Assign to Team", status: "pending", icon: Users },
-    ],
-  },
-  {
-    id: "agent-3",
-    name: "Meeting Prep",
-    description: "Generates comprehensive meeting briefs",
-    type: "productivity",
-    status: "idle",
-    icon: Calendar,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-    tasksToday: 5,
-    timeSaved: "1.5 hrs",
-    lastActive: new Date(Date.now() - 3600000),
-    workflow: [
-      { id: "w1", name: "Detect Meeting", status: "completed", icon: Calendar },
-      { id: "w2", name: "Gather Context", status: "completed", icon: Database },
-      { id: "w3", name: "Generate Brief", status: "completed", icon: FileText },
-    ],
-  },
-  {
-    id: "agent-4",
-    name: "Data Enricher",
-    description: "Auto-populates missing contact and company data",
-    type: "data",
-    status: "new",
-    icon: Database,
-    color: "text-cyan-600",
-    bgColor: "bg-cyan-50",
-    tasksToday: 0,
-    timeSaved: "0 hrs",
-    lastActive: new Date(),
-    isNew: true,
-  },
-  {
-    id: "agent-5",
-    name: "Follow-up Reminder",
-    description: "Reminds you to follow up with leads",
-    type: "sales",
-    status: "paused",
-    icon: Clock,
-    color: "text-amber-600",
-    bgColor: "bg-amber-50",
-    tasksToday: 12,
-    timeSaved: "0.8 hrs",
-    lastActive: new Date(Date.now() - 7200000),
-  },
-  {
-    id: "agent-6",
-    name: "Content Writer",
-    description: "Generates marketing copy and social posts",
-    type: "content",
-    status: "idle",
-    icon: FileText,
-    color: "text-indigo-600",
-    bgColor: "bg-indigo-50",
-    tasksToday: 8,
-    timeSaved: "3.2 hrs",
-    lastActive: new Date(Date.now() - 1800000),
-  },
-];
+// API response types
+interface ApiAgent {
+  id: string;
+  name: string;
+  description: string | null;
+  type: string;
+  status: string;
+  executionCount: number;
+  lastExecutedAt: string | null;
+}
 
-const generateMockActivity = (): AgentActivity[] => {
-  const activities: AgentActivity[] = [
-    {
-      id: "act-1",
-      agentId: "agent-1",
-      agentName: "Email Responder",
-      action: "Sent follow-up email",
-      description: "Follow-up sent to John Smith regarding Q4 proposal",
-      timestamp: new Date(),
-      status: "success",
-    },
-    {
-      id: "act-2",
-      agentId: "agent-2",
-      agentName: "Lead Scorer",
-      action: "Scored new lead",
-      description: "Sarah Chen (TechCorp) - Score: 94 🔥",
-      timestamp: new Date(Date.now() - 15000),
-      status: "success",
-      details: "High intent signals detected",
-    },
-    {
-      id: "act-3",
-      agentId: "agent-1",
-      agentName: "Email Responder",
-      action: "Processing email",
-      description: "Analyzing incoming email from support@acme.com",
-      timestamp: new Date(Date.now() - 30000),
-      status: "running",
-    },
-    {
-      id: "act-4",
-      agentId: "agent-2",
-      agentName: "Lead Scorer",
-      action: "Enriched lead data",
-      description: "Added company info for Mike Johnson (StartupXYZ)",
-      timestamp: new Date(Date.now() - 60000),
-      status: "success",
-    },
-    {
-      id: "act-5",
-      agentId: "agent-3",
-      agentName: "Meeting Prep",
-      action: "Generated brief",
-      description: "Meeting brief created for 'Acme Corp Demo' at 2:00 PM",
-      timestamp: new Date(Date.now() - 180000),
-      status: "success",
-      details: "3 pages, 5 talking points",
-    },
-    {
-      id: "act-6",
-      agentId: "agent-6",
-      agentName: "Content Writer",
-      action: "Created social post",
-      description: "LinkedIn post drafted for product launch",
-      timestamp: new Date(Date.now() - 300000),
-      status: "success",
-    },
-    {
-      id: "act-7",
-      agentId: "agent-5",
-      agentName: "Follow-up Reminder",
-      action: "Scheduled reminder",
-      description: "Reminder set for Lisa Park follow-up in 2 days",
-      timestamp: new Date(Date.now() - 600000),
-      status: "success",
-    },
-  ];
-  return activities;
+interface ApiExecution {
+  id: string;
+  agentId: string;
+  agentName: string;
+  agentType: string;
+  agentDescription: string | null;
+  status: string;
+  durationMs: number | null;
+  createdAt: string;
+}
+
+// Agent type mapping for icons and colors
+const agentTypeConfig: Record<string, { icon: typeof Bot; color: string; bgColor: string }> = {
+  email: { icon: Mail, color: "text-blue-600", bgColor: "bg-blue-50" },
+  call: { icon: MessageSquare, color: "text-green-600", bgColor: "bg-green-50" },
+  note: { icon: FileText, color: "text-amber-600", bgColor: "bg-amber-50" },
+  task: { icon: CheckCircle2, color: "text-purple-600", bgColor: "bg-purple-50" },
+  roadmap: { icon: Target, color: "text-indigo-600", bgColor: "bg-indigo-50" },
+  content: { icon: FileText, color: "text-pink-600", bgColor: "bg-pink-50" },
+  custom: { icon: Bot, color: "text-gray-600", bgColor: "bg-gray-50" },
+  browser: { icon: Database, color: "text-cyan-600", bgColor: "bg-cyan-50" },
+  "cross-app": { icon: Workflow, color: "text-orange-600", bgColor: "bg-orange-50" },
+  knowledge: { icon: Brain, color: "text-violet-600", bgColor: "bg-violet-50" },
+  sales: { icon: Target, color: "text-purple-600", bgColor: "bg-purple-50" },
+  trending: { icon: TrendingUp, color: "text-red-600", bgColor: "bg-red-50" },
+  research: { icon: Search, color: "text-blue-600", bgColor: "bg-blue-50" },
+  meeting: { icon: Calendar, color: "text-green-600", bgColor: "bg-green-50" },
+  code: { icon: Database, color: "text-gray-600", bgColor: "bg-gray-50" },
+  data: { icon: Database, color: "text-cyan-600", bgColor: "bg-cyan-50" },
+  security: { icon: AlertCircle, color: "text-red-600", bgColor: "bg-red-50" },
+  scope: { icon: Target, color: "text-indigo-600", bgColor: "bg-indigo-50" },
 };
 
-// Simulated new activities for real-time feel
-const newActivityTemplates = [
-  { agentId: "agent-1", agentName: "Email Responder", action: "Sent email", descriptions: ["Reply sent to customer inquiry", "Follow-up email delivered", "Auto-response sent"] },
-  { agentId: "agent-2", agentName: "Lead Scorer", action: "Scored lead", descriptions: ["New lead scored: 87 points", "Lead qualified for sales", "Hot lead detected: Score 92"] },
-  { agentId: "agent-3", agentName: "Meeting Prep", action: "Prepared brief", descriptions: ["Meeting context gathered", "Brief generated for upcoming call"] },
-  { agentId: "agent-6", agentName: "Content Writer", action: "Generated content", descriptions: ["Email template created", "Social post drafted"] },
-];
+// Transform API agent to local Agent format
+const transformApiAgent = (apiAgent: ApiAgent): Agent => {
+  const typeConfig = agentTypeConfig[apiAgent.type] || agentTypeConfig.custom;
+  const statusMap: Record<string, Agent["status"]> = {
+    draft: "new",
+    active: "active",
+    paused: "paused",
+    archived: "idle",
+  };
+  
+  return {
+    id: apiAgent.id,
+    name: apiAgent.name,
+    description: apiAgent.description || "No description",
+    type: apiAgent.type,
+    status: statusMap[apiAgent.status] || "idle",
+    icon: typeConfig.icon,
+    color: typeConfig.color,
+    bgColor: typeConfig.bgColor,
+    tasksToday: apiAgent.executionCount || 0,
+    timeSaved: `${((apiAgent.executionCount || 0) * 0.1).toFixed(1)} hrs`,
+    lastActive: apiAgent.lastExecutedAt ? new Date(apiAgent.lastExecutedAt) : new Date(),
+    isNew: apiAgent.status === "draft",
+  };
+};
+
+// Transform API execution to AgentActivity format
+const transformApiExecution = (execution: ApiExecution): AgentActivity => {
+  const statusMap: Record<string, AgentActivity["status"]> = {
+    pending: "pending",
+    running: "running",
+    completed: "success",
+    failed: "error",
+    cancelled: "error",
+  };
+  
+  return {
+    id: execution.id,
+    agentId: execution.agentId,
+    agentName: execution.agentName,
+    action: execution.status === "completed" ? "Completed task" : 
+            execution.status === "running" ? "Processing" : 
+            execution.status === "failed" ? "Failed" : "Pending",
+    description: execution.agentDescription || `Execution ${execution.status}`,
+    timestamp: new Date(execution.createdAt),
+    status: statusMap[execution.status] || "success",
+    details: execution.durationMs ? `Duration: ${execution.durationMs}ms` : undefined,
+  };
+};
 
 export default function ActivityPage() {
-  const [agents, setAgents] = useState<Agent[]>(mockAgents);
-  const [activities, setActivities] = useState<AgentActivity[]>(generateMockActivity());
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLive, setIsLive] = useState(true);
+  const [isUpdatingAgent, setIsUpdatingAgent] = useState<string | null>(null);
   const activityEndRef = useRef<HTMLDivElement>(null);
 
-  // Simulate real-time activity updates
+  // Fetch agents from API
+  const { data: agentsData, error: agentsError, mutate: mutateAgents, isLoading: isLoadingAgents } = useSWR<ApiAgent[]>(
+    '/api/agents',
+    fetcher,
+    { refreshInterval: isLive ? 10000 : 0 }
+  );
+
+  // Fetch activity/executions from API
+  const { data: activityData, error: activityError, mutate: mutateActivity, isLoading: isLoadingActivity } = useSWR(
+    '/api/activity?limit=50',
+    fetcher,
+    { refreshInterval: isLive ? 5000 : 0 }
+  );
+
+  // Transform API data to local format
+  const agents: Agent[] = agentsData?.map(transformApiAgent) || [];
+  const activities: AgentActivity[] = activityData?.executions?.map(transformApiExecution) || [];
+
+  // Refresh data periodically when live
   useEffect(() => {
     if (!isLive) return;
 
     const interval = setInterval(() => {
-      // Randomly add new activity
-      if (Math.random() > 0.5) {
-        const template = newActivityTemplates[Math.floor(Math.random() * newActivityTemplates.length)];
-        const newActivity: AgentActivity = {
-          id: `act-${Date.now()}`,
-          agentId: template.agentId,
-          agentName: template.agentName,
-          action: template.action,
-          description: template.descriptions[Math.floor(Math.random() * template.descriptions.length)],
-          timestamp: new Date(),
-          status: "success",
-        };
-        setActivities(prev => [newActivity, ...prev].slice(0, 50));
-      }
-
-      // Update agent progress randomly
-      setAgents(prev => prev.map(agent => {
-        if (agent.status === "active" && agent.progress !== undefined) {
-          const newProgress = Math.min(100, agent.progress + Math.floor(Math.random() * 10));
-          if (newProgress >= 100) {
-            return { ...agent, progress: Math.floor(Math.random() * 30) + 10 };
-          }
-          return { ...agent, progress: newProgress };
-        }
-        return agent;
-      }));
-    }, 3000);
+      mutateAgents();
+      mutateActivity();
+    }, 10000);
 
     return () => clearInterval(interval);
-  }, [isLive]);
+  }, [isLive, mutateAgents, mutateActivity]);
 
   // Filter agents
   const filteredAgents = agents.filter(agent => {
@@ -320,22 +230,45 @@ export default function ActivityPage() {
     : activities;
 
   // Handlers
-  const handlePauseAgent = (agentId: string) => {
-    setAgents(prev => prev.map(a => 
-      a.id === agentId 
-        ? { ...a, status: a.status === "paused" ? "active" : "paused" as const }
-        : a
-    ));
-    toast.success(agents.find(a => a.id === agentId)?.status === "paused" ? "Agent resumed" : "Agent paused");
+  const handlePauseAgent = async (agentId: string) => {
+    const agent = agents.find(a => a.id === agentId);
+    if (!agent) return;
+    
+    const newStatus = agent.status === "paused" ? "active" : "paused";
+    setIsUpdatingAgent(agentId);
+    
+    try {
+      const response = await fetch(`/api/agents/${agentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update agent');
+      }
+      
+      // Refresh agents data
+      await mutateAgents();
+      toast.success(newStatus === "paused" ? "Agent paused" : "Agent resumed");
+    } catch (error) {
+      logger.error('Failed to update agent status', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update agent. Please try again.');
+    } finally {
+      setIsUpdatingAgent(null);
+    }
   };
 
   const handleConfigureAgent = (agent: Agent) => {
     toast.info(`Opening configuration for ${agent.name}...`);
+    // TODO: Navigate to agent configuration page
   };
 
   const handleViewWorkflow = (agent: Agent) => {
     setSelectedAgent(agent);
-    toast.success(`Viewing workflow for ${agent.name}`);
+    toast.info(`Viewing workflow for ${agent.name}`);
+    // TODO: Navigate to workflow builder
   };
 
   const formatTimestamp = (date: Date) => {
@@ -377,12 +310,13 @@ export default function ActivityPage() {
     }
   };
 
-  // Stats
+  // Stats from real API data
   const stats = {
     activeAgents: agents.filter(a => a.status === "active").length,
-    totalTasks: agents.reduce((sum, a) => sum + a.tasksToday, 0),
-    totalTimeSaved: agents.reduce((sum, a) => sum + parseFloat(a.timeSaved), 0).toFixed(1),
-    successRate: 98.5,
+    totalTasks: activityData?.stats?.total || 0,
+    totalTimeSaved: ((activityData?.stats?.total || 0) * 0.05).toFixed(1), // Estimate ~3 min saved per task
+    successRate: activityData?.stats?.successRate || 0,
+    errors: activityData?.stats?.failed || 0,
   };
 
   return (
@@ -481,72 +415,109 @@ export default function ActivityPage() {
 
             {/* Agent List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {filteredAgents.map((agent) => {
-                const isSelected = selectedAgent?.id === agent.id;
-                const AgentIcon = agent.icon;
-
-                return (
-                  <button
-                    key={agent.id}
-                    onClick={() => setSelectedAgent(isSelected ? null : agent)}
-                    className={cn(
-                      "w-full text-left p-3 rounded-lg border transition-all duration-200",
-                      isSelected
-                        ? `${agent.bgColor} border-2 ${agent.color.replace('text-', 'border-')} shadow-md`
-                        : agent.isNew
-                        ? "bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-300"
-                        : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"
-                    )}
-                    aria-label={`Select ${agent.name}`}
-                    aria-pressed={isSelected}
-                  >
+              {isLoadingAgents ? (
+                // Loading skeletons
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="p-3 rounded-lg border border-gray-100 bg-white">
                     <div className="flex items-start gap-3">
-                      <div className={cn("p-2 rounded-lg relative", agent.bgColor)}>
-                        <AgentIcon className={cn("h-5 w-5", agent.color)} />
-                        <div className="absolute -top-1 -right-1">
-                          {getStatusIndicator(agent.status)}
-                        </div>
+                      <Skeleton className="h-9 w-9 rounded-lg" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-1/2" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <h4 className="font-semibold text-sm text-gray-900 truncate">{agent.name}</h4>
-                          {agent.isNew && (
-                            <Badge className="text-[10px] px-1.5 py-0 h-4 bg-indigo-100 text-indigo-700 border-0">
-                              <Star className="h-2.5 w-2.5 mr-0.5" />
-                              NEW
-                            </Badge>
-                          )}
+                    </div>
+                  </div>
+                ))
+              ) : agentsError ? (
+                // Error state
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <AlertCircle className="h-8 w-8 text-red-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Failed to load agents</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => mutateAgents()}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1.5" />
+                    Retry
+                  </Button>
+                </div>
+              ) : filteredAgents.length === 0 ? (
+                // Empty state
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Bot className="h-8 w-8 text-gray-300 mb-2" />
+                  <p className="text-sm text-gray-500">No agents found</p>
+                  <p className="text-xs text-gray-400">Try adjusting your filters</p>
+                </div>
+              ) : (
+                filteredAgents.map((agent) => {
+                  const isSelected = selectedAgent?.id === agent.id;
+                  const AgentIcon = agent.icon;
+
+                  return (
+                    <button
+                      key={agent.id}
+                      onClick={() => setSelectedAgent(isSelected ? null : agent)}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg border transition-all duration-200",
+                        isSelected
+                          ? `${agent.bgColor} border-2 ${agent.color.replace('text-', 'border-')} shadow-md`
+                          : agent.isNew
+                          ? "bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-300"
+                          : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                      )}
+                      aria-label={`Select ${agent.name}`}
+                      aria-pressed={isSelected}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={cn("p-2 rounded-lg relative", agent.bgColor)}>
+                          <AgentIcon className={cn("h-5 w-5", agent.color)} />
+                          <div className="absolute -top-1 -right-1">
+                            {getStatusIndicator(agent.status)}
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-500 truncate mb-1.5">{agent.description}</p>
-                        
-                        {agent.status === "active" && agent.currentTask && (
-                          <div className="mb-1.5">
-                            <p className="text-[11px] text-gray-600 truncate">{agent.currentTask}</p>
-                            {agent.progress !== undefined && (
-                              <Progress value={agent.progress} className="h-1 mt-1" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h4 className="font-semibold text-sm text-gray-900 truncate">{agent.name}</h4>
+                            {agent.isNew && (
+                              <Badge className="text-[10px] px-1.5 py-0 h-4 bg-indigo-100 text-indigo-700 border-0">
+                                <Star className="h-2.5 w-2.5 mr-0.5" />
+                                NEW
+                              </Badge>
                             )}
                           </div>
-                        )}
+                          <p className="text-xs text-gray-500 truncate mb-1.5">{agent.description}</p>
+                          
+                          {agent.status === "active" && agent.currentTask && (
+                            <div className="mb-1.5">
+                              <p className="text-[11px] text-gray-600 truncate">{agent.currentTask}</p>
+                              {agent.progress !== undefined && (
+                                <Progress value={agent.progress} className="h-1 mt-1" />
+                              )}
+                            </div>
+                          )}
 
-                        <div className="flex items-center gap-3 text-[10px] text-gray-400">
-                          <span className="flex items-center gap-1">
-                            {getStatusIndicator(agent.status)}
-                            <span className="ml-0.5">{getStatusLabel(agent.status)}</span>
-                          </span>
-                          <span>•</span>
-                          <span>{agent.tasksToday} today</span>
-                          <span>•</span>
-                          <span>{agent.timeSaved} saved</span>
+                          <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                            <span className="flex items-center gap-1">
+                              {getStatusIndicator(agent.status)}
+                              <span className="ml-0.5">{getStatusLabel(agent.status)}</span>
+                            </span>
+                            <span>•</span>
+                            <span>{agent.tasksToday} today</span>
+                            <span>•</span>
+                            <span>{agent.timeSaved} saved</span>
+                          </div>
                         </div>
+                        <ChevronRight className={cn(
+                          "h-4 w-4 transition-transform flex-shrink-0",
+                          isSelected ? `${agent.color} rotate-90` : "text-gray-300"
+                        )} />
                       </div>
-                      <ChevronRight className={cn(
-                        "h-4 w-4 transition-transform flex-shrink-0",
-                        isSelected ? `${agent.color} rotate-90` : "text-gray-300"
-                      )} />
-                    </div>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -575,50 +546,90 @@ export default function ActivityPage() {
 
             {/* Activity List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {filteredActivities.map((activity, index) => {
-                const agent = agents.find(a => a.id === activity.agentId);
-                const AgentIcon = agent?.icon || Bot;
-
-                return (
-                  <div
-                    key={activity.id}
-                    className={cn(
-                      "p-3 rounded-lg border transition-all",
-                      index === 0 && isLive ? "animate-pulse-once bg-green-50/50 border-green-200" : "bg-white border-gray-100",
-                      activity.status === "running" && "border-l-2 border-l-blue-500"
-                    )}
-                  >
+              {isLoadingActivity ? (
+                // Loading skeletons
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="p-3 rounded-lg border border-gray-100 bg-white">
                     <div className="flex items-start gap-3">
-                      <div className={cn("p-1.5 rounded-lg flex-shrink-0", agent?.bgColor || "bg-gray-100")}>
-                        <AgentIcon className={cn("h-4 w-4", agent?.color || "text-gray-600")} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-sm font-medium text-gray-900">{activity.agentName}</span>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-500">{activity.action}</span>
-                        </div>
-                        <p className="text-sm text-gray-600">{activity.description}</p>
-                        {activity.details && (
-                          <p className="text-xs text-gray-400 mt-1">{activity.details}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span className="text-[10px] text-gray-400">{formatTimestamp(activity.timestamp)}</span>
-                          {activity.status === "running" && (
-                            <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-50 text-blue-600 border-blue-200">
-                              <Loader2 className="h-2.5 w-2.5 mr-0.5 animate-spin" />
-                              Running
-                            </Badge>
-                          )}
-                          {activity.status === "success" && (
-                            <CheckCircle2 className="h-3 w-3 text-green-500" />
-                          )}
-                        </div>
+                      <Skeleton className="h-7 w-7 rounded-lg" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-2/3" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-1/4" />
                       </div>
                     </div>
                   </div>
-                );
-              })}
+                ))
+              ) : activityError ? (
+                // Error state
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <AlertCircle className="h-8 w-8 text-red-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Failed to load activity</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => mutateActivity()}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1.5" />
+                    Retry
+                  </Button>
+                </div>
+              ) : filteredActivities.length === 0 ? (
+                // Empty state
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Activity className="h-8 w-8 text-gray-300 mb-2" />
+                  <p className="text-sm text-gray-500">No activity yet</p>
+                  <p className="text-xs text-gray-400">Agent activity will appear here</p>
+                </div>
+              ) : (
+                filteredActivities.map((activity, index) => {
+                  const agent = agents.find(a => a.id === activity.agentId);
+                  const AgentIcon = agent?.icon || Bot;
+
+                  return (
+                    <div
+                      key={activity.id}
+                      className={cn(
+                        "p-3 rounded-lg border transition-all",
+                        index === 0 && isLive ? "animate-pulse-once bg-green-50/50 border-green-200" : "bg-white border-gray-100",
+                        activity.status === "running" && "border-l-2 border-l-blue-500"
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={cn("p-1.5 rounded-lg flex-shrink-0", agent?.bgColor || "bg-gray-100")}>
+                          <AgentIcon className={cn("h-4 w-4", agent?.color || "text-gray-600")} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-sm font-medium text-gray-900">{activity.agentName}</span>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-gray-500">{activity.action}</span>
+                          </div>
+                          <p className="text-sm text-gray-600">{activity.description}</p>
+                          {activity.details && (
+                            <p className="text-xs text-gray-400 mt-1">{activity.details}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[10px] text-gray-400">{formatTimestamp(activity.timestamp)}</span>
+                            {activity.status === "running" && (
+                              <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-50 text-blue-600 border-blue-200">
+                                <Loader2 className="h-2.5 w-2.5 mr-0.5 animate-spin" />
+                                Running
+                              </Badge>
+                            )}
+                            {activity.status === "success" && (
+                              <CheckCircle2 className="h-3 w-3 text-green-500" />
+                            )}
+                            {activity.status === "error" && (
+                              <AlertCircle className="h-3 w-3 text-red-500" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
               <div ref={activityEndRef} />
             </div>
           </div>
@@ -777,10 +788,12 @@ export default function ActivityPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handlePauseAgent(selectedAgent.id)}
-                      disabled={selectedAgent.isNew}
+                      disabled={selectedAgent.isNew || isUpdatingAgent === selectedAgent.id}
                       className="w-full"
                     >
-                      {selectedAgent.status === "paused" ? (
+                      {isUpdatingAgent === selectedAgent.id ? (
+                        <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Updating...</>
+                      ) : selectedAgent.status === "paused" ? (
                         <><Play className="h-4 w-4 mr-1.5" />Resume</>
                       ) : (
                         <><Pause className="h-4 w-4 mr-1.5" />Pause</>
@@ -860,8 +873,10 @@ export default function ActivityPage() {
           </div>
           <span className="text-gray-300 hidden md:inline">•</span>
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-green-600" />
-            <span className="font-semibold text-green-600">0 errors</span>
+            <AlertCircle className={cn("h-4 w-4", stats.errors > 0 ? "text-red-600" : "text-green-600")} />
+            <span className={cn("font-semibold", stats.errors > 0 ? "text-red-600" : "text-green-600")}>
+              {stats.errors} {stats.errors === 1 ? "error" : "errors"}
+            </span>
           </div>
         </div>
       </Card>

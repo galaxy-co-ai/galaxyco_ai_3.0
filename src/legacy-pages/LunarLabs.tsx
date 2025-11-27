@@ -540,7 +540,7 @@ export default function LunarLabs() {
                           onSelectSuggestion={() => {}}
                           quickActions={null}
                           role="sales"
-                          path={undefined}
+                          path={null}
                           completedTopics={[]}
                           isFirstTimeUser={false}
                           onStartPath={() => {}}

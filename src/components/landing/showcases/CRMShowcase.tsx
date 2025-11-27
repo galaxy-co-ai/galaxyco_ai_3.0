@@ -1,5 +1,5 @@
 import { DemoWrapper } from "../../shared/DemoWrapper";
-import CRM from "../../../legacy-pages/CRM";
+import CRM from "../../../pages/CRM";
 
 export function CRMShowcase() {
   return (

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Sparkles, 
   MessageSquare, 
@@ -29,9 +31,15 @@ import {
   History,
   Plus,
   Trash2,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
+
+// SWR fetcher
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface Message {
   id: string;
@@ -68,74 +76,31 @@ export default function AssistantPage() {
   const [leftPanelView, setLeftPanelView] = useState<LeftPanelView>("capabilities");
   const [selectedCapability, setSelectedCapability] = useState<string>("workflow");
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock conversation history
-  const [conversations, setConversations] = useState<Conversation[]>([
-    {
-      id: "conv-1",
-      title: "Lead follow-up workflow",
-      preview: "Create a workflow to follow up with leads automatically...",
-      capability: "workflow",
-      messages: [
-        { id: "1", role: "user", content: "Create a workflow to follow up with leads", timestamp: new Date(Date.now() - 86400000) },
-        { id: "2", role: "assistant", content: "I can help you create that workflow! Let me set up an automation that triggers when a new lead is added. It will:\n\n1. Send an immediate welcome email\n2. Wait 2 days, then send a follow-up\n3. Notify your sales team if they engage\n\nShould I create this workflow for you?", timestamp: new Date(Date.now() - 86400000) },
-      ],
-      createdAt: new Date(Date.now() - 86400000),
-      updatedAt: new Date(Date.now() - 86400000),
-    },
-    {
-      id: "conv-2",
-      title: "Sales pipeline analysis",
-      preview: "Analyze my sales pipeline and show key metrics...",
-      capability: "insights",
-      messages: [
-        { id: "1", role: "user", content: "Analyze my sales pipeline", timestamp: new Date(Date.now() - 172800000) },
-        { id: "2", role: "assistant", content: "Based on your data, here's what I found:\n\n📈 **Pipeline Health**: Strong - $1.2M value\n🎯 **Win Rate**: 23.5% (+2.3% this month)\n🔥 **Hot Leads**: 42 ready for outreach\n\nYour conversion rate has improved significantly. Want me to dig deeper into any metric?", timestamp: new Date(Date.now() - 172800000) },
-      ],
-      createdAt: new Date(Date.now() - 172800000),
-      updatedAt: new Date(Date.now() - 172800000),
-    },
-    {
-      id: "conv-3",
-      title: "Email draft for John",
-      preview: "Write a follow-up email for the meeting with John...",
-      capability: "content",
-      messages: [
-        { id: "1", role: "user", content: "Write a follow-up email for John after our meeting yesterday", timestamp: new Date(Date.now() - 259200000) },
-        { id: "2", role: "assistant", content: "I've drafted a follow-up email for you:\n\n---\n**Subject**: Great connecting yesterday, John!\n\nHi John,\n\nIt was wonderful speaking with you about your team's automation needs. I wanted to follow up on our conversation and share some resources...\n\n---\n\nWant me to personalize this further or send it directly?", timestamp: new Date(Date.now() - 259200000) },
-      ],
-      createdAt: new Date(Date.now() - 259200000),
-      updatedAt: new Date(Date.now() - 259200000),
-    },
-    {
-      id: "conv-4",
-      title: "Meeting with Sarah",
-      preview: "Find a time to meet with Sarah next week...",
-      capability: "scheduling",
-      messages: [
-        { id: "1", role: "user", content: "Find a time to meet with Sarah next week", timestamp: new Date(Date.now() - 345600000) },
-        { id: "2", role: "assistant", content: "I found 3 available slots that work for both you and Sarah:\n\n1. **Monday 2:00 PM** - 30 min\n2. **Wednesday 10:00 AM** - 30 min\n3. **Friday 3:30 PM** - 30 min\n\nWhich would you prefer? I'll send the invite automatically.", timestamp: new Date(Date.now() - 345600000) },
-      ],
-      createdAt: new Date(Date.now() - 345600000),
-      updatedAt: new Date(Date.now() - 345600000),
-    },
-    {
-      id: "conv-5",
-      title: "Hot leads review",
-      preview: "Who are my hottest leads right now?",
-      capability: "leads",
-      messages: [
-        { id: "1", role: "user", content: "Who are my hottest leads right now?", timestamp: new Date(Date.now() - 432000000) },
-        { id: "2", role: "assistant", content: "Here are your hottest leads right now:\n\n🔥 **Sarah Chen** (TechCorp) - Score: 94\n   Ready to buy, last engaged 2 hours ago\n\n🔥 **Mike Johnson** (StartupXYZ) - Score: 91\n   Requested pricing, demo scheduled\n\n🔥 **Lisa Park** (GlobalInc) - Score: 88\n   Multiple page visits today\n\nWant me to draft outreach for any of them?", timestamp: new Date(Date.now() - 432000000) },
-      ],
-      createdAt: new Date(Date.now() - 432000000),
-      updatedAt: new Date(Date.now() - 432000000),
-    },
-  ]);
+  // Fetch conversations from API
+  const { 
+    data: conversationsData, 
+    error: conversationsError, 
+    mutate: mutateConversations,
+    isLoading: isLoadingConversations 
+  } = useSWR<Conversation[]>('/api/assistant/conversations', fetcher);
+
+  // Map API data to local format
+  const conversations: Conversation[] = conversationsData?.map((conv) => ({
+    ...conv,
+    messages: conv.messages?.map((msg) => ({
+      ...msg,
+      timestamp: new Date(msg.timestamp),
+    })) || [],
+    createdAt: new Date(conv.createdAt),
+    updatedAt: new Date(conv.updatedAt),
+  })) || [];
 
   const capabilities: AssistantCapability[] = [
     {
@@ -251,67 +216,55 @@ export default function AssistantPage() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageText = inputValue;
     setInputValue("");
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: getAIResponse(inputValue, selectedCapability),
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-      setIsLoading(false);
+    try {
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: messageText,
+          conversationId: currentConversationId,
+          context: {
+            feature: selectedCapability,
+          },
+        }),
+      });
 
-      // Save to conversation history if it's a new conversation
-      if (!selectedConversation && messages.length === 0) {
-        const newConv: Conversation = {
-          id: `conv-${Date.now()}`,
-          title: inputValue.slice(0, 40) + (inputValue.length > 40 ? "..." : ""),
-          preview: inputValue,
-          capability: selectedCapability,
-          messages: [userMessage, assistantMessage],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-        setConversations(prev => [newConv, ...prev]);
-        setSelectedConversation(newConv.id);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send message');
       }
-    }, 1500);
-  };
 
-  const getAIResponse = (query: string, capability: string): string => {
-    const responses: Record<string, string[]> = {
-      workflow: [
-        "I can help you create that workflow! Let me set up an automation that triggers when a new lead is added. It will:\n\n1. Send an immediate welcome email\n2. Wait 2 days, then send a follow-up\n3. Notify your sales team if they engage\n\nShould I create this workflow for you?",
-        "Great idea! I'll create an automated email response system. It will analyze incoming emails and generate contextual replies. Want me to set this up with your email account?",
-      ],
-      insights: [
-        "Based on your data, here's what I found:\n\n📈 **Pipeline Health**: Strong - $1.2M value\n🎯 **Win Rate**: 23.5% (+2.3% this month)\n🔥 **Hot Leads**: 42 ready for outreach\n\nYour conversion rate has improved significantly. Want me to dig deeper into any metric?",
-        "Looking at your campaigns:\n\n1. **Email Campaign A** - 34% open rate (above avg)\n2. **Social Ads** - 285% ROI\n3. **Content Marketing** - 60% of qualified leads\n\nYour email campaigns are performing exceptionally well!",
-      ],
-      content: [
-        "I've drafted a follow-up email for you:\n\n---\n**Subject**: Great connecting yesterday, [Name]!\n\nHi [Name],\n\nIt was wonderful speaking with you about [topic]. I wanted to follow up on our conversation...\n\n---\n\nWant me to personalize this further or send it directly?",
-        "Here's a draft proposal outline:\n\n1. **Executive Summary**\n2. **Project Scope & Objectives**\n3. **Timeline & Milestones**\n4. **Investment & ROI**\n5. **Next Steps**\n\nShall I expand any section?",
-      ],
-      scheduling: [
-        "I found 3 available slots that work for both you and Sarah:\n\n1. **Tomorrow 2:00 PM** - 30 min\n2. **Thursday 10:00 AM** - 30 min\n3. **Friday 3:30 PM** - 30 min\n\nWhich would you prefer? I'll send the invite automatically.",
-        "Done! I've blocked 9:00 AM - 12:00 PM tomorrow as focus time. I'll also:\n\n• Decline any conflicting meetings\n• Set your status to 'Do Not Disturb'\n• Hold notifications until noon\n\nAnything else?",
-      ],
-      leads: [
-        "Here are your hottest leads right now:\n\n🔥 **Sarah Chen** (TechCorp) - Score: 94\n   Ready to buy, last engaged 2 hours ago\n\n🔥 **Mike Johnson** (StartupXYZ) - Score: 91\n   Requested pricing, demo scheduled\n\n🔥 **Lisa Park** (GlobalInc) - Score: 88\n   Multiple page visits today\n\nWant me to draft outreach for any of them?",
-        "I've scored your 15 new leads from yesterday:\n\n• **5 Hot** (score 80+) - Immediate follow-up\n• **7 Warm** (score 50-79) - Add to nurture\n• **3 Cold** (score <50) - Long-term nurture\n\nShould I create tasks for the hot leads?",
-      ],
-      research: [
-        "Here's what I found on **Acme Corp**:\n\n📍 **Industry**: Enterprise Software\n👥 **Size**: 500-1000 employees\n💰 **Revenue**: ~$50M ARR\n📰 **Recent News**: Just raised Series C\n\n**Key Decision Makers**:\n• Jane Smith - VP of Sales\n• Tom Brown - CTO\n\nWant me to find their contact info?",
-        "Found 3 decision makers at TechStart:\n\n1. **Alex Rivera** - CEO\n   LinkedIn: Connected 2nd degree\n\n2. **Maria Santos** - Head of Ops\n   Recently posted about automation\n\n3. **James Lee** - VP Engineering\n   Attended your webinar last month\n\nShall I draft personalized outreach?",
-      ],
-    };
+      const data = await response.json();
 
-    const capabilityResponses = responses[capability] || responses.workflow;
-    return capabilityResponses[Math.floor(Math.random() * capabilityResponses.length)];
+      const assistantMessage: Message = {
+        id: data.message.id,
+        role: "assistant",
+        content: data.message.content,
+        timestamp: new Date(data.message.createdAt),
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      
+      // Update conversation ID if this was a new conversation
+      if (!currentConversationId && data.conversationId) {
+        setCurrentConversationId(data.conversationId);
+        setSelectedConversation(data.conversationId);
+      }
+      
+      // Refresh conversation history
+      mutateConversations();
+    } catch (error) {
+      logger.error('Failed to send message', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send message. Please try again.');
+      // Remove the optimistic user message on error
+      setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleExampleClick = (example: string) => {
@@ -325,28 +278,75 @@ export default function AssistantPage() {
     }
   };
 
-  const handleSelectConversation = (conv: Conversation) => {
+  const handleSelectConversation = async (conv: Conversation) => {
     setSelectedConversation(conv.id);
+    setCurrentConversationId(conv.id);
     setSelectedCapability(conv.capability);
-    setMessages(conv.messages);
     setLeftPanelView("history");
+    
+    // Fetch full conversation messages from API
+    try {
+      const response = await fetch(`/api/assistant/conversations/${conv.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to load conversation');
+      }
+      const data = await response.json();
+      
+      // Map the messages to the correct format
+      const loadedMessages: Message[] = data.messages.map((msg: { id: string; role: 'user' | 'assistant'; content: string; createdAt: string }) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.createdAt),
+      }));
+      
+      setMessages(loadedMessages);
+    } catch (error) {
+      logger.error('Failed to load conversation', error);
+      toast.error('Failed to load conversation');
+      // Fall back to the preview messages we have
+      setMessages(conv.messages || []);
+    }
   };
 
   const handleNewConversation = () => {
     setSelectedConversation(null);
+    setCurrentConversationId(null);
     setMessages([]);
     setLeftPanelView("capabilities");
     toast.success("Started new conversation");
   };
 
-  const handleDeleteConversation = (convId: string, e: React.MouseEvent) => {
+  const handleDeleteConversation = async (convId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setConversations(prev => prev.filter(c => c.id !== convId));
-    if (selectedConversation === convId) {
-      setSelectedConversation(null);
-      setMessages([]);
+    setIsDeletingConversation(convId);
+    
+    try {
+      const response = await fetch(`/api/assistant/conversations/${convId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete conversation');
+      }
+
+      // Clear current conversation if it was deleted
+      if (selectedConversation === convId) {
+        setSelectedConversation(null);
+        setCurrentConversationId(null);
+        setMessages([]);
+      }
+      
+      // Refresh conversation list
+      mutateConversations();
+      toast.success("Conversation deleted");
+    } catch (error) {
+      logger.error('Failed to delete conversation', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete conversation');
+    } finally {
+      setIsDeletingConversation(null);
     }
-    toast.success("Conversation deleted");
   };
 
   const formatRelativeTime = (date: Date) => {
@@ -478,6 +478,7 @@ export default function AssistantPage() {
                       onClick={() => {
                         setSelectedCapability(capability.id);
                         setSelectedConversation(null);
+                        setCurrentConversationId(null);
                         setMessages([]);
                       }}
                       className={cn(
@@ -517,6 +518,39 @@ export default function AssistantPage() {
                     </button>
                   );
                 })
+              ) : isLoadingConversations ? (
+                // Loading state for conversations
+                Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="p-4 rounded-lg border border-gray-100 bg-white">
+                    <div className="flex items-start gap-3">
+                      <Skeleton className="h-9 w-9 rounded-lg" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : conversationsError ? (
+                // Error state
+                <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                    <AlertCircle className="h-8 w-8 text-red-400" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">Failed to load history</h3>
+                  <p className="text-sm text-gray-500 max-w-xs mb-4">
+                    We couldn&apos;t load your conversation history.
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => mutateConversations()}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1.5" />
+                    Retry
+                  </Button>
+                </div>
               ) : (
                 // Conversation History
                 conversations.length === 0 ? (
@@ -567,10 +601,15 @@ export default function AssistantPage() {
                               </h4>
                               <button
                                 onClick={(e) => handleDeleteConversation(conv.id, e)}
-                                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 transition-all"
+                                className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 transition-all disabled:opacity-50"
                                 aria-label={`Delete conversation: ${conv.title}`}
+                                disabled={isDeletingConversation === conv.id}
                               >
-                                <Trash2 className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                                {isDeletingConversation === conv.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 text-red-500 animate-spin" aria-hidden="true" />
+                                ) : (
+                                  <Trash2 className="h-3.5 w-3.5 text-red-500" aria-hidden="true" />
+                                )}
                               </button>
                             </div>
                             <p className="text-xs text-gray-500 truncate mb-2">{conv.preview}</p>
@@ -731,7 +770,7 @@ export default function AssistantPage() {
                 </Button>
               </div>
               <p className="text-[11px] text-gray-400 mt-2 text-center">
-                Press Enter to send • AI responses are simulated for demo purposes
+                Press Enter to send • Powered by GPT-4
               </p>
             </div>
           </div>

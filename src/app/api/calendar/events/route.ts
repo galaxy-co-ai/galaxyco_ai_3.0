@@ -87,10 +87,10 @@ export async function GET(request: Request) {
       conditions.push(gte(calendarEvents.startTime, new Date()));
     }
 
-    // Get events
+    // Get events - order by start time ascending for chronological display
     const events = await db.query.calendarEvents.findMany({
       where: and(...conditions),
-      orderBy: [desc(calendarEvents.startTime)],
+      orderBy: [calendarEvents.startTime],
       limit,
     });
 

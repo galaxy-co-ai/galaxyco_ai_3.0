@@ -31,6 +31,12 @@ import {
   MessageSquare,
   Activity,
   ChevronRight,
+  Play,
+  Pause,
+  Trash2,
+  Save,
+  Settings,
+  AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -102,6 +108,9 @@ export default function StudioDashboard({ initialTab = 'templates' }: StudioDash
   });
   const [isSavingWorkflow, setIsSavingWorkflow] = useState(false);
   const [isExecutingWorkflow, setIsExecutingWorkflow] = useState(false);
+  const [isDeletingWorkflow, setIsDeletingWorkflow] = useState<string | null>(null);
+  const [isTogglingStatus, setIsTogglingStatus] = useState<string | null>(null);
+  const [isUsingTemplate, setIsUsingTemplate] = useState(false);
 
   // Fetch workflows from API
   const { data: workflowsData, error: workflowsError, mutate: mutateWorkflows, isLoading: isLoadingWorkflows } = useSWR('/api/workflows', fetcher, {
@@ -820,6 +829,195 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
     setIsCreatingAgent(false);
   };
 
+  // Save the created workflow to the database
+  const handleSaveWorkflow = async () => {
+    if (!agentData.name || agentFlow.length === 0) {
+      toast.error('Please provide a name and build a workflow first');
+      return;
+    }
+
+    setIsSavingWorkflow(true);
+    try {
+      const response = await fetch('/api/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: agentData.name,
+          description: agentData.description || agentData.problem,
+          type: 'custom',
+          nodes: agentFlow.map(node => ({
+            id: node.id,
+            type: node.type,
+            title: node.title,
+            description: node.description,
+          })),
+          systemPrompt: `You are ${agentData.name}. ${agentData.description || agentData.problem}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save workflow');
+      }
+
+      const data = await response.json();
+      toast.success(`Workflow "${data.name}" saved successfully!`);
+      
+      // Reset form and switch to My Agents tab
+      setCreateChatMessages([]);
+      setCreateChatInput("");
+      setAgentFlow([]);
+      setAgentData({ name: "", description: "", purpose: "", problem: "", trigger: "", dataSources: "", integrations: "", logic: "", errorHandling: "", output: "" });
+      mutateWorkflows();
+      setActiveTab('my-agents');
+      setSelectedAgent(data.id);
+    } catch (error) {
+      logger.error('Failed to save workflow', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to save workflow');
+    } finally {
+      setIsSavingWorkflow(false);
+    }
+  };
+
+  // Use a template to create a new workflow
+  const handleUseTemplate = async (templateId: string) => {
+    const template = agentTemplates.find(t => t.id === templateId);
+    if (!template) return;
+
+    setIsUsingTemplate(true);
+    try {
+      const nodes = getTemplateNodes(templateId);
+      
+      const response = await fetch('/api/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: template.name,
+          description: template.description,
+          type: templateId === 'email-assistant' ? 'email' :
+                templateId === 'lead-qualifier' ? 'sales' :
+                templateId === 'meeting-prep' ? 'meeting' :
+                templateId === 'data-sync' ? 'data' :
+                templateId === 'content-generator' ? 'content' :
+                templateId === 'analytics-agent' ? 'research' :
+                templateId === 'customer-support' ? 'support' : 'custom',
+          nodes: nodes.map(node => ({
+            id: node.id,
+            type: node.type,
+            title: node.title,
+            description: node.description,
+          })),
+          systemPrompt: `You are ${template.name}. ${template.description}`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create from template');
+      }
+
+      const data = await response.json();
+      toast.success(`Created "${data.name}" from template!`);
+      mutateWorkflows();
+      setActiveTab('my-agents');
+      setSelectedAgent(data.id);
+    } catch (error) {
+      logger.error('Failed to use template', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to use template');
+    } finally {
+      setIsUsingTemplate(false);
+    }
+  };
+
+  // Delete a workflow
+  const handleDeleteWorkflow = async (workflowId: string) => {
+    const workflow = myAgents.find(a => a.id === workflowId);
+    if (!workflow) return;
+
+    if (!confirm(`Are you sure you want to delete "${workflow.name}"? This cannot be undone.`)) {
+      return;
+    }
+
+    setIsDeletingWorkflow(workflowId);
+    try {
+      const response = await fetch(`/api/workflows/${workflowId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete workflow');
+      }
+
+      toast.success(`"${workflow.name}" deleted`);
+      if (selectedAgent === workflowId) {
+        setSelectedAgent(null);
+      }
+      mutateWorkflows();
+    } catch (error) {
+      logger.error('Failed to delete workflow', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete workflow');
+    } finally {
+      setIsDeletingWorkflow(null);
+    }
+  };
+
+  // Toggle workflow status (active/paused)
+  const handleToggleStatus = async (workflowId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    
+    setIsTogglingStatus(workflowId);
+    try {
+      const response = await fetch(`/api/workflows/${workflowId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update status');
+      }
+
+      toast.success(`Workflow ${newStatus === 'active' ? 'activated' : 'paused'}`);
+      mutateWorkflows();
+    } catch (error) {
+      logger.error('Failed to toggle workflow status', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update status');
+    } finally {
+      setIsTogglingStatus(null);
+    }
+  };
+
+  // Execute/run a workflow
+  const handleExecuteWorkflow = async (workflowId: string) => {
+    const workflow = myAgents.find(a => a.id === workflowId);
+    if (!workflow) return;
+
+    setIsExecutingWorkflow(true);
+    try {
+      const response = await fetch(`/api/workflows/${workflowId}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testMode: true }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to execute workflow');
+      }
+
+      const data = await response.json();
+      toast.success(`"${workflow.name}" executed successfully! (${data.durationMs}ms)`);
+      mutateWorkflows();
+    } catch (error) {
+      logger.error('Failed to execute workflow', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to execute workflow');
+    } finally {
+      setIsExecutingWorkflow(false);
+    }
+  };
+
   return (
     <div className="h-full bg-gray-50/50 overflow-hidden">
       {/* Header Section - Matching other pages */}
@@ -1030,9 +1228,15 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700 text-white"
                               aria-label="Use this template"
+                              onClick={() => handleUseTemplate(selectedTemplate)}
+                              disabled={isUsingTemplate}
                             >
-                              <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
-                              Use Template
+                              {isUsingTemplate ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" aria-hidden="true" />
+                              ) : (
+                                <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
+                              )}
+                              {isUsingTemplate ? 'Creating...' : 'Use Template'}
                             </Button>
                           </div>
                         </div>
@@ -1298,6 +1502,21 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
                           {agentData.description || "Your agent workflow will appear here as you build it"}
                         </p>
                       </div>
+                      {agentFlow.length > 0 && (
+                        <Button
+                          size="sm"
+                          onClick={handleSaveWorkflow}
+                          disabled={isSavingWorkflow || !agentData.name}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          {isSavingWorkflow ? (
+                            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4 mr-1.5" />
+                          )}
+                          {isSavingWorkflow ? 'Saving...' : 'Save Workflow'}
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -1514,6 +1733,61 @@ Remember: Ask ONE thoughtful question at a time. Focus on what's missing from th
                           {myAgents.find(a => a.id === selectedAgent)?.description || "Choose an agent to view its workflow"}
                         </p>
                       </div>
+                      {selectedAgent && (
+                        <div className="flex items-center gap-2">
+                          {/* Run button */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleExecuteWorkflow(selectedAgent)}
+                            disabled={isExecutingWorkflow}
+                            className="text-green-600 border-green-200 hover:bg-green-50"
+                          >
+                            {isExecutingWorkflow ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </Button>
+                          {/* Pause/Activate button */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const agent = myAgents.find(a => a.id === selectedAgent);
+                              if (agent) handleToggleStatus(selectedAgent, agent.status);
+                            }}
+                            disabled={isTogglingStatus === selectedAgent}
+                            className={cn(
+                              myAgents.find(a => a.id === selectedAgent)?.status === 'active'
+                                ? "text-amber-600 border-amber-200 hover:bg-amber-50"
+                                : "text-green-600 border-green-200 hover:bg-green-50"
+                            )}
+                          >
+                            {isTogglingStatus === selectedAgent ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : myAgents.find(a => a.id === selectedAgent)?.status === 'active' ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4" />
+                            )}
+                          </Button>
+                          {/* Delete button */}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteWorkflow(selectedAgent)}
+                            disabled={isDeletingWorkflow === selectedAgent}
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                          >
+                            {isDeletingWorkflow === selectedAgent ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
 

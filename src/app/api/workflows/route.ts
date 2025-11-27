@@ -1,41 +1,43 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { agents } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
-// Note: This requires adding workflow tables to your schema
-// For now, we'll store workflows in a JSON structure
-
 const workflowSchema = z.object({
   name: z.string().min(1, 'Workflow name is required'),
   description: z.string().optional(),
-  nodes: z.array(z.any()),
-  edges: z.array(z.any()),
+  type: z.enum(['email', 'sales', 'meeting', 'data', 'content', 'research', 'support', 'custom']).default('custom'),
+  nodes: z.array(z.any()).optional(),
+  edges: z.array(z.any()).optional(),
   trigger: z.any().optional(),
+  systemPrompt: z.string().optional(),
 });
-
-// Temporary in-memory storage (replace with database)
-const workflows = new Map<string, any>();
 
 export async function GET() {
   try {
     const { workspaceId } = await getCurrentWorkspace();
 
-    // In production, query from database
-    const workspaceWorkflows = Array.from(workflows.values())
-      .filter((w) => w.workspaceId === workspaceId);
+    // Query agents from database (agents are the underlying model for workflows)
+    const workspaceAgents = await db.query.agents.findMany({
+      where: eq(agents.workspaceId, workspaceId),
+      orderBy: [desc(agents.createdAt)],
+    });
 
     return NextResponse.json({
-      workflows: workspaceWorkflows.map((w) => ({
-        id: w.id,
-        name: w.name,
-        description: w.description,
-        status: w.status,
-        nodeCount: w.nodes?.length || 0,
-        createdAt: w.createdAt,
-        lastExecutedAt: w.lastExecutedAt,
+      workflows: workspaceAgents.map((agent) => ({
+        id: agent.id,
+        name: agent.name,
+        description: agent.description,
+        type: agent.type,
+        status: agent.status,
+        nodeCount: (agent.config as any)?.nodes?.length || 0,
+        executionCount: agent.executionCount,
+        createdAt: agent.createdAt,
+        lastExecutedAt: agent.lastExecutedAt,
       })),
     });
   } catch (error) {
@@ -58,33 +60,35 @@ export async function POST(request: Request) {
     }
 
     const data = validationResult.data;
-    const workflowId = `wf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    const workflow = {
-      id: workflowId,
-      workspaceId,
-      createdBy: user.id,
-      name: data.name,
-      description: data.description,
-      nodes: data.nodes,
-      edges: data.edges,
-      trigger: data.trigger,
-      status: 'draft',
-      version: 1,
-      executionCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    // Create agent in database
+    const [newAgent] = await db
+      .insert(agents)
+      .values({
+        workspaceId,
+        createdBy: user.id,
+        name: data.name,
+        description: data.description || null,
+        type: data.type,
+        status: 'draft',
+        config: {
+          nodes: data.nodes || [],
+          edges: data.edges || [],
+          trigger: data.trigger || null,
+          systemPrompt: data.systemPrompt || null,
+        },
+      })
+      .returning();
 
-    // In production, save to database
-    workflows.set(workflowId, workflow);
+    logger.info('Workflow/Agent created', { id: newAgent.id, name: newAgent.name, workspaceId });
 
     return NextResponse.json({
-      id: workflow.id,
-      name: workflow.name,
-      description: workflow.description,
-      status: workflow.status,
-      createdAt: workflow.createdAt,
+      id: newAgent.id,
+      name: newAgent.name,
+      description: newAgent.description,
+      type: newAgent.type,
+      status: newAgent.status,
+      createdAt: newAgent.createdAt,
     }, { status: 201 });
   } catch (error) {
     return createErrorResponse(error, 'Create workflow error');

@@ -1,39 +1,17 @@
 import { Card } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { ScrollArea } from '../ui/scroll-area';
-import { Clock, Target, Tag, Check, ArrowRight, ArrowLeft } from 'lucide-react';
-import { topics, type Topic, type LearningPath } from '../../data/lunarLabsContent';
-import { WelcomeCard } from './WelcomeCard';
-import { LearningObjectives } from './LearningObjectives';
-import { TopicCompletionFlow } from './TopicCompletionFlow';
+import { Clock, Target, Tag } from 'lucide-react';
+import { topics, type Topic } from '../../data/lunarLabsContent';
 import { CRMContactDemo } from '../SandboxDemos/CRMContactDemo';
 import { EmailComposerDemo } from '../SandboxDemos/EmailComposerDemo';
 import { WorkflowBuilderDemo } from '../SandboxDemos/WorkflowBuilderDemo';
 
-interface Suggestion {
-  id: string;
-  title: string;
-  reason: string;
-  topicId: string;
-  priority: 'high' | 'medium' | 'low';
-}
-
 interface ContentStageProps {
   topicId: string | null;
   activeDemoId?: string | null;
-  onCompleteTopic?: (topicId: string) => void;
-  isCompleted?: boolean;
-  suggestions?: Suggestion[];
-  onSelectSuggestion?: (topicId: string) => void;
-  quickActions?: React.ReactNode;
-  role?: string;
-  path?: LearningPath;
-  completedTopics?: string[];
-  isFirstTimeUser?: boolean;
-  onStartPath?: () => void;
 }
 
 const demoComponents: Record<string, any> = {
@@ -44,36 +22,27 @@ const demoComponents: Record<string, any> = {
   'AgentBuilderDemo': WorkflowBuilderDemo // Placeholder
 };
 
-export function ContentStage({ 
-  topicId, 
-  activeDemoId, 
-  onCompleteTopic, 
-  isCompleted, 
-  suggestions, 
-  onSelectSuggestion, 
-  quickActions,
-  role = 'sales',
-  path,
-  completedTopics = [],
-  isFirstTimeUser = false,
-  onStartPath
-}: ContentStageProps) {
+export function ContentStage({ topicId, activeDemoId }: ContentStageProps) {
   const topic = topics.find(t => t.id === topicId);
 
   if (!topic) {
-    // Enhanced empty state with Welcome Card
     return (
-      <div className="h-full">
-        <WelcomeCard 
-          role={role || 'user'}
-          path={path ?? null}
-          completedTopics={completedTopics || []}
-          isFirstTimeUser={isFirstTimeUser}
-          onStartPath={onStartPath}
-          onSelectTopic={onSelectSuggestion}
-          suggestions={suggestions}
-        />
-      </div>
+      <Card className="p-8 border-purple-500/20 h-full flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span className="text-3xl">🌙</span>
+          </div>
+          <h3 className="text-lg mb-2">Welcome to Lunar Labs</h3>
+          <p className="text-sm text-gray-400 mb-4">
+            Your R&D knowledge center. Choose a topic from the left or use search to find what you need.
+          </p>
+          <div className="flex flex-wrap gap-1.5 justify-center">
+            <Badge variant="outline" className="text-xs">Interactive Demos</Badge>
+            <Badge variant="outline" className="text-xs">Learning Paths</Badge>
+            <Badge variant="outline" className="text-xs">Quick Actions</Badge>
+          </div>
+        </div>
+      </Card>
     );
   }
 
@@ -87,138 +56,40 @@ export function ContentStage({
     ? demoSections.find(s => s.demo?.id === activeDemoId)
     : demoSections[0];
 
-  // Get step information if in a path
-  const pathStep = path?.steps.find(step => step.topicId === topic.id);
-  const stepIndex = pathStep && path ? path.steps.findIndex(step => step.topicId === topic.id) : -1;
-  const stepNumber = stepIndex >= 0 ? stepIndex + 1 : undefined;
-  const totalSteps = path ? path.steps.filter(s => s.required !== false).length : undefined;
-
-  // Get next and previous steps
-  const nextStep = path && stepIndex >= 0 && stepIndex < path.steps.length - 1
-    ? path.steps[stepIndex + 1]
-    : null;
-  const previousStep = path && stepIndex > 0
-    ? path.steps[stepIndex - 1]
-    : null;
-
-  const canAccessNext = nextStep ? 
-    (!nextStep.prerequisites || nextStep.prerequisites.every(prereq => completedTopics.includes(prereq)))
-    : false;
-
   return (
-    <div className="space-y-3">
-      {/* Learning Objectives */}
-      <LearningObjectives 
-        topic={topic}
-        path={path}
-        stepNumber={stepNumber}
-        totalSteps={totalSteps}
-        completedTopics={completedTopics}
-      />
-
+    <div className="space-y-2">
       {/* Topic Header */}
-      <Card className="p-4 sm:p-5 lg:p-6 border-purple-500/20" role="article" aria-labelledby={`topic-title-${topic.id}`}>
-        <div className="flex items-start justify-between mb-3 flex-col sm:flex-row gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="text-2xl sm:text-3xl flex-shrink-0">{topic.icon}</span>
-              <h1 id={`topic-title-${topic.id}`} className="text-xl sm:text-2xl lg:text-3xl font-bold">{topic.title}</h1>
-              {isCompleted && (
-                <Badge variant="outline" className="bg-green-500/10 border-green-500/30 text-green-400">
-                  <Check className="w-3 h-3 mr-1" />
-                  Completed
-                </Badge>
-              )}
+      <Card className="p-3 border-purple-500/20">
+        <div className="flex items-start justify-between mb-2">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl">{topic.icon}</span>
+              <h1 className="text-xl">{topic.title}</h1>
             </div>
-            <p className="text-sm sm:text-base text-gray-300 mb-3">{topic.description}</p>
+            <p className="text-sm text-gray-400">{topic.description}</p>
           </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Badge variant="outline" className="capitalize text-xs sm:text-sm">{topic.difficulty}</Badge>
-            {!isCompleted && onCompleteTopic && (
-              <Button
-                size="sm"
-                className="h-9 sm:h-10 px-3 sm:px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-xs sm:text-sm"
-                onClick={() => onCompleteTopic(topic.id)}
-                aria-label={`Mark ${topic.title} as complete`}
-              >
-                <Check className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Mark Complete</span>
-                <span className="sm:hidden">Complete</span>
-              </Button>
-            )}
-          </div>
+          <Badge variant="outline" className="capitalize text-xs">{topic.difficulty}</Badge>
         </div>
 
-        {/* Navigation Buttons */}
-        {(previousStep || nextStep) && (
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-purple-500/20">
-            <div className="flex-1">
-              {previousStep && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    const prevTopic = topics.find(t => t.id === previousStep.topicId);
-                    if (prevTopic && onSelectSuggestion) {
-                      onSelectSuggestion(previousStep.topicId);
-                    }
-                  }}
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  <div className="text-left">
-                    <div className="text-[10px] text-gray-400">Previous</div>
-                    <div className="text-xs">{topics.find(t => t.id === previousStep.topicId)?.title}</div>
-                  </div>
-                </Button>
-              )}
-            </div>
-            <div className="flex-1">
-              {nextStep && (
-                <Button
-                  variant={canAccessNext ? "default" : "outline"}
-                  size="sm"
-                  className={`w-full justify-end ${canAccessNext ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' : ''}`}
-                  disabled={!canAccessNext}
-                  onClick={() => {
-                    if (canAccessNext && onSelectSuggestion) {
-                      onSelectSuggestion(nextStep.topicId);
-                    }
-                  }}
-                >
-                  <div className="text-right mr-2">
-                    <div className="text-[10px] text-gray-400">Next</div>
-                    <div className="text-xs">{topics.find(t => t.id === nextStep.topicId)?.title}</div>
-                  </div>
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              )}
+        <div className="flex items-center gap-4 text-xs text-gray-400">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3 h-3" />
+            <span>{topic.estimatedTime}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Target className="w-3 h-3" />
+            <span>{topic.sections.length} sections</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Tag className="w-3 h-3" />
+            <div className="flex gap-1">
+              {topic.tags.slice(0, 2).map(tag => (
+                <Badge key={tag} variant="outline" className="text-[10px] h-4">{tag}</Badge>
+              ))}
             </div>
           </div>
-        )}
+        </div>
       </Card>
-
-      {/* Quick Actions - Show above tabs if available */}
-      {quickActions && (
-        <div className="mb-3">
-          {quickActions}
-        </div>
-      )}
-
-      {/* Completion Flow - Show at bottom before tabs when topic is viewed */}
-      {!isCompleted && onCompleteTopic && (
-        <TopicCompletionFlow
-          topic={topic}
-          onComplete={() => onCompleteTopic(topic.id)}
-          onNext={() => {
-            if (nextStep && onSelectSuggestion && canAccessNext) {
-              onSelectSuggestion(nextStep.topicId);
-            }
-          }}
-          hasNext={!!nextStep && canAccessNext}
-          nextTopicTitle={nextStep ? topics.find(t => t.id === nextStep.topicId)?.title : undefined}
-        />
-      )}
 
       {/* Content Tabs */}
       <Tabs defaultValue={activeDemoSection ? 'demos' : 'overview'} className="w-full">
