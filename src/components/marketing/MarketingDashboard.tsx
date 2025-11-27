@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -36,7 +36,22 @@ import {
   CheckCircle2,
   Video,
   Image as ImageIcon,
+  Palette,
+  MessageSquare,
+  Globe,
+  Presentation,
+  Newspaper,
+  RefreshCw,
+  Loader2,
+  Eye,
+  Copy,
+  Twitter,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Youtube,
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import MarketingAutomationsTab from "./MarketingAutomationsTab";
@@ -92,7 +107,7 @@ interface MarketingDashboardProps {
   };
 }
 
-type TabType = 'campaigns' | 'content' | 'channels' | 'analytics' | 'audiences' | 'automations';
+type TabType = 'campaigns' | 'content' | 'assets' | 'channels' | 'analytics' | 'audiences' | 'automations';
 
 interface ChatMessage {
   id: string;
@@ -155,6 +170,35 @@ export default function MarketingDashboard({
     keywords: [] as string[],
     publishDate: "",
   });
+
+  // Assets tab state
+  const [selectedAssetTemplate, setSelectedAssetTemplate] = useState<string | null>(null);
+  const [assetCategoryFilter, setAssetCategoryFilter] = useState<string>('All');
+  const [assetChatMessages, setAssetChatMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: "Hey! 👋 I'm Neptune. Ready to create some killer marketing assets? Pick a template from the list, or just tell me what you need — I can write emails, social posts, ad copy, landing page content, and more!",
+      timestamp: new Date(),
+    },
+  ]);
+  const [assetChatInput, setAssetChatInput] = useState("");
+  const [isCreatingAsset, setIsCreatingAsset] = useState(false);
+  const [assetData, setAssetData] = useState({
+    title: "",
+    type: "",
+    content: "",
+    targetAudience: "",
+    tone: "",
+    keyMessages: "",
+    variations: [] as string[],
+  });
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [assetChatMessages]);
 
   const formatCurrency = (cents: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -290,11 +334,36 @@ export default function MarketingDashboard({
   const tabs = [
     { id: 'campaigns' as TabType, label: 'Campaigns', icon: Megaphone, badge: stats.activeCampaigns.toString(), badgeColor: 'bg-pink-500', activeColor: 'bg-pink-100 text-pink-700' },
     { id: 'content' as TabType, label: 'Content', icon: FileText, activeColor: 'bg-blue-100 text-blue-700' },
+    { id: 'assets' as TabType, label: 'Assets', icon: Palette, activeColor: 'bg-emerald-100 text-emerald-700' },
     { id: 'channels' as TabType, label: 'Channels', icon: Share2, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3, activeColor: 'bg-indigo-100 text-indigo-700' },
     { id: 'audiences' as TabType, label: 'Audiences', icon: Users, activeColor: 'bg-cyan-100 text-cyan-700' },
     { id: 'automations' as TabType, label: 'Automations', icon: Zap, activeColor: 'bg-orange-100 text-orange-700' },
   ];
+
+  // Marketing Asset Templates
+  const assetTemplates = [
+    { id: 'email-welcome', name: 'Welcome Email', category: 'Email', icon: Mail, description: 'Onboarding welcome sequence', color: 'bg-pink-500' },
+    { id: 'email-nurture', name: 'Nurture Email', category: 'Email', icon: Mail, description: 'Lead nurturing content', color: 'bg-pink-500' },
+    { id: 'email-promo', name: 'Promotional Email', category: 'Email', icon: Mail, description: 'Product/service promotion', color: 'bg-pink-500' },
+    { id: 'email-announcement', name: 'Announcement', category: 'Email', icon: Mail, description: 'News and updates', color: 'bg-pink-500' },
+    { id: 'social-twitter', name: 'Twitter Thread', category: 'Social', icon: Twitter, description: 'Engaging thread content', color: 'bg-sky-500' },
+    { id: 'social-linkedin', name: 'LinkedIn Post', category: 'Social', icon: Linkedin, description: 'Professional content', color: 'bg-blue-600' },
+    { id: 'social-instagram', name: 'Instagram Caption', category: 'Social', icon: Instagram, description: 'Visual storytelling', color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+    { id: 'social-facebook', name: 'Facebook Post', category: 'Social', icon: Facebook, description: 'Community engagement', color: 'bg-blue-500' },
+    { id: 'ad-google', name: 'Google Ad Copy', category: 'Ads', icon: Target, description: 'Search & display ads', color: 'bg-red-500' },
+    { id: 'ad-meta', name: 'Meta Ad Copy', category: 'Ads', icon: Target, description: 'Facebook & Instagram ads', color: 'bg-indigo-500' },
+    { id: 'ad-banner', name: 'Display Banner', category: 'Ads', icon: ImageIcon, description: 'Banner ad copy', color: 'bg-amber-500' },
+    { id: 'landing-hero', name: 'Landing Page Hero', category: 'Landing Pages', icon: Globe, description: 'Headlines & value props', color: 'bg-emerald-500' },
+    { id: 'landing-cta', name: 'CTA Copy', category: 'Landing Pages', icon: Zap, description: 'Call-to-action buttons', color: 'bg-orange-500' },
+    { id: 'sales-onepager', name: 'One-Pager', category: 'Sales', icon: FileText, description: 'Product/service overview', color: 'bg-violet-500' },
+    { id: 'sales-casestudy', name: 'Case Study', category: 'Sales', icon: Presentation, description: 'Success story template', color: 'bg-teal-500' },
+    { id: 'brand-tagline', name: 'Taglines', category: 'Brand', icon: Sparkles, description: 'Brand messaging', color: 'bg-rose-500' },
+    { id: 'video-script', name: 'Video Script', category: 'Video', icon: Video, description: 'Explainer & demo scripts', color: 'bg-red-600' },
+    { id: 'pr-release', name: 'Press Release', category: 'PR', icon: Newspaper, description: 'Media announcements', color: 'bg-slate-600' },
+  ];
+
+  const assetCategories = ['All', 'Email', 'Social', 'Ads', 'Landing Pages', 'Sales', 'Brand', 'Video', 'PR'];
 
   const [contentSearchQuery, setContentSearchQuery] = useState("");
 
@@ -566,6 +635,111 @@ Be conversational and helpful. If they're testing or asking if something works, 
       setIsLoadingContentChat(false);
     }
   };
+
+  // Handle Asset Chat Message - REAL API
+  const handleSendAssetMessage = async () => {
+    if (!assetChatInput.trim() || isCreatingAsset) return;
+
+    const userInput = assetChatInput.trim();
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userInput,
+      timestamp: new Date(),
+    };
+
+    setAssetChatMessages(prev => [...prev, userMessage]);
+    setAssetChatInput("");
+    setIsCreatingAsset(true);
+
+    try {
+      const selectedTemplate = assetTemplates.find(t => t.id === selectedAssetTemplate);
+      
+      // Build context for Neptune
+      let prompt = `[Marketing Assets Creation]
+You are helping create marketing assets. The user is in the Marketing → Assets tab.
+`;
+
+      if (selectedTemplate) {
+        prompt += `Selected template: ${selectedTemplate.name} (${selectedTemplate.category})
+Template description: ${selectedTemplate.description}
+
+`;
+      }
+
+      if (assetData.title || assetData.targetAudience || assetData.tone) {
+        prompt += `Current asset data:
+${JSON.stringify(assetData, null, 2)}
+
+`;
+      }
+
+      prompt += `User's message: "${userInput}"
+
+IMPORTANT INSTRUCTIONS:
+1. If the user is describing what they want to create, use the generate_document tool with:
+   - documentType: "${selectedTemplate?.category?.toLowerCase() || 'general'}"
+   - collectionName: "Marketing Assets"
+   - Include the asset type in the title
+2. Generate HIGH QUALITY, PROFESSIONAL marketing copy
+3. If creating social media posts, provide 2-3 variations
+4. If creating ad copy, include headline options and body text
+5. If creating emails, include subject line options
+6. Always ask clarifying questions if needed (audience, tone, key messages)
+7. After generating, offer to save to the knowledge base
+
+Be creative, engaging, and write copy that converts!`;
+
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from Neptune');
+      }
+
+      const data = await response.json();
+      
+      // Check if content was generated
+      const responseContent = data.message.content;
+      if (responseContent.length > 300) {
+        setAssetData(prev => ({ 
+          ...prev, 
+          content: responseContent,
+          type: selectedTemplate?.name || prev.type,
+        }));
+      }
+
+      setAssetChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: responseContent,
+        timestamp: new Date(),
+      }]);
+    } catch (error) {
+      console.error('Asset chat error:', error);
+      setAssetChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm having trouble connecting right now. Please try again in a moment.",
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setIsCreatingAsset(false);
+    }
+  };
+
+  // Handle suggestion click in assets chat
+  const handleAssetSuggestionClick = (suggestion: string) => {
+    setAssetChatInput(suggestion);
+  };
+
+  // Filter templates by category
+  const filteredAssetTemplates = assetCategoryFilter === 'All' 
+    ? assetTemplates 
+    : assetTemplates.filter(t => t.category === assetCategoryFilter);
 
   return (
     <div className="h-full bg-gray-50/50 overflow-hidden">
@@ -1343,6 +1517,274 @@ Be conversational and helpful. If they're testing or asking if something works, 
                   </div>
                 </div>
           </Card>
+            )}
+
+            {/* ASSETS TAB */}
+            {activeTab === 'assets' && (
+              <Card className="p-8 shadow-lg border-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left: Asset Templates */}
+                  <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    {/* Header */}
+                    <div className="px-6 py-4 border-b bg-gradient-to-r from-emerald-50 to-emerald-100/50 flex-shrink-0">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-md">
+                            <Palette className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h2 className="font-semibold text-gray-900">Asset Templates</h2>
+                            <p className="text-xs text-gray-500">{assetTemplates.length} templates available</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Category Filter */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {assetCategories.map((category) => (
+                          <button
+                            key={category}
+                            onClick={() => setAssetCategoryFilter(category)}
+                            className={`px-2.5 py-1 text-xs rounded-full transition-all ${
+                              assetCategoryFilter === category
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                            }`}
+                          >
+                            {category}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Template List */}
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                      {filteredAssetTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => {
+                            setSelectedAssetTemplate(template.id);
+                            setAssetData(prev => ({ ...prev, type: template.name }));
+                            // Add template selection message
+                            setAssetChatMessages(prev => [...prev, {
+                              id: Date.now().toString(),
+                              role: 'assistant',
+                              content: `Great choice! Let's create a **${template.name}**. ${
+                                template.category === 'Email' 
+                                  ? "What's the purpose of this email? Who's your target audience?"
+                                  : template.category === 'Social'
+                                  ? "What topic or product are you promoting? What tone do you want (professional, casual, playful)?"
+                                  : template.category === 'Ads'
+                                  ? "What product/service is this ad for? What's your main value proposition?"
+                                  : template.category === 'Landing Pages'
+                                  ? "What's the page for? What action do you want visitors to take?"
+                                  : template.category === 'Sales'
+                                  ? "What product/service is this for? Who's your ideal customer?"
+                                  : "Tell me more about what you want to create!"
+                              }`,
+                              timestamp: new Date(),
+                            }]);
+                          }}
+                          className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                            selectedAssetTemplate === template.id
+                              ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                              : 'border-gray-200 hover:border-emerald-300 bg-white'
+                          }`}
+                          aria-label={`Select ${template.name} template`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg ${template.color} text-white flex-shrink-0`}>
+                              <template.icon className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-900">{template.name}</p>
+                                <Badge variant="outline" className="text-[10px] px-1.5">
+                                  {template.category}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-0.5">{template.description}</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right: Neptune Chat */}
+                  <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    {/* Chat Header */}
+                    <div className="px-6 py-4 border-b bg-gradient-to-r from-emerald-50 to-emerald-100/50 flex items-center justify-between flex-shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                          <Sparkles className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm text-gray-900">Neptune Asset Creator</h3>
+                          <p className="text-xs text-emerald-600">
+                            {selectedAssetTemplate 
+                              ? `Creating: ${assetTemplates.find(t => t.id === selectedAssetTemplate)?.name}`
+                              : 'Ready to create marketing magic'}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          setAssetChatMessages([{
+                            id: '1',
+                            role: 'assistant',
+                            content: "Hey! 👋 I'm Neptune. Ready to create some killer marketing assets? Pick a template from the list, or just tell me what you need — I can write emails, social posts, ad copy, landing page content, and more!",
+                            timestamp: new Date(),
+                          }]);
+                          setSelectedAssetTemplate(null);
+                          setAssetData({
+                            title: "",
+                            type: "",
+                            content: "",
+                            targetAudience: "",
+                            tone: "",
+                            keyMessages: "",
+                            variations: [],
+                          });
+                        }}
+                        className="h-7 w-7"
+                        aria-label="Start new conversation"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Chat Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
+                      {assetChatMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          {message.role === 'assistant' && (
+                            <Avatar className="h-7 w-7 shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white">
+                                <Sparkles className="h-3.5 w-3.5" />
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                          <div className={`flex-1 min-w-0 ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
+                            <div
+                              className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] ${
+                                message.role === 'user'
+                                  ? 'bg-emerald-500 text-white ml-auto rounded-br-md'
+                                  : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                            </div>
+                            <span className="text-[10px] text-gray-400 mt-1 block">
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {message.role === 'user' && (
+                            <Avatar className="h-7 w-7 shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-700 text-white text-xs">
+                                U
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                      ))}
+                      {isCreatingAsset && (
+                        <div className="flex gap-2">
+                          <Avatar className="h-7 w-7 shrink-0">
+                            <AvatarFallback className="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white">
+                              <Sparkles className="h-3.5 w-3.5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-white shadow-sm border border-gray-100">
+                            <div className="flex gap-1">
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                className="h-2 w-2 bg-emerald-400 rounded-full"
+                              />
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                                className="h-2 w-2 bg-emerald-400 rounded-full"
+                              />
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                                className="h-2 w-2 bg-emerald-400 rounded-full"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Quick Suggestions - Only show at start */}
+                    {assetChatMessages.length === 1 && !selectedAssetTemplate && (
+                      <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+                        <p className="text-[10px] text-gray-500 mb-2">Quick starts:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            "Write a welcome email for new customers",
+                            "Create a LinkedIn post about our product launch",
+                            "Write Google ad copy for our service",
+                            "Draft a case study outline"
+                          ].map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setAssetChatInput(suggestion);
+                                handleSendAssetMessage();
+                              }}
+                              className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-all"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Chat Input */}
+                    <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
+                      <Input
+                        placeholder={selectedAssetTemplate 
+                          ? `Describe your ${assetTemplates.find(t => t.id === selectedAssetTemplate)?.name}...`
+                          : "What marketing asset do you need?"}
+                        value={assetChatInput}
+                        onChange={(e) => setAssetChatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey && !isCreatingAsset) {
+                            e.preventDefault();
+                            handleSendAssetMessage();
+                          }
+                        }}
+                        className="flex-1 rounded-full"
+                        disabled={isCreatingAsset}
+                        aria-label="Type message to Neptune"
+                      />
+                      <Button
+                        size="icon"
+                        onClick={handleSendAssetMessage}
+                        disabled={!assetChatInput.trim() || isCreatingAsset}
+                        className="bg-emerald-500 hover:bg-emerald-600 rounded-full"
+                        aria-label="Send message"
+                      >
+                        {isCreatingAsset ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             )}
 
             {/* CHANNELS TAB */}
