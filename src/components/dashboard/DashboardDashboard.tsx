@@ -1596,7 +1596,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                         {isAssistantLoading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <Send className="h-5 w-5" aria-hidden="true" />}
                       </Button>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-2 text-center">Press Enter to send • AI responses are simulated</p>
+                    <p className="text-[11px] text-gray-400 mt-2 text-center">Press Enter to send • Powered by Neptune AI</p>
                   </div>
                 </div>
               </div>
