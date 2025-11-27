@@ -453,11 +453,12 @@ export default function KnowledgeBaseDashboard({
     }
   };
 
-  // Handle chat message send
+  // Handle chat message send - REAL API with document generation
   const handleSendCreateMessage = async () => {
     if (!createChatInput.trim() || !selectedTemplate) return;
 
     const userInput = createChatInput.trim();
+    const template = documentTemplates.find(t => t.id === selectedTemplate);
     const userMessage = {
       id: Date.now().toString(),
       role: 'user' as const,
@@ -469,72 +470,94 @@ export default function KnowledgeBaseDashboard({
     setCreateChatInput("");
     setIsCreatingDocument(true);
 
-    // Get current document data to determine next step
-    setDocumentData((currentData) => {
-      const template = documentTemplates.find(t => t.id === selectedTemplate);
-      let assistantResponse = "";
-      let newData = { ...currentData };
-      let shouldGenerate = false;
+    try {
+      // Build context about what we're creating
+      const templateType = template?.id || 'general';
+      const existingData = documentData;
+      
+      let prompt = `[Knowledge Base - Document Creation]
+Template: ${template?.name || 'General Document'}
+`;
 
-      if (!currentData.title) {
-        // First question - title
-        newData.title = userInput;
-        const categoryExamples = initialCollections.length > 0 
-          ? initialCollections.slice(0, 3).map(c => c.name).join(', ')
-          : 'General, Technical, Support';
-        assistantResponse = `Great! "${userInput}" sounds like a good title. What category should this document belong to? (e.g., ${categoryExamples})`;
-      } else if (!currentData.category) {
-        // Second question - category
-        newData.category = userInput;
-        assistantResponse = `Perfect! Now, can you provide a brief description of what this document should cover? This will help me create the best content for you.`;
-      } else if (!currentData.description) {
-        // Third question - description
-        newData.description = userInput;
-        assistantResponse = `Excellent! Based on your requirements, I'll now generate the ${template?.name.toLowerCase() || 'document'}. This may take a moment...`;
-        shouldGenerate = true;
+      if (!existingData.title) {
+        prompt += `The user just provided a title: "${userInput}"
+Please acknowledge the title and ask what category/folder they want to save it in. List available categories if possible using list_collections tool first.`;
+      } else if (!existingData.category) {
+        // Update local state with category
+        setDocumentData(prev => ({ ...prev, category: userInput }));
+        prompt += `Title: ${existingData.title}
+Category chosen: ${userInput}
+Ask the user to describe what content they want in this ${template?.name || 'document'}. What should it cover?`;
+      } else if (!existingData.description) {
+        // Update local state with description
+        setDocumentData(prev => ({ ...prev, description: userInput }));
+        prompt += `Title: ${existingData.title}
+Category: ${existingData.category}
+Description/Requirements: ${userInput}
+
+NOW GENERATE THE DOCUMENT! Use the generate_document tool with:
+- title: "${existingData.title}"
+- documentType: "${templateType}"
+- topic: "${userInput}"
+- collectionName: "${existingData.category}"
+
+After generating, use create_document to save it. Write comprehensive, professional, helpful content. Make it really good!`;
       } else {
-        // Additional questions or document is ready
-        assistantResponse = `I understand. Let me update the document accordingly. Is there anything else you'd like to add or modify?`;
+        prompt += `We already have a document. User's follow-up: ${userInput}
+If they want to modify or regenerate, do so. If they want to save, use create_document.`;
       }
 
-      // Send assistant response
-      if (assistantResponse) {
-        setTimeout(() => {
-          setCreateChatMessages(prev => [...prev, {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: assistantResponse,
-            timestamp: new Date(),
-          }]);
-          
-          // If we need to generate the document, do it after the response
-          if (shouldGenerate) {
-            setTimeout(() => {
-              setDocumentData((prev) => {
-                const generatedContent = `# ${prev.title}\n\n## Overview\n\n${prev.description}\n\n## Content\n\n[AI-generated content based on your requirements will appear here]`;
-                
-                setCreateChatMessages(prevMessages => [...prevMessages, {
-                  id: (Date.now() + 2).toString(),
-                  role: 'assistant',
-                  content: `✅ Document created successfully! I've generated a ${template?.name.toLowerCase() || 'document'} titled "${prev.title}". You can review it below and make any edits you'd like. Would you like me to save it to your knowledge base?`,
-                  timestamp: new Date(),
-                }]);
-                setIsCreatingDocument(false);
-                
-                return { ...prev, content: generatedContent };
-              });
-            }, 2000);
-          } else {
-            setIsCreatingDocument(false);
-          }
-        }, 1000);
+      // Call real Neptune API
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from Neptune');
       }
 
-      return newData;
-    });
+      const data = await response.json();
+      
+      // Update document data if title was just set
+      if (!existingData.title) {
+        setDocumentData(prev => ({ ...prev, title: userInput }));
+      }
+      
+      // Check if content was generated (look for markdown headers in response)
+      const responseContent = data.message.content;
+      if (responseContent.includes('# ') && responseContent.length > 500) {
+        // Looks like generated content - extract it
+        setDocumentData(prev => ({ 
+          ...prev, 
+          content: responseContent,
+        }));
+      }
+
+      setCreateChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: responseContent,
+        timestamp: new Date(),
+      }]);
+
+      // Refresh knowledge base in case document was saved
+      mutateKnowledge();
+    } catch (error) {
+      console.error('Document creation error:', error);
+      setCreateChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I encountered an issue while creating the document. Let me try again - please repeat your last message.",
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setIsCreatingDocument(false);
+    }
   };
 
-  // Handle Neptune chat message (when no template selected)
+  // Handle Neptune chat message (when no template selected) - REAL API
   const handleSendNeptuneMessage = async () => {
     if (!neptuneChatInput.trim()) return;
 
@@ -550,40 +573,42 @@ export default function KnowledgeBaseDashboard({
     setNeptuneChatInput("");
     setIsNeptuneTyping(true);
 
-    // Simulate Neptune's intelligent response
-    setTimeout(() => {
-      // Check if user mentioned a document type
-      const lowerInput = userInput.toLowerCase();
-      let response = "";
-      let suggestedTemplate: string | null = null;
+    try {
+      // Call real Neptune API with knowledge base context
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `[Knowledge Base Context] The user is in the Knowledge Base "Create" tab and wants to create a document. Help them create high-quality content. If they describe what they want, use the generate_document tool to create it, then use create_document to save it. Be proactive and helpful.\n\nUser's request: ${userInput}`,
+        }),
+      });
 
-      if (lowerInput.includes('article') || lowerInput.includes('blog')) {
-        response = "An article sounds great! I can help you structure that. Would you like me to start with an Article template? It includes sections for introduction, main points, and conclusion. Just click on 'Article' in the templates, or tell me what your article is about and I'll help you get started right here!";
-        suggestedTemplate = 'article';
-      } else if (lowerInput.includes('sop') || lowerInput.includes('procedure') || lowerInput.includes('process')) {
-        response = "Perfect! SOPs are my specialty. I'll help you create clear, step-by-step procedures. You can select 'SOP Template' from the list, or describe the process you want to document and I'll structure it for you.";
-        suggestedTemplate = 'sop';
-      } else if (lowerInput.includes('proposal') || lowerInput.includes('pitch')) {
-        response = "A proposal! Let's make it compelling. I can help you with executive summary, problem statement, proposed solution, and pricing. Select 'Proposal' from the templates or tell me about your project!";
-        suggestedTemplate = 'proposal';
-      } else if (lowerInput.includes('meeting') || lowerInput.includes('notes') || lowerInput.includes('minutes')) {
-        response = "Meeting notes coming right up! I'll help you capture attendees, agenda items, decisions, and action items. Pick 'Meeting Notes' from the templates or just paste your notes and I'll organize them.";
-        suggestedTemplate = 'meeting-notes';
-      } else if (lowerInput.includes('faq') || lowerInput.includes('questions')) {
-        response = "FAQ documentation is super useful! I'll help you organize common questions with clear answers. Select 'FAQ Document' or tell me the topic and I'll suggest some questions to cover.";
-        suggestedTemplate = 'faq';
-      } else {
-        response = "I can help with that! To get started, you can either:\n\n• Pick a template from the list on the left\n• Or just describe what you need and I'll help you create it from scratch\n\nWhat would you like to create?";
+      if (!response.ok) {
+        throw new Error('Failed to get response from Neptune');
       }
 
+      const data = await response.json();
+      
       setNeptuneChatMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response,
+        content: data.message.content,
         timestamp: new Date(),
       }]);
+
+      // Refresh knowledge base data in case document was created
+      mutateKnowledge();
+    } catch (error) {
+      console.error('Neptune chat error:', error);
+      setNeptuneChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm having trouble connecting right now. Please try again in a moment, or you can select a template from the list to get started.",
+        timestamp: new Date(),
+      }]);
+    } finally {
       setIsNeptuneTyping(false);
-    }, 1200);
+    }
   };
 
   // Handle document click - open in floating dialog
@@ -1304,18 +1329,45 @@ export default function KnowledgeBaseDashboard({
                               <Button
                                 size="sm"
                                 className="flex-1"
-                                onClick={() => {
-                                  // TODO: Save document to knowledge base
-                                  toast.success('Document created successfully!');
-                                  setSelectedTemplate(null);
-                                  setCreateChatMessages([]);
-                                  setDocumentData({
-                                    title: "",
-                                    type: "",
-                                    category: "",
-                                    content: "",
-                                    description: "",
-                                  });
+                                onClick={async () => {
+                                  if (!documentData.content || !documentData.title) {
+                                    toast.error('Document title and content are required');
+                                    return;
+                                  }
+                                  
+                                  try {
+                                    // Call Neptune to save the document
+                                    const response = await fetch('/api/assistant/chat', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        message: `Save this document to the knowledge base using the create_document tool:
+Title: ${documentData.title}
+Category: ${documentData.category || 'General'}
+Content:
+${documentData.content}`,
+                                      }),
+                                    });
+
+                                    if (!response.ok) {
+                                      throw new Error('Failed to save document');
+                                    }
+
+                                    toast.success('Document saved to knowledge base!');
+                                    mutateKnowledge(); // Refresh the knowledge base data
+                                    setSelectedTemplate(null);
+                                    setCreateChatMessages([]);
+                                    setDocumentData({
+                                      title: "",
+                                      type: "",
+                                      category: "",
+                                      content: "",
+                                      description: "",
+                                    });
+                                  } catch (error) {
+                                    console.error('Save document error:', error);
+                                    toast.error('Failed to save document. Please try again.');
+                                  }
                                 }}
                                 aria-label="Save document"
                               >

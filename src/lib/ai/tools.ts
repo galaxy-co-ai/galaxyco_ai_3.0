@@ -417,8 +417,56 @@ export const aiTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'generate_document',
+      description: 'Generate a complete, high-quality document based on user requirements. Use this when the user wants to CREATE or WRITE a new document, article, SOP, proposal, FAQ, meeting notes, or any content. The AI will write the full content.',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'Title of the document',
+          },
+          documentType: {
+            type: 'string',
+            enum: ['article', 'sop', 'proposal', 'meeting-notes', 'faq', 'guide', 'report', 'policy', 'template', 'general'],
+            description: 'Type of document to generate - this determines the structure and tone',
+          },
+          topic: {
+            type: 'string',
+            description: 'Main topic or subject matter to write about',
+          },
+          requirements: {
+            type: 'string',
+            description: 'Specific requirements, context, key points to include, or instructions for the document',
+          },
+          tone: {
+            type: 'string',
+            enum: ['professional', 'casual', 'technical', 'friendly', 'formal'],
+            description: 'Writing tone/style (default: professional)',
+          },
+          length: {
+            type: 'string',
+            enum: ['brief', 'standard', 'comprehensive'],
+            description: 'Desired document length (default: standard)',
+          },
+          collectionId: {
+            type: 'string',
+            description: 'Optional collection/category ID to organize the document',
+          },
+          collectionName: {
+            type: 'string',
+            description: 'Name of collection to put document in (will create if needed)',
+          },
+        },
+        required: ['title', 'documentType', 'topic'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'create_document',
-      description: 'Create a new document in the knowledge base. Use this when the user wants to save or document something.',
+      description: 'Save a document to the knowledge base with provided content. Use this when you already have the content ready to save.',
       parameters: {
         type: 'object',
         properties: {
@@ -428,7 +476,7 @@ export const aiTools: ChatCompletionTool[] = [
           },
           content: {
             type: 'string',
-            description: 'The document content (can include markdown)',
+            description: 'The document content (supports markdown formatting)',
           },
           type: {
             type: 'string',
@@ -439,8 +487,41 @@ export const aiTools: ChatCompletionTool[] = [
             type: 'string',
             description: 'Optional collection/folder ID to organize the document',
           },
+          collectionName: {
+            type: 'string',
+            description: 'Name of collection to put document in (will create if needed)',
+          },
         },
         required: ['title', 'content'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_collection',
+      description: 'Create a new collection/category in the knowledge base to organize documents.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Name of the collection',
+          },
+          description: {
+            type: 'string',
+            description: 'Description of what this collection contains',
+          },
+          color: {
+            type: 'string',
+            description: 'Color for the collection (e.g., blue, green, purple)',
+          },
+          icon: {
+            type: 'string',
+            description: 'Emoji icon for the collection',
+          },
+        },
+        required: ['name'],
       },
     },
   },
@@ -1358,31 +1439,362 @@ const toolImplementations: Record<string, ToolFunction> = {
     }
   },
 
+  async generate_document(args, context): Promise<ToolResult> {
+    try {
+      const title = args.title as string;
+      const documentType = args.documentType as string || 'general';
+      const topic = args.topic as string;
+      const requirements = args.requirements as string || '';
+      const tone = args.tone as string || 'professional';
+      const length = args.length as string || 'standard';
+      const collectionName = args.collectionName as string | undefined;
+      let collectionId = args.collectionId as string | undefined;
+
+      // If collection name provided but no ID, find or create the collection
+      if (collectionName && !collectionId) {
+        const existingCollection = await db.query.knowledgeCollections.findFirst({
+          where: and(
+            eq(knowledgeCollections.workspaceId, context.workspaceId),
+            like(knowledgeCollections.name, collectionName)
+          ),
+        });
+
+        if (existingCollection) {
+          collectionId = existingCollection.id;
+        } else {
+          // Create new collection
+          const [newCollection] = await db
+            .insert(knowledgeCollections)
+            .values({
+              workspaceId: context.workspaceId,
+              name: collectionName,
+              description: `Auto-created for ${documentType} documents`,
+              createdBy: context.userId,
+            })
+            .returning();
+          collectionId = newCollection.id;
+        }
+      }
+
+      // Build the document structure template based on type
+      const structureTemplates: Record<string, string> = {
+        article: `
+# ${title}
+
+## Introduction
+[Engaging introduction that hooks the reader and establishes the topic]
+
+## Key Points
+[Main content with well-organized sections]
+
+### [Subheading 1]
+[Detailed content]
+
+### [Subheading 2]
+[Detailed content]
+
+## Conclusion
+[Summary and call to action]`,
+        sop: `
+# ${title}
+
+## Purpose
+[Clear statement of why this procedure exists]
+
+## Scope
+[Who this applies to and when]
+
+## Prerequisites
+- [Required tools/access/knowledge]
+
+## Procedure
+
+### Step 1: [Action]
+1. [Sub-step]
+2. [Sub-step]
+
+### Step 2: [Action]
+1. [Sub-step]
+2. [Sub-step]
+
+## Troubleshooting
+| Issue | Solution |
+|-------|----------|
+| [Common problem] | [Resolution] |
+
+## References
+- [Related documents]`,
+        proposal: `
+# ${title}
+
+## Executive Summary
+[Brief overview of the proposal and key benefits]
+
+## Problem Statement
+[Clear description of the challenge to be addressed]
+
+## Proposed Solution
+[Detailed description of your approach]
+
+## Benefits
+- [Benefit 1]
+- [Benefit 2]
+- [Benefit 3]
+
+## Timeline
+| Phase | Duration | Deliverables |
+|-------|----------|--------------|
+| Phase 1 | [Time] | [Deliverables] |
+
+## Investment
+[Cost breakdown and pricing]
+
+## Next Steps
+[Clear call to action]`,
+        'meeting-notes': `
+# ${title}
+
+**Date:** [Date]
+**Attendees:** [Names]
+**Location/Call:** [Location]
+
+## Agenda
+1. [Item 1]
+2. [Item 2]
+
+## Discussion Summary
+
+### [Topic 1]
+- [Key points discussed]
+- [Decisions made]
+
+### [Topic 2]
+- [Key points discussed]
+- [Decisions made]
+
+## Action Items
+| Action | Owner | Due Date |
+|--------|-------|----------|
+| [Task] | [Name] | [Date] |
+
+## Next Meeting
+[Date and topics]`,
+        faq: `
+# ${title}
+
+## Frequently Asked Questions
+
+### General
+
+**Q: [Question 1]**
+A: [Detailed answer]
+
+**Q: [Question 2]**
+A: [Detailed answer]
+
+### Getting Started
+
+**Q: [Question 3]**
+A: [Detailed answer]
+
+### Troubleshooting
+
+**Q: [Question 4]**
+A: [Detailed answer]`,
+        guide: `
+# ${title}
+
+## Overview
+[What this guide covers and who it's for]
+
+## Getting Started
+[Initial setup or prerequisites]
+
+## Step-by-Step Instructions
+
+### 1. [First Step]
+[Detailed instructions with examples]
+
+### 2. [Second Step]
+[Detailed instructions with examples]
+
+## Best Practices
+- [Tip 1]
+- [Tip 2]
+
+## Additional Resources
+- [Link/reference]`,
+        report: `
+# ${title}
+
+## Executive Summary
+[Key findings and recommendations]
+
+## Introduction
+[Context and objectives]
+
+## Methodology
+[How data was collected/analyzed]
+
+## Findings
+
+### [Finding 1]
+[Details and supporting data]
+
+### [Finding 2]
+[Details and supporting data]
+
+## Analysis
+[Interpretation of findings]
+
+## Recommendations
+1. [Recommendation 1]
+2. [Recommendation 2]
+
+## Conclusion
+[Summary and next steps]`,
+        policy: `
+# ${title}
+
+## Policy Statement
+[Clear statement of the policy]
+
+## Purpose
+[Why this policy exists]
+
+## Scope
+[Who this policy applies to]
+
+## Policy Details
+
+### [Section 1]
+[Policy specifics]
+
+### [Section 2]
+[Policy specifics]
+
+## Compliance
+[How compliance will be monitored]
+
+## Exceptions
+[Process for requesting exceptions]
+
+## Related Policies
+- [Related policy links]
+
+**Effective Date:** [Date]
+**Last Updated:** [Date]`,
+        general: `
+# ${title}
+
+## Overview
+[Introduction to the topic]
+
+## Details
+[Main content]
+
+## Summary
+[Key takeaways]`,
+      };
+
+      const structure = structureTemplates[documentType] || structureTemplates.general;
+      
+      // Return the document generation request - the AI will fill in the content
+      // based on this structure and the provided requirements
+      return {
+        success: true,
+        message: `Ready to generate ${documentType} document. Please write the complete document content following this structure and requirements.`,
+        data: {
+          generationRequest: true,
+          title,
+          documentType,
+          topic,
+          requirements,
+          tone,
+          length,
+          collectionId,
+          collectionName,
+          structureTemplate: structure,
+          instructions: `Generate a ${length} ${tone} ${documentType} about "${topic}". ${requirements ? `Additional requirements: ${requirements}` : ''} Follow the structure template but write real, helpful content. Make it practical and actionable. Use markdown formatting.`,
+        },
+      };
+    } catch (error) {
+      logger.error('AI generate_document failed', error);
+      return {
+        success: false,
+        message: 'Failed to prepare document generation',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
   async create_document(args, context): Promise<ToolResult> {
     try {
+      const collectionName = args.collectionName as string | undefined;
+      let collectionId = args.collectionId as string | undefined;
+
+      // If collection name provided but no ID, find or create the collection
+      if (collectionName && !collectionId) {
+        const existingCollection = await db.query.knowledgeCollections.findFirst({
+          where: and(
+            eq(knowledgeCollections.workspaceId, context.workspaceId),
+            like(knowledgeCollections.name, collectionName)
+          ),
+        });
+
+        if (existingCollection) {
+          collectionId = existingCollection.id;
+        } else {
+          // Create new collection
+          const [newCollection] = await db
+            .insert(knowledgeCollections)
+            .values({
+              workspaceId: context.workspaceId,
+              name: collectionName,
+              description: `Created by Neptune`,
+              createdBy: context.userId,
+            })
+            .returning();
+          collectionId = newCollection.id;
+        }
+      }
+
+      const content = args.content as string;
       const [doc] = await db
         .insert(knowledgeItems)
         .values({
           workspaceId: context.workspaceId,
           title: args.title as string,
           type: (args.type as 'document' | 'text') || 'document',
-          content: args.content as string,
-          summary: (args.content as string).substring(0, 500),
-          collectionId: (args.collectionId as string) || null,
+          content: content,
+          summary: content.substring(0, 500).replace(/[#*`]/g, ''), // Clean summary
+          collectionId: collectionId || null,
           createdBy: context.userId,
           status: 'ready',
         })
         .returning();
 
+      // Update collection item count if applicable
+      if (collectionId) {
+        await db
+          .update(knowledgeCollections)
+          .set({ 
+            itemCount: sql`${knowledgeCollections.itemCount} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(knowledgeCollections.id, collectionId));
+      }
+
       logger.info('AI created document', { docId: doc.id, workspaceId: context.workspaceId });
 
       return {
         success: true,
-        message: `Created document "${doc.title}" successfully`,
+        message: `✅ Document "${doc.title}" has been saved to your knowledge base${collectionName ? ` in the "${collectionName}" category` : ''}.`,
         data: {
           id: doc.id,
           title: doc.title,
           type: doc.type,
+          collectionId: collectionId,
         },
       };
     } catch (error) {
@@ -1390,6 +1802,62 @@ const toolImplementations: Record<string, ToolFunction> = {
       return {
         success: false,
         message: 'Failed to create document',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async create_collection(args, context): Promise<ToolResult> {
+    try {
+      // Check if collection already exists
+      const existing = await db.query.knowledgeCollections.findFirst({
+        where: and(
+          eq(knowledgeCollections.workspaceId, context.workspaceId),
+          like(knowledgeCollections.name, args.name as string)
+        ),
+      });
+
+      if (existing) {
+        return {
+          success: true,
+          message: `Collection "${existing.name}" already exists`,
+          data: {
+            id: existing.id,
+            name: existing.name,
+            description: existing.description,
+            alreadyExisted: true,
+          },
+        };
+      }
+
+      const [collection] = await db
+        .insert(knowledgeCollections)
+        .values({
+          workspaceId: context.workspaceId,
+          name: args.name as string,
+          description: args.description as string || null,
+          color: args.color as string || null,
+          icon: args.icon as string || null,
+          createdBy: context.userId,
+        })
+        .returning();
+
+      logger.info('AI created collection', { collectionId: collection.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `✅ Created new category "${collection.name}"`,
+        data: {
+          id: collection.id,
+          name: collection.name,
+          description: collection.description,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_collection failed', error);
+      return {
+        success: false,
+        message: 'Failed to create collection',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -2074,8 +2542,8 @@ export const toolsByCategory = {
   tasks: ['create_task'],
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
-  content: ['draft_email', 'send_email'],
-  knowledge: ['search_knowledge', 'create_document', 'list_collections'],
+  content: ['draft_email', 'send_email', 'generate_document'],
+  knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections'],
   marketing: ['create_campaign', 'get_campaign_stats'],
   deals: ['create_deal', 'update_deal', 'get_deals_closing_soon'],
 };
