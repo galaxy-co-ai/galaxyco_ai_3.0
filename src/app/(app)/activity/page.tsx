@@ -187,7 +187,7 @@ export default function ActivityPage() {
   const activityEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch agents from API
-  const { data: agentsData, error: agentsError, mutate: mutateAgents, isLoading: isLoadingAgents } = useSWR<ApiAgent[]>(
+  const { data: agentsData, error: agentsError, mutate: mutateAgents, isLoading: isLoadingAgents } = useSWR<{ agents: ApiAgent[] }>(
     '/api/agents',
     fetcher,
     { refreshInterval: isLive ? 10000 : 0 }
