@@ -28,18 +28,19 @@ export const onRequestError = async (
   }
 ) => {
   const Sentry = await import('@sentry/nextjs');
-  Sentry.captureException(error, {
-    mechanism: {
-      type: 'nextjs-instrumentation',
-      handled: false,
-    },
-    extra: {
-      request_path: request.path,
-      request_method: request.method,
-      router_kind: context.routerKind,
-      route_path: context.routePath,
-      route_type: context.routeType,
-    },
+  
+  Sentry.withScope((scope) => {
+    scope.setTag('request_path', request.path);
+    scope.setTag('request_method', request.method);
+    scope.setTag('router_kind', context.routerKind);
+    scope.setTag('route_path', context.routePath);
+    scope.setTag('route_type', context.routeType);
+    
+    Sentry.captureException(error, {
+      mechanism: {
+        type: 'nextjs-instrumentation',
+        handled: false,
+      },
+    });
   });
 };
-
