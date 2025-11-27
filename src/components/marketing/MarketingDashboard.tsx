@@ -365,6 +365,55 @@ export default function MarketingDashboard({
 
   const assetCategories = ['All', 'Email', 'Social', 'Ads', 'Landing Pages', 'Sales', 'Brand', 'Video', 'PR'];
 
+  // Content Templates (for Content tab)
+  const contentTemplates = [
+    { id: 'blog-post', name: 'Blog Post', category: 'Blog', icon: FileText, description: 'Long-form article content', color: 'bg-blue-500' },
+    { id: 'blog-listicle', name: 'Listicle', category: 'Blog', icon: FileText, description: 'List-based article format', color: 'bg-blue-500' },
+    { id: 'blog-howto', name: 'How-To Guide', category: 'Blog', icon: FileText, description: 'Step-by-step tutorials', color: 'bg-blue-500' },
+    { id: 'social-carousel', name: 'Social Carousel', category: 'Social', icon: ImageIcon, description: 'Multi-slide social content', color: 'bg-pink-500' },
+    { id: 'social-story', name: 'Story Script', category: 'Social', icon: Video, description: 'Instagram/TikTok stories', color: 'bg-pink-500' },
+    { id: 'social-reel', name: 'Reel/Short Script', category: 'Social', icon: Video, description: 'Short-form video scripts', color: 'bg-pink-500' },
+    { id: 'email-newsletter', name: 'Newsletter', category: 'Email', icon: Mail, description: 'Regular email updates', color: 'bg-violet-500' },
+    { id: 'email-drip', name: 'Drip Sequence', category: 'Email', icon: Mail, description: 'Automated email series', color: 'bg-violet-500' },
+    { id: 'email-broadcast', name: 'Broadcast Email', category: 'Email', icon: Mail, description: 'One-time announcements', color: 'bg-violet-500' },
+    { id: 'video-explainer', name: 'Explainer Script', category: 'Video', icon: Video, description: 'Product/service explainers', color: 'bg-red-500' },
+    { id: 'video-testimonial', name: 'Testimonial Script', category: 'Video', icon: Video, description: 'Customer success stories', color: 'bg-red-500' },
+    { id: 'video-tutorial', name: 'Tutorial Script', category: 'Video', icon: Video, description: 'Educational how-tos', color: 'bg-red-500' },
+    { id: 'podcast-outline', name: 'Podcast Outline', category: 'Audio', icon: MessageSquare, description: 'Episode planning', color: 'bg-purple-500' },
+    { id: 'podcast-shownotes', name: 'Show Notes', category: 'Audio', icon: MessageSquare, description: 'Episode summaries', color: 'bg-purple-500' },
+    { id: 'whitepaper', name: 'Whitepaper', category: 'Long-form', icon: FileText, description: 'In-depth research content', color: 'bg-slate-600' },
+    { id: 'ebook-chapter', name: 'eBook Chapter', category: 'Long-form', icon: FileText, description: 'Book-style content', color: 'bg-slate-600' },
+    { id: 'webinar-script', name: 'Webinar Script', category: 'Events', icon: Presentation, description: 'Live presentation scripts', color: 'bg-teal-500' },
+    { id: 'event-promo', name: 'Event Promotion', category: 'Events', icon: Megaphone, description: 'Event marketing copy', color: 'bg-teal-500' },
+  ];
+
+  const contentCategories = ['All', 'Blog', 'Social', 'Email', 'Video', 'Audio', 'Long-form', 'Events'];
+
+  // Content tab state
+  const [selectedContentTemplate, setSelectedContentTemplate] = useState<string | null>(null);
+  const [contentCategoryFilter, setContentCategoryFilter] = useState<string>('All');
+  const [contentNeptuneChatMessages, setContentNeptuneChatMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: "Hey! 👋 I'm Neptune. Ready to create some amazing content? Pick a template from the list, or just tell me what you need — blog posts, social content, email campaigns, video scripts, and more!",
+      timestamp: new Date(),
+    },
+  ]);
+  const [contentNeptuneChatInput, setContentNeptuneChatInput] = useState("");
+  const [isCreatingContent, setIsCreatingContent] = useState(false);
+  const contentMessagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll content chat
+  useEffect(() => {
+    contentMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [contentNeptuneChatMessages]);
+
+  // Filter content templates
+  const filteredContentTemplates = contentCategoryFilter === 'All' 
+    ? contentTemplates 
+    : contentTemplates.filter(t => t.category === contentCategoryFilter);
+
   const [contentSearchQuery, setContentSearchQuery] = useState("");
 
   const filteredCampaigns = useMemo(() => {
@@ -740,6 +789,84 @@ Be creative, engaging, and write copy that converts!`;
   const filteredAssetTemplates = assetCategoryFilter === 'All' 
     ? assetTemplates 
     : assetTemplates.filter(t => t.category === assetCategoryFilter);
+
+  // Handle Content Neptune Chat Message - REAL API
+  const handleSendContentNeptuneMessage = async () => {
+    if (!contentNeptuneChatInput.trim() || isCreatingContent) return;
+
+    const userInput = contentNeptuneChatInput.trim();
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userInput,
+      timestamp: new Date(),
+    };
+
+    setContentNeptuneChatMessages(prev => [...prev, userMessage]);
+    setContentNeptuneChatInput("");
+    setIsCreatingContent(true);
+
+    try {
+      const selectedTemplate = contentTemplates.find(t => t.id === selectedContentTemplate);
+      
+      // Build context for Neptune
+      let prompt = `[Marketing Content Creation]
+You are helping create marketing content. The user is in the Marketing → Content tab.
+`;
+
+      if (selectedTemplate) {
+        prompt += `Selected template: ${selectedTemplate.name} (${selectedTemplate.category})
+Template description: ${selectedTemplate.description}
+
+`;
+      }
+
+      prompt += `User's message: "${userInput}"
+
+IMPORTANT INSTRUCTIONS:
+1. Generate HIGH QUALITY, ENGAGING content that's ready to publish
+2. Use the generate_document tool with:
+   - documentType: "${selectedTemplate?.category?.toLowerCase() || 'article'}"
+   - collectionName: "Marketing Content"
+3. For blog posts: Include compelling headlines, intro hooks, subheadings, and CTAs
+4. For social content: Make it platform-appropriate, engaging, with relevant hashtags
+5. For email: Include subject lines (multiple options), preview text, and body
+6. For video scripts: Include scene descriptions, dialogue, and timing
+7. Ask clarifying questions if needed (audience, tone, key messages, goals)
+8. After generating, offer to save to the knowledge base
+
+Be creative, engaging, and write content that resonates!`;
+
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from Neptune');
+      }
+
+      const data = await response.json();
+
+      setContentNeptuneChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.message.content,
+        timestamp: new Date(),
+      }]);
+    } catch (error) {
+      console.error('Content chat error:', error);
+      setContentNeptuneChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm having trouble connecting right now. Please try again in a moment.",
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setIsCreatingContent(false);
+    }
+  };
 
   return (
     <div className="h-full bg-gray-50/50 overflow-hidden">
@@ -1216,11 +1343,11 @@ Be creative, engaging, and write copy that converts!`;
           </Card>
             )}
 
-            {/* CONTENT TAB */}
+            {/* CONTENT TAB - Template-based with Neptune */}
             {activeTab === 'content' && (
               <Card className="p-8 shadow-lg border-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Left: Content List */}
+                  {/* Left: Content Templates */}
                   <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     {/* Header */}
                     <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
@@ -1230,293 +1357,252 @@ Be creative, engaging, and write copy that converts!`;
                             <FileText className="h-5 w-5" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-[15px] text-gray-900">Content</h3>
-                            <p className="text-[13px] text-blue-600 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                              {filteredContent.length} items
-                            </p>
+                            <h2 className="font-semibold text-gray-900">Content Templates</h2>
+                            <p className="text-xs text-gray-500">{contentTemplates.length} templates available</p>
                           </div>
                         </div>
-                        <Button
-                          size="icon"
-                          onClick={() => setShowContentChat(true)}
-                          className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
-                          aria-label="Add content"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
                       </div>
-
-                      {/* Search */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search content..."
-                          value={contentSearchQuery}
-                          onChange={(e) => setContentSearchQuery(e.target.value)}
-                          className="pl-9 h-9 text-sm bg-white dark:bg-card"
-                          aria-label="Search content"
-                        />
+                      
+                      {/* Category Filter */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {contentCategories.map((category) => (
+                          <button
+                            key={category}
+                            onClick={() => setContentCategoryFilter(category)}
+                            className={`px-2.5 py-1 text-xs rounded-full transition-all ${
+                              contentCategoryFilter === category
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                            }`}
+                          >
+                            {category}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Content List */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      {filteredContent.length > 0 ? (
-                        filteredContent.map((content) => (
-                          <div
-                            key={content.id}
-                            onClick={() => setSelectedContent(content)}
-                            className="p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-sm font-semibold text-gray-900">{content.title}</h4>
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] px-2 py-0.5 ${
-                                  content.status === 'published'
-                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                    : content.status === 'draft'
-                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : 'bg-slate-50 text-slate-600 border-slate-200'
-                                }`}
-                              >
-                                {content.status}
-                              </Badge>
+                    {/* Template List */}
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                      {filteredContentTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => {
+                            setSelectedContentTemplate(template.id);
+                            // Add template selection message
+                            setContentNeptuneChatMessages(prev => [...prev, {
+                              id: Date.now().toString(),
+                              role: 'assistant',
+                              content: `Great choice! Let's create a **${template.name}**. ${
+                                template.category === 'Blog' 
+                                  ? "What topic would you like to write about? Who's your target audience?"
+                                  : template.category === 'Social'
+                                  ? "What's the main message or product you want to promote? What platform is this for?"
+                                  : template.category === 'Email'
+                                  ? "What's the purpose of this email? Is it for a specific campaign or audience segment?"
+                                  : template.category === 'Video'
+                                  ? "What's the video about? How long should it be? What's the call to action?"
+                                  : template.category === 'Audio'
+                                  ? "What's the topic? Who are your guests (if any)? What key points should we cover?"
+                                  : template.category === 'Long-form'
+                                  ? "What subject matter should this cover? What's the main thesis or argument?"
+                                  : template.category === 'Events'
+                                  ? "Tell me about the event - what, when, where, and who should attend?"
+                                  : "Tell me more about what you want to create!"
+                              }`,
+                              timestamp: new Date(),
+                            }]);
+                          }}
+                          className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                            selectedContentTemplate === template.id
+                              ? 'border-blue-500 bg-blue-50 shadow-sm'
+                              : 'border-gray-200 hover:border-blue-300 bg-white'
+                          }`}
+                          aria-label={`Select ${template.name} template`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg ${template.color} text-white flex-shrink-0`}>
+                              <template.icon className="h-4 w-4" />
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
-                              <span className="font-medium capitalize">{content.type}</span>
-                              <span>•</span>
-                              <span>{content.views.toLocaleString()} views</span>
-                              <span>•</span>
-                              <span>{content.engagement}% engagement</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-900">{template.name}</p>
+                                <Badge variant="outline" className="text-[10px] px-1.5">
+                                  {template.category}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-0.5">{template.description}</p>
                             </div>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-12 px-6">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center mx-auto mb-4">
-                            <FileText className="h-7 w-7 text-orange-600" />
-                          </div>
-                          <h3 className="font-semibold text-gray-900 mb-2">Create your first content</h3>
-                          <p className="text-sm text-muted-foreground mb-4 max-w-[200px] mx-auto">
-                            Write blog posts, social media content, and email templates with Neptune.
-                          </p>
-                          <Button size="sm" className="gap-2 bg-orange-600 hover:bg-orange-700">
-                            <Sparkles className="h-4 w-4" />
-                            Generate Content
-                          </Button>
-                        </div>
-                      )}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Right: Content Chat or Details */}
+                  {/* Right: Neptune Chat */}
                   <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                    {showContentChat ? (
-                      <>
-                        {/* Chat Header */}
-                        <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between flex-shrink-0">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                              <Sparkles className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-sm text-gray-900">AI Content Creation</h3>
-                              <p className="text-xs text-blue-600">Guided content creation</p>
-                            </div>
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              setShowContentChat(false);
-                              setContentChatMessages([{
-                                id: '1',
-                                role: 'assistant',
-                                content: "Hi! I'm here to help you create new marketing content. What type of content would you like to create? (e.g., blog post, social media post, email newsletter, video script)",
-                                timestamp: new Date(),
-                              }]);
-                              setContentChatInput("");
-                              setContentData({
-                                title: "",
-                                type: "",
-                                topic: "",
-                                targetAudience: "",
-                                tone: "",
-                                keywords: [],
-                                publishDate: "",
-                              });
-                            }}
-                            className="h-7 w-7"
-                            aria-label="Close chat"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                    {/* Chat Header */}
+                    <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between flex-shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                          <Sparkles className="h-4 w-4" />
                         </div>
-
-                        {/* Chat Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                          {contentChatMessages.map((message) => (
-                            <div
-                              key={message.id}
-                              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                              <div
-                                className={`max-w-[80%] rounded-lg p-3 ${
-                                  message.role === 'user'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-slate-100 text-gray-900'
-                                }`}
-                              >
-                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                              </div>
-                            </div>
-                  ))}
-              </div>
-
-                        {/* Chat Input */}
-                        <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0">
-                          <Input
-                            placeholder="Type your message..."
-                            value={contentChatInput}
-                            onChange={(e) => setContentChatInput(e.target.value)}
-                            disabled={isLoadingContentChat}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey && !isLoadingContentChat) {
-                                e.preventDefault();
-                                handleSendContentMessage();
-                              }
-                            }}
-                            className="flex-1 disabled:opacity-50"
-                            aria-label="Message input"
-                          />
-                          <Button
-                            size="icon"
-                            onClick={handleSendContentMessage}
-                            disabled={!contentChatInput.trim() || isLoadingContentChat}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                            aria-label="Send message"
-                          >
-                            {isLoadingContentChat ? (
-                              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <Send className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </>
-                    ) : selectedContent ? (
-                      <div className="flex-1 overflow-y-auto">
-                        {/* Content Header */}
-                        <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-semibold text-lg text-gray-900">{selectedContent.title}</h3>
-                            <Badge
-                              className={`${
-                                selectedContent.status === 'published'
-                                  ? 'bg-green-100 text-green-700'
-                                  : selectedContent.status === 'draft'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {selectedContent.status}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-gray-600">
-                            <span className="capitalize font-medium">{selectedContent.type}</span>
-                            <span>•</span>
-                            <span>By {selectedContent.author}</span>
-                            {selectedContent.publishedAt && (
-                              <>
-                                <span>•</span>
-                                <span>{formatDate(selectedContent.publishedAt)}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Content Stats */}
-                        <div className="px-6 py-4 border-b bg-slate-50">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <div className="flex items-center gap-2 text-blue-600 mb-1">
-                                <Users className="h-4 w-4" />
-                                <span className="text-xs font-medium">Views</span>
-                              </div>
-                              <p className="text-xl font-bold text-gray-900">
-                                {selectedContent.views.toLocaleString()}
-                              </p>
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2 text-purple-600 mb-1">
-                                <TrendingUp className="h-4 w-4" />
-                                <span className="text-xs font-medium">Engagement</span>
-                              </div>
-                              <p className="text-xl font-bold text-gray-900">
-                                {selectedContent.engagement}%
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Content Body */}
-                        <div className="p-6">
-                          {selectedContent.excerpt && (
-                            <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                              <p className="text-sm text-gray-700 italic">{selectedContent.excerpt}</p>
-                            </div>
-                          )}
-
-                          {selectedContent.content && (
-                            <div className="prose prose-sm max-w-none">
-                              {selectedContent.type === 'blog' ? (
-                                <div className="space-y-3">
-                                  {selectedContent.content.split('\n').map((line, index) => {
-                                    if (line.startsWith('# ')) {
-                                      return <h1 key={index} className="text-2xl font-bold text-gray-900 mt-6 mb-3">{line.substring(2)}</h1>;
-                                    } else if (line.startsWith('## ')) {
-                                      return <h2 key={index} className="text-xl font-semibold text-gray-900 mt-5 mb-2">{line.substring(3)}</h2>;
-                                    } else if (line.trim() === '') {
-                                      return <div key={index} className="h-2" />;
-                                    } else {
-                                      return <p key={index} className="text-sm text-gray-700 leading-relaxed">{line}</p>;
-                                    }
-                                  })}
-                                </div>
-                              ) : (
-                                <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-                                  {selectedContent.content}
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {!selectedContent.content && (
-                            <div className="text-center py-12">
-                              <FileText className="h-12 w-12 mx-auto mb-3 text-slate-300" />
-                              <p className="text-sm text-gray-500">No content available</p>
-                            </div>
-                          )}
+                        <div>
+                          <h3 className="font-semibold text-sm text-gray-900">Neptune Content Creator</h3>
+                          <p className="text-xs text-blue-600">
+                            {selectedContentTemplate 
+                              ? `Creating: ${contentTemplates.find(t => t.id === selectedContentTemplate)?.name}`
+                              : 'Ready to create amazing content'}
+                          </p>
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center p-8">
-                        <div className="text-center max-w-sm">
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                            <FileText className="h-8 w-8 text-slate-400" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          setContentNeptuneChatMessages([{
+                            id: '1',
+                            role: 'assistant',
+                            content: "Hey! 👋 I'm Neptune. Ready to create some amazing content? Pick a template from the list, or just tell me what you need — blog posts, social content, email campaigns, video scripts, and more!",
+                            timestamp: new Date(),
+                          }]);
+                          setSelectedContentTemplate(null);
+                        }}
+                        className="h-7 w-7"
+                        aria-label="Start new conversation"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Chat Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
+                      {contentNeptuneChatMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          {message.role === 'assistant' && (
+                            <Avatar className="h-7 w-7 shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+                                <Sparkles className="h-3.5 w-3.5" />
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                          <div className={`flex-1 min-w-0 ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
+                            <div
+                              className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] ${
+                                message.role === 'user'
+                                  ? 'bg-blue-500 text-white ml-auto rounded-br-md'
+                                  : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                            </div>
+                            <span className="text-[10px] text-gray-400 mt-1 block">
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
-                          <h3 className="text-base font-semibold text-gray-900 mb-2">Select content</h3>
-                          <p className="text-sm text-gray-500">
-                            Choose a content item from the list to view detailed information, performance metrics, and analytics.
-                          </p>
+                          {message.role === 'user' && (
+                            <Avatar className="h-7 w-7 shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-700 text-white text-xs">
+                                U
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                      ))}
+                      {isCreatingContent && (
+                        <div className="flex gap-2">
+                          <Avatar className="h-7 w-7 shrink-0">
+                            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+                              <Sparkles className="h-3.5 w-3.5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-white shadow-sm border border-gray-100">
+                            <div className="flex gap-1">
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                className="h-2 w-2 bg-blue-400 rounded-full"
+                              />
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                                className="h-2 w-2 bg-blue-400 rounded-full"
+                              />
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                                className="h-2 w-2 bg-blue-400 rounded-full"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={contentMessagesEndRef} />
+                    </div>
+
+                    {/* Quick Suggestions - Only show at start */}
+                    {contentNeptuneChatMessages.length === 1 && !selectedContentTemplate && (
+                      <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+                        <p className="text-[10px] text-gray-500 mb-2">Quick starts:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            "Write a blog post about our product launch",
+                            "Create a LinkedIn carousel about industry trends",
+                            "Draft a newsletter for our subscribers",
+                            "Write a video script for a product demo"
+                          ].map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setContentNeptuneChatInput(suggestion);
+                                setTimeout(() => handleSendContentNeptuneMessage(), 100);
+                              }}
+                              className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}
+
+                    {/* Chat Input */}
+                    <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
+                      <Input
+                        placeholder={selectedContentTemplate 
+                          ? `Describe your ${contentTemplates.find(t => t.id === selectedContentTemplate)?.name}...`
+                          : "What content do you want to create?"}
+                        value={contentNeptuneChatInput}
+                        onChange={(e) => setContentNeptuneChatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey && !isCreatingContent) {
+                            e.preventDefault();
+                            handleSendContentNeptuneMessage();
+                          }
+                        }}
+                        className="flex-1 rounded-full"
+                        disabled={isCreatingContent}
+                        aria-label="Type message to Neptune"
+                      />
+                      <Button
+                        size="icon"
+                        onClick={handleSendContentNeptuneMessage}
+                        disabled={!contentNeptuneChatInput.trim() || isCreatingContent}
+                        className="bg-blue-500 hover:bg-blue-600 rounded-full"
+                        aria-label="Send message"
+                      >
+                        {isCreatingContent ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-          </Card>
+              </Card>
             )}
 
             {/* ASSETS TAB */}
