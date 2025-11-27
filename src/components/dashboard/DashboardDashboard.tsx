@@ -1357,7 +1357,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
 
   // Tab configuration (defined after agentsList for proper access)
   const tabs = [
-    { id: 'assistant' as TabType, label: 'AI Assistant', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
+    { id: 'assistant' as TabType, label: 'Neptune', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
     { id: 'snapshot' as TabType, label: 'Snapshot', icon: BarChart3, activeColor: 'bg-blue-100 text-blue-700' },
     { id: 'automations' as TabType, label: 'Automations', icon: Bot, activeColor: 'bg-green-100 text-green-700' },
     { id: 'planner' as TabType, label: 'Planner', icon: CalendarDays, badge: calendarEvents.length > 0 ? String(calendarEvents.length) : undefined, badgeColor: 'bg-orange-500', activeColor: 'bg-orange-100 text-orange-700' },
@@ -1453,7 +1453,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                           <Sparkles className="h-5 w-5" aria-hidden="true" />
                       </div>
                       <div>
-                          <h3 className="font-semibold text-[15px] text-gray-900">AI Assistant</h3>
+                          <h3 className="font-semibold text-[15px] text-gray-900">Neptune</h3>
                           <p className="text-[13px] text-indigo-600 flex items-center gap-1">
                             <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" aria-hidden="true" />
                             {assistantLeftView === "capabilities" ? `${assistantCapabilities.length} capabilities` : `${assistantConversations.length} conversations`}

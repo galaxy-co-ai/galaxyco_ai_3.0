@@ -39,7 +39,7 @@ const mainNavItems = [
 ];
 
 const bottomNavItems = [
-  { icon: Sparkles, label: "AI Assistant", href: "#", id: "assistant" },
+  { icon: Sparkles, label: "Neptune", href: "#", id: "assistant" },
   { icon: Plug, label: "Integrations", href: "#", id: "integrations" },
   { icon: Settings, label: "Settings", href: "#", id: "settings" },
 ];

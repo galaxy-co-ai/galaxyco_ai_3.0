@@ -382,8 +382,8 @@ export default function AssistantPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">AI Assistant</h1>
-          <p className="text-gray-500 mt-1">Your intelligent assistant for workflow automation and insights</p>
+          <h1 className="text-3xl font-bold text-gray-900">Neptune</h1>
+          <p className="text-gray-500 mt-1">Your AI sidekick for getting things done</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge className="bg-green-100 text-green-700 border-green-200 px-3 py-1">
@@ -410,7 +410,7 @@ export default function AssistantPage() {
                     <Sparkles className="h-5 w-5" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[15px] text-gray-900">AI Assistant</h3>
+                    <h3 className="font-semibold text-[15px] text-gray-900">Neptune</h3>
                     <p className="text-[13px] text-indigo-600 flex items-center gap-1">
                       <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" aria-hidden="true" />
                       {leftPanelView === "capabilities" ? `${capabilities.length} capabilities` : `${conversations.length} conversations`}
