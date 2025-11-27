@@ -50,6 +50,8 @@ import {
   Instagram,
   Facebook,
   Youtube,
+  Briefcase,
+  Calendar,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -388,6 +390,55 @@ export default function MarketingDashboard({
   ];
 
   const contentCategories = ['All', 'Blog', 'Social', 'Email', 'Video', 'Audio', 'Long-form', 'Events'];
+
+  // Campaign Templates
+  const campaignTemplates = [
+    { id: 'launch-product', name: 'Product Launch', category: 'Launch', icon: Megaphone, description: 'New product or feature release', color: 'bg-pink-500' },
+    { id: 'launch-brand', name: 'Brand Launch', category: 'Launch', icon: Sparkles, description: 'New brand or rebrand campaign', color: 'bg-pink-500' },
+    { id: 'launch-event', name: 'Event Launch', category: 'Launch', icon: Calendar, description: 'Webinar, conference, or event', color: 'bg-pink-500' },
+    { id: 'awareness-brand', name: 'Brand Awareness', category: 'Awareness', icon: TrendingUp, description: 'Increase brand recognition', color: 'bg-purple-500' },
+    { id: 'awareness-thought', name: 'Thought Leadership', category: 'Awareness', icon: Target, description: 'Establish industry authority', color: 'bg-purple-500' },
+    { id: 'lead-gen', name: 'Lead Generation', category: 'Lead Gen', icon: UserPlus, description: 'Capture qualified leads', color: 'bg-blue-500' },
+    { id: 'lead-nurture', name: 'Lead Nurturing', category: 'Lead Gen', icon: Mail, description: 'Convert leads to customers', color: 'bg-blue-500' },
+    { id: 'lead-webinar', name: 'Webinar Funnel', category: 'Lead Gen', icon: Video, description: 'Webinar registration campaign', color: 'bg-blue-500' },
+    { id: 'sales-promo', name: 'Promotional Sale', category: 'Sales', icon: DollarSign, description: 'Discounts and special offers', color: 'bg-green-500' },
+    { id: 'sales-seasonal', name: 'Seasonal Campaign', category: 'Sales', icon: Clock, description: 'Holiday or seasonal promotions', color: 'bg-green-500' },
+    { id: 'sales-flash', name: 'Flash Sale', category: 'Sales', icon: Zap, description: 'Limited-time offers', color: 'bg-green-500' },
+    { id: 'retention-loyalty', name: 'Loyalty Program', category: 'Retention', icon: Users, description: 'Customer loyalty rewards', color: 'bg-amber-500' },
+    { id: 'retention-winback', name: 'Win-Back Campaign', category: 'Retention', icon: RefreshCw, description: 'Re-engage inactive customers', color: 'bg-amber-500' },
+    { id: 'retention-referral', name: 'Referral Program', category: 'Retention', icon: Share2, description: 'Customer referral incentives', color: 'bg-amber-500' },
+    { id: 'social-ugc', name: 'UGC Campaign', category: 'Social', icon: ImageIcon, description: 'User-generated content', color: 'bg-indigo-500' },
+    { id: 'social-contest', name: 'Contest/Giveaway', category: 'Social', icon: Target, description: 'Engagement contests', color: 'bg-indigo-500' },
+    { id: 'social-influencer', name: 'Influencer Campaign', category: 'Social', icon: Users, description: 'Influencer partnerships', color: 'bg-indigo-500' },
+    { id: 'abm', name: 'Account-Based Marketing', category: 'ABM', icon: Briefcase, description: 'Target specific accounts', color: 'bg-slate-600' },
+  ];
+
+  const campaignCategories = ['All', 'Launch', 'Awareness', 'Lead Gen', 'Sales', 'Retention', 'Social', 'ABM'];
+
+  // Campaign tab state (new template-based)
+  const [selectedCampaignTemplate, setSelectedCampaignTemplate] = useState<string | null>(null);
+  const [campaignCategoryFilter, setCampaignCategoryFilter] = useState<string>('All');
+  const [campaignNeptuneChatMessages, setCampaignNeptuneChatMessages] = useState<ChatMessage[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: "Hey! 👋 I'm Neptune. Ready to launch a powerful marketing campaign? Pick a template from the list, or tell me your goals — I'll help you plan the strategy, channels, budget, and timeline!",
+      timestamp: new Date(),
+    },
+  ]);
+  const [campaignNeptuneChatInput, setCampaignNeptuneChatInput] = useState("");
+  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
+  const campaignMessagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll campaign chat
+  useEffect(() => {
+    campaignMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [campaignNeptuneChatMessages]);
+
+  // Filter campaign templates
+  const filteredCampaignTemplates = campaignCategoryFilter === 'All' 
+    ? campaignTemplates 
+    : campaignTemplates.filter(t => t.category === campaignCategoryFilter);
 
   // Content tab state
   const [selectedContentTemplate, setSelectedContentTemplate] = useState<string | null>(null);
@@ -790,6 +841,87 @@ Be creative, engaging, and write copy that converts!`;
     ? assetTemplates 
     : assetTemplates.filter(t => t.category === assetCategoryFilter);
 
+  // Handle Campaign Neptune Chat Message - REAL API
+  const handleSendCampaignNeptuneMessage = async () => {
+    if (!campaignNeptuneChatInput.trim() || isCreatingCampaign) return;
+
+    const userInput = campaignNeptuneChatInput.trim();
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: userInput,
+      timestamp: new Date(),
+    };
+
+    setCampaignNeptuneChatMessages(prev => [...prev, userMessage]);
+    setCampaignNeptuneChatInput("");
+    setIsCreatingCampaign(true);
+
+    try {
+      const selectedTemplate = campaignTemplates.find(t => t.id === selectedCampaignTemplate);
+      
+      // Build context for Neptune
+      let prompt = `[Marketing Campaign Planning]
+You are helping plan and create a marketing campaign. The user is in the Marketing → Campaigns tab.
+`;
+
+      if (selectedTemplate) {
+        prompt += `Selected campaign type: ${selectedTemplate.name} (${selectedTemplate.category})
+Campaign description: ${selectedTemplate.description}
+
+`;
+      }
+
+      prompt += `User's message: "${userInput}"
+
+IMPORTANT INSTRUCTIONS:
+1. Help the user plan a comprehensive marketing campaign
+2. Ask about and help define:
+   - Campaign goals and KPIs
+   - Target audience and personas
+   - Budget allocation
+   - Channel strategy (email, social, paid ads, content, etc.)
+   - Timeline and milestones
+   - Key messaging and value propositions
+   - Success metrics
+3. If they're ready, use create_campaign tool to set it up
+4. Offer to create supporting content/assets using generate_document
+5. Be strategic and provide actionable recommendations
+6. Consider industry best practices
+
+Be a strategic marketing partner!`;
+
+      const response = await fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from Neptune');
+      }
+
+      const data = await response.json();
+
+      setCampaignNeptuneChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.message.content,
+        timestamp: new Date(),
+      }]);
+    } catch (error) {
+      console.error('Campaign chat error:', error);
+      setCampaignNeptuneChatMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I'm having trouble connecting right now. Please try again in a moment.",
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setIsCreatingCampaign(false);
+    }
+  };
+
   // Handle Content Neptune Chat Message - REAL API
   const handleSendContentNeptuneMessage = async () => {
     if (!contentNeptuneChatInput.trim() || isCreatingContent) return;
@@ -932,11 +1064,11 @@ Be creative, engaging, and write content that resonates!`;
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {/* CAMPAIGNS TAB */}
+            {/* CAMPAIGNS TAB - Template-based with Neptune */}
             {activeTab === 'campaigns' && (
               <Card className="p-8 shadow-lg border-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Left: Campaigns List */}
+                  {/* Left: Campaign Templates */}
                   <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     {/* Header */}
                     <div className="px-6 py-4 border-b bg-gradient-to-r from-pink-50 to-pink-100/50 flex-shrink-0">
@@ -946,401 +1078,252 @@ Be creative, engaging, and write content that resonates!`;
                             <Megaphone className="h-5 w-5" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-[15px] text-gray-900">Campaigns</h3>
-                            <p className="text-[13px] text-pink-600 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></span>
-                              {filteredCampaigns.length} campaigns
-                            </p>
+                            <h2 className="font-semibold text-gray-900">Campaign Templates</h2>
+                            <p className="text-xs text-gray-500">{campaignTemplates.length} campaign types</p>
                           </div>
                         </div>
-                        <Button
-                          size="icon"
-                          onClick={() => setShowCampaignChat(true)}
-                          className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
-                          aria-label="Add campaign"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
                       </div>
-
-                      {/* Search */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search campaigns..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9 h-9 text-sm bg-white dark:bg-card"
-                          aria-label="Search campaigns"
-                        />
+                      
+                      {/* Category Filter */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {campaignCategories.map((category) => (
+                          <button
+                            key={category}
+                            onClick={() => setCampaignCategoryFilter(category)}
+                            className={`px-2.5 py-1 text-xs rounded-full transition-all ${
+                              campaignCategoryFilter === category
+                                ? 'bg-pink-500 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                            }`}
+                          >
+                            {category}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
-                    {/* Campaigns List */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      {filteredCampaigns.length > 0 ? (
-                        filteredCampaigns.map((campaign) => (
-                          <div
-                            key={campaign.id}
-                            onClick={() => setSelectedCampaign(campaign)}
-                            className="p-4 rounded-lg border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-sm font-semibold text-gray-900">{campaign.name}</h4>
-                              <Badge
-                                variant="outline"
-                                className={`text-[10px] px-2 py-0.5 ${
-                                  campaign.status === 'active'
-                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                    : campaign.status === 'paused'
-                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : 'bg-slate-50 text-slate-600 border-slate-200'
-                                }`}
-                              >
-                                {campaign.status}
-                              </Badge>
+                    {/* Template List */}
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                      {filteredCampaignTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => {
+                            setSelectedCampaignTemplate(template.id);
+                            // Add template selection message
+                            setCampaignNeptuneChatMessages(prev => [...prev, {
+                              id: Date.now().toString(),
+                              role: 'assistant',
+                              content: `Great choice! Let's plan a **${template.name}** campaign. ${
+                                template.category === 'Launch' 
+                                  ? "What are you launching? Tell me about the product/brand/event and your target audience."
+                                  : template.category === 'Awareness'
+                                  ? "What's your brand story? Who do you want to reach and what message should resonate with them?"
+                                  : template.category === 'Lead Gen'
+                                  ? "What's your offer or lead magnet? Who's your ideal customer and what channels work best for them?"
+                                  : template.category === 'Sales'
+                                  ? "What product/service are you promoting? What's the discount or offer, and what's your timeline?"
+                                  : template.category === 'Retention'
+                                  ? "Tell me about your customer base. What segment are you targeting and what value can you offer them?"
+                                  : template.category === 'Social'
+                                  ? "What's the campaign about? Which platforms do you want to focus on?"
+                                  : template.category === 'ABM'
+                                  ? "Which accounts are you targeting? What's your value proposition for them?"
+                                  : "Tell me more about your campaign goals!"
+                              }`,
+                              timestamp: new Date(),
+                            }]);
+                          }}
+                          className={`w-full p-3 rounded-lg border text-left transition-all hover:shadow-md ${
+                            selectedCampaignTemplate === template.id
+                              ? 'border-pink-500 bg-pink-50 shadow-sm'
+                              : 'border-gray-200 hover:border-pink-300 bg-white'
+                          }`}
+                          aria-label={`Select ${template.name} template`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg ${template.color} text-white flex-shrink-0`}>
+                              <template.icon className="h-4 w-4" />
                             </div>
-                            <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mt-2">
-                              <div>
-                                <span className="font-medium">Budget:</span> {formatCurrency(campaign.budget)}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium text-gray-900">{template.name}</p>
+                                <Badge variant="outline" className="text-[10px] px-1.5">
+                                  {template.category}
+                                </Badge>
                               </div>
-                              <div>
-                                <span className="font-medium">ROI:</span> {campaign.roi}%
-                              </div>
+                              <p className="text-xs text-gray-500 mt-0.5">{template.description}</p>
                             </div>
                           </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-12 px-6">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center mx-auto mb-4">
-                            <Megaphone className="h-7 w-7 text-pink-600" />
-                          </div>
-                          <h3 className="font-semibold text-gray-900 mb-2">Launch your first campaign</h3>
-                          <p className="text-sm text-muted-foreground mb-4 max-w-[200px] mx-auto">
-                            Create targeted marketing campaigns to reach your audience.
-                          </p>
-                          <Button size="sm" className="gap-2 bg-pink-600 hover:bg-pink-700">
-                            <Plus className="h-4 w-4" />
-                            New Campaign
-                          </Button>
-                        </div>
-                      )}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Right: Campaign Chat or Details */}
+                  {/* Right: Neptune Chat */}
                   <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                    {showCampaignChat ? (
-                      <>
-                        {/* Chat Header */}
-                        <div className="px-6 py-4 border-b bg-gradient-to-r from-pink-50 to-pink-100/50 flex items-center justify-between flex-shrink-0">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 text-white">
-                              <Sparkles className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-sm text-gray-900">AI Campaign Setup</h3>
-                              <p className="text-xs text-pink-600">Guided campaign creation</p>
-                            </div>
-                          </div>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              setShowCampaignChat(false);
-                              setChatMessages([{
-                                id: '1',
-                                role: 'assistant',
-                                content: "Hi! I'm here to help you create a new marketing campaign. Let's start with the basics - what's the goal of this campaign? (e.g., product launch, brand awareness, lead generation)",
-                                timestamp: new Date(),
-                              }]);
-                              setChatInput("");
-                              setCampaignData({
-                                name: "",
-                                goal: "",
-                                budget: "",
-                                channels: [],
-                                startDate: "",
-                                endDate: "",
-                                targetAudience: "",
-                              });
-                            }}
-                            className="h-7 w-7"
-                            aria-label="Close chat"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                    {/* Chat Header */}
+                    <div className="px-6 py-4 border-b bg-gradient-to-r from-pink-50 to-pink-100/50 flex items-center justify-between flex-shrink-0">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 text-white">
+                          <Sparkles className="h-4 w-4" />
                         </div>
-
-                        {/* Chat Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                          {chatMessages.map((message) => (
-                            <div
-                              key={message.id}
-                              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            >
-                              <div
-                                className={`max-w-[80%] rounded-lg p-3 ${
-                                  message.role === 'user'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-slate-100 text-gray-900'
-                                }`}
-                              >
-                                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                              </div>
-                            </div>
-                ))}
-              </div>
-
-                        {/* Chat Input */}
-                        <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0">
-                          <Input
-                            placeholder="Type your message..."
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
-                            disabled={isLoadingChat}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey && !isLoadingChat) {
-                                e.preventDefault();
-                                handleSendMessage();
-                              }
-                            }}
-                            className="flex-1 disabled:opacity-50"
-                            aria-label="Message input"
-                          />
-                          <Button
-                            size="icon"
-                            onClick={handleSendMessage}
-                            disabled={!chatInput.trim() || isLoadingChat}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                            aria-label="Send message"
-                          >
-                            {isLoadingChat ? (
-                              <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <Send className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </>
-                    ) : selectedCampaign ? (
-                      <div className="flex-1 overflow-y-auto p-6">
-                        {/* Campaign Header */}
-                        <div className="mb-6">
-                          <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-xl font-bold text-gray-900">{selectedCampaign.name}</h2>
-                            <Badge
-                              className={`${
-                                selectedCampaign.status === 'active'
-                                  ? 'bg-green-100 text-green-700'
-                                  : selectedCampaign.status === 'paused'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              {selectedCampaign.status}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600">Campaign Briefing</p>
-                        </div>
-
-                        {/* Quick Stats */}
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                          <div className="bg-blue-50 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-blue-600 mb-1">
-                              <DollarSign className="h-4 w-4" />
-                              <span className="text-xs font-medium">Budget</span>
-                            </div>
-                            <p className="text-lg font-bold text-gray-900">
-                              {formatCurrency(selectedCampaign.budget)}
-                            </p>
-                          </div>
-                          <div className="bg-purple-50 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-purple-600 mb-1">
-                              <Target className="h-4 w-4" />
-                              <span className="text-xs font-medium">ROI Target</span>
-                            </div>
-                            <p className="text-lg font-bold text-gray-900">
-                              {selectedCampaign.roi}%
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Campaign Period */}
-                        <div className="mb-6">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-3">Campaign Period</h3>
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <div className="flex items-center gap-4 text-sm">
-                              <div className="flex items-center gap-2 text-gray-700">
-                                <Clock className="h-4 w-4 text-gray-500" />
-                                <div>
-                                  <p className="text-xs text-gray-500">Start Date</p>
-                                  <p className="font-medium">
-                                    {selectedCampaign.startDate
-                                      ? formatDate(selectedCampaign.startDate)
-                                      : 'Not set'}
-                                  </p>
-                                </div>
-                              </div>
-                              <span className="text-gray-400">→</span>
-                              <div>
-                                <p className="text-xs text-gray-500">End Date</p>
-                                <p className="font-medium">
-                                  {selectedCampaign.endDate
-                                    ? formatDate(selectedCampaign.endDate)
-                                    : 'Ongoing'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Marketing Channels */}
-                        <div className="mb-6">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-3">Marketing Channels</h3>
-                          <div className="space-y-2">
-                            {selectedCampaign.channels.map((channel) => (
-                              <div key={channel} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                  {channel === 'email' && <Mail className="h-4 w-4 text-blue-600" />}
-                                  {channel === 'social' && <Share2 className="h-4 w-4 text-purple-600" />}
-                                  {channel === 'ads' && <Target className="h-4 w-4 text-orange-600" />}
-                                  <span className="text-sm font-medium capitalize">{channel}</span>
-                                </div>
-                                <Badge variant="outline" className="text-xs bg-white">
-                                  Active
-                                </Badge>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Campaign Assets */}
-                        <div className="mb-6">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-3">Campaign Assets</h3>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded bg-blue-100 flex items-center justify-center">
-                                  <FileText className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium">Email Templates</p>
-                                  <p className="text-xs text-gray-500">3 templates</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded bg-purple-100 flex items-center justify-center">
-                                  <ImageIcon className="h-4 w-4 text-purple-600" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium">Social Media Graphics</p>
-                                  <p className="text-xs text-gray-500">12 images</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded bg-green-100 flex items-center justify-center">
-                                  <Video className="h-4 w-4 text-green-600" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium">Video Content</p>
-                                  <p className="text-xs text-gray-500">2 videos</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Target Demographics */}
-                        <div className="mb-6">
-                          <h3 className="text-sm font-semibold text-gray-900 mb-3">Target Demographics</h3>
-                          <div className="bg-slate-50 rounded-lg p-4 space-y-4">
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Age Range</span>
-                                <span className="text-sm font-medium">25-45 years</span>
-                              </div>
-                            </div>
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Gender</span>
-                                <span className="text-sm font-medium">All</span>
-                              </div>
-                            </div>
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Location</span>
-                                <span className="text-sm font-medium">United States</span>
-                              </div>
-                            </div>
-                            <div>
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Interests</span>
-                              </div>
-                              <div className="flex flex-wrap gap-1.5">
-                                <Badge variant="outline" className="text-xs">Technology</Badge>
-                                <Badge variant="outline" className="text-xs">Business</Badge>
-                                <Badge variant="outline" className="text-xs">Productivity</Badge>
-                                <Badge variant="outline" className="text-xs">SaaS</Badge>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Campaign Goals */}
                         <div>
-                          <h3 className="text-sm font-semibold text-gray-900 mb-3">Campaign Goals</h3>
-                          <div className="space-y-2">
-                            <div className="flex items-start gap-2 p-3 bg-green-50 rounded-lg">
-                              <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">Generate 250+ qualified leads</p>
-                                <p className="text-xs text-gray-600">Primary objective</p>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg">
-                              <Target className="h-4 w-4 text-blue-600 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">Achieve 125% ROI</p>
-                                <p className="text-xs text-gray-600">Financial target</p>
-                              </div>
-                            </div>
-                            <div className="flex items-start gap-2 p-3 bg-purple-50 rounded-lg">
-                              <TrendingUp className="h-4 w-4 text-purple-600 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">Increase brand awareness</p>
-                                <p className="text-xs text-gray-600">Secondary objective</p>
-                              </div>
-                            </div>
-                          </div>
+                          <h3 className="font-semibold text-sm text-gray-900">Neptune Campaign Planner</h3>
+                          <p className="text-xs text-pink-600">
+                            {selectedCampaignTemplate 
+                              ? `Planning: ${campaignTemplates.find(t => t.id === selectedCampaignTemplate)?.name}`
+                              : 'Ready to launch your next campaign'}
+                          </p>
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center p-8">
-                        <div className="text-center max-w-sm">
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                            <Megaphone className="h-8 w-8 text-slate-400" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          setCampaignNeptuneChatMessages([{
+                            id: '1',
+                            role: 'assistant',
+                            content: "Hey! 👋 I'm Neptune. Ready to launch a powerful marketing campaign? Pick a template from the list, or tell me your goals — I'll help you plan the strategy, channels, budget, and timeline!",
+                            timestamp: new Date(),
+                          }]);
+                          setSelectedCampaignTemplate(null);
+                        }}
+                        className="h-7 w-7"
+                        aria-label="Start new conversation"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Chat Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
+                      {campaignNeptuneChatMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          {message.role === 'assistant' && (
+                            <Avatar className="h-7 w-7 shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-pink-600 to-pink-700 text-white">
+                                <Sparkles className="h-3.5 w-3.5" />
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                          <div className={`flex-1 min-w-0 ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
+                            <div
+                              className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] ${
+                                message.role === 'user'
+                                  ? 'bg-pink-500 text-white ml-auto rounded-br-md'
+                                  : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                            </div>
+                            <span className="text-[10px] text-gray-400 mt-1 block">
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
-                          <h3 className="text-base font-semibold text-gray-900 mb-2">Select a campaign</h3>
-                          <p className="text-sm text-gray-500 mb-4">
-                            Choose a campaign from the list to view detailed information, performance metrics, and analytics.
-                          </p>
-                          <Button
-                            onClick={() => setShowCampaignChat(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            Get Started!
-                          </Button>
+                          {message.role === 'user' && (
+                            <Avatar className="h-7 w-7 shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-700 text-white text-xs">
+                                U
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </div>
+                      ))}
+                      {isCreatingCampaign && (
+                        <div className="flex gap-2">
+                          <Avatar className="h-7 w-7 shrink-0">
+                            <AvatarFallback className="bg-gradient-to-br from-pink-600 to-pink-700 text-white">
+                              <Sparkles className="h-3.5 w-3.5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-white shadow-sm border border-gray-100">
+                            <div className="flex gap-1">
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                className="h-2 w-2 bg-pink-400 rounded-full"
+                              />
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+                                className="h-2 w-2 bg-pink-400 rounded-full"
+                              />
+                              <motion.div
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+                                className="h-2 w-2 bg-pink-400 rounded-full"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={campaignMessagesEndRef} />
+                    </div>
+
+                    {/* Quick Suggestions - Only show at start */}
+                    {campaignNeptuneChatMessages.length === 1 && !selectedCampaignTemplate && (
+                      <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+                        <p className="text-[10px] text-gray-500 mb-2">Quick starts:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            "Plan a product launch campaign",
+                            "Create a lead generation funnel",
+                            "Design a seasonal promotion",
+                            "Build a brand awareness strategy"
+                          ].map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setCampaignNeptuneChatInput(suggestion);
+                                setTimeout(() => handleSendCampaignNeptuneMessage(), 100);
+                              }}
+                              className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-pink-50 hover:border-pink-300 hover:text-pink-700 transition-all"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     )}
+
+                    {/* Chat Input */}
+                    <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
+                      <Input
+                        placeholder={selectedCampaignTemplate 
+                          ? `Describe your ${campaignTemplates.find(t => t.id === selectedCampaignTemplate)?.name} goals...`
+                          : "What campaign do you want to create?"}
+                        value={campaignNeptuneChatInput}
+                        onChange={(e) => setCampaignNeptuneChatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey && !isCreatingCampaign) {
+                            e.preventDefault();
+                            handleSendCampaignNeptuneMessage();
+                          }
+                        }}
+                        className="flex-1 rounded-full"
+                        disabled={isCreatingCampaign}
+                        aria-label="Type message to Neptune"
+                      />
+                      <Button
+                        size="icon"
+                        onClick={handleSendCampaignNeptuneMessage}
+                        disabled={!campaignNeptuneChatInput.trim() || isCreatingCampaign}
+                        className="bg-pink-500 hover:bg-pink-600 rounded-full"
+                        aria-label="Send message"
+                      >
+                        {isCreatingCampaign ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
-          </Card>
+              </Card>
             )}
 
             {/* CONTENT TAB - Template-based with Neptune */}
