@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -346,10 +347,12 @@ export default function ActivityPage() {
             {isLive ? <Pause className="h-4 w-4 mr-1.5" /> : <Play className="h-4 w-4 mr-1.5" />}
             {isLive ? "Pause" : "Resume"}
           </Button>
-          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Agent
-          </Button>
+          <Link href="/studio">
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Agent
+            </Button>
+          </Link>
         </div>
       </div>
 
