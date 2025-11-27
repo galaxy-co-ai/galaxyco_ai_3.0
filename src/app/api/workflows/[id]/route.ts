@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agents, agentExecutionLogs } from '@/db/schema';
+import { agents, agentExecutions } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -160,8 +160,8 @@ export async function DELETE(
 
     // Delete execution logs first
     await db
-      .delete(agentExecutionLogs)
-      .where(eq(agentExecutionLogs.agentId, id));
+      .delete(agentExecutions)
+      .where(eq(agentExecutions.agentId, id));
 
     // Delete the agent/workflow
     await db

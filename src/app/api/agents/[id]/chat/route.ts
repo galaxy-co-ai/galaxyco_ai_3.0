@@ -49,10 +49,10 @@ export async function GET(
       orderBy: [desc(aiConversations.lastMessageAt)],
     });
 
-    // Find conversation for this specific agent
+    // Find conversation for this specific agent (using title or context.agentId)
     const agentConversation = conversations.find(c => 
       c.title?.startsWith(`Agent Chat: ${agent.name}`) || 
-      (c.metadata as any)?.agentId === agentId
+      (c.context as any)?.agentId === agentId
     );
 
     if (!agentConversation) {
@@ -174,7 +174,10 @@ export async function POST(
           title: `Agent Chat: ${agent.name}`,
           lastMessageAt: new Date(),
           messageCount: 0,
-          metadata: { agentId: agent.id },
+          context: { 
+            page: `/agents/${agent.id}`,
+            selectedItems: { agentId: agent.id },
+          },
         })
         .returning();
 
@@ -209,20 +212,30 @@ export async function POST(
     
     systemPrompt += `\n\nYou are currently in a chat interface where users can interact with you directly. Be helpful, concise, and conversational.`;
 
-    // Determine agent capabilities based on type
+    // Determine agent capabilities based on type (matching agentTypeEnum)
     const agentType = agent.type;
-    if (agentType === 'email') {
-      systemPrompt += `\n\nYou specialize in email management, drafting responses, and organizing communications.`;
-    } else if (agentType === 'sales') {
-      systemPrompt += `\n\nYou specialize in sales, lead qualification, and customer relationship management.`;
-    } else if (agentType === 'meeting') {
-      systemPrompt += `\n\nYou specialize in meeting preparation, scheduling, and generating briefs.`;
+    if (agentType === 'scope') {
+      systemPrompt += `\n\nYou specialize in project scoping, requirements gathering, and planning.`;
+    } else if (agentType === 'call') {
+      systemPrompt += `\n\nYou specialize in call management, scheduling, and follow-ups.`;
+    } else if (agentType === 'note') {
+      systemPrompt += `\n\nYou specialize in note-taking, summarization, and documentation.`;
+    } else if (agentType === 'task') {
+      systemPrompt += `\n\nYou specialize in task management, prioritization, and workflow automation.`;
+    } else if (agentType === 'roadmap') {
+      systemPrompt += `\n\nYou specialize in roadmap planning, milestone tracking, and project timelines.`;
     } else if (agentType === 'content') {
       systemPrompt += `\n\nYou specialize in content creation, writing, and marketing materials.`;
-    } else if (agentType === 'research') {
-      systemPrompt += `\n\nYou specialize in research, data analysis, and generating insights.`;
-    } else if (agentType === 'support') {
-      systemPrompt += `\n\nYou specialize in customer support, answering questions, and resolving issues.`;
+    } else if (agentType === 'browser') {
+      systemPrompt += `\n\nYou specialize in web browsing, research, and data extraction.`;
+    } else if (agentType === 'knowledge') {
+      systemPrompt += `\n\nYou specialize in knowledge management, documentation, and information retrieval.`;
+    } else if (agentType === 'code') {
+      systemPrompt += `\n\nYou specialize in code review, development assistance, and technical documentation.`;
+    } else if (agentType === 'data') {
+      systemPrompt += `\n\nYou specialize in data analysis, reporting, and generating insights.`;
+    } else if (agentType === 'security') {
+      systemPrompt += `\n\nYou specialize in security analysis, compliance, and risk assessment.`;
     }
 
     // Call OpenAI
@@ -318,7 +331,7 @@ export async function DELETE(
 
     const agentConversation = conversations.find(c => 
       c.title?.startsWith(`Agent Chat: ${agent.name}`) || 
-      (c.metadata as any)?.agentId === agentId
+      c.context?.selectedItems?.agentId === agentId
     );
 
     if (agentConversation) {

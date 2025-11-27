@@ -78,12 +78,13 @@ export async function POST(request: Request) {
       const itemMetadata = new Map<string, any>();
 
       for (const chunk of similarChunks) {
-        const itemId = chunk.metadata?.itemId;
-        if (itemId) {
+        const metadata = chunk.metadata as Record<string, unknown> | undefined;
+        const itemId = metadata?.itemId;
+        if (typeof itemId === 'string') {
           const currentScore = itemScores.get(itemId) || 0;
           if (chunk.score && chunk.score > currentScore) {
             itemScores.set(itemId, chunk.score);
-            itemMetadata.set(itemId, chunk.metadata);
+            itemMetadata.set(itemId, metadata);
           }
         }
       }

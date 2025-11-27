@@ -7,10 +7,15 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
+// Must match agentTypeEnum in schema.ts
 const workflowSchema = z.object({
   name: z.string().min(1, 'Workflow name is required'),
   description: z.string().optional(),
-  type: z.enum(['email', 'sales', 'meeting', 'data', 'content', 'research', 'support', 'custom']).default('custom'),
+  type: z.enum([
+    'scope', 'call', 'email', 'note', 'task', 'roadmap', 'content', 'custom',
+    'browser', 'cross-app', 'knowledge', 'sales', 'trending', 'research',
+    'meeting', 'code', 'data', 'security'
+  ]).default('custom'),
   nodes: z.array(z.any()).optional(),
   edges: z.array(z.any()).optional(),
   trigger: z.any().optional(),

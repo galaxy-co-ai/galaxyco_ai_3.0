@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agents, agentExecutionLogs } from '@/db/schema';
+import { agents, agentExecutions } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -52,7 +52,7 @@ export async function POST(
 
     // Create execution log
     const [executionLog] = await db
-      .insert(agentExecutionLogs)
+      .insert(agentExecutions)
       .values({
         agentId: agent.id,
         workspaceId,
@@ -116,14 +116,14 @@ export async function POST(
 
       // Update execution log with success
       const [updatedLog] = await db
-        .update(agentExecutionLogs)
+        .update(agentExecutions)
         .set({
           status: 'completed',
           output: { steps: executionSteps },
           durationMs,
           completedAt: new Date(),
         })
-        .where(eq(agentExecutionLogs.id, executionLog.id))
+        .where(eq(agentExecutions.id, executionLog.id))
         .returning();
 
       // Update agent execution count
@@ -153,14 +153,14 @@ export async function POST(
       
       // Update execution log with failure
       await db
-        .update(agentExecutionLogs)
+        .update(agentExecutions)
         .set({
           status: 'failed',
           error: { message: executionError instanceof Error ? executionError.message : 'Unknown error' },
           durationMs,
           completedAt: new Date(),
         })
-        .where(eq(agentExecutionLogs.id, executionLog.id));
+        .where(eq(agentExecutions.id, executionLog.id));
 
       throw executionError;
     }
