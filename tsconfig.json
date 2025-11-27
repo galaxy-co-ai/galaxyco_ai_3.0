@@ -35,6 +35,8 @@
     "Figma Make Project",
     "src/legacy-pages",
     "src/App.tsx",
-    "src/main.tsx"
+    "src/main.tsx",
+    "tests",
+    "vitest.config.ts"
   ]
 }

@@ -214,7 +214,7 @@ export function NodeInspector({ node, onClose, onTest }: NodeInspectorProps) {
                       <Label htmlFor="auto-retry" className="text-xs font-normal">Auto Retry</Label>
                       <p className="text-xs text-muted-foreground">Retry failed executions</p>
                     </div>
-                    <Switch id="auto-retry" defaultChecked />
+                    <Switch aria-label="Auto retry" defaultChecked />
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -222,7 +222,7 @@ export function NodeInspector({ node, onClose, onTest }: NodeInspectorProps) {
                       <Label htmlFor="logging" className="text-xs font-normal">Detailed Logging</Label>
                       <p className="text-xs text-muted-foreground">Log all data inputs/outputs</p>
                     </div>
-                    <Switch id="logging" defaultChecked />
+                    <Switch aria-label="Logging" defaultChecked />
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -230,7 +230,7 @@ export function NodeInspector({ node, onClose, onTest }: NodeInspectorProps) {
                       <Label htmlFor="notifications" className="text-xs font-normal">Error Notifications</Label>
                       <p className="text-xs text-muted-foreground">Alert on failures</p>
                     </div>
-                    <Switch id="notifications" />
+                    <Switch aria-label="Notifications" />
                   </div>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export function NodeInspector({ node, onClose, onTest }: NodeInspectorProps) {
 
                   <div>
                     <Label htmlFor="attachment" className="text-xs">Has Attachment</Label>
-                    <Switch id="attachment" defaultChecked className="mt-1.5" />
+                    <Switch aria-label="Attachment" defaultChecked className="mt-1.5" />
                   </div>
                 </div>
               </div>

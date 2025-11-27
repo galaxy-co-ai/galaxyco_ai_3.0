@@ -1,3 +1,5 @@
+"use client";
+
 import { OnboardingFlow } from "@/components/galaxy/onboarding-flow";
 
 export default function OnboardingPage() {

@@ -534,16 +534,6 @@ export default function LunarLabs() {
                         <ContentStage 
                           topicId={selectedStep.topicId || ''} 
                           activeDemoId={null}
-                          onCompleteTopic={() => handleCompleteStep(selectedStep.id)}
-                          isCompleted={completedSteps.includes(selectedStep.id)}
-                          suggestions={[]}
-                          onSelectSuggestion={() => {}}
-                          quickActions={null}
-                          role="sales"
-                          path={null}
-                          completedTopics={[]}
-                          isFirstTimeUser={false}
-                          onStartPath={() => {}}
                         />
                       </div>
                     ) : (
