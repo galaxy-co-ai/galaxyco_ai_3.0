@@ -77,10 +77,8 @@ export async function POST(request: Request) {
         type: data.type,
         status: 'draft',
         config: {
-          nodes: data.nodes || [],
-          edges: data.edges || [],
-          trigger: data.trigger || undefined,
           systemPrompt: data.systemPrompt || undefined,
+          triggers: data.trigger ? [{ type: 'manual', config: data.trigger }] : undefined,
         },
       })
       .returning();
