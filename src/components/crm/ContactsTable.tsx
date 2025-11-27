@@ -11,12 +11,14 @@ interface ContactsTableProps {
   contacts: Contact[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onAddNew?: () => void;
 }
 
 export default function ContactsTable({
   contacts,
   selectedId,
   onSelect,
+  onAddNew,
 }: ContactsTableProps) {
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase().slice(0, 2);
@@ -34,7 +36,11 @@ export default function ContactsTable({
             Contacts are the people you do business with. Import or add them here.
           </p>
           <div className="flex flex-col gap-2">
-            <Button size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700">
+            <Button 
+              size="sm" 
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+              onClick={onAddNew}
+            >
               <UserPlus className="h-4 w-4" />
               Add Contact
             </Button>

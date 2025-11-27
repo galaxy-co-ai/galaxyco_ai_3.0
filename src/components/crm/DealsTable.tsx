@@ -10,6 +10,7 @@ interface DealsTableProps {
   deals: Deal[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onAddNew?: () => void;
   formatDate: (date: Date | null) => string;
   formatCurrency: (cents: number) => string;
 }
@@ -18,6 +19,7 @@ export default function DealsTable({
   deals,
   selectedId,
   onSelect,
+  onAddNew,
   formatDate,
   formatCurrency,
 }: DealsTableProps) {
@@ -52,7 +54,11 @@ export default function DealsTable({
             Track opportunities from first contact to closed-won. See your revenue grow!
           </p>
           <div className="flex flex-col gap-2">
-            <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700">
+            <Button 
+              size="sm" 
+              className="gap-2 bg-green-600 hover:bg-green-700"
+              onClick={onAddNew}
+            >
               <Plus className="h-4 w-4" />
               Create Deal
             </Button>

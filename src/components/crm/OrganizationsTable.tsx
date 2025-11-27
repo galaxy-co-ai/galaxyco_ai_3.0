@@ -11,6 +11,7 @@ interface OrganizationsTableProps {
   organizations: Organization[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onAddNew?: () => void;
   formatDate: (date: Date | null) => string;
   formatCurrency: (cents: number) => string;
 }
@@ -19,6 +20,7 @@ export default function OrganizationsTable({
   organizations,
   selectedId,
   onSelect,
+  onAddNew,
   formatDate,
   formatCurrency,
 }: OrganizationsTableProps) {
@@ -53,7 +55,11 @@ export default function OrganizationsTable({
             Organizations help you manage company relationships and track multiple contacts per account.
           </p>
           <div className="flex flex-col gap-2">
-            <Button size="sm" className="gap-2 bg-purple-600 hover:bg-purple-700">
+            <Button 
+              size="sm" 
+              className="gap-2 bg-purple-600 hover:bg-purple-700"
+              onClick={onAddNew}
+            >
               <Plus className="h-4 w-4" />
               Add Organization
             </Button>

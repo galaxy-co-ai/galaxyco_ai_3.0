@@ -786,6 +786,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       leads={filteredLeads}
                       selectedId={selectedLead}
                       onSelect={handleLeadClick}
+                      onAddNew={() => setShowAddLeadDialog(true)}
                       formatDate={formatDate}
                       formatCurrency={formatCurrency}
                     />
@@ -1021,6 +1022,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       organizations={filteredOrganizations}
                       selectedId={selectedOrg}
                       onSelect={handleOrgClick}
+                      onAddNew={() => setShowAddOrgDialog(true)}
                       formatDate={formatDate}
                       formatCurrency={formatCurrency}
                     />
@@ -1197,6 +1199,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       contacts={filteredContacts}
                       selectedId={selectedContact}
                       onSelect={handleContactClick}
+                      onAddNew={() => setShowAddContactDialog(true)}
                     />
                   </div>
                 </div>
@@ -1354,6 +1357,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       deals={filteredDeals}
                       selectedId={selectedDeal}
                       onSelect={handleDealClick}
+                      onAddNew={() => setShowAddDealDialog(true)}
                       formatDate={formatDate}
                       formatCurrency={formatCurrency}
                     />

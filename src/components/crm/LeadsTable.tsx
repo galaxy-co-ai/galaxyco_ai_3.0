@@ -11,6 +11,7 @@ interface LeadsTableProps {
   leads: Lead[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onAddNew?: () => void;
   formatDate: (date: Date | null) => string;
   formatCurrency: (cents: number) => string;
 }
@@ -19,6 +20,7 @@ export default function LeadsTable({
   leads,
   selectedId,
   onSelect,
+  onAddNew,
   formatDate,
   formatCurrency,
 }: LeadsTableProps) {
@@ -62,12 +64,16 @@ export default function LeadsTable({
             Add your first lead to begin tracking prospects and growing your business.
           </p>
           <div className="flex flex-col gap-2">
-            <Button size="sm" className="gap-2 bg-blue-600 hover:bg-blue-700">
+            <Button 
+              size="sm" 
+              className="gap-2 bg-blue-600 hover:bg-blue-700"
+              onClick={onAddNew}
+            >
               <UserPlus className="h-4 w-4" />
               Add Your First Lead
             </Button>
             <p className="text-xs text-muted-foreground">
-              Or ask Neptune: "Create a lead for..."
+              Or ask Neptune: &quot;Create a lead for...&quot;
             </p>
           </div>
         </div>
