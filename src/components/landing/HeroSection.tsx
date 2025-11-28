@@ -195,26 +195,23 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-12 lg:mb-16"
+            className="flex flex-col sm:flex-row gap-3 justify-center mb-12 lg:mb-16"
           >
-            <Button
-              size="lg"
+            <button
               onClick={onEnterApp}
-              className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-6 text-lg rounded-xl font-semibold group shadow-2xl shadow-white/20"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-105 group"
               aria-label="Get started with GalaxyCo AI for free"
             >
               Start Free Trial
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-            </Button>
-            <Button
-              size="lg"
-              variant="ghost"
-              className="text-white hover:bg-white/10 px-8 py-6 text-lg rounded-xl border border-white/20 group"
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+            </button>
+            <button
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white/10 text-white/90 border border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-sm group"
               aria-label="Watch a demo video of the platform"
             >
-              <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
+              <Play className="h-4 w-4 group-hover:scale-110 transition-transform" aria-hidden="true" />
               Watch Demo
-            </Button>
+            </button>
           </motion.div>
 
           {/* Stats Row */}
