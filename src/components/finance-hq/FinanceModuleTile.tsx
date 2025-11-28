@@ -1,0 +1,268 @@
+"use client";
+
+import * as React from "react";
+import {
+  ChevronRight,
+  BarChart3,
+  LineChart,
+  PieChart,
+  List,
+  DollarSign,
+  TrendingUp,
+  Receipt,
+  ShoppingCart,
+  CreditCard,
+  type LucideIcon,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import {
+  isChartData,
+  isListData,
+  isMetricData,
+} from "@/types/finance";
+import type {
+  FinanceModule,
+  FinanceObject,
+  FinanceProvider,
+  ChartData,
+  ListData,
+  MetricData,
+} from "@/types/finance";
+
+/**
+ * Map icon names to Lucide icon components
+ */
+const iconMap: Record<string, LucideIcon> = {
+  BarChart3,
+  LineChart,
+  PieChart,
+  List,
+  DollarSign,
+  TrendingUp,
+  Receipt,
+  ShoppingCart,
+  CreditCard,
+};
+
+function getIconByName(name: string): LucideIcon {
+  return iconMap[name] || BarChart3;
+}
+
+/**
+ * Get color classes for each finance source
+ */
+function getSourceColors(source: FinanceProvider) {
+  const colors = {
+    quickbooks: {
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800",
+    },
+    stripe: {
+      iconBg: "bg-indigo-100 dark:bg-indigo-900/30",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      badgeClass: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800",
+    },
+    shopify: {
+      iconBg: "bg-lime-100 dark:bg-lime-900/30",
+      iconColor: "text-lime-600 dark:text-lime-400",
+      badgeClass: "bg-lime-50 text-lime-700 border-lime-200 dark:bg-lime-900/20 dark:text-lime-400 dark:border-lime-800",
+    },
+  };
+  return colors[source];
+}
+
+/**
+ * Format relative time string
+ */
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+/**
+ * Mini chart visualization for module preview
+ */
+function ModuleChart({ data }: { data: ChartData }) {
+  const maxValue = Math.max(...data.dataPoints.map((p) => p.value));
+
+  return (
+    <div className="flex items-end gap-1 h-full pt-2">
+      {data.dataPoints.slice(-12).map((point, i) => (
+        <div
+          key={i}
+          className="flex-1 bg-primary/20 rounded-t transition-all hover:bg-primary/40"
+          style={{ height: `${(point.value / maxValue) * 100}%`, minHeight: "4px" }}
+          title={`${point.label}: ${point.value}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * List preview for module
+ */
+function ModuleList({ items }: { items: ListData["items"] }) {
+  return (
+    <div className="space-y-2">
+      {items.slice(0, 3).map((item) => (
+        <div
+          key={item.id}
+          className="flex items-center justify-between text-sm"
+        >
+          <span className="truncate text-foreground">{item.title}</span>
+          {item.amount !== undefined && (
+            <span className="text-muted-foreground font-mono">
+              ${item.amount.toLocaleString()}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Large metric display for module
+ */
+function ModuleMetric({ value, formattedValue, trend }: MetricData) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full">
+      <span className="text-3xl font-bold text-foreground">{formattedValue}</span>
+      {trend !== undefined && (
+        <span
+          className={cn(
+            "text-sm flex items-center gap-1 mt-1",
+            trend >= 0 ? "text-green-600" : "text-red-600"
+          )}
+        >
+          <TrendingUp
+            className={cn("h-3 w-3", trend < 0 && "rotate-180")}
+            aria-hidden="true"
+          />
+          {trend >= 0 ? "+" : ""}
+          {trend}%
+        </span>
+      )}
+    </div>
+  );
+}
+
+interface FinanceModuleTileProps {
+  module: FinanceModule;
+  onClick: (item: FinanceObject) => void;
+}
+
+/**
+ * Individual module card with chart or list preview.
+ * Clickable to open detail drawer.
+ */
+export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
+  const Icon = getIconByName(module.icon);
+  const sourceColors = getSourceColors(module.source);
+
+  const handleClick = () => {
+    onClick({ type: "module", id: module.id, data: module as unknown as Record<string, unknown> });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
+  return (
+    <Card
+      className="p-6 rounded-2xl shadow-sm border hover:shadow-md transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`View ${module.title} details from ${module.source}`}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className={cn("p-2 rounded-lg", sourceColors.iconBg)}>
+            <Icon className={cn("h-5 w-5", sourceColors.iconColor)} aria-hidden="true" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">{module.title}</h3>
+            <Badge
+              variant="outline"
+              className={cn("text-xs border capitalize", sourceColors.badgeClass)}
+            >
+              {module.source}
+            </Badge>
+          </div>
+        </div>
+        <ChevronRight
+          className="h-5 w-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors"
+          aria-hidden="true"
+        />
+      </div>
+
+      {/* Module Content - varies by type */}
+      <div className="h-32">
+        {module.type === "chart" && isChartData(module.data) && (
+          <ModuleChart data={module.data} />
+        )}
+        {module.type === "list" && isListData(module.data) && (
+          <ModuleList items={module.data.items} />
+        )}
+        {module.type === "metric" && isMetricData(module.data) && (
+          <ModuleMetric {...module.data} />
+        )}
+      </div>
+
+      <div className="text-xs text-muted-foreground mt-4">
+        Updated {formatRelativeTime(module.lastUpdated)}
+      </div>
+    </Card>
+  );
+}
+
+/**
+ * Loading skeleton for FinanceModuleTile
+ */
+export function FinanceModuleTileSkeleton() {
+  return (
+    <Card className="p-6 rounded-2xl shadow-sm border">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-9 rounded-lg" />
+          <div>
+            <Skeleton className="h-5 w-32 mb-2" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </div>
+        <Skeleton className="h-5 w-5 rounded" />
+      </div>
+      <div className="h-32 flex items-end gap-1 pt-2">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton
+            key={i}
+            className="flex-1 rounded-t"
+            style={{ height: `${30 + Math.random() * 70}%` }}
+          />
+        ))}
+      </div>
+      <Skeleton className="h-3 w-24 mt-4" />
+    </Card>
+  );
+}
+

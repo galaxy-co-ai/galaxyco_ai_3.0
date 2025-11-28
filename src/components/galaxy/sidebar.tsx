@@ -17,6 +17,7 @@ import {
   Bot,
   PanelLeftClose,
   PanelLeftOpen,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ const mainNavItems = [
   { icon: Workflow, label: "Studio", href: "/studio", id: "studio" },
   { icon: BookOpen, label: "Library", href: "/library", id: "library" },
   { icon: Users, label: "CRM", href: "/crm", id: "crm" },
+  { icon: TrendingUp, label: "Finance HQ", href: "/finance", id: "finance" },
   { icon: Megaphone, label: "Marketing", href: "/marketing", id: "marketing" },
   { icon: FlaskConical, label: "Lunar Labs", href: "/lunar-labs", id: "lunar-labs" },
 ];
