@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { FinanceKPIGrid } from "./FinanceKPIGrid";
 import { FinanceModuleGrid } from "./FinanceModuleGrid";
@@ -10,7 +11,6 @@ import { FinanceDetailDrawer } from "./FinanceDetailDrawer";
 import { FinanceDatePicker } from "./FinanceDatePicker";
 import { FinanceFilterChips } from "./FinanceFilterChips";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sparkles,
@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Plug,
   TrendingUp,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
@@ -30,7 +31,322 @@ import type {
   FinanceFilters,
   FinanceObject,
   FinanceProvider,
+  KPI,
+  FinanceModule,
+  FinanceEvent,
+  FinanceTransaction,
 } from "@/types/finance";
+
+// ============================================================================
+// DEMO MODE DATA - Sample data for previewing Finance HQ without integrations
+// ============================================================================
+
+const DEMO_KPIS: KPI[] = [
+  {
+    id: "revenue",
+    label: "Revenue",
+    value: 127450,
+    formattedValue: "$127,450",
+    delta: 12.5,
+    deltaLabel: "vs last month",
+    icon: "TrendingUp",
+    iconColor: "text-emerald-600",
+    iconBg: "bg-emerald-100",
+  },
+  {
+    id: "expenses",
+    label: "Expenses",
+    value: 42800,
+    formattedValue: "$42,800",
+    delta: -8.3,
+    deltaLabel: "vs last month",
+    icon: "TrendingDown",
+    iconColor: "text-rose-600",
+    iconBg: "bg-rose-100",
+  },
+  {
+    id: "profit",
+    label: "Net Profit",
+    value: 84650,
+    formattedValue: "$84,650",
+    delta: 18.2,
+    deltaLabel: "vs last month",
+    icon: "DollarSign",
+    iconColor: "text-blue-600",
+    iconBg: "bg-blue-100",
+  },
+  {
+    id: "outstanding",
+    label: "Outstanding",
+    value: 23400,
+    formattedValue: "$23,400",
+    delta: -5.1,
+    deltaLabel: "3 invoices",
+    icon: "Clock",
+    iconColor: "text-amber-600",
+    iconBg: "bg-amber-100",
+  },
+];
+
+const DEMO_MODULES: FinanceModule[] = [
+  {
+    id: "revenue-chart",
+    title: "Revenue Trend",
+    source: "stripe",
+    type: "chart",
+    icon: "BarChart3",
+    data: {
+      type: "line",
+      dataPoints: [
+        { label: "Jan", value: 95000 },
+        { label: "Feb", value: 102000 },
+        { label: "Mar", value: 98000 },
+        { label: "Apr", value: 115000 },
+        { label: "May", value: 127450 },
+      ],
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "invoices",
+    title: "Recent Invoices",
+    source: "quickbooks",
+    type: "list",
+    icon: "FileText",
+    data: {
+      items: [
+        { id: "inv-001", title: "Acme Corp", subtitle: "Due Dec 5", amount: 12500, status: "unpaid" },
+        { id: "inv-002", title: "TechStart Inc", subtitle: "Due Dec 10", amount: 8400, status: "unpaid" },
+        { id: "inv-003", title: "Global Solutions", subtitle: "Paid Nov 28", amount: 15000, status: "paid" },
+        { id: "inv-004", title: "Startup Labs", subtitle: "Overdue", amount: 2500, status: "overdue" },
+      ],
+      total: 4,
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "expenses-chart",
+    title: "Expense Breakdown",
+    source: "quickbooks",
+    type: "chart",
+    icon: "PieChart",
+    data: {
+      type: "donut",
+      dataPoints: [
+        { label: "Payroll", value: 22000 },
+        { label: "Software", value: 8500 },
+        { label: "Marketing", value: 6200 },
+        { label: "Office", value: 3800 },
+        { label: "Other", value: 2300 },
+      ],
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "orders",
+    title: "Recent Orders",
+    source: "shopify",
+    type: "list",
+    icon: "ShoppingCart",
+    data: {
+      items: [
+        { id: "ord-001", title: "Order #1247", subtitle: "Sarah M.", amount: 249, status: "fulfilled" },
+        { id: "ord-002", title: "Order #1246", subtitle: "John D.", amount: 189, status: "processing" },
+        { id: "ord-003", title: "Order #1245", subtitle: "Emma W.", amount: 425, status: "fulfilled" },
+        { id: "ord-004", title: "Order #1244", subtitle: "Mike R.", amount: 89, status: "fulfilled" },
+      ],
+      total: 127,
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "cashflow",
+    title: "Cash Flow",
+    source: "stripe",
+    type: "metric",
+    icon: "Wallet",
+    data: {
+      value: 84650,
+      formattedValue: "+$84,650",
+      trend: 15.2,
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "payouts",
+    title: "Pending Payouts",
+    source: "stripe",
+    type: "metric",
+    icon: "Banknote",
+    data: {
+      value: 18750,
+      formattedValue: "$18,750",
+      trend: 0,
+    },
+    lastUpdated: new Date().toISOString(),
+  },
+];
+
+const DEMO_TIMELINE: FinanceEvent[] = [
+  {
+    id: "evt-1",
+    type: "invoice_paid",
+    source: "quickbooks",
+    label: "Invoice Paid",
+    description: "Global Solutions - $15,000",
+    amount: 15000,
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "evt-2",
+    type: "order",
+    source: "shopify",
+    label: "New Order",
+    description: "Order #1247 - Sarah M.",
+    amount: 249,
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "evt-3",
+    type: "payout",
+    source: "stripe",
+    label: "Payout Processed",
+    description: "Bank transfer complete",
+    amount: 12500,
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "evt-4",
+    type: "invoice_created",
+    source: "quickbooks",
+    label: "Invoice Created",
+    description: "TechStart Inc - $8,400",
+    amount: 8400,
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "evt-5",
+    type: "expense",
+    source: "quickbooks",
+    label: "Expense Recorded",
+    description: "Software subscriptions",
+    amount: -850,
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "evt-6",
+    type: "order",
+    source: "shopify",
+    label: "New Order",
+    description: "Order #1246 - John D.",
+    amount: 189,
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "evt-7",
+    type: "refund",
+    source: "stripe",
+    label: "Refund Issued",
+    description: "Customer refund",
+    amount: -75,
+    date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
+const DEMO_TRANSACTIONS: FinanceTransaction[] = [
+  {
+    id: "txn-1",
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    source: "stripe",
+    type: "income",
+    description: "Payment from Acme Corp",
+    amount: 12500,
+    currency: "USD",
+    status: "completed",
+    externalId: "ch_abc123",
+  },
+  {
+    id: "txn-2",
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    source: "shopify",
+    type: "income",
+    description: "Order #1247",
+    amount: 249,
+    currency: "USD",
+    status: "completed",
+    externalId: "ord_xyz456",
+  },
+  {
+    id: "txn-3",
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    source: "stripe",
+    type: "fee",
+    description: "Stripe processing fee",
+    amount: -36.25,
+    currency: "USD",
+    status: "completed",
+    externalId: "fee_def789",
+  },
+  {
+    id: "txn-4",
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    source: "quickbooks",
+    type: "expense",
+    description: "Office supplies",
+    amount: -245.50,
+    currency: "USD",
+    status: "completed",
+    externalId: "exp_ghi012",
+  },
+  {
+    id: "txn-5",
+    date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    source: "shopify",
+    type: "income",
+    description: "Order #1246",
+    amount: 189,
+    currency: "USD",
+    status: "completed",
+    externalId: "ord_jkl345",
+  },
+  {
+    id: "txn-6",
+    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    source: "stripe",
+    type: "refund",
+    description: "Customer refund - Order #1240",
+    amount: -75,
+    currency: "USD",
+    status: "completed",
+    externalId: "re_mno678",
+  },
+];
+
+const DEMO_INTEGRATIONS: FinanceIntegrationsResponse = {
+  connected: ["quickbooks", "stripe", "shopify"],
+  expired: [],
+  available: [],
+  details: {
+    quickbooks: {
+      status: "connected",
+      connectedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      lastSyncAt: new Date().toISOString(),
+      accountName: "Demo Company LLC",
+    },
+    stripe: {
+      status: "connected",
+      connectedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+      lastSyncAt: new Date().toISOString(),
+      accountName: "demo_acct_123",
+    },
+    shopify: {
+      status: "connected",
+      connectedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+      lastSyncAt: new Date().toISOString(),
+      accountName: "demo-store.myshopify.com",
+    },
+  },
+};
 
 /**
  * SWR fetcher function
@@ -53,10 +369,52 @@ function FinanceEmptyState() {
         Finance HQ brings all your financial data together in one place. Connect
         QuickBooks, Stripe, or Shopify to get started.
       </p>
-      <Button asChild>
-        <a href="/integrations" aria-label="Go to integrations page to connect finance tools">
-          <Plug className="h-4 w-4 mr-2" aria-hidden="true" />
-          Connect Integrations
+      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+        <Button asChild>
+          <a href="/integrations" aria-label="Go to integrations page to connect finance tools">
+            <Plug className="h-4 w-4 mr-2" aria-hidden="true" />
+            Connect Integrations
+          </a>
+        </Button>
+        <Button variant="outline" asChild>
+          <a href="/finance?demo=true" aria-label="Preview Finance HQ with demo data">
+            <FlaskConical className="h-4 w-4 mr-2" aria-hidden="true" />
+            Preview Demo
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Demo mode banner
+ */
+function DemoModeBanner() {
+  return (
+    <div
+      className="flex items-center justify-between p-4 rounded-xl bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 mb-6"
+      role="status"
+    >
+      <div className="flex items-center gap-3">
+        <FlaskConical className="h-5 w-5 text-violet-600 dark:text-violet-400" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-medium text-violet-800 dark:text-violet-200">
+            Demo Mode Active
+          </p>
+          <p className="text-xs text-violet-600 dark:text-violet-400">
+            Viewing sample data. Connect real integrations to see your actual finances.
+          </p>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="border-violet-300 text-violet-700 hover:bg-violet-100 dark:border-violet-700 dark:text-violet-300 dark:hover:bg-violet-900/30"
+        asChild
+      >
+        <a href="/finance">
+          Exit Demo
         </a>
       </Button>
     </div>
@@ -151,8 +509,13 @@ interface FinanceHQDashboardProps {
 /**
  * Main Finance HQ Dashboard component.
  * Orchestrates data fetching and renders all financial sections.
+ * Supports demo mode via ?demo=true URL parameter.
  */
 export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
+  // Check for demo mode
+  const searchParams = useSearchParams();
+  const isDemoMode = searchParams.get("demo") === "true";
+
   // State
   const [dateRange, setDateRange] = React.useState<DateRange>({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
@@ -173,28 +536,46 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
     [dateRange]
   );
 
-  // Data fetching with SWR
+  // Data fetching with SWR (skip in demo mode)
   const {
     data: overview,
-    error: overviewError,
     isLoading: overviewLoading,
   } = useSWR<FinanceOverviewResponse>(
-    `/api/finance/overview?${dateQuery}`,
+    isDemoMode ? null : `/api/finance/overview?${dateQuery}`,
     fetcher,
     { fallbackData: initialData }
   );
 
   const { data: modules, isLoading: modulesLoading } =
-    useSWR<FinanceModulesResponse>(`/api/finance/modules?${dateQuery}`, fetcher);
+    useSWR<FinanceModulesResponse>(
+      isDemoMode ? null : `/api/finance/modules?${dateQuery}`,
+      fetcher
+    );
 
   const { data: timeline, isLoading: timelineLoading } =
-    useSWR<TimelineResponse>(`/api/finance/timeline?${dateQuery}`, fetcher);
+    useSWR<TimelineResponse>(
+      isDemoMode ? null : `/api/finance/timeline?${dateQuery}`,
+      fetcher
+    );
 
   const { data: activity, isLoading: activityLoading } =
-    useSWR<ActivityResponse>(`/api/finance/activity?${dateQuery}`, fetcher);
+    useSWR<ActivityResponse>(
+      isDemoMode ? null : `/api/finance/activity?${dateQuery}`,
+      fetcher
+    );
 
   const { data: integrations, isLoading: integrationsLoading } =
-    useSWR<FinanceIntegrationsResponse>("/api/finance/integrations", fetcher);
+    useSWR<FinanceIntegrationsResponse>(
+      isDemoMode ? null : "/api/finance/integrations",
+      fetcher
+    );
+
+  // Use demo data when in demo mode
+  const displayOverview = isDemoMode ? { kpis: DEMO_KPIS, summary: { revenue: 127450, expenses: 42800, profit: 84650, cashflow: 84650, outstandingInvoices: 23400 }, bySource: {} } : overview;
+  const displayModules = isDemoMode ? { modules: DEMO_MODULES } : modules;
+  const displayTimeline = isDemoMode ? { events: DEMO_TIMELINE } : timeline;
+  const displayActivity = isDemoMode ? { transactions: DEMO_TRANSACTIONS, pagination: { hasMore: false, total: DEMO_TRANSACTIONS.length } } : activity;
+  const displayIntegrations = isDemoMode ? DEMO_INTEGRATIONS : integrations;
 
   // Handlers
   const handleItemClick = (item: FinanceObject) => {
@@ -208,53 +589,62 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
     setTimeout(() => setSelectedItem(null), 300);
   };
 
-  // Check for no integrations
+  // Check for no integrations (but not in demo mode)
   const hasIntegrations =
-    integrations?.connected && integrations.connected.length > 0;
-  const showEmptyState = !integrationsLoading && !hasIntegrations;
+    displayIntegrations?.connected && displayIntegrations.connected.length > 0;
+  const showEmptyState = !isDemoMode && !integrationsLoading && !hasIntegrations;
 
   if (showEmptyState) {
     return <FinanceEmptyState />;
   }
 
+  // In demo mode, never show loading states
+  const isOverviewLoading = isDemoMode ? false : overviewLoading;
+  const isModulesLoading = isDemoMode ? false : modulesLoading;
+  const isTimelineLoading = isDemoMode ? false : timelineLoading;
+  const isActivityLoading = isDemoMode ? false : activityLoading;
+
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      {/* Demo Mode Banner */}
+      {isDemoMode && <DemoModeBanner />}
+
       {/* Header */}
       <FinanceHeader
         dateRange={dateRange}
         onDateRangeChange={setDateRange}
         filters={filters}
         onFiltersChange={setFilters}
-        integrations={integrations}
+        integrations={displayIntegrations}
       />
 
       {/* Reconnect Banners */}
-      {integrations?.expired?.map((provider) => (
+      {displayIntegrations?.expired?.map((provider) => (
         <ReconnectBanner key={provider} provider={provider} />
       ))}
 
       {/* KPI Row */}
-      <FinanceKPIGrid kpis={overview?.kpis} isLoading={overviewLoading} />
+      <FinanceKPIGrid kpis={displayOverview?.kpis} isLoading={isOverviewLoading} />
 
       {/* Module Grid */}
       <FinanceModuleGrid
-        modules={modules?.modules}
-        isLoading={modulesLoading}
+        modules={displayModules?.modules}
+        isLoading={isModulesLoading}
         filters={filters}
         onModuleClick={handleItemClick}
       />
 
       {/* Timeline */}
       <FinanceTimeline
-        events={timeline?.events}
-        isLoading={timelineLoading}
+        events={displayTimeline?.events}
+        isLoading={isTimelineLoading}
         onEventClick={handleItemClick}
       />
 
       {/* Activity Table */}
       <FinanceActivityTable
-        transactions={activity?.transactions}
-        isLoading={activityLoading}
+        transactions={displayActivity?.transactions}
+        isLoading={isActivityLoading}
         onRowClick={handleItemClick}
       />
 
