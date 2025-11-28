@@ -369,6 +369,7 @@
   animation: float 6s ease-in-out infinite;
 }
 
+
 /* Performance Optimizations */
 @media (prefers-reduced-motion: reduce) {
   *,

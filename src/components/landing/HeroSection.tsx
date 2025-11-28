@@ -12,10 +12,6 @@ import {
   Users,
   BarChart3,
   FileSearch,
-  Zap,
-  CheckCircle2,
-  TrendingUp,
-  MessageSquare,
   Play,
 } from "lucide-react";
 
@@ -68,36 +64,20 @@ const stats = [
   { value: "3x", label: "productivity" },
 ];
 
-// Orbital floating elements configuration
-const orbitingElements = [
-  { 
-    icon: MessageSquare, 
-    label: "AI Chat",
-    orbit: "left",
-    duration: 25,
-    startAngle: 0,
-  },
-  { 
-    icon: Zap, 
-    label: "Automation",
-    orbit: "right", 
-    duration: 28,
-    startAngle: 180,
-  },
-  { 
-    icon: CheckCircle2, 
-    label: "Task Done",
-    orbit: "left",
-    duration: 30,
-    startAngle: 180,
-  },
-  { 
-    icon: TrendingUp, 
-    label: "+127%",
-    orbit: "right",
-    duration: 22,
-    startAngle: 0,
-  },
+// Animated background particles
+const particles = [
+  { size: 4, x: "10%", y: "20%", duration: 8, delay: 0 },
+  { size: 6, x: "85%", y: "15%", duration: 10, delay: 1 },
+  { size: 3, x: "20%", y: "70%", duration: 7, delay: 2 },
+  { size: 5, x: "90%", y: "60%", duration: 9, delay: 0.5 },
+  { size: 4, x: "5%", y: "45%", duration: 11, delay: 1.5 },
+  { size: 7, x: "75%", y: "80%", duration: 8, delay: 3 },
+  { size: 3, x: "45%", y: "10%", duration: 12, delay: 2.5 },
+  { size: 5, x: "60%", y: "85%", duration: 9, delay: 0 },
+  { size: 4, x: "30%", y: "35%", duration: 10, delay: 4 },
+  { size: 6, x: "95%", y: "40%", duration: 7, delay: 1 },
+  { size: 3, x: "15%", y: "90%", duration: 11, delay: 3.5 },
+  { size: 5, x: "70%", y: "25%", duration: 8, delay: 2 },
 ];
 
 export function HeroSection({ onEnterApp }: HeroSectionProps) {
@@ -142,103 +122,32 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a1a]/80" />
       </div>
 
-      {/* Orbiting UI Elements - Desktop only */}
-      <div className="hidden lg:block absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 5 }}>
-        {/* Left orbit elements */}
-        {orbitingElements
-          .filter(el => el.orbit === "left")
-          .map((el, i) => {
-            const Icon = el.icon;
-            // Elliptical orbit parameters for left side
-            const radiusX = 580; // horizontal radius
-            const radiusY = 380; // vertical radius  
-            const centerX = -100; // offset left of center
-            const centerY = 50; // vertical center offset
-            
-            return (
-              <motion.div
-                key={`left-${i}`}
-                initial={{ opacity: 0 }}
-                animate={{ 
-                  opacity: 1,
-                  x: [
-                    centerX + radiusX * Math.cos((el.startAngle * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle + 90) * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle + 180) * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle + 270) * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle + 360) * Math.PI) / 180),
-                  ],
-                  y: [
-                    centerY + radiusY * Math.sin((el.startAngle * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle + 90) * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle + 180) * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle + 270) * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle + 360) * Math.PI) / 180),
-                  ],
-                }}
-                transition={{ 
-                  opacity: { delay: 1 + i * 0.3, duration: 0.8 },
-                  x: { duration: el.duration, repeat: Infinity, ease: "linear" },
-                  y: { duration: el.duration, repeat: Infinity, ease: "linear" },
-                }}
-                className="absolute left-1/2 top-1/2"
-                style={{ marginLeft: "-60px", marginTop: "-20px" }}
-              >
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 shadow-xl">
-                  <Icon className="h-4 w-4 text-white/80" aria-hidden="true" />
-                  <span className="text-sm text-white/90 font-medium whitespace-nowrap">{el.label}</span>
-                </div>
-              </motion.div>
-            );
-          })}
-
-        {/* Right orbit elements */}
-        {orbitingElements
-          .filter(el => el.orbit === "right")
-          .map((el, i) => {
-            const Icon = el.icon;
-            // Elliptical orbit parameters for right side
-            const radiusX = 580;
-            const radiusY = 380;
-            const centerX = 100; // offset right of center
-            const centerY = 50;
-            
-            return (
-              <motion.div
-                key={`right-${i}`}
-                initial={{ opacity: 0 }}
-                animate={{ 
-                  opacity: 1,
-                  x: [
-                    centerX + radiusX * Math.cos((el.startAngle * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle - 90) * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle - 180) * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle - 270) * Math.PI) / 180),
-                    centerX + radiusX * Math.cos(((el.startAngle - 360) * Math.PI) / 180),
-                  ],
-                  y: [
-                    centerY + radiusY * Math.sin((el.startAngle * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle - 90) * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle - 180) * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle - 270) * Math.PI) / 180),
-                    centerY + radiusY * Math.sin(((el.startAngle - 360) * Math.PI) / 180),
-                  ],
-                }}
-                transition={{ 
-                  opacity: { delay: 1.2 + i * 0.3, duration: 0.8 },
-                  x: { duration: el.duration, repeat: Infinity, ease: "linear" },
-                  y: { duration: el.duration, repeat: Infinity, ease: "linear" },
-                }}
-                className="absolute left-1/2 top-1/2"
-                style={{ marginLeft: "-60px", marginTop: "-20px" }}
-              >
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 shadow-xl">
-                  <Icon className="h-4 w-4 text-white/80" aria-hidden="true" />
-                  <span className="text-sm text-white/90 font-medium whitespace-nowrap">{el.label}</span>
-                </div>
-              </motion.div>
-            );
-          })}
+      {/* Animated Background Particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 1 }}>
+        {particles.map((particle, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-white/20"
+            style={{
+              width: particle.size,
+              height: particle.size,
+              left: particle.x,
+              top: particle.y,
+            }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ 
+              opacity: [0.1, 0.4, 0.1],
+              scale: [1, 1.2, 1],
+              y: [0, -30, 0],
+            }}
+            transition={{
+              duration: particle.duration,
+              delay: particle.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
       </div>
 
       {/* Main Content */}
