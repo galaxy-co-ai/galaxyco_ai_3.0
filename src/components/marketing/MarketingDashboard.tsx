@@ -819,7 +819,7 @@ Be creative, engaging, and write copy that converts!`;
         timestamp: new Date(),
       }]);
     } catch (error) {
-      console.error('Asset chat error:', error);
+      logger.error('Asset chat error', error);
       setAssetChatMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -910,7 +910,7 @@ Be a strategic marketing partner!`;
         timestamp: new Date(),
       }]);
     } catch (error) {
-      console.error('Campaign chat error:', error);
+      logger.error('Campaign chat error', error);
       setCampaignNeptuneChatMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -988,7 +988,7 @@ Be creative, engaging, and write content that resonates!`;
         timestamp: new Date(),
       }]);
     } catch (error) {
-      console.error('Content chat error:', error);
+      logger.error('Content chat error', error);
       setContentNeptuneChatMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

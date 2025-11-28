@@ -48,6 +48,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import type { DashboardData } from "@/types/dashboard";
 
@@ -221,7 +222,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
         }
       }
     } catch (error) {
-      console.error('Failed to load agent conversation:', error);
+      logger.error('Failed to load agent conversation', error);
     }
   };
 
@@ -282,7 +283,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
         [agentId]: [...(prev[agentId] || []), assistantMessage],
       }));
     } catch (error) {
-      console.error('Failed to send message to agent:', error);
+      logger.error('Failed to send message to agent', error);
       toast.error(error instanceof Error ? error.message : 'Failed to send message');
       // Remove the optimistic user message on error
       setAgentConversations(prev => ({

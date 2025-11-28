@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 
 interface Message {
   id: string;
@@ -137,7 +138,7 @@ export function FloatingAIAssistant() {
 
       setMessages(prev => [...prev, aiResponse]);
     } catch (error) {
-      console.error("Failed to send message:", error);
+      logger.error("Failed to send message", error);
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -190,7 +191,7 @@ export function FloatingAIAssistant() {
       
       toast.success(feedback === "positive" ? "Thanks for the feedback!" : "Sorry about that. I'll try to do better.");
     } catch (error) {
-      console.error("Failed to submit feedback:", error);
+      logger.error("Failed to submit feedback", error);
     }
   };
 

@@ -1,8 +1,13 @@
-import type { TriggerConfig } from "@trigger.dev/sdk/v3";
+import { defineConfig } from "@trigger.dev/sdk/v3";
 
-export const config: TriggerConfig = {
-  project: "proj_wqyglesiexqbjxkbvxff",
-  maxDuration: 300, // 5 minutes max per task
+export default defineConfig({
+  project: "proj_kztbsnnuypnyibmslcvd",
+  runtime: "node",
+  logLevel: "log",
+  // The max compute seconds a task is allowed to run. If the task run exceeds this duration, it will be stopped.
+  // You can override this on an individual task.
+  // See https://trigger.dev/docs/runs/max-duration
+  maxDuration: 3600,
   retries: {
     enabledInDev: true,
     default: {
@@ -13,6 +18,5 @@ export const config: TriggerConfig = {
       randomize: true,
     },
   },
-  dirs: ["./src/trigger"],
-};
-
+  dirs: ["npx --yes trigger.dev@latest deploy"],
+});

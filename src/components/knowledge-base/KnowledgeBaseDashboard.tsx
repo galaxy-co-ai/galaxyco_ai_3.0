@@ -545,7 +545,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
       // Refresh knowledge base in case document was saved
       mutateKnowledge();
     } catch (error) {
-      console.error('Document creation error:', error);
+      logger.error('Document creation error', error);
       setCreateChatMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -599,7 +599,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
       // Refresh knowledge base data in case document was created
       mutateKnowledge();
     } catch (error) {
-      console.error('Neptune chat error:', error);
+      logger.error('Neptune chat error', error);
       setNeptuneChatMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -1365,7 +1365,7 @@ ${documentData.content}`,
                                       description: "",
                                     });
                                   } catch (error) {
-                                    console.error('Save document error:', error);
+                                    logger.error('Save document error', error);
                                     toast.error('Failed to save document. Please try again.');
                                   }
                                 }}
