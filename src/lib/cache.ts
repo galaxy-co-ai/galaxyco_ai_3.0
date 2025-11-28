@@ -1,9 +1,14 @@
-import { redis } from '@/lib/upstash';
+import { redis, shouldUseRedis, markRedisHealthy, markRedisUnhealthy } from '@/lib/upstash';
 import { logger } from '@/lib/logger';
 
 /**
  * Redis Cache Helper Utilities
  * Provides convenient functions for caching with TTL
+ * 
+ * Features:
+ * - Graceful degradation when Redis is unavailable
+ * - Health tracking to avoid spamming logs on failures
+ * - Auto-recovery after temporary outages
  */
 
 interface CacheOptions {
@@ -15,20 +20,35 @@ interface CacheOptions {
  * Get cached data
  */
 export async function getCache<T>(key: string, options: CacheOptions = {}): Promise<T | null> {
-  if (!redis) return null;
+  if (!shouldUseRedis() || !redis) return null;
 
   try {
     const { prefix = 'cache' } = options;
     const cacheKey = `${prefix}:${key}`;
     const cached = await redis.get(cacheKey);
 
-    if (cached) {
-      return JSON.parse(cached as string) as T;
+    markRedisHealthy();
+    
+    if (cached === null || cached === undefined) {
+      return null;
     }
 
-    return null;
+    // Upstash Redis automatically parses JSON, so cached might already be an object
+    // Handle both cases: string (needs parsing) or already-parsed object
+    if (typeof cached === 'string') {
+      return JSON.parse(cached) as T;
+    }
+    
+    // Already parsed by Upstash
+    return cached as T;
   } catch (error) {
-    logger.error('Cache get error', error);
+    markRedisUnhealthy();
+    // Only log on first few failures to avoid spam
+    if (error instanceof Error && error.message.includes('fetch failed')) {
+      logger.debug('Redis connection unavailable - caching disabled temporarily');
+    } else {
+      logger.error('Cache get error', error);
+    }
     return null;
   }
 }
@@ -41,14 +61,21 @@ export async function setCache<T>(
   data: T,
   options: CacheOptions = {}
 ): Promise<void> {
-  if (!redis) return;
+  if (!shouldUseRedis() || !redis) return;
 
   try {
     const { ttl = 300, prefix = 'cache' } = options; // Default 5 minutes
     const cacheKey = `${prefix}:${key}`;
     await redis.setex(cacheKey, ttl, JSON.stringify(data));
+    markRedisHealthy();
   } catch (error) {
-    logger.error('Cache set error', error);
+    markRedisUnhealthy();
+    // Only log on first few failures to avoid spam
+    if (error instanceof Error && error.message.includes('fetch failed')) {
+      logger.debug('Redis connection unavailable - caching disabled temporarily');
+    } else {
+      logger.error('Cache set error', error);
+    }
   }
 }
 
@@ -56,14 +83,20 @@ export async function setCache<T>(
  * Invalidate cache by key
  */
 export async function invalidateCache(key: string, options: CacheOptions = {}): Promise<void> {
-  if (!redis) return;
+  if (!shouldUseRedis() || !redis) return;
 
   try {
     const { prefix = 'cache' } = options;
     const cacheKey = `${prefix}:${key}`;
     await redis.del(cacheKey);
+    markRedisHealthy();
   } catch (error) {
-    logger.error('Cache invalidate error', error);
+    markRedisUnhealthy();
+    if (error instanceof Error && error.message.includes('fetch failed')) {
+      logger.debug('Redis connection unavailable - cache invalidation skipped');
+    } else {
+      logger.error('Cache invalidate error', error);
+    }
   }
 }
 
@@ -74,7 +107,7 @@ export async function invalidateCachePattern(
   pattern: string,
   options: CacheOptions = {}
 ): Promise<void> {
-  if (!redis) return;
+  if (!shouldUseRedis() || !redis) return;
 
   try {
     const { prefix = 'cache' } = options;
@@ -86,8 +119,14 @@ export async function invalidateCachePattern(
     if (keys.length > 0) {
       await redis.del(...keys);
     }
+    markRedisHealthy();
   } catch (error) {
-    logger.error('Cache pattern invalidate error', error);
+    markRedisUnhealthy();
+    if (error instanceof Error && error.message.includes('fetch failed')) {
+      logger.debug('Redis connection unavailable - pattern invalidation skipped');
+    } else {
+      logger.error('Cache pattern invalidate error', error);
+    }
   }
 }
 

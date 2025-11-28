@@ -1,9 +1,13 @@
-import { redis } from '@/lib/upstash';
+import { redis, shouldUseRedis, markRedisHealthy, markRedisUnhealthy } from '@/lib/upstash';
 import { logger } from '@/lib/logger';
 
 /**
  * Rate Limiting Utility using Upstash Redis
  * Implements sliding window rate limiting
+ * 
+ * Features:
+ * - Graceful degradation when Redis is unavailable
+ * - Health tracking to avoid repeated failures
  */
 
 export interface RateLimitResult {
@@ -26,8 +30,8 @@ export async function rateLimit(
   limit: number = 100,
   window: number = 60
 ): Promise<RateLimitResult> {
-  // If Redis is not available, allow all requests
-  if (!redis) {
+  // If Redis is not available or unhealthy, allow all requests
+  if (!shouldUseRedis() || !redis) {
     return {
       success: true,
       remaining: limit,
@@ -53,6 +57,8 @@ export async function rateLimit(
 
     const remaining = Math.max(0, limit - count);
     
+    markRedisHealthy();
+    
     return {
       success: count <= limit,
       remaining,
@@ -60,7 +66,13 @@ export async function rateLimit(
       reset,
     };
   } catch (error) {
-    logger.error('Rate limit error', error);
+    markRedisUnhealthy();
+    // Only log detailed errors for non-connection issues
+    if (error instanceof Error && error.message.includes('fetch failed')) {
+      logger.debug('Redis connection unavailable - rate limiting disabled temporarily');
+    } else {
+      logger.error('Rate limit error', error);
+    }
     // On error, allow the request
     return {
       success: true,
