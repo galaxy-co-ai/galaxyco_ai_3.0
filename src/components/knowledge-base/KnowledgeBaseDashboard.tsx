@@ -475,7 +475,7 @@ export default function KnowledgeBaseDashboard({
       const templateType = template?.id || 'general';
       const existingData = documentData;
       
-      let prompt = `[Knowledge Base - Document Creation]
+      let prompt = `[Library - Document Creation]
 Template: ${template?.name || 'General Document'}
 `;
 
@@ -579,7 +579,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `[Knowledge Base Context] The user is in the Knowledge Base "Create" tab and wants to create a document. Help them create high-quality content. If they describe what they want, use the generate_document tool to create it, then use create_document to save it. Be proactive and helpful.\n\nUser's request: ${userInput}`,
+          message: `[Library Context] The user is in the Library "Create" tab and wants to create a document. Help them create high-quality content. If they describe what they want, use the generate_document tool to create it, then use create_document to save it. Be proactive and helpful.\n\nUser's request: ${userInput}`,
         }),
       });
 
@@ -623,7 +623,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
       <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Knowledge Base</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Library</h1>
           <p className="text-muted-foreground text-base">
             Organize, search, and access your documents and knowledge.
           </p>

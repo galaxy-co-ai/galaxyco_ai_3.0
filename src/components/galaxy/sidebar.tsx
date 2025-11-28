@@ -28,7 +28,7 @@ const mainNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", id: "dashboard" },
   { icon: Activity, label: "Activity", href: "/activity", id: "activity" },
   { icon: Workflow, label: "Studio", href: "/studio", id: "studio" },
-  { icon: BookOpen, label: "Knowledge Base", href: "/knowledge-base", id: "knowledge-base" },
+  { icon: BookOpen, label: "Library", href: "/library", id: "library" },
   { icon: Users, label: "CRM", href: "/crm", id: "crm" },
   { icon: Megaphone, label: "Marketing", href: "/marketing", id: "marketing" },
   { icon: FlaskConical, label: "Lunar Labs", href: "/lunar-labs", id: "lunar-labs" },
