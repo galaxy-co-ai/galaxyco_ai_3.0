@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { Badge } from "../components/ui/badge";
-import { Sparkles, Activity } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { HeroSection } from "../components/landing/HeroSection";
 import { FooterCTA } from "../components/landing/FooterCTA";
@@ -10,7 +10,6 @@ import { SmartNavigation } from "../components/shared/SmartNavigation";
 import { EnhancedThreePillars } from "../components/landing/EnhancedThreePillars";
 import { EnhancedBenefits } from "../components/landing/EnhancedBenefits";
 import { SectionDivider } from "../components/shared/SectionDivider";
-import { StockTickerStandalone } from "../components/landing/StockTicker";
 import { DemoWrapper } from "../components/shared/DemoWrapper";
 import { FloatingSalesChat } from "../components/landing/FloatingSalesChat";
 import DashboardDashboard from "../components/dashboard/DashboardDashboard";
@@ -35,40 +34,6 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
 
       {/* Epic Hero Section */}
       {onEnterApp && <HeroSection onEnterApp={onEnterApp} />}
-
-      {/* Live Activity Ticker */}
-      <section className="py-12 bg-gradient-to-b from-white via-blue-50/30 to-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
-          >
-            <Badge className="mb-3 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-lg">
-              <Activity className="h-3 w-3 mr-1.5 animate-pulse" />
-              Live Now
-            </Badge>
-            <h2 className="text-2xl mb-2">AI Agents Working Right Now</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Watch real-time activity as AI agents process tasks, analyze data, and automate workflows across our platform
-            </p>
-          </motion.div>
-        </div>
-        
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <StockTickerStandalone />
-        </motion.div>
-      </section>
-
-      {/* Section Divider */}
-      <SectionDivider variant="sparkle" />
 
       {/* Enhanced Three Pillars Section */}
       <EnhancedThreePillars />
