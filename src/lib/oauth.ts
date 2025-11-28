@@ -1,9 +1,9 @@
 /**
- * OAuth Configuration for Google and Microsoft Integrations
- * Supports Gmail, Google Calendar, Outlook, and Microsoft Calendar
+ * OAuth Configuration for Google, Microsoft, QuickBooks, and Shopify Integrations
+ * Supports Gmail, Google Calendar, Outlook, Microsoft Calendar, and Finance HQ
  */
 
-export type OAuthProvider = 'google' | 'microsoft';
+export type OAuthProvider = 'google' | 'microsoft' | 'quickbooks' | 'shopify';
 
 export interface OAuthConfig {
   clientId: string;
@@ -43,6 +43,33 @@ export const oauthProviders: Record<OAuthProvider, OAuthConfig> = {
       'https://graph.microsoft.com/Calendars.Read',
       'https://graph.microsoft.com/Calendars.ReadWrite',
       'offline_access',
+    ],
+  },
+  quickbooks: {
+    clientId: process.env.QUICKBOOKS_CLIENT_ID || '',
+    clientSecret: process.env.QUICKBOOKS_CLIENT_SECRET || '',
+    authUrl: 'https://appcenter.intuit.com/connect/oauth2',
+    tokenUrl: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+    scopes: [
+      'com.intuit.quickbooks.accounting',
+      'openid',
+      'profile',
+      'email',
+    ],
+  },
+  shopify: {
+    clientId: process.env.SHOPIFY_CLIENT_ID || '',
+    clientSecret: process.env.SHOPIFY_CLIENT_SECRET || '',
+    // Note: Shopify uses per-shop OAuth URLs
+    // The {shop} placeholder is replaced at runtime with the actual shop domain
+    authUrl: 'https://{shop}.myshopify.com/admin/oauth/authorize',
+    tokenUrl: 'https://{shop}.myshopify.com/admin/oauth/access_token',
+    scopes: [
+      'read_orders',
+      'read_products',
+      'read_customers',
+      'read_shopify_payments_payouts',
+      'read_shopify_payments_disputes',
     ],
   },
 };

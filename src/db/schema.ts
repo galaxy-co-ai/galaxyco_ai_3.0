@@ -199,6 +199,9 @@ export const integrationProviderEnum = pgEnum('integration_provider', [
   'slack',
   'salesforce',
   'hubspot',
+  'quickbooks',
+  'stripe',
+  'shopify',
 ]);
 
 export const integrationStatusEnum = pgEnum('integration_status', [
