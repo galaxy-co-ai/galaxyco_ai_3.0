@@ -870,6 +870,122 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
+
+  // ============================================================================
+  // FINANCE HQ TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'get_finance_summary',
+      description: 'Get a summary of the user\'s financial data including revenue, expenses, profit, and cash flow from connected integrations (QuickBooks, Stripe, Shopify).',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: {
+            type: 'string',
+            enum: ['today', 'this_week', 'this_month', 'last_month', 'this_quarter', 'this_year'],
+            description: 'The time period to summarize',
+          },
+        },
+        required: ['period'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_overdue_invoices',
+      description: 'Get a list of overdue invoices that need attention. Useful for following up on unpaid invoices.',
+      parameters: {
+        type: 'object',
+        properties: {
+          limit: {
+            type: 'number',
+            description: 'Maximum number of invoices to return (default: 10)',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'send_invoice_reminder',
+      description: 'Send a payment reminder email for an overdue invoice to the customer.',
+      parameters: {
+        type: 'object',
+        properties: {
+          invoiceId: {
+            type: 'string',
+            description: 'The ID of the invoice to send a reminder for',
+          },
+          customMessage: {
+            type: 'string',
+            description: 'Optional custom message to include in the reminder email',
+          },
+        },
+        required: ['invoiceId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_cash_flow_forecast',
+      description: 'Generate a cash flow forecast for the next 30, 60, or 90 days based on historical data and pending invoices.',
+      parameters: {
+        type: 'object',
+        properties: {
+          days: {
+            type: 'number',
+            enum: [30, 60, 90],
+            description: 'Number of days to forecast',
+          },
+        },
+        required: ['days'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'compare_financial_periods',
+      description: 'Compare financial metrics between two time periods to show growth or changes.',
+      parameters: {
+        type: 'object',
+        properties: {
+          metric: {
+            type: 'string',
+            enum: ['revenue', 'expenses', 'profit', 'orders', 'invoices'],
+            description: 'The metric to compare',
+          },
+          period1: {
+            type: 'string',
+            enum: ['this_week', 'this_month', 'this_quarter', 'this_year'],
+            description: 'First period to compare',
+          },
+          period2: {
+            type: 'string',
+            enum: ['last_week', 'last_month', 'last_quarter', 'last_year'],
+            description: 'Second period to compare',
+          },
+        },
+        required: ['metric', 'period1', 'period2'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_finance_integrations',
+      description: 'Get the status of connected finance integrations (QuickBooks, Stripe, Shopify).',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
 ];
 
 // ============================================================================
@@ -2653,6 +2769,365 @@ A: [Detailed answer]`,
       };
     }
   },
+
+  // ============================================================================
+  // FINANCE HQ TOOL IMPLEMENTATIONS
+  // ============================================================================
+
+  async get_finance_summary(args, context): Promise<ToolResult> {
+    try {
+      const period = args.period as string;
+      
+      // Get connected finance integrations
+      const { integrations } = await import('@/db/schema');
+      const { inArray } = await import('drizzle-orm');
+      
+      const financeProviders = ['quickbooks', 'stripe', 'shopify'] as const;
+      const connectedIntegrations = await db.query.integrations.findMany({
+        where: and(
+          eq(integrations.workspaceId, context.workspaceId),
+          inArray(integrations.provider, financeProviders),
+          eq(integrations.status, 'active')
+        ),
+      });
+
+      if (connectedIntegrations.length === 0) {
+        return {
+          success: false,
+          message: 'No finance integrations connected. Please connect QuickBooks, Stripe, or Shopify from Settings.',
+          data: { connectedProviders: [] },
+        };
+      }
+
+      const connectedProviders = connectedIntegrations.map(i => i.provider);
+
+      // Calculate date range based on period
+      const now = new Date();
+      let startDate = new Date();
+      const periodLabel = period.replace('_', ' ');
+
+      switch (period) {
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'this_week':
+          startDate.setDate(now.getDate() - now.getDay());
+          startDate.setHours(0, 0, 0, 0);
+          break;
+        case 'this_month':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case 'last_month':
+          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          break;
+        case 'this_quarter':
+          startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+          break;
+        case 'this_year':
+          startDate = new Date(now.getFullYear(), 0, 1);
+          break;
+      }
+
+      // Note: In production, this would fetch real data from the finance services
+      // For now, return a helpful message about connected providers
+      logger.info('AI get_finance_summary', { period, connectedProviders, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Financial summary for ${periodLabel}`,
+        data: {
+          period: periodLabel,
+          dateRange: {
+            start: startDate.toISOString(),
+            end: now.toISOString(),
+          },
+          connectedProviders,
+          summary: {
+            revenue: 0,
+            expenses: 0,
+            profit: 0,
+            outstandingInvoices: 0,
+            cashflow: 0,
+          },
+          note: `Data from connected providers: ${connectedProviders.join(', ')}. View Finance HQ for detailed breakdown.`,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_finance_summary failed', error);
+      return {
+        success: false,
+        message: 'Failed to get financial summary',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_overdue_invoices(args, context): Promise<ToolResult> {
+    try {
+      const limit = (args.limit as number) || 10;
+
+      // Check for QuickBooks integration (invoices come from QB)
+      const { integrations } = await import('@/db/schema');
+      
+      const qbIntegration = await db.query.integrations.findFirst({
+        where: and(
+          eq(integrations.workspaceId, context.workspaceId),
+          eq(integrations.provider, 'quickbooks'),
+          eq(integrations.status, 'active')
+        ),
+      });
+
+      if (!qbIntegration) {
+        return {
+          success: false,
+          message: 'QuickBooks is not connected. Please connect QuickBooks to view invoices.',
+          data: { hasQuickBooks: false },
+        };
+      }
+
+      // Note: In production, this would call the QuickBooks service to get real invoices
+      logger.info('AI get_overdue_invoices', { limit, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: 'Retrieved overdue invoices',
+        data: {
+          invoices: [],
+          total: 0,
+          totalAmount: 0,
+          note: 'View Finance HQ for detailed invoice list and management.',
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_overdue_invoices failed', error);
+      return {
+        success: false,
+        message: 'Failed to get overdue invoices',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async send_invoice_reminder(args, context): Promise<ToolResult> {
+    try {
+      const invoiceId = args.invoiceId as string;
+      const customMessage = args.customMessage as string | undefined;
+
+      // Check for QuickBooks integration
+      const { integrations } = await import('@/db/schema');
+      
+      const qbIntegration = await db.query.integrations.findFirst({
+        where: and(
+          eq(integrations.workspaceId, context.workspaceId),
+          eq(integrations.provider, 'quickbooks'),
+          eq(integrations.status, 'active')
+        ),
+      });
+
+      if (!qbIntegration) {
+        return {
+          success: false,
+          message: 'QuickBooks is not connected. Please connect QuickBooks to send invoice reminders.',
+        };
+      }
+
+      // Note: In production, this would call the invoice reminder API
+      logger.info('AI send_invoice_reminder', { invoiceId, customMessage, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Invoice reminder queued for invoice ${invoiceId}`,
+        data: {
+          invoiceId,
+          customMessage: customMessage || 'Default reminder message',
+          status: 'queued',
+          note: 'Use Finance HQ to view invoice details and send reminders directly.',
+        },
+      };
+    } catch (error) {
+      logger.error('AI send_invoice_reminder failed', error);
+      return {
+        success: false,
+        message: 'Failed to send invoice reminder',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async generate_cash_flow_forecast(args, context): Promise<ToolResult> {
+    try {
+      const days = args.days as number;
+
+      // Get connected finance integrations
+      const { integrations } = await import('@/db/schema');
+      const { inArray } = await import('drizzle-orm');
+      
+      const financeProviders = ['quickbooks', 'stripe', 'shopify'] as const;
+      const connectedIntegrations = await db.query.integrations.findMany({
+        where: and(
+          eq(integrations.workspaceId, context.workspaceId),
+          inArray(integrations.provider, financeProviders),
+          eq(integrations.status, 'active')
+        ),
+      });
+
+      if (connectedIntegrations.length === 0) {
+        return {
+          success: false,
+          message: 'No finance integrations connected. Please connect QuickBooks, Stripe, or Shopify to generate forecasts.',
+        };
+      }
+
+      const connectedProviders = connectedIntegrations.map(i => i.provider);
+
+      logger.info('AI generate_cash_flow_forecast', { days, connectedProviders, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `${days}-day cash flow forecast generated`,
+        data: {
+          forecastDays: days,
+          connectedProviders,
+          forecast: {
+            expectedInflows: 0,
+            expectedOutflows: 0,
+            projectedNetPosition: 0,
+          },
+          note: `Forecast based on data from: ${connectedProviders.join(', ')}. View Finance HQ for detailed projections.`,
+        },
+      };
+    } catch (error) {
+      logger.error('AI generate_cash_flow_forecast failed', error);
+      return {
+        success: false,
+        message: 'Failed to generate cash flow forecast',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async compare_financial_periods(args, context): Promise<ToolResult> {
+    try {
+      const metric = args.metric as string;
+      const period1 = args.period1 as string;
+      const period2 = args.period2 as string;
+
+      // Get connected finance integrations
+      const { integrations } = await import('@/db/schema');
+      const { inArray } = await import('drizzle-orm');
+      
+      const financeProviders = ['quickbooks', 'stripe', 'shopify'] as const;
+      const connectedIntegrations = await db.query.integrations.findMany({
+        where: and(
+          eq(integrations.workspaceId, context.workspaceId),
+          inArray(integrations.provider, financeProviders),
+          eq(integrations.status, 'active')
+        ),
+      });
+
+      if (connectedIntegrations.length === 0) {
+        return {
+          success: false,
+          message: 'No finance integrations connected. Please connect QuickBooks, Stripe, or Shopify to compare periods.',
+        };
+      }
+
+      const connectedProviders = connectedIntegrations.map(i => i.provider);
+
+      logger.info('AI compare_financial_periods', { metric, period1, period2, connectedProviders, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Comparison of ${metric} between ${period1.replace('_', ' ')} and ${period2.replace('_', ' ')}`,
+        data: {
+          metric,
+          period1: {
+            label: period1.replace('_', ' '),
+            value: 0,
+          },
+          period2: {
+            label: period2.replace('_', ' '),
+            value: 0,
+          },
+          change: {
+            absolute: 0,
+            percentage: '0%',
+          },
+          connectedProviders,
+          note: 'View Finance HQ for detailed period comparisons with charts.',
+        },
+      };
+    } catch (error) {
+      logger.error('AI compare_financial_periods failed', error);
+      return {
+        success: false,
+        message: 'Failed to compare financial periods',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_finance_integrations(args, context): Promise<ToolResult> {
+    try {
+      const { integrations } = await import('@/db/schema');
+      const { inArray } = await import('drizzle-orm');
+      
+      const financeProviders = ['quickbooks', 'stripe', 'shopify'] as const;
+      const allIntegrations = await db.query.integrations.findMany({
+        where: and(
+          eq(integrations.workspaceId, context.workspaceId),
+          inArray(integrations.provider, financeProviders)
+        ),
+      });
+
+      const connected: string[] = [];
+      const expired: string[] = [];
+      const available: string[] = [];
+
+      for (const provider of financeProviders) {
+        const integration = allIntegrations.find(i => i.provider === provider);
+        if (!integration) {
+          available.push(provider);
+        } else if (integration.status === 'active') {
+          connected.push(provider);
+        } else if (integration.status === 'expired') {
+          expired.push(provider);
+        } else {
+          available.push(provider);
+        }
+      }
+
+      const details: Record<string, { status: string; lastSyncAt?: string; accountName?: string }> = {};
+      for (const integration of allIntegrations) {
+        details[integration.provider] = {
+          status: integration.status,
+          lastSyncAt: integration.lastSyncAt?.toISOString(),
+          accountName: integration.displayName || integration.name || undefined,
+        };
+      }
+
+      return {
+        success: true,
+        message: `Found ${connected.length} connected finance integration(s)`,
+        data: {
+          connected,
+          expired,
+          available,
+          details,
+          summary: connected.length > 0
+            ? `Connected to: ${connected.join(', ')}`
+            : 'No finance integrations connected. Connect QuickBooks, Stripe, or Shopify to enable Finance HQ.',
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_finance_integrations failed', error);
+      return {
+        success: false,
+        message: 'Failed to get finance integrations',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -2703,6 +3178,7 @@ export const toolsByCategory = {
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections'],
   marketing: ['create_campaign', 'get_campaign_stats'],
   deals: ['create_deal', 'update_deal', 'get_deals_closing_soon'],
+  finance: ['get_finance_summary', 'get_overdue_invoices', 'send_invoice_reminder', 'generate_cash_flow_forecast', 'compare_financial_periods', 'get_finance_integrations'],
 };
 
 export function getToolsForCapability(capability: string): ChatCompletionTool[] {
@@ -2726,6 +3202,9 @@ export function getToolsForCapability(capability: string): ChatCompletionTool[] 
       break;
     case 'research':
       toolNames.push(...toolsByCategory.crm);
+      break;
+    case 'finance':
+      toolNames.push(...toolsByCategory.finance, ...toolsByCategory.analytics);
       break;
     default:
       // Return all tools

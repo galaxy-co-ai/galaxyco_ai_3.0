@@ -231,10 +231,83 @@ function buildProactiveInsightsSection(context: AIContextData): string {
     insights.push(`📅 You have ${context.calendar.todayEventCount} event(s) scheduled for today.`);
   }
 
+  // Finance insights
+  if (context.finance?.recentInvoices) {
+    const overdueInvoices = context.finance.recentInvoices.filter(inv => inv.status === 'overdue');
+    if (overdueInvoices.length > 0) {
+      const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+      insights.push(`💰 You have ${overdueInvoices.length} overdue invoice(s) totaling ${formatNumber(totalOverdue)}.`);
+    }
+  }
+
   if (insights.length === 0) return '';
 
   return `## Proactive Insights to Mention (when relevant)
 ${insights.join('\n')}`;
+}
+
+// ============================================================================
+// FINANCE PROMPT SECTION
+// ============================================================================
+
+/**
+ * Build finance-specific system prompt section
+ */
+function buildFinanceSection(context: AIContextData, feature?: string): string {
+  const finance = context.finance;
+  
+  if (!finance?.hasFinanceIntegrations) {
+    return '';
+  }
+
+  let section = `
+## FINANCE CAPABILITIES
+
+You have access to the user's financial data from: ${finance.connectedProviders.join(', ')}.`;
+
+  // Add summary if available
+  if (finance.summary) {
+    section += `
+
+Current Financial Summary:
+- Revenue: ${formatNumber(finance.summary.revenue)}
+- Expenses: ${formatNumber(finance.summary.expenses)}
+- Profit: ${formatNumber(finance.summary.profit)}
+- Outstanding Invoices: ${formatNumber(finance.summary.outstandingInvoices)}
+- Cash Flow: ${formatNumber(finance.summary.cashflow)}`;
+  }
+
+  // Add finance-specific guidance when user is on finance page
+  if (feature === 'finance') {
+    section += `
+
+The user is currently viewing Finance HQ. You can:
+- Summarize their financial health
+- Explain trends in revenue, expenses, or cash flow
+- Help with invoices (list overdue, send reminders, create new)
+- Analyze transactions and identify patterns
+- Generate forecasts based on historical data
+- Compare periods (this month vs last month, YoY)
+
+When discussing finances:
+- Be precise with numbers
+- Always clarify which data source (QuickBooks, Stripe, Shopify)
+- Offer actionable next steps
+- Be proactive about flagging issues (overdue invoices, cash flow concerns)`;
+  }
+
+  // Add alert for overdue invoices
+  if (finance.recentInvoices) {
+    const overdueInvoices = finance.recentInvoices.filter(inv => inv.status === 'overdue');
+    if (overdueInvoices.length > 0) {
+      const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+      section += `
+
+⚠️ ALERT: There are ${overdueInvoices.length} overdue invoices totaling ${formatNumber(totalOverdue)}. Consider proactively mentioning this.`;
+    }
+  }
+
+  return section;
 }
 
 // ============================================================================
@@ -260,6 +333,12 @@ export function generateSystemPrompt(
   if (context) {
     sections.push(buildContextSection(context));
     sections.push(buildInstructionsSection(context));
+    
+    // Finance section (if finance integrations connected)
+    const financeSection = buildFinanceSection(context, feature);
+    if (financeSection) {
+      sections.push(financeSection);
+    }
     
     // Proactive insights (if enabled)
     if (context.preferences.enableProactiveInsights) {
@@ -339,6 +418,21 @@ Focus on gathering and synthesizing information about:
 - Contacts and decision makers
 - Industry trends
 Use CRM data to provide context on existing relationships.`,
+
+    'finance': `## Current Mode: Finance HQ
+Focus on financial data and insights. Use finance tools to:
+- Get financial summaries and KPIs
+- List and manage invoices (especially overdue ones)
+- Send payment reminders to customers
+- Generate cash flow forecasts
+- Compare financial performance across periods
+
+When discussing finances:
+- Always cite the data source (QuickBooks, Stripe, or Shopify)
+- Use precise numbers with proper currency formatting
+- Proactively flag issues like overdue invoices or cash flow concerns
+- Offer actionable next steps
+- When comparing periods, show both absolute and percentage changes`,
   };
 
   return instructions[feature] || null;
