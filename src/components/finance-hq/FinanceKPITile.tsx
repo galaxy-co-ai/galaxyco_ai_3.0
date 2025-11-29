@@ -44,8 +44,8 @@ interface FinanceKPITileProps {
 }
 
 /**
- * Individual KPI card display with value, label, and trend indicator.
- * Compact horizontal layout with icon inline with value.
+ * Individual KPI card display with label, value, and trend indicator.
+ * Reading order: Label → Value → Delta (natural information hierarchy)
  */
 export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
   const Icon = getIconByName(kpi.icon);
@@ -57,23 +57,22 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
       role="article"
       aria-label={`${kpi.label}: ${kpi.formattedValue}`}
     >
-      {/* Icon + Value on same row */}
-      <div className="flex items-center gap-2.5">
+      {/* Icon + Label on top row */}
+      <div className="flex items-center gap-2 mb-1">
         <div className={cn("p-1.5 rounded-lg shrink-0", kpi.iconBg)}>
           <Icon className={cn("h-4 w-4", kpi.iconColor)} aria-hidden="true" />
         </div>
-        <div className="min-w-0">
-          <div className="text-lg font-semibold text-foreground leading-tight">
-            {kpi.formattedValue}
-          </div>
-          <div className="text-[11px] text-muted-foreground">{kpi.label}</div>
-        </div>
+        <span className="text-xs text-muted-foreground font-medium">{kpi.label}</span>
       </div>
-      {/* Delta row */}
+      {/* Value - prominent */}
+      <div className="text-xl font-semibold text-foreground leading-tight pl-[34px]">
+        {kpi.formattedValue}
+      </div>
+      {/* Delta - contextualizes the value */}
       {kpi.delta !== undefined && (
         <div
           className={cn(
-            "text-[11px] mt-2 flex items-center gap-0.5 pl-[38px]",
+            "text-[11px] mt-1 flex items-center gap-0.5 pl-[34px]",
             isPositive ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"
           )}
           aria-label={`${isPositive ? "Increased" : "Decreased"} by ${Math.abs(kpi.delta)}%${kpi.deltaLabel ? ` ${kpi.deltaLabel}` : ""}`}
@@ -99,14 +98,12 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
 export function FinanceKPITileSkeleton() {
   return (
     <Card className="p-3 rounded-xl shadow-sm border !gap-0">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2 mb-1">
         <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
-        <div className="min-w-0">
-          <Skeleton className="h-5 w-20 mb-1" />
-          <Skeleton className="h-3 w-14" />
-        </div>
+        <Skeleton className="h-3 w-16" />
       </div>
-      <Skeleton className="h-3 w-24 mt-2 ml-[38px]" />
+      <Skeleton className="h-6 w-24 ml-[34px]" />
+      <Skeleton className="h-3 w-28 mt-1 ml-[34px]" />
     </Card>
   );
 }
