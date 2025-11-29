@@ -8,6 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { NeptuneDocumentSidebar } from "./NeptuneDocumentSidebar";
 import { EstimateForm } from "./forms/EstimateForm";
+import { InvoiceForm } from "./forms/InvoiceForm";
+import { ChangeOrderForm } from "./forms/ChangeOrderForm";
+import { ReceiptForm } from "./forms/ReceiptForm";
+import { ExpenseForm } from "./forms/ExpenseForm";
+import { PaymentForm } from "./forms/PaymentForm";
 import type { DocumentType, FinanceDocument, DocumentChatMessage } from "./types";
 
 interface DocumentCreatorDialogProps {
@@ -246,16 +251,22 @@ export function DocumentCreatorDialog({
             )}>
               <div className="p-6">
                 {documentType === "estimate" && (
-                  <EstimateForm
-                    ref={formRef}
-                    initialData={formData}
-                  />
+                  <EstimateForm ref={formRef} initialData={formData} />
                 )}
-                {/* Add other form types here */}
-                {documentType !== "estimate" && (
-                  <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
-                    {config.title} form coming soon...
-                  </div>
+                {documentType === "invoice" && (
+                  <InvoiceForm ref={formRef} initialData={formData} />
+                )}
+                {documentType === "change_order" && (
+                  <ChangeOrderForm ref={formRef} initialData={formData} />
+                )}
+                {documentType === "receipt" && (
+                  <ReceiptForm ref={formRef} initialData={formData} />
+                )}
+                {documentType === "expense" && (
+                  <ExpenseForm ref={formRef} initialData={formData} />
+                )}
+                {documentType === "payment" && (
+                  <PaymentForm ref={formRef} initialData={formData} />
                 )}
               </div>
             </div>
@@ -299,7 +310,12 @@ export function DocumentCreatorDialog({
                 disabled={isSaving}
               >
                 <Send className="h-3.5 w-3.5" />
-                {documentType === "estimate" ? "Send Estimate" : "Save & Send"}
+                {documentType === "estimate" && "Send Estimate"}
+                {documentType === "invoice" && "Send Invoice"}
+                {documentType === "change_order" && "Submit Change Order"}
+                {documentType === "receipt" && "Issue Receipt"}
+                {documentType === "expense" && "Record Expense"}
+                {documentType === "payment" && "Record Payment"}
               </Button>
             </div>
           </div>
