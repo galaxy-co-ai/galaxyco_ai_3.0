@@ -91,8 +91,8 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
         {kpi.label}
       </Badge>
 
-      {/* Icon + Value inline */}
-      <div className="flex items-center gap-2.5">
+      {/* Icon + Value centered */}
+      <div className="flex items-center justify-center gap-2.5">
         <div className={cn("p-1.5 rounded-lg shrink-0", kpi.iconBg)}>
           <Icon className={cn("h-4 w-4", kpi.iconColor)} aria-hidden="true" />
         </div>
@@ -101,11 +101,11 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
         </div>
       </div>
 
-      {/* Delta - below value */}
+      {/* Delta - centered below value */}
       {kpi.delta !== undefined && (
         <div
           className={cn(
-            "text-[11px] mt-1.5 flex items-center gap-0.5 pl-[34px]",
+            "text-[11px] mt-1.5 flex items-center justify-center gap-0.5",
             isPositive ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"
           )}
           aria-label={`${isPositive ? "Increased" : "Decreased"} by ${Math.abs(kpi.delta)}%${kpi.deltaLabel ? ` ${kpi.deltaLabel}` : ""}`}
@@ -132,11 +132,11 @@ export function FinanceKPITileSkeleton() {
   return (
     <Card className="p-3 pt-5 rounded-xl shadow-sm border !gap-0 relative overflow-visible">
       <Skeleton className="absolute -top-2.5 left-1/2 -translate-x-1/2 h-5 w-16 rounded-full" />
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-center gap-2.5">
         <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
         <Skeleton className="h-6 w-20" />
       </div>
-      <Skeleton className="h-3 w-28 mt-1.5 ml-[34px]" />
+      <Skeleton className="h-3 w-28 mt-1.5 mx-auto" />
     </Card>
   );
 }
