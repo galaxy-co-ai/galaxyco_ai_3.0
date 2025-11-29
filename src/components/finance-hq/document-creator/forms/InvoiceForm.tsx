@@ -21,9 +21,9 @@ interface InvoiceFormProps {
   initialData?: Partial<FinanceDocument>;
 }
 
-export interface InvoiceFormRef {
-  getFormData: () => Partial<InvoiceDocument>;
-}
+export type InvoiceFormRef = {
+  getFormData: () => Partial<FinanceDocument>;
+};
 
 const TAX_RATES = [
   { label: "No Tax", value: 0 },

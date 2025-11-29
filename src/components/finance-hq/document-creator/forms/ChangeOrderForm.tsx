@@ -15,9 +15,9 @@ interface ChangeOrderFormProps {
   initialData?: Partial<FinanceDocument>;
 }
 
-export interface ChangeOrderFormRef {
-  getFormData: () => Partial<ChangeOrderDocument>;
-}
+export type ChangeOrderFormRef = {
+  getFormData: () => Partial<FinanceDocument>;
+};
 
 function generateChangeOrderNumber(): string {
   const date = new Date();
@@ -199,9 +199,9 @@ export const ChangeOrderForm = React.forwardRef<ChangeOrderFormRef, ChangeOrderF
             </p>
           </div>
           <Switch
-            id="approval-required"
             checked={approvalRequired}
             onCheckedChange={setApprovalRequired}
+            aria-label="Requires Client Approval"
           />
         </div>
 

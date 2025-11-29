@@ -148,3 +148,8 @@ export interface DocumentCreatorState {
   chatMessages: DocumentChatMessage[];
 }
 
+// Generic form ref interface for all document forms
+export interface DocumentFormRef {
+  getFormData: () => Partial<FinanceDocument>;
+}
+

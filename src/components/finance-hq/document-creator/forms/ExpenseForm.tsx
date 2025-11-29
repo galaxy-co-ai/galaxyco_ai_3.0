@@ -20,9 +20,9 @@ interface ExpenseFormProps {
   initialData?: Partial<FinanceDocument>;
 }
 
-export interface ExpenseFormRef {
-  getFormData: () => Partial<ExpenseDocument>;
-}
+export type ExpenseFormRef = {
+  getFormData: () => Partial<FinanceDocument>;
+};
 
 const EXPENSE_CATEGORIES = [
   { label: "Materials & Supplies", value: "materials" },
@@ -265,9 +265,9 @@ export const ExpenseForm = React.forwardRef<ExpenseFormRef, ExpenseFormProps>(
             </p>
           </div>
           <Switch
-            id="reimbursable"
             checked={reimbursable}
             onCheckedChange={setReimbursable}
+            aria-label="Reimbursable Expense"
           />
         </div>
 

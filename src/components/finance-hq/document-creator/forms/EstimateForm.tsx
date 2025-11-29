@@ -21,9 +21,9 @@ interface EstimateFormProps {
   initialData?: Partial<FinanceDocument>;
 }
 
-export interface EstimateFormRef {
-  getFormData: () => Partial<EstimateDocument>;
-}
+export type EstimateFormRef = {
+  getFormData: () => Partial<FinanceDocument>;
+};
 
 const TAX_RATES = [
   { label: "No Tax", value: 0 },

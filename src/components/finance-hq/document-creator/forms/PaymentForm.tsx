@@ -19,9 +19,9 @@ interface PaymentFormProps {
   initialData?: Partial<FinanceDocument>;
 }
 
-export interface PaymentFormRef {
-  getFormData: () => Partial<PaymentDocument>;
-}
+export type PaymentFormRef = {
+  getFormData: () => Partial<FinanceDocument>;
+};
 
 const PAYMENT_METHODS = [
   { label: "Cash", value: "cash" },

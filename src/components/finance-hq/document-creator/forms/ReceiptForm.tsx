@@ -19,9 +19,9 @@ interface ReceiptFormProps {
   initialData?: Partial<FinanceDocument>;
 }
 
-export interface ReceiptFormRef {
-  getFormData: () => Partial<ReceiptDocument>;
-}
+export type ReceiptFormRef = {
+  getFormData: () => Partial<FinanceDocument>;
+};
 
 const PAYMENT_METHODS = [
   { label: "Cash", value: "cash" },
