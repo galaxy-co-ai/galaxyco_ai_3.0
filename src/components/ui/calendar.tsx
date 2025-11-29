@@ -20,7 +20,7 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row gap-4 sm:gap-6",
+        months: "flex flex-col sm:flex-row gap-4 sm:gap-8",
         month: "flex flex-col gap-4",
         month_caption: "flex justify-center pt-1 relative items-center h-7",
         caption_label: "text-sm font-medium",
@@ -36,7 +36,7 @@ function Calendar({
         month_grid: "w-full border-collapse",
         weekdays: "flex",
         weekday:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] flex items-center justify-center",
+          "text-muted-foreground rounded-md w-10 font-normal text-[0.8rem] flex items-center justify-center",
         week: "flex w-full mt-2",
         day: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50",
@@ -46,7 +46,7 @@ function Calendar({
         ),
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground"
+          "h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground"
         ),
         range_start:
           "day-range-start rounded-l-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",

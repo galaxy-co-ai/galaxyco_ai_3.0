@@ -117,7 +117,7 @@ export function FinanceDatePicker({ value, onChange }: FinanceDatePickerProps) {
           <ChevronDown className="ml-1.5 h-3 w-3 opacity-50" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0" align="center">
         <div className="flex">
           {/* Presets sidebar */}
           <div className="border-r border-border p-2 space-y-0.5 w-32">
@@ -138,7 +138,7 @@ export function FinanceDatePicker({ value, onChange }: FinanceDatePickerProps) {
           </div>
 
           {/* Calendar */}
-          <div className="p-3">
+          <div className="p-4">
             <Calendar
               mode="range"
               defaultMonth={value.start}
