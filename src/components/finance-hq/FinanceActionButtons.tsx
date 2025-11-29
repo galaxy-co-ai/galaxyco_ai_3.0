@@ -9,6 +9,8 @@ import {
   FileBarChart,
   PiggyBank,
   ChevronDown,
+  ClipboardList,
+  ReceiptText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +29,8 @@ interface FinanceActionButtonsProps {
 
 export type FinanceAction =
   | "create_invoice"
+  | "create_estimate"
+  | "create_receipt"
   | "create_expense"
   | "record_payment"
   | "report_pnl"
@@ -75,6 +79,21 @@ export function FinanceActionButtons({
             <Receipt className="h-3.5 w-3.5 mr-2 text-emerald-600" aria-hidden="true" />
             New Invoice
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleAction("create_estimate")}
+            className="text-xs"
+          >
+            <ClipboardList className="h-3.5 w-3.5 mr-2 text-blue-600" aria-hidden="true" />
+            New Estimate
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleAction("create_receipt")}
+            className="text-xs"
+          >
+            <ReceiptText className="h-3.5 w-3.5 mr-2 text-teal-600" aria-hidden="true" />
+            New Receipt
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => handleAction("create_expense")}
             className="text-xs"
