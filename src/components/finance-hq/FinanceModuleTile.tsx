@@ -141,12 +141,12 @@ function ModuleList({ items }: { items: ListData["items"] }) {
  */
 function ModuleMetric({ value, formattedValue, trend }: MetricData) {
   return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <span className="text-2xl font-semibold text-foreground">{formattedValue}</span>
+    <div className="flex items-center justify-center gap-3">
+      <span className="text-xl font-semibold text-foreground">{formattedValue}</span>
       {trend !== undefined && (
         <span
           className={cn(
-            "text-xs flex items-center gap-1 mt-1",
+            "text-xs flex items-center gap-0.5",
             trend >= 0 ? "text-green-600" : "text-red-600"
           )}
         >
@@ -188,36 +188,38 @@ export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
 
   return (
     <Card
-      className="p-4 rounded-xl shadow-sm border hover:shadow-md transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="p-3 rounded-xl shadow-sm border hover:shadow-md transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 !gap-0"
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`View ${module.title} details from ${module.source}`}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className={cn("p-1.5 rounded-lg", sourceColors.iconBg)}>
-            <Icon className={cn("h-4 w-4", sourceColors.iconColor)} aria-hidden="true" />
+      {/* Compact header: icon, title, badge all inline */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={cn("p-1.5 rounded-lg shrink-0", sourceColors.iconBg)}>
+            <Icon className={cn("h-3.5 w-3.5", sourceColors.iconColor)} aria-hidden="true" />
           </div>
-          <div>
-            <h3 className="text-sm font-medium text-foreground">{module.title}</h3>
-            <Badge
-              variant="outline"
-              className={cn("text-[10px] h-4 px-1.5 border capitalize", sourceColors.badgeClass)}
-            >
-              {module.source}
-            </Badge>
-          </div>
+          <h3 className="text-sm font-medium text-foreground truncate">{module.title}</h3>
+          <Badge
+            variant="outline"
+            className={cn("text-[9px] h-4 px-1.5 border capitalize shrink-0", sourceColors.badgeClass)}
+          >
+            {module.source}
+          </Badge>
         </div>
         <ChevronRight
-          className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors"
+          className="h-4 w-4 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0 ml-1"
           aria-hidden="true"
         />
       </div>
 
-      {/* Module Content - varies by type */}
-      <div className="h-24">
+      {/* Module Content - dynamic height based on content type */}
+      <div className={cn(
+        module.type === "chart" ? "h-16" : "min-h-0",
+        module.type === "metric" && "h-14 flex items-center justify-center"
+      )}>
         {module.type === "chart" && isChartData(module.data) && (
           <ModuleChart data={module.data} />
         )}
@@ -229,7 +231,7 @@ export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
         )}
       </div>
 
-      <div className="text-[11px] text-muted-foreground mt-3">
+      <div className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">
         Updated {formatRelativeTime(module.lastUpdated)}
       </div>
     </Card>
@@ -241,18 +243,16 @@ export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
  */
 export function FinanceModuleTileSkeleton() {
   return (
-    <Card className="p-4 rounded-xl shadow-sm border">
-      <div className="flex items-center justify-between mb-3">
+    <Card className="p-3 rounded-xl shadow-sm border !gap-0">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-7 w-7 rounded-lg" />
-          <div>
-            <Skeleton className="h-4 w-24 mb-1" />
-            <Skeleton className="h-3 w-14" />
-          </div>
+          <Skeleton className="h-6 w-6 rounded-lg shrink-0" />
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-12 rounded-full" />
         </div>
         <Skeleton className="h-4 w-4 rounded" />
       </div>
-      <div className="h-24 flex items-end gap-1 pt-2">
+      <div className="h-16 flex items-end gap-1 pt-1">
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton
             key={i}
@@ -261,7 +261,7 @@ export function FinanceModuleTileSkeleton() {
           />
         ))}
       </div>
-      <Skeleton className="h-2.5 w-20 mt-3" />
+      <Skeleton className="h-2.5 w-20 mt-2 pt-2" />
     </Card>
   );
 }
