@@ -120,8 +120,8 @@ export function FinanceDatePicker({ value, onChange }: FinanceDatePickerProps) {
       <PopoverContent className="w-auto p-0" align="start">
         <div className="flex">
           {/* Presets sidebar */}
-          <div className="border-r border-border p-2 space-y-1">
-            <p className="text-xs font-medium text-muted-foreground px-2 py-1">
+          <div className="border-r border-border p-2 space-y-0.5 w-32">
+            <p className="text-[11px] font-medium text-muted-foreground px-2 py-1">
               Quick select
             </p>
             {presets.map((preset) => (
@@ -129,7 +129,7 @@ export function FinanceDatePicker({ value, onChange }: FinanceDatePickerProps) {
                 key={preset.label}
                 variant="ghost"
                 size="sm"
-                className="w-full justify-start text-sm font-normal"
+                className="w-full justify-start text-xs font-normal h-7 px-2"
                 onClick={() => handlePresetClick(preset)}
               >
                 {preset.label}
