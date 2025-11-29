@@ -19,7 +19,6 @@ import type { EstimateDocument, LineItem, FinanceDocument } from "../types";
 
 interface EstimateFormProps {
   initialData?: Partial<FinanceDocument>;
-  onChange?: (data: Partial<EstimateDocument>) => void;
 }
 
 export interface EstimateFormRef {
@@ -67,7 +66,7 @@ function createDefaultLineItem(): LineItem {
 }
 
 export const EstimateForm = React.forwardRef<EstimateFormRef, EstimateFormProps>(
-  function EstimateForm({ initialData, onChange }, ref) {
+  function EstimateForm({ initialData }, ref) {
     // Form state
     const [estimateNumber, setEstimateNumber] = React.useState(
       (initialData as EstimateDocument)?.number || generateEstimateNumber()
@@ -164,10 +163,8 @@ export const EstimateForm = React.forwardRef<EstimateFormRef, EstimateFormProps>
       getFormData,
     }), [getFormData]);
 
-    // Notify parent of changes
-    React.useEffect(() => {
-      onChange?.(getFormData());
-    }, [getFormData, onChange]);
+    // Note: We don't auto-notify parent on every change to avoid infinite loops
+    // Parent should use the ref to get form data when needed (e.g., on save)
 
     const formatCurrency = (value: number) => {
       return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

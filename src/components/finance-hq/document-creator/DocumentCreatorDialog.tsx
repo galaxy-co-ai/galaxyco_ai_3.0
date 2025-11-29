@@ -174,10 +174,6 @@ export function DocumentCreatorDialog({
     }
   };
 
-  const handleFormChange = (data: Partial<FinanceDocument>) => {
-    setFormData(data);
-  };
-
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
@@ -253,7 +249,6 @@ export function DocumentCreatorDialog({
                   <EstimateForm
                     ref={formRef}
                     initialData={formData}
-                    onChange={handleFormChange}
                   />
                 )}
                 {/* Add other form types here */}
