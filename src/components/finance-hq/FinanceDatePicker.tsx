@@ -104,16 +104,17 @@ export function FinanceDatePicker({ value, onChange }: FinanceDatePickerProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          size="sm"
           className={cn(
-            "justify-start text-left font-normal min-w-[240px]",
+            "h-8 justify-start text-left font-normal text-xs min-w-[180px]",
             !value && "text-muted-foreground"
           )}
           aria-label="Select date range"
           aria-expanded={open}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+          <CalendarIcon className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
           <span className="flex-1">{formatDateRange()}</span>
-          <ChevronDown className="ml-2 h-4 w-4 opacity-50" aria-hidden="true" />
+          <ChevronDown className="ml-1.5 h-3 w-3 opacity-50" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">

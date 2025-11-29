@@ -17,12 +17,12 @@ export function FinanceKPIGrid({ kpis, isLoading }: FinanceKPIGridProps) {
   if (isLoading) {
     return (
       <div
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
         role="region"
         aria-label="Key performance indicators loading"
         aria-busy="true"
       >
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <FinanceKPITileSkeleton key={i} />
         ))}
       </div>
@@ -35,7 +35,7 @@ export function FinanceKPIGrid({ kpis, isLoading }: FinanceKPIGridProps) {
 
   return (
     <div
-      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+      className="grid grid-cols-2 md:grid-cols-4 gap-3"
       role="region"
       aria-label="Key performance indicators"
     >

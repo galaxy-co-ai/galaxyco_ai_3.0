@@ -31,7 +31,7 @@ export function FinanceModuleGrid({
   if (isLoading) {
     return (
       <section
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
         role="region"
         aria-label="Finance modules loading"
         aria-busy="true"
@@ -46,7 +46,7 @@ export function FinanceModuleGrid({
   if (filteredModules.length === 0) {
     return (
       <section
-        className="text-center py-12 text-muted-foreground"
+        className="text-center py-8 text-xs text-muted-foreground"
         role="region"
         aria-label="Finance modules"
       >
@@ -57,7 +57,7 @@ export function FinanceModuleGrid({
 
   return (
     <section
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"
       role="region"
       aria-label="Finance modules"
     >

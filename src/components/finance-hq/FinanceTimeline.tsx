@@ -121,31 +121,31 @@ function TimelineEvent({ event, onClick }: TimelineEventProps) {
 
   return (
     <div
-      className="flex-shrink-0 w-48 p-3 rounded-xl border bg-card hover:bg-accent/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex-shrink-0 w-44 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`${event.label}${event.amount ? `: ${formatAmount(event.amount)}` : ""} on ${formatEventDate(event.date)}`}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <div className={cn("p-1.5 rounded-lg", colors.bg)}>
-          <Icon className={cn("h-3.5 w-3.5", colors.icon)} aria-hidden="true" />
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <div className={cn("p-1 rounded-md", colors.bg)}>
+          <Icon className={cn("h-3 w-3", colors.icon)} aria-hidden="true" />
         </div>
         <Badge
           variant="outline"
-          className={cn("text-[10px] border capitalize", getSourceBadgeClass(event.source))}
+          className={cn("text-[9px] h-4 px-1 border capitalize", getSourceBadgeClass(event.source))}
         >
           {event.source}
         </Badge>
       </div>
-      <p className="text-sm font-medium text-foreground truncate">{event.label}</p>
+      <p className="text-xs font-medium text-foreground truncate">{event.label}</p>
       {event.amount !== undefined && (
-        <p className="text-lg font-semibold text-foreground mt-1">
+        <p className="text-sm font-semibold text-foreground mt-0.5">
           {formatAmount(event.amount)}
         </p>
       )}
-      <p className="text-xs text-muted-foreground mt-1">
+      <p className="text-[10px] text-muted-foreground mt-0.5">
         {formatEventDate(event.date)}
       </p>
     </div>
@@ -173,9 +173,9 @@ export function FinanceTimeline({
 
   if (!events || events.length === 0) {
     return (
-      <Card className="p-6 rounded-2xl shadow-sm border">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Financial Timeline</h3>
-        <p className="text-muted-foreground text-center py-8">
+      <Card className="p-4 rounded-xl shadow-sm border">
+        <h3 className="text-sm font-medium text-foreground mb-3">Financial Timeline</h3>
+        <p className="text-xs text-muted-foreground text-center py-6">
           No recent financial events to display.
         </p>
       </Card>
@@ -183,10 +183,10 @@ export function FinanceTimeline({
   }
 
   return (
-    <Card className="p-6 rounded-2xl shadow-sm border" role="region" aria-label="Financial timeline">
-      <h3 className="text-lg font-semibold text-foreground mb-4">Financial Timeline</h3>
+    <Card className="p-4 rounded-xl shadow-sm border" role="region" aria-label="Financial timeline">
+      <h3 className="text-sm font-medium text-foreground mb-3">Financial Timeline</h3>
       <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex gap-3 pb-4">
+        <div className="flex gap-2 pb-3">
           {events.map((event) => (
             <TimelineEvent
               key={event.id}
@@ -208,18 +208,18 @@ export function FinanceTimeline({
  */
 export function FinanceTimelineSkeleton() {
   return (
-    <Card className="p-6 rounded-2xl shadow-sm border">
-      <Skeleton className="h-6 w-40 mb-4" />
-      <div className="flex gap-3 overflow-hidden">
+    <Card className="p-4 rounded-xl shadow-sm border">
+      <Skeleton className="h-4 w-32 mb-3" />
+      <div className="flex gap-2 overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex-shrink-0 w-48 p-3 rounded-xl border">
-            <div className="flex items-center gap-2 mb-2">
-              <Skeleton className="h-7 w-7 rounded-lg" />
-              <Skeleton className="h-4 w-16" />
+          <div key={i} className="flex-shrink-0 w-44 p-3 rounded-lg border">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Skeleton className="h-5 w-5 rounded-md" />
+              <Skeleton className="h-4 w-12" />
             </div>
-            <Skeleton className="h-4 w-32 mb-2" />
-            <Skeleton className="h-6 w-20 mb-1" />
-            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-28 mb-1" />
+            <Skeleton className="h-4 w-16 mb-0.5" />
+            <Skeleton className="h-2.5 w-20" />
           </div>
         ))}
       </div>

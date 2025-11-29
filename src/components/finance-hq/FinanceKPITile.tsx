@@ -53,23 +53,23 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
 
   return (
     <Card
-      className="p-4 md:p-6 rounded-2xl shadow-sm bg-gradient-to-br from-card to-muted/30 border hover:shadow-md transition-shadow"
+      className="p-4 rounded-xl shadow-sm bg-gradient-to-br from-card to-muted/20 border hover:shadow-md transition-shadow"
       role="article"
       aria-label={`${kpi.label}: ${kpi.formattedValue}`}
     >
-      <div className="flex items-center gap-3 mb-3">
-        <div className={cn("p-2 rounded-xl", kpi.iconBg)}>
-          <Icon className={cn("h-5 w-5", kpi.iconColor)} aria-hidden="true" />
+      <div className="flex items-center gap-2 mb-2">
+        <div className={cn("p-1.5 rounded-lg", kpi.iconBg)}>
+          <Icon className={cn("h-4 w-4", kpi.iconColor)} aria-hidden="true" />
         </div>
       </div>
-      <div className="text-2xl md:text-3xl font-bold text-foreground">
+      <div className="text-lg font-semibold text-foreground">
         {kpi.formattedValue}
       </div>
-      <div className="text-sm text-muted-foreground mt-1">{kpi.label}</div>
+      <div className="text-xs text-muted-foreground mt-0.5">{kpi.label}</div>
       {kpi.delta !== undefined && (
         <div
           className={cn(
-            "text-xs mt-2 flex items-center gap-1",
+            "text-[11px] mt-1.5 flex items-center gap-0.5",
             isPositive ? "text-green-600 dark:text-green-500" : "text-red-600 dark:text-red-500"
           )}
           aria-label={`${isPositive ? "Increased" : "Decreased"} by ${Math.abs(kpi.delta)}%${kpi.deltaLabel ? ` ${kpi.deltaLabel}` : ""}`}
@@ -94,13 +94,13 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
  */
 export function FinanceKPITileSkeleton() {
   return (
-    <Card className="p-4 md:p-6 rounded-2xl shadow-sm border">
-      <div className="flex items-center gap-3 mb-3">
-        <Skeleton className="h-9 w-9 rounded-xl" />
+    <Card className="p-4 rounded-xl shadow-sm border">
+      <div className="flex items-center gap-2 mb-2">
+        <Skeleton className="h-7 w-7 rounded-lg" />
       </div>
-      <Skeleton className="h-8 w-24 mb-2" />
-      <Skeleton className="h-4 w-16" />
-      <Skeleton className="h-3 w-20 mt-2" />
+      <Skeleton className="h-5 w-20 mb-1" />
+      <Skeleton className="h-3 w-14" />
+      <Skeleton className="h-3 w-16 mt-1.5" />
     </Card>
   );
 }

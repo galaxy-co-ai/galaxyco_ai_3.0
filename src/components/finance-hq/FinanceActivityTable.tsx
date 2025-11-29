@@ -31,7 +31,7 @@ function SourceBadge({ source }: { source: FinanceProvider }) {
   return (
     <Badge
       variant="outline"
-      className={cn("text-xs border capitalize", getSourceBadgeClass(source))}
+      className={cn("text-[10px] h-5 px-1.5 border capitalize", getSourceBadgeClass(source))}
     >
       {source}
     </Badge>
@@ -69,7 +69,7 @@ function AmountDisplay({
   return (
     <span
       className={cn(
-        "text-sm font-medium font-mono",
+        "text-xs font-medium font-mono",
         isNegative ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
       )}
     >
@@ -114,11 +114,11 @@ export function FinanceActivityTable({
 
   if (!transactions || transactions.length === 0) {
     return (
-      <Card className="rounded-2xl shadow-sm border overflow-hidden">
-        <div className="px-6 py-4 border-b border-border">
-          <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
+      <Card className="rounded-xl shadow-sm border overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-medium text-foreground">Recent Activity</h3>
         </div>
-        <div className="px-6 py-12 text-center text-muted-foreground">
+        <div className="px-4 py-8 text-center text-xs text-muted-foreground">
           No recent transactions to display.
         </div>
       </Card>
@@ -137,9 +137,9 @@ export function FinanceActivityTable({
   };
 
   return (
-    <Card className="rounded-2xl shadow-sm border overflow-hidden" role="region" aria-label="Recent activity">
-      <div className="px-6 py-4 border-b border-border">
-        <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
+    <Card className="rounded-xl shadow-sm border overflow-hidden" role="region" aria-label="Recent activity">
+      <div className="px-4 py-3 border-b border-border">
+        <h3 className="text-sm font-medium text-foreground">Recent Activity</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full" role="grid">
@@ -147,31 +147,31 @@ export function FinanceActivityTable({
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                className="px-4 py-2 text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider"
               >
                 Date
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                className="px-4 py-2 text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider"
               >
                 Source
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                className="px-4 py-2 text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider"
               >
                 Type
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                className="px-4 py-2 text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider"
               >
                 Description
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider"
+                className="px-4 py-2 text-right text-[10px] font-medium text-muted-foreground uppercase tracking-wider"
               >
                 Amount
               </th>
@@ -188,19 +188,19 @@ export function FinanceActivityTable({
                 tabIndex={0}
                 aria-label={`${tx.description}, ${getTypeLabel(tx.type)}, ${formatDate(tx.date)}`}
               >
-                <td className="px-6 py-4 text-sm text-muted-foreground whitespace-nowrap">
+                <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                   {formatDate(tx.date)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-2.5 whitespace-nowrap">
                   <SourceBadge source={tx.source} />
                 </td>
-                <td className="px-6 py-4 text-sm text-foreground capitalize whitespace-nowrap">
+                <td className="px-4 py-2.5 text-xs text-foreground capitalize whitespace-nowrap">
                   {getTypeLabel(tx.type)}
                 </td>
-                <td className="px-6 py-4 text-sm text-foreground max-w-xs truncate">
+                <td className="px-4 py-2.5 text-xs text-foreground max-w-xs truncate">
                   {tx.description}
                 </td>
-                <td className="px-6 py-4 text-right whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right whitespace-nowrap">
                   <AmountDisplay amount={tx.amount} type={tx.type} />
                 </td>
               </tr>
@@ -217,48 +217,48 @@ export function FinanceActivityTable({
  */
 export function FinanceActivityTableSkeleton() {
   return (
-    <Card className="rounded-2xl shadow-sm border overflow-hidden">
-      <div className="px-6 py-4 border-b border-border">
-        <Skeleton className="h-6 w-32" />
+    <Card className="rounded-xl shadow-sm border overflow-hidden">
+      <div className="px-4 py-3 border-b border-border">
+        <Skeleton className="h-4 w-28" />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-muted/50">
             <tr>
-              <th className="px-6 py-3 text-left">
-                <Skeleton className="h-3 w-10" />
+              <th className="px-4 py-2 text-left">
+                <Skeleton className="h-2.5 w-8" />
               </th>
-              <th className="px-6 py-3 text-left">
-                <Skeleton className="h-3 w-14" />
+              <th className="px-4 py-2 text-left">
+                <Skeleton className="h-2.5 w-12" />
               </th>
-              <th className="px-6 py-3 text-left">
-                <Skeleton className="h-3 w-10" />
+              <th className="px-4 py-2 text-left">
+                <Skeleton className="h-2.5 w-8" />
               </th>
-              <th className="px-6 py-3 text-left">
-                <Skeleton className="h-3 w-24" />
+              <th className="px-4 py-2 text-left">
+                <Skeleton className="h-2.5 w-20" />
               </th>
-              <th className="px-6 py-3 text-right">
-                <Skeleton className="h-3 w-16 ml-auto" />
+              <th className="px-4 py-2 text-right">
+                <Skeleton className="h-2.5 w-14 ml-auto" />
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {Array.from({ length: 5 }).map((_, i) => (
               <tr key={i}>
-                <td className="px-6 py-4">
-                  <Skeleton className="h-4 w-24" />
+                <td className="px-4 py-2.5">
+                  <Skeleton className="h-3 w-20" />
                 </td>
-                <td className="px-6 py-4">
-                  <Skeleton className="h-5 w-20 rounded-md" />
+                <td className="px-4 py-2.5">
+                  <Skeleton className="h-5 w-16 rounded-md" />
                 </td>
-                <td className="px-6 py-4">
-                  <Skeleton className="h-4 w-16" />
+                <td className="px-4 py-2.5">
+                  <Skeleton className="h-3 w-12" />
                 </td>
-                <td className="px-6 py-4">
-                  <Skeleton className="h-4 w-48" />
+                <td className="px-4 py-2.5">
+                  <Skeleton className="h-3 w-40" />
                 </td>
-                <td className="px-6 py-4 text-right">
-                  <Skeleton className="h-4 w-20 ml-auto" />
+                <td className="px-4 py-2.5 text-right">
+                  <Skeleton className="h-3 w-16 ml-auto" />
                 </td>
               </tr>
             ))}

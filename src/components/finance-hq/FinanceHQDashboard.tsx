@@ -10,6 +10,7 @@ import { FinanceActivityTable } from "./FinanceActivityTable";
 import { FinanceDetailDrawer } from "./FinanceDetailDrawer";
 import { FinanceDatePicker } from "./FinanceDatePicker";
 import { FinanceFilterChips } from "./FinanceFilterChips";
+import { FinanceActionButtons, type FinanceAction } from "./FinanceActionButtons";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -467,37 +468,43 @@ function FinanceHeader({
   filters,
   onFiltersChange,
   integrations,
+  onAction,
 }: {
   dateRange: DateRange;
   onDateRangeChange: (range: DateRange) => void;
   filters: FinanceFilters;
   onFiltersChange: (filters: FinanceFilters) => void;
   integrations?: FinanceIntegrationsResponse;
+  onAction?: (action: FinanceAction) => void;
 }) {
   return (
-    <header className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <header className="space-y-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-7 w-7 text-primary" aria-hidden="true" />
+          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
             Finance HQ
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground">
             Your unified financial command center
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <FinanceDatePicker value={dateRange} onChange={onDateRangeChange} />
-          <Button variant="outline" size="icon" aria-label="Ask Neptune AI">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
+          <Button variant="outline" size="sm" className="h-8" aria-label="Ask Neptune AI">
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
       </div>
-      <FinanceFilterChips
-        filters={filters}
-        onChange={onFiltersChange}
-        integrations={integrations}
-      />
+      {/* Filter and Action Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <FinanceFilterChips
+          filters={filters}
+          onChange={onFiltersChange}
+          integrations={integrations}
+        />
+        <FinanceActionButtons onAction={onAction} />
+      </div>
     </header>
   );
 }
@@ -589,6 +596,27 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
     setTimeout(() => setSelectedItem(null), 300);
   };
 
+  const handleAction = (action: FinanceAction) => {
+    // TODO: Implement action handling - for now, this can be connected to modals or navigation
+    // Example actions: create_invoice, create_expense, record_payment, report_pnl, etc.
+    switch (action) {
+      case "create_invoice":
+      case "create_expense":
+      case "record_payment":
+        // Would open a modal to create document
+        break;
+      case "report_pnl":
+      case "report_cashflow":
+      case "report_balance":
+        // Would generate/navigate to report view
+        break;
+      case "export_csv":
+      case "export_pdf":
+        // Would trigger export
+        break;
+    }
+  };
+
   // Check for no integrations (but not in demo mode)
   const hasIntegrations =
     displayIntegrations?.connected && displayIntegrations.connected.length > 0;
@@ -616,6 +644,7 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
         filters={filters}
         onFiltersChange={setFilters}
         integrations={displayIntegrations}
+        onAction={handleAction}
       />
 
       {/* Reconnect Banners */}
