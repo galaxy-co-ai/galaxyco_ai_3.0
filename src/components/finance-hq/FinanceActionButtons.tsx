@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ClipboardList,
   ReceiptText,
+  FilePenLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,8 +29,9 @@ interface FinanceActionButtonsProps {
 }
 
 export type FinanceAction =
-  | "create_invoice"
   | "create_estimate"
+  | "create_change_order"
+  | "create_invoice"
   | "create_receipt"
   | "create_expense"
   | "record_payment"
@@ -73,18 +75,25 @@ export function FinanceActionButtons({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem
-            onClick={() => handleAction("create_invoice")}
-            className="text-xs"
-          >
-            <Receipt className="h-3.5 w-3.5 mr-2 text-emerald-600" aria-hidden="true" />
-            New Invoice
-          </DropdownMenuItem>
-          <DropdownMenuItem
             onClick={() => handleAction("create_estimate")}
             className="text-xs"
           >
             <ClipboardList className="h-3.5 w-3.5 mr-2 text-blue-600" aria-hidden="true" />
             New Estimate
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleAction("create_change_order")}
+            className="text-xs"
+          >
+            <FilePenLine className="h-3.5 w-3.5 mr-2 text-orange-600" aria-hidden="true" />
+            Change Order
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleAction("create_invoice")}
+            className="text-xs"
+          >
+            <Receipt className="h-3.5 w-3.5 mr-2 text-emerald-600" aria-hidden="true" />
+            New Invoice
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleAction("create_receipt")}
