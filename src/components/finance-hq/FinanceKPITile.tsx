@@ -76,7 +76,7 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
 
   return (
     <Card
-      className="p-3 pt-5 rounded-xl shadow-sm bg-gradient-to-br from-card to-muted/20 border hover:shadow-md transition-shadow !gap-0 relative overflow-visible"
+      className="px-3 pt-5 pb-2 rounded-xl shadow-sm bg-gradient-to-br from-card to-muted/20 border hover:shadow-md transition-shadow !gap-0 relative overflow-visible"
       role="article"
       aria-label={`${kpi.label}: ${kpi.formattedValue}`}
     >
@@ -130,7 +130,7 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
  */
 export function FinanceKPITileSkeleton() {
   return (
-    <Card className="p-3 pt-5 rounded-xl shadow-sm border !gap-0 relative overflow-visible">
+    <Card className="px-3 pt-5 pb-2 rounded-xl shadow-sm border !gap-0 relative overflow-visible">
       <Skeleton className="absolute -top-2.5 left-1/2 -translate-x-1/2 h-5 w-16 rounded-full" />
       <div className="flex items-center justify-center gap-2.5">
         <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
