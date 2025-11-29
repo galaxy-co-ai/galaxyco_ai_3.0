@@ -4,7 +4,7 @@ import * as React from "react";
 import {
   ChevronRight,
   BarChart3,
-  LineChart,
+  LineChart as LineChartIcon,
   PieChart,
   List,
   DollarSign,
@@ -17,6 +17,12 @@ import {
   FolderKanban,
   type LucideIcon,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  YAxis,
+} from "recharts";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -40,7 +46,7 @@ import type {
  */
 const iconMap: Record<string, LucideIcon> = {
   BarChart3,
-  LineChart,
+  LineChart: LineChartIcon,
   PieChart,
   List,
   DollarSign,
@@ -54,15 +60,15 @@ const iconMap: Record<string, LucideIcon> = {
 };
 
 /**
- * Get chart color class based on module ID
+ * Get chart color (hex) based on module ID
  */
 function getChartColor(moduleId: string): string {
   const colors: Record<string, string> = {
-    "revenue-trend": "stroke-emerald-500",
-    "expense-trend": "stroke-rose-500",
-    "profit-trend": "stroke-blue-500",
+    "revenue-trend": "#10b981",   // emerald-500
+    "expense-trend": "#f43f5e",   // rose-500
+    "profit-trend": "#3b82f6",    // blue-500
   };
-  return colors[moduleId] || "stroke-primary";
+  return colors[moduleId] || "#6366f1"; // indigo-500 default
 }
 
 function getIconByName(name: string): LucideIcon {
@@ -112,80 +118,42 @@ function formatRelativeTime(dateString: string): string {
 }
 
 /**
- * Curved line chart visualization for trends
+ * Professional sparkline chart using Recharts
  */
-function CurvedLineChart({ data, color = "stroke-primary" }: { data: ChartData; color?: string }) {
-  const points = data.dataPoints.slice(-8);
-  const maxValue = Math.max(...points.map((p) => p.value));
-  const minValue = Math.min(...points.map((p) => p.value));
-  const range = maxValue - minValue || 1;
-  
-  const width = 100;
-  const height = 40;
-  const padding = 4;
-  
-  // Generate smooth curve points
-  const chartPoints = points.map((point, i) => ({
-    x: padding + (i / (points.length - 1)) * (width - padding * 2),
-    y: padding + (1 - (point.value - minValue) / range) * (height - padding * 2),
+function SparklineChart({ data, color = "#6366f1" }: { data: ChartData; color?: string }) {
+  const chartData = data.dataPoints.map((point) => ({
+    name: point.label,
+    value: point.value,
   }));
-  
-  // Generate smooth bezier path
-  const generateSmoothPath = () => {
-    if (chartPoints.length < 2) return "";
-    
-    let path = `M ${chartPoints[0].x},${chartPoints[0].y}`;
-    
-    for (let i = 0; i < chartPoints.length - 1; i++) {
-      const curr = chartPoints[i];
-      const next = chartPoints[i + 1];
-      const cpx = (curr.x + next.x) / 2;
-      path += ` Q ${curr.x + (cpx - curr.x) * 0.5},${curr.y} ${cpx},${(curr.y + next.y) / 2}`;
-      path += ` Q ${cpx + (next.x - cpx) * 0.5},${next.y} ${next.x},${next.y}`;
-    }
-    
-    return path;
-  };
-  
-  // Generate gradient fill path
-  const generateFillPath = () => {
-    const linePath = generateSmoothPath();
-    if (!linePath) return "";
-    return `${linePath} L ${chartPoints[chartPoints.length - 1].x},${height} L ${chartPoints[0].x},${height} Z`;
-  };
+
+  // Calculate domain with padding
+  const values = chartData.map(d => d.value);
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const padding = (maxVal - minVal) * 0.1;
 
   return (
-    <div className="h-full w-full pt-1">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id={`gradient-${data.dataPoints[0]?.label}`} x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" className="[stop-color:currentColor]" stopOpacity="0.3" />
-            <stop offset="100%" className="[stop-color:currentColor]" stopOpacity="0.05" />
-          </linearGradient>
-        </defs>
-        {/* Gradient fill */}
-        <path
-          d={generateFillPath()}
-          className={cn(color.replace("stroke-", "fill-"), "opacity-30")}
-        />
-        {/* Line */}
-        <path
-          d={generateSmoothPath()}
-          fill="none"
-          className={cn(color, "stroke-2")}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* End dot */}
-        {chartPoints.length > 0 && (
-          <circle
-            cx={chartPoints[chartPoints.length - 1].x}
-            cy={chartPoints[chartPoints.length - 1].y}
-            r="2.5"
-            className={cn(color.replace("stroke-", "fill-"))}
+    <div className="h-full w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+          <defs>
+            <linearGradient id={`gradient-${data.dataPoints[0]?.label}-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.05} />
+            </linearGradient>
+          </defs>
+          <YAxis domain={[minVal - padding, maxVal + padding]} hide />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke={color}
+            strokeWidth={2}
+            fill={`url(#gradient-${data.dataPoints[0]?.label}-${color.replace('#', '')})`}
+            dot={false}
+            activeDot={false}
           />
-        )}
-      </svg>
+        </AreaChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -196,9 +164,9 @@ function CurvedLineChart({ data, color = "stroke-primary" }: { data: ChartData; 
 function ModuleChart({ data, color }: { data: ChartData; color?: string }) {
   const maxValue = Math.max(...data.dataPoints.map((p) => p.value));
 
-  // Use curved line for 'line' type charts
+  // Use Recharts sparkline for 'line' type charts
   if (data.type === "line") {
-    return <CurvedLineChart data={data} color={color} />;
+    return <SparklineChart data={data} color={color} />;
   }
 
   // Default bar chart
