@@ -188,18 +188,18 @@ export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
 
   return (
     <Card
-      className="p-3 pt-4 rounded-xl shadow-sm border hover:shadow-md transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 !gap-0 relative overflow-visible"
+      className="p-3 rounded-xl shadow-sm border hover:shadow-md transition-all cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 !gap-0 relative"
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`View ${module.title} details from ${module.source}`}
     >
-      {/* Badge straddling top border */}
+      {/* Badge in top-right corner */}
       <Badge
         variant="outline"
         className={cn(
-          "absolute top-0 right-3 -translate-y-1/2 text-[9px] h-4 px-1.5 border capitalize shadow-sm",
+          "absolute top-2 right-2 text-[9px] h-4 px-1.5 border capitalize",
           sourceColors.badgeClass
         )}
       >
@@ -249,9 +249,9 @@ export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
  */
 export function FinanceModuleTileSkeleton() {
   return (
-    <Card className="p-3 pt-4 rounded-xl shadow-sm border !gap-0 relative overflow-visible">
+    <Card className="p-3 rounded-xl shadow-sm border !gap-0 relative">
       {/* Badge skeleton */}
-      <Skeleton className="absolute top-0 right-3 -translate-y-1/2 h-4 w-14 rounded-full" />
+      <Skeleton className="absolute top-2 right-2 h-4 w-14 rounded-full" />
       
       {/* Header skeleton */}
       <div className="flex items-center gap-2 mb-2">
