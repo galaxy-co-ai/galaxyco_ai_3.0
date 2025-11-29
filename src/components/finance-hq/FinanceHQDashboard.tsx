@@ -479,8 +479,9 @@ function FinanceHeader({
 }) {
   return (
     <header className="space-y-3">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        {/* Left: Title */}
+        <div className="sm:flex-1">
           <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
             Finance HQ
@@ -489,12 +490,15 @@ function FinanceHeader({
             Your unified financial command center
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Center: Date Picker */}
+        <div className="flex items-center justify-center gap-2">
           <FinanceDatePicker value={dateRange} onChange={onDateRangeChange} />
           <Button variant="outline" size="sm" className="h-8" aria-label="Ask Neptune AI">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
+        {/* Right: Spacer for balance */}
+        <div className="hidden sm:block sm:flex-1" />
       </div>
       {/* Filter and Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
