@@ -11,6 +11,7 @@ import { FinanceDetailDrawer } from "./FinanceDetailDrawer";
 import { FinanceDatePicker } from "./FinanceDatePicker";
 import { FinanceFilterChips } from "./FinanceFilterChips";
 import { FinanceActionButtons, type FinanceAction } from "./FinanceActionButtons";
+import { DocumentCreatorDialog, type DocumentType } from "./document-creator";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -617,15 +618,30 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
     setTimeout(() => setSelectedItem(null), 300);
   };
 
+  // Document creator state
+  const [isDocCreatorOpen, setIsDocCreatorOpen] = React.useState(false);
+  const [docCreatorType, setDocCreatorType] = React.useState<DocumentType>("estimate");
+
   const handleAction = (action: FinanceAction) => {
-    // TODO: Implement action handling - for now, this can be connected to modals or navigation
-    // Example actions: create_invoice, create_expense, record_payment, report_pnl, etc.
+    // Map action to document type and open creator
+    const actionToDocType: Record<string, DocumentType> = {
+      create_estimate: "estimate",
+      create_change_order: "change_order",
+      create_invoice: "invoice",
+      create_receipt: "receipt",
+      create_expense: "expense",
+      record_payment: "payment",
+    };
+
+    const docType = actionToDocType[action];
+    if (docType) {
+      setDocCreatorType(docType);
+      setIsDocCreatorOpen(true);
+      return;
+    }
+
+    // Handle report actions
     switch (action) {
-      case "create_invoice":
-      case "create_expense":
-      case "record_payment":
-        // Would open a modal to create document
-        break;
       case "report_pnl":
       case "report_cashflow":
       case "report_balance":
@@ -703,6 +719,18 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
         item={selectedItem}
         isOpen={isDrawerOpen}
         onClose={handleDrawerClose}
+      />
+
+      {/* Document Creator Dialog */}
+      <DocumentCreatorDialog
+        open={isDocCreatorOpen}
+        onOpenChange={setIsDocCreatorOpen}
+        documentType={docCreatorType}
+        onSave={async (document, asDraft) => {
+          // TODO: Save document to Library and sync with external software
+          console.log("Saving document:", { document, asDraft });
+          // After saving, could refresh relevant data
+        }}
       />
     </main>
   );
