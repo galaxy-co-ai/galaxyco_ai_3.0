@@ -121,30 +121,40 @@ function TimelineEvent({ event, onClick }: TimelineEventProps) {
 
   return (
     <div
-      className="flex-shrink-0 w-44 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="flex-shrink-0 w-40 p-3 pt-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring relative overflow-visible"
       onClick={onClick}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       aria-label={`${event.label}${event.amount ? `: ${formatAmount(event.amount)}` : ""} on ${formatEventDate(event.date)}`}
     >
-      <div className="flex items-center gap-1.5 mb-1.5">
+      {/* Source badge - centered, straddling top border */}
+      <Badge
+        variant="outline"
+        className={cn(
+          "absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] h-4 px-1.5 border capitalize shadow-sm",
+          getSourceBadgeClass(event.source)
+        )}
+      >
+        {event.source}
+      </Badge>
+
+      {/* Icon + Label row */}
+      <div className="flex items-center gap-1.5 mb-1">
         <div className={cn("p-1 rounded-md", colors.bg)}>
           <Icon className={cn("h-3 w-3", colors.icon)} aria-hidden="true" />
         </div>
-        <Badge
-          variant="outline"
-          className={cn("text-[9px] h-4 px-1 border capitalize", getSourceBadgeClass(event.source))}
-        >
-          {event.source}
-        </Badge>
+        <p className="text-xs font-medium text-foreground truncate">{event.label}</p>
       </div>
-      <p className="text-xs font-medium text-foreground truncate">{event.label}</p>
+
+      {/* Amount */}
       {event.amount !== undefined && (
-        <p className="text-sm font-semibold text-foreground mt-0.5">
+        <p className="text-sm font-semibold text-foreground">
           {formatAmount(event.amount)}
         </p>
       )}
+
+      {/* Date */}
       <p className="text-[10px] text-muted-foreground mt-0.5">
         {formatEventDate(event.date)}
       </p>
@@ -184,9 +194,9 @@ export function FinanceTimeline({
 
   return (
     <Card className="p-4 rounded-xl shadow-sm border" role="region" aria-label="Financial timeline">
-      <h3 className="text-sm font-medium text-foreground mb-3">Financial Timeline</h3>
+      <h3 className="text-sm font-medium text-foreground mb-4">Financial Timeline</h3>
       <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex gap-2 pb-3">
+        <div className="flex gap-3 pb-3 pt-2">
           {events.map((event) => (
             <TimelineEvent
               key={event.id}
@@ -209,17 +219,17 @@ export function FinanceTimeline({
 export function FinanceTimelineSkeleton() {
   return (
     <Card className="p-4 rounded-xl shadow-sm border">
-      <Skeleton className="h-4 w-32 mb-3" />
-      <div className="flex gap-2 overflow-hidden">
+      <Skeleton className="h-4 w-32 mb-4" />
+      <div className="flex gap-3 overflow-hidden pt-2">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex-shrink-0 w-44 p-3 rounded-lg border">
-            <div className="flex items-center gap-1.5 mb-1.5">
+          <div key={i} className="flex-shrink-0 w-40 p-3 pt-4 rounded-lg border relative overflow-visible">
+            <Skeleton className="absolute -top-2 left-1/2 -translate-x-1/2 h-4 w-14 rounded-full" />
+            <div className="flex items-center gap-1.5 mb-1">
               <Skeleton className="h-5 w-5 rounded-md" />
-              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-3 w-20" />
             </div>
-            <Skeleton className="h-3 w-28 mb-1" />
-            <Skeleton className="h-4 w-16 mb-0.5" />
-            <Skeleton className="h-2.5 w-20" />
+            <Skeleton className="h-4 w-14" />
+            <Skeleton className="h-2.5 w-24 mt-0.5" />
           </div>
         ))}
       </div>
