@@ -5,6 +5,14 @@
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)](https://tailwindcss.com)
+[![Build](https://img.shields.io/badge/Build-Passing-brightgreen)](./PROJECT_STATUS.md)
+
+---
+
+> ### 📋 **Current Project Status → [PROJECT_STATUS.md](./PROJECT_STATUS.md)**
+> 
+> This is the **single source of truth** for build status, recent changes, and known issues.  
+> Other `.md` files in the root may be outdated - always check `PROJECT_STATUS.md` first.
 
 ---
 
@@ -57,25 +65,25 @@ npm run typecheck           # TypeScript validation
 
 ## 📊 Project Status
 
+> **See [PROJECT_STATUS.md](./PROJECT_STATUS.md) for the latest verified build status.**
+
 ```
+Build:    ████████████████████ ✅ Passing (Vercel Production)
 Backend:  ████████████████████ 95% ✅ Production-ready
-Frontend: ████████░░░░░░░░░░░░ 40% 🟡 UI built, needs API connections
-Setup:    ░░░░░░░░░░░░░░░░░░░░  0% ❌ Must complete first!
+Frontend: ████████████████░░░░ 80% ✅ Full UI with API connections
 ```
 
 **What's Complete:**
-- ✅ 25+ API endpoints (AI, CRM, workflows, knowledge base)
+- ✅ 40+ API endpoints (AI, CRM, workflows, knowledge, communications)
 - ✅ Complete database schema (50+ tables)
-- ✅ Beautiful UI with 48+ components
+- ✅ Beautiful UI with 48+ responsive components
 - ✅ AI integrations (OpenAI, Anthropic, Google)
 - ✅ Multi-tenant architecture
 - ✅ Redis caching & rate limiting
 - ✅ OAuth infrastructure
-
-**What's Needed:**
-- 🟡 Environment setup (Phase 0 - 2 hours)
-- 🟡 Connect UI to APIs (Phase 1-3 - 3 weeks)
-- 🟡 Testing & deployment (Phase 4 - 1 week)
+- ✅ Conversations/Communications Hub
+- ✅ Finance HQ Dashboard
+- ✅ All pages responsive (mobile-first)
 
 ---
 
