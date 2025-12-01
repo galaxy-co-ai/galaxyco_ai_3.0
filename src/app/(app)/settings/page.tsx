@@ -475,7 +475,7 @@ export default function SettingsPage() {
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={member.avatar} />
                         <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                          {member.name.split(' ').map(n => n[0]).join('')}
+                          {member.name.split(' ').map((n: string) => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
                       <div>
