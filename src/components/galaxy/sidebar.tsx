@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Activity,
   Workflow,
   BookOpen,
   Users,
@@ -28,7 +27,7 @@ import { Separator } from "@/components/ui/separator";
 // Main navigation items
 const mainNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", id: "dashboard" },
-  { icon: Activity, label: "Activity", href: "/activity", id: "activity" },
+  { icon: Bot, label: "My Agents", href: "/activity", id: "activity" },
   { icon: Workflow, label: "Studio", href: "/studio", id: "studio" },
   { icon: BookOpen, label: "Library", href: "/library", id: "library" },
   { icon: Users, label: "CRM", href: "/crm", id: "crm" },
