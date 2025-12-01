@@ -81,7 +81,12 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
   { id: "api", name: "API Keys", icon: Key, description: "Developer access" },
 ];
 
-// Removed mock data - using SWR to fetch real data
+// Mock sessions data for security section (TODO: Replace with real API data)
+const mockSessions = [
+  { id: "1", device: "MacBook Pro - Chrome", location: "San Francisco, CA", lastActive: "Now", current: true },
+  { id: "2", device: "iPhone 15 Pro - Safari", location: "San Francisco, CA", lastActive: "2 hours ago", current: false },
+  { id: "3", device: "Windows PC - Firefox", location: "New York, NY", lastActive: "Yesterday", current: false },
+];
 
 export default function SettingsPage() {
   const { user, isLoaded } = useUser();
