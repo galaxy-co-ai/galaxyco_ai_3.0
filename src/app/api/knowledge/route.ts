@@ -49,20 +49,27 @@ export async function GET(request: Request) {
         color: col.color,
         icon: col.icon,
       })),
-      items: items.map((item: typeof items[0]) => ({
-        id: item.id,
-        name: item.title,
-        type: item.type.toUpperCase(),
-        project: item.collection?.name || 'Uncategorized',
-        createdBy: item.creator
-          ? item.creator.firstName && item.creator.lastName
-            ? `${item.creator.firstName} ${item.creator.lastName}`
-            : item.creator.email
-          : 'User',
-        createdAt: formatRelativeTime(item.createdAt),
-        size: item.fileSize ? formatFileSize(item.fileSize) : 'N/A',
-        description: item.summary || item.content?.substring(0, 100) || '',
-      })),
+      items: items.map((item: typeof items[0]) => {
+        // Safely extract collection
+        const collection = Array.isArray(item.collection) ? item.collection[0] : item.collection;
+        // Safely extract creator
+        const creator = Array.isArray(item.creator) ? item.creator[0] : item.creator;
+        
+        return {
+          id: item.id,
+          name: item.title,
+          type: item.type.toUpperCase(),
+          project: collection?.name || 'Uncategorized',
+          createdBy: creator
+            ? creator.firstName && creator.lastName
+              ? `${creator.firstName} ${creator.lastName}`
+              : creator.email
+            : 'User',
+          createdAt: formatRelativeTime(item.createdAt),
+          size: item.fileSize ? formatFileSize(item.fileSize) : 'N/A',
+          description: item.summary || item.content?.substring(0, 100) || '',
+        };
+      }),
     });
   } catch (error) {
     return createErrorResponse(error, 'Knowledge Base API error');

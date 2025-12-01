@@ -71,12 +71,47 @@ export async function GET(request: Request) {
       },
     });
 
+    // Helper to safely extract agent metadata regardless of relation shape
+    const getAgentMeta = (agent: (typeof executions)[number]['agent']) => {
+      if (!agent) {
+        return {
+          name: '',
+          type: '',
+          description: '',
+        };
+      }
+
+      const resolved = Array.isArray(agent) ? agent[0] : agent;
+
+      return {
+        name: resolved?.name ?? '',
+        type: resolved?.type ?? '',
+        description: resolved?.description ?? '',
+      };
+    };
+
+    // Helper to safely extract triggeredByUser metadata regardless of relation shape
+    const getTriggeredByUser = (user: (typeof executions)[number]['triggeredByUser']) => {
+      if (!user) {
+        return { id: '', firstName: '', lastName: '', email: '' };
+      }
+      const resolved = Array.isArray(user) ? user[0] : user;
+      return {
+        id: resolved?.id ?? '',
+        firstName: resolved?.firstName ?? '',
+        lastName: resolved?.lastName ?? '',
+        email: resolved?.email ?? '',
+      };
+    };
+
     // Filter by search if provided (client-side filtering for agent name)
     let filteredExecutions = executions;
     if (search) {
-      filteredExecutions = executions.filter((exec: typeof executions[0]) =>
-        exec.agent.name.toLowerCase().includes(search.toLowerCase())
-      );
+      const normalizedSearch = search.toLowerCase();
+      filteredExecutions = executions.filter((exec) => {
+        const { name } = getAgentMeta(exec.agent);
+        return name.toLowerCase().includes(normalizedSearch);
+      });
     }
 
     // Get total count for pagination
@@ -136,30 +171,35 @@ export async function GET(request: Request) {
     const totalCost = totalCostResult[0]?.sum || 0;
 
     return NextResponse.json({
-      executions: filteredExecutions.map((exec) => ({
-        id: exec.id,
-        agentId: exec.agentId,
-        agentName: exec.agent.name,
-        agentType: exec.agent.type,
-        agentDescription: exec.agent.description,
-        status: exec.status,
-        input: exec.input,
-        output: exec.output,
-        error: exec.error,
-        durationMs: exec.durationMs,
-        tokensUsed: exec.tokensUsed,
-        cost: exec.cost,
-        startedAt: exec.startedAt,
-        completedAt: exec.completedAt,
-        createdAt: exec.createdAt,
-        triggeredBy: {
-          id: exec.triggeredByUser.id,
-          name: exec.triggeredByUser.firstName && exec.triggeredByUser.lastName
-            ? `${exec.triggeredByUser.firstName} ${exec.triggeredByUser.lastName}`
-            : exec.triggeredByUser.email,
-          email: exec.triggeredByUser.email,
-        },
-      })),
+      executions: filteredExecutions.map((exec) => {
+        const { name: agentName, type: agentType, description: agentDescription } = getAgentMeta(exec.agent);
+        const triggeredByUser = getTriggeredByUser(exec.triggeredByUser);
+
+        return {
+          id: exec.id,
+          agentId: exec.agentId,
+          agentName,
+          agentType,
+          agentDescription,
+          status: exec.status,
+          input: exec.input,
+          output: exec.output,
+          error: exec.error,
+          durationMs: exec.durationMs,
+          tokensUsed: exec.tokensUsed,
+          cost: exec.cost,
+          startedAt: exec.startedAt,
+          completedAt: exec.completedAt,
+          createdAt: exec.createdAt,
+          triggeredBy: {
+            id: triggeredByUser.id,
+            name: triggeredByUser.firstName && triggeredByUser.lastName
+              ? `${triggeredByUser.firstName} ${triggeredByUser.lastName}`
+              : triggeredByUser.email,
+            email: triggeredByUser.email,
+          },
+        };
+      }),
       pagination: {
         total: totalCount[0]?.count || 0,
         limit,

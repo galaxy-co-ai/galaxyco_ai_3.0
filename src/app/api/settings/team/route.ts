@@ -46,19 +46,23 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      members: members.map((member) => ({
-        id: member.id,
-        userId: member.userId,
-        email: member.user?.email || '',
-        name: member.user?.firstName && member.user?.lastName
-          ? `${member.user.firstName} ${member.user.lastName}`
-          : member.user?.firstName || member.user?.lastName || 'User',
-        avatar: member.user?.avatarUrl || null,
-        role: member.role,
-        status: member.isActive ? 'active' : 'paused',
-        joinedAt: member.joinedAt,
-        createdAt: member.createdAt,
-      })),
+      members: members.map((member) => {
+        // Normalize user which may be object or array
+        const user = Array.isArray(member.user) ? member.user[0] : member.user;
+        return {
+          id: member.id,
+          userId: member.userId,
+          email: user?.email || '',
+          name: user?.firstName && user?.lastName
+            ? `${user.firstName} ${user.lastName}`
+            : user?.firstName || user?.lastName || 'User',
+          avatar: user?.avatarUrl || null,
+          role: member.role,
+          status: member.isActive ? 'active' : 'paused',
+          joinedAt: member.joinedAt,
+          createdAt: member.createdAt,
+        };
+      }),
     });
   } catch (error) {
     return createErrorResponse(error, 'Get team members error');
@@ -151,6 +155,8 @@ export async function POST(request: Request) {
     return createErrorResponse(error, 'Invite team member error');
   }
 }
+
+
 
 
 

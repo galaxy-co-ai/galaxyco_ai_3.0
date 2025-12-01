@@ -166,7 +166,7 @@ export async function POST(
     }
 
     // Create message record
-    const [message] = await db
+    const messageResult = await db
       .insert(conversationMessages)
       .values({
         workspaceId,
@@ -190,6 +190,7 @@ export async function POST(
         },
       })
       .returning();
+    const message = Array.isArray(messageResult) ? messageResult[0] : messageResult;
 
     // Update conversation
     await db

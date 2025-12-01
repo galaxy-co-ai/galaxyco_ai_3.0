@@ -2176,10 +2176,8 @@ export const conversationMessages = pgTable(
     externalId: text('external_id'), // Gmail message ID, Twilio message SID, etc.
     externalMetadata: jsonb('external_metadata').$type<Record<string, any>>().default({}),
 
-    // Threading
-    replyToId: uuid('reply_to_id').references(() => conversationMessages.id, {
-      onDelete: 'set null',
-    }),
+    // Threading (self-reference handled via relations to avoid circular type inference)
+    replyToId: uuid('reply_to_id'),
 
     // Attachments
     attachments: jsonb('attachments')

@@ -254,8 +254,8 @@ export async function POST(request: Request) {
         ),
       });
       if (prospect) {
-        participantName = participantName || prospect.name;
-        participantEmail = participantEmail || prospect.email;
+        participantName = participantName || prospect.name || undefined;
+        participantEmail = participantEmail || prospect.email || undefined;
         participantPhone = participantPhone || prospect.phone || undefined;
       }
     }
@@ -292,7 +292,6 @@ export async function POST(request: Request) {
         name: participantName || 'Unknown',
         email: participantEmail || '',
         phone: participantPhone || '',
-        isActive: true,
       });
     }
 

@@ -109,7 +109,7 @@ export default async function ConversationsPage() {
               latestMessage: latestMessage ? {
                 id: latestMessage.id,
                 body: latestMessage.body,
-                direction: latestMessage.direction,
+                direction: latestMessage.direction as 'inbound' | 'outbound',
                 senderName: latestMessage.senderName || "",
                 createdAt: latestMessage.createdAt,
               } : null,

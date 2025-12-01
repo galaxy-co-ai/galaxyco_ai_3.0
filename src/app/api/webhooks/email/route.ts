@@ -260,7 +260,7 @@ async function processInboundEmail(workspaceId: string, email: ParsedEmail): Pro
         where: and(
           eq(conversations.workspaceId, workspaceId),
           eq(conversations.channel, 'email'),
-          eq(conversations.externalThreadId, email.inReplyTo)
+          eq(conversations.externalId, email.inReplyTo)
         ),
       })
     : null;
@@ -300,7 +300,7 @@ async function processInboundEmail(workspaceId: string, email: ParsedEmail): Pro
         messageCount: 1,
         lastMessageAt: new Date(),
         externalId: email.from,
-        externalThreadId: email.messageId,
+        externalMetadata: { threadId: email.messageId },
       })
       .returning();
 
@@ -315,7 +315,6 @@ async function processInboundEmail(workspaceId: string, email: ParsedEmail): Pro
       name: email.fromName || existingContact
         ? `${existingContact?.firstName || ''} ${existingContact?.lastName || ''}`.trim()
         : email.from,
-      isActive: true,
     });
   } else {
     // Update existing conversation
@@ -328,7 +327,6 @@ async function processInboundEmail(workspaceId: string, email: ParsedEmail): Pro
         messageCount: (conversation.messageCount || 0) + 1,
         lastMessageAt: new Date(),
         updatedAt: new Date(),
-        externalThreadId: email.messageId, // Update thread ID
       })
       .where(eq(conversations.id, conversation.id));
   }
@@ -347,7 +345,12 @@ async function processInboundEmail(workspaceId: string, email: ParsedEmail): Pro
     isRead: false,
     externalId: email.messageId,
     attachments: email.attachments.length > 0 
-      ? email.attachments.map(a => ({ name: a.filename, type: a.type }))
+      ? email.attachments.map(a => ({ 
+          name: a.filename, 
+          type: a.type,
+          url: '', // To be populated after upload
+          size: a.content?.length || 0,
+        }))
       : undefined,
   });
 

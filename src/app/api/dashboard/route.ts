@@ -85,19 +85,29 @@ export async function GET(request: Request) {
           .where(eq(prospects.workspaceId, workspaceId))
           .groupBy(prospects.stage);
 
+        // Helper to safely extract agent metadata
+        const getAgentMeta = (agent: (typeof recentExecutions)[number]['agent']) => {
+          if (!agent) return { name: '', type: '' };
+          const resolved = Array.isArray(agent) ? agent[0] : agent;
+          return { name: resolved?.name ?? '', type: resolved?.type ?? '' };
+        };
+
         return {
           stats: {
             activeAgents: activeAgentsCount[0]?.count ?? 0,
             tasksCompleted: completedTasksCount[0]?.count ?? 0,
             hoursSaved,
           },
-          recentActivity: recentExecutions.map((exec: typeof recentExecutions[0]) => ({
-            id: exec.id,
-            agentName: exec.agent.name,
-            agentType: exec.agent.type,
-            status: exec.status,
-            createdAt: exec.createdAt,
-          })),
+          recentActivity: recentExecutions.map((exec: typeof recentExecutions[0]) => {
+            const agentMeta = getAgentMeta(exec.agent);
+            return {
+              id: exec.id,
+              agentName: agentMeta.name,
+              agentType: agentMeta.type,
+              status: exec.status,
+              createdAt: exec.createdAt,
+            };
+          }),
           pipeline: pipelineStats.reduce((acc: Record<string, number>, stat: typeof pipelineStats[0]) => {
             acc[stat.stage] = stat.count;
             return acc;

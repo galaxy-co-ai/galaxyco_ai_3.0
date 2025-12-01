@@ -87,7 +87,6 @@ export async function GET(
         labels: conversation.labels || [],
         tags: conversation.tags || [],
         externalId: conversation.externalId,
-        externalThreadId: conversation.externalThreadId,
       },
       messages: messages.map((msg) => ({
         id: msg.id,
@@ -116,9 +115,7 @@ export async function GET(
         name: p.name || '',
         email: p.email || '',
         phone: p.phone || '',
-        isActive: p.isActive,
-        joinedAt: p.joinedAt,
-        leftAt: p.leftAt,
+        role: p.role || '',
       })),
     });
   } catch (error) {

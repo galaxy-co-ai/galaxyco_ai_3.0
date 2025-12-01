@@ -175,9 +175,14 @@ export async function getCurrentWorkspace() {
     throw new Error('Failed to create or retrieve workspace membership');
   }
 
+  // Normalize workspace which may be object or array due to Drizzle type inference
+  const workspace = Array.isArray(membership.workspace) 
+    ? membership.workspace[0] 
+    : membership.workspace;
+
   return {
     workspaceId: membership.workspaceId,
-    workspace: membership.workspace,
+    workspace,
     userId,
     user,
     membership,

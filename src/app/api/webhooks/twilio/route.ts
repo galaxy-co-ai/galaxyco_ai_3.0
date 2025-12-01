@@ -209,7 +209,6 @@ async function handleMessageWebhook(
           ? `${existingContact.firstName} ${existingContact.lastName}`.trim()
           : from,
         email: existingContact?.email || '',
-        isActive: true,
       });
     } else {
       // Update existing conversation
@@ -323,7 +322,6 @@ async function handleVoiceWebhook(
             ? `${existingContact.firstName} ${existingContact.lastName}`.trim()
             : from,
           email: existingContact?.email || '',
-          isActive: true,
         });
 
         // Create call record message

@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     // Fetch recent messages for context
-    const recentMessages = await db.query.conversationMessages.findMany({
+    const messagesResult = await db.query.conversationMessages.findMany({
       where: and(
         eq(conversationMessages.conversationId, validated.conversationId),
         eq(conversationMessages.workspaceId, workspaceId)
@@ -74,6 +74,15 @@ export async function POST(request: Request) {
       orderBy: [desc(conversationMessages.createdAt)],
       limit: 20,
     });
+
+    // Map to expected type
+    const recentMessages: ConversationMessage[] = messagesResult.map((msg) => ({
+      id: msg.id,
+      body: msg.body,
+      direction: msg.direction as 'inbound' | 'outbound',
+      senderName: msg.senderName,
+      createdAt: msg.createdAt,
+    }));
 
     let result = '';
 
@@ -333,21 +342,22 @@ async function handleCreateTask(
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(17, 0, 0, 0);
 
-    const [task] = await db
+    const taskResult = await db
       .insert(tasks)
       .values({
         workspaceId,
         title: `Follow up on ${conversation.channel} conversation`,
         description: `Review and respond to conversation: ${conversation.subject || 'No subject'}\n\nConversation ID: ${conversation.id}`,
-        status: 'pending',
+        status: 'todo',
         priority: 'medium',
         dueDate: tomorrow,
         assignedTo: userId,
         createdBy: userId,
       })
       .returning();
+    const task = Array.isArray(taskResult) ? taskResult[0] : taskResult;
 
-    return `**Task Created** ✅\n\n📋 **Title:** Follow up on ${conversation.channel} conversation\n📅 **Due:** ${tomorrow.toLocaleDateString()}\n🎯 **Priority:** Medium\n📌 **Status:** Pending\n\n_Task added to your CRM._`;
+    return `**Task Created** ✅\n\n📋 **Title:** Follow up on ${conversation.channel} conversation\n📅 **Due:** ${tomorrow.toLocaleDateString()}\n🎯 **Priority:** Medium\n📌 **Status:** To Do\n\n_Task added to your CRM._`;
   } catch (error) {
     logger.error('Create task error', error);
     return `**Task Creation**\n\nUnable to create task automatically. Please create manually:\n- Title: Follow up on ${conversation.channel} conversation\n- Due: Tomorrow\n- Priority: Medium`;

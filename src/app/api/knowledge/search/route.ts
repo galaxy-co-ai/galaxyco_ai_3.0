@@ -137,6 +137,8 @@ export async function POST(request: Request) {
       for (const result of vectorResults) {
         const item = vectorItems.find((i) => i.id === result.itemId);
         if (item) {
+          // Normalize collection which may be object or array
+          const collection = Array.isArray(item.collection) ? item.collection[0] : item.collection;
           mergedResults.set(item.id, {
             id: item.id,
             title: item.title,
@@ -144,7 +146,7 @@ export async function POST(request: Request) {
             summary: item.summary,
             content: item.content,
             url: item.sourceUrl,
-            collection: item.collection,
+            collection: collection ? { name: collection.name, color: collection.color } : null,
             createdAt: item.createdAt,
             score: result.score * 10, // Boost vector score
             matchType: 'semantic',
@@ -157,6 +159,8 @@ export async function POST(request: Request) {
     // Add keyword results
     for (const item of keywordResults) {
       if (!mergedResults.has(item.id)) {
+        // Normalize collection which may be object or array
+        const collection = Array.isArray(item.collection) ? item.collection[0] : item.collection;
         mergedResults.set(item.id, {
           id: item.id,
           title: item.title,
@@ -164,7 +168,7 @@ export async function POST(request: Request) {
           summary: item.summary,
           content: item.content,
           url: item.sourceUrl,
-          collection: item.collection,
+          collection: collection ? { name: collection.name, color: collection.color } : null,
           createdAt: item.createdAt,
           score: 5, // Base keyword score
           matchType: 'keyword',
