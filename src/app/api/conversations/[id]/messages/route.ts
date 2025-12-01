@@ -20,11 +20,11 @@ const messageSchema = z.object({
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
 
     // Verify conversation belongs to workspace
     const conversation = await db.query.conversations.findFirst({
@@ -77,12 +77,12 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await currentUser();
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

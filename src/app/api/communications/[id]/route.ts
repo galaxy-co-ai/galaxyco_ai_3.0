@@ -29,11 +29,11 @@ const updateConversationSchema = z.object({
  */
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
 
     // Fetch conversation
     const conversation = await db.query.conversations.findFirst({
@@ -133,12 +133,12 @@ export async function GET(
  */
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await currentUser();
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -240,12 +240,12 @@ export async function PATCH(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await currentUser();
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
