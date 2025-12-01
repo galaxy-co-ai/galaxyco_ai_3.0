@@ -618,9 +618,9 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
   };
 
   return (
-    <div className="h-full bg-gray-50/50 overflow-hidden">
+    <div className="h-full bg-gray-50/50 overflow-y-auto">
       {/* Header Section - Matching CRM/Marketing */}
-      <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Library</h1>
@@ -628,23 +628,29 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
             Organize, search, and access your documents and knowledge.
           </p>
 
-          {/* Stat Badges */}
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            {statBadges.map((stat, index) => (
-              <Badge
-                key={index}
-                className={`${stat.color} px-6 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2`}
-              >
-                <stat.icon className="h-4 w-4" />
-                {stat.label}
-              </Badge>
-            ))}
+          {/* Stats Bar - Compact Inline Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+              <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+              <span className="font-semibold">{stats.totalArticles}</span>
+              <span className="ml-1 text-blue-600/70 font-normal">Articles</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+              <Folder className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+              <span className="font-semibold">{stats.totalCategories}</span>
+              <span className="ml-1 text-purple-600/70 font-normal">Categories</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+              <Clock className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+              <span className="font-semibold">{stats.recentItems}</span>
+              <span className="ml-1 text-green-600/70 font-normal">Recent</span>
+            </Badge>
           </div>
         </div>
 
         {/* Floating Tab Bar - Matching CRM/Marketing */}
-        <div className="flex justify-center">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
+        <div className="flex justify-center overflow-x-auto pb-2 -mb-2">
+          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -714,14 +720,14 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className="max-w-7xl mx-auto px-6 pb-6"
+          className="max-w-7xl mx-auto px-4 sm:px-6 pb-6"
         >
           {/* ARTICLES / FAVORITES / RECENT TABS */}
           {(activeTab === 'articles' || activeTab === 'favorites' || activeTab === 'recent') && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
                 {/* Left: Articles List */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
                     <div className="flex items-center justify-between mb-4">
@@ -855,7 +861,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 </div>
 
                 {/* Right: Document Preview/Details */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
                     <div className="flex items-start justify-between gap-4">
@@ -980,10 +986,10 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
 
           {/* CATEGORIES TAB */}
           {activeTab === 'categories' && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
                 {/* Left: Categories List */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
                     <div className="flex items-center justify-between mb-4">
@@ -1077,7 +1083,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 </div>
 
                 {/* Right: Category Details */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
                     <div className="flex items-start justify-between gap-4">
@@ -1170,10 +1176,10 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
 
           {/* CREATE TAB */}
           {activeTab === 'create' && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
                 {/* Left: Template List */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex-shrink-0">
                     <div className="flex items-center justify-between mb-4">
@@ -1233,7 +1239,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 </div>
 
                 {/* Right: AI Chat Interface */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {selectedTemplate ? (
                     <>
                       {/* Chat Header */}

@@ -178,6 +178,20 @@ export const inboxChannelEnum = pgEnum('inbox_channel', [
   'mention',
 ]);
 export const inboxStatusEnum = pgEnum('inbox_status', ['unread', 'read', 'archived']);
+export const conversationChannelEnum = pgEnum('conversation_channel', [
+  'email',
+  'sms',
+  'call',
+  'whatsapp',
+  'social',
+  'live_chat',
+]);
+export const conversationStatusEnum = pgEnum('conversation_status', [
+  'active',
+  'archived',
+  'closed',
+  'spam',
+]);
 export const notificationTypeEnum = pgEnum('notification_type', [
   'info',
   'success',
@@ -2074,6 +2088,173 @@ export const notifications = pgTable(
 );
 
 // ============================================================================
+// COMMUNICATION - CONVERSATIONS (Unified Hub)
+// ============================================================================
+
+export const conversations = pgTable(
+  'conversations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Conversation info
+    channel: conversationChannelEnum('channel').notNull(),
+    status: conversationStatusEnum('status').notNull().default('active'),
+    subject: text('subject'), // For email threads
+    snippet: text('snippet'), // Preview text
+
+    // External IDs (for syncing with external services)
+    externalId: text('external_id'), // Gmail thread ID, Twilio conversation SID, etc.
+    externalMetadata: jsonb('external_metadata').$type<Record<string, any>>().default({}),
+
+    // Status tracking
+    isUnread: boolean('is_unread').default(true),
+    isStarred: boolean('is_starred').default(false),
+    isPinned: boolean('is_pinned').default(false),
+    unreadCount: integer('unread_count').default(0),
+    messageCount: integer('message_count').default(0),
+
+    // Assignment
+    assignedTo: uuid('assigned_to').references(() => users.id),
+
+    // Labels/Tags
+    labels: text('labels').array().default([]),
+    tags: text('tags').array().default([]),
+
+    // Timestamps
+    lastMessageAt: timestamp('last_message_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('conversation_tenant_idx').on(table.workspaceId),
+    channelIdx: index('conversation_channel_idx').on(table.channel),
+    statusIdx: index('conversation_status_idx').on(table.status),
+    assignedToIdx: index('conversation_assigned_to_idx').on(table.assignedTo),
+    lastMessageIdx: index('conversation_last_message_idx').on(table.lastMessageAt),
+    externalIdIdx: index('conversation_external_id_idx').on(table.externalId),
+  }),
+);
+
+export const conversationMessages = pgTable(
+  'conversation_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Conversation reference
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => conversations.id, { onDelete: 'cascade' }),
+
+    // Message content
+    body: text('body').notNull(),
+    subject: text('subject'), // For emails
+    htmlBody: text('html_body'), // Rich HTML content
+
+    // Direction
+    direction: text('direction').notNull(), // 'inbound' or 'outbound'
+    isFromCustomer: boolean('is_from_customer').default(true),
+
+    // Sender/Recipient info
+    senderId: uuid('sender_id').references(() => users.id), // Internal user
+    senderEmail: text('sender_email'),
+    senderName: text('sender_name'),
+    senderPhone: text('sender_phone'),
+    recipientEmail: text('recipient_email'),
+    recipientPhone: text('recipient_phone'),
+
+    // External IDs
+    externalId: text('external_id'), // Gmail message ID, Twilio message SID, etc.
+    externalMetadata: jsonb('external_metadata').$type<Record<string, any>>().default({}),
+
+    // Threading
+    replyToId: uuid('reply_to_id').references(() => conversationMessages.id, {
+      onDelete: 'set null',
+    }),
+
+    // Attachments
+    attachments: jsonb('attachments')
+      .$type<Array<{ name: string; url: string; size: number; type: string }>>()
+      .default([]),
+
+    // Status
+    isRead: boolean('is_read').default(false),
+    isDelivered: boolean('is_delivered').default(false),
+    isFailed: boolean('is_failed').default(false),
+    failureReason: text('failure_reason'),
+
+    // Call-specific (for call logs)
+    callDuration: integer('call_duration'), // in seconds
+    callRecordingUrl: text('call_recording_url'),
+    callTranscription: text('call_transcription'),
+
+    // Timestamps
+    readAt: timestamp('read_at'),
+    deliveredAt: timestamp('delivered_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('conversation_message_tenant_idx').on(table.workspaceId),
+    conversationIdx: index('conversation_message_conversation_idx').on(table.conversationId),
+    senderIdx: index('conversation_message_sender_idx').on(table.senderId),
+    createdAtIdx: index('conversation_message_created_at_idx').on(table.createdAt),
+    externalIdIdx: index('conversation_message_external_id_idx').on(table.externalId),
+  }),
+);
+
+export const conversationParticipants = pgTable(
+  'conversation_participants',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Conversation reference
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => conversations.id, { onDelete: 'cascade' }),
+
+    // Link to CRM entities (optional - can be null for unknown contacts)
+    contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+    prospectId: uuid('prospect_id').references(() => prospects.id, { onDelete: 'set null' }),
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }), // Internal team member
+
+    // Contact info (for when not linked to CRM)
+    email: text('email'),
+    phone: text('phone'),
+    name: text('name'),
+
+    // Role
+    role: text('role').default('participant'), // 'participant', 'cc', 'bcc' (for emails)
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('conversation_participant_tenant_idx').on(table.workspaceId),
+    conversationIdx: index('conversation_participant_conversation_idx').on(table.conversationId),
+    contactIdx: index('conversation_participant_contact_idx').on(table.contactId),
+    prospectIdx: index('conversation_participant_prospect_idx').on(table.prospectId),
+    customerIdx: index('conversation_participant_customer_idx').on(table.customerId),
+    emailIdx: index('conversation_participant_email_idx').on(table.email),
+    phoneIdx: index('conversation_participant_phone_idx').on(table.phone),
+  }),
+);
+
+// ============================================================================
 // DEVELOPER - WEBHOOKS
 // ============================================================================
 
@@ -2832,6 +3013,69 @@ export const gridTemplatesRelations = relations(gridTemplates, ({ one }) => ({
 }));
 
 // ============================================================================
+// RELATIONS - CONVERSATIONS
+// ============================================================================
+
+export const conversationsRelations = relations(conversations, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [conversations.workspaceId],
+    references: [workspaces.id],
+  }),
+  assignedUser: one(users, {
+    fields: [conversations.assignedTo],
+    references: [users.id],
+  }),
+  messages: many(conversationMessages),
+  participants: many(conversationParticipants),
+}));
+
+export const conversationMessagesRelations = relations(conversationMessages, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [conversationMessages.workspaceId],
+    references: [workspaces.id],
+  }),
+  conversation: one(conversations, {
+    fields: [conversationMessages.conversationId],
+    references: [conversations.id],
+  }),
+  sender: one(users, {
+    fields: [conversationMessages.senderId],
+    references: [users.id],
+  }),
+  replyTo: one(conversationMessages, {
+    fields: [conversationMessages.replyToId],
+    references: [conversationMessages.id],
+  }),
+}));
+
+export const conversationParticipantsRelations = relations(conversationParticipants, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [conversationParticipants.workspaceId],
+    references: [workspaces.id],
+  }),
+  conversation: one(conversations, {
+    fields: [conversationParticipants.conversationId],
+    references: [conversations.id],
+  }),
+  contact: one(contacts, {
+    fields: [conversationParticipants.contactId],
+    references: [contacts.id],
+  }),
+  prospect: one(prospects, {
+    fields: [conversationParticipants.prospectId],
+    references: [prospects.id],
+  }),
+  customer: one(customers, {
+    fields: [conversationParticipants.customerId],
+    references: [customers.id],
+  }),
+  user: one(users, {
+    fields: [conversationParticipants.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -2898,6 +3142,16 @@ export type NewContact = typeof contacts.$inferInsert;
 
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
+
+// Conversation Types
+export type Conversation = typeof conversations.$inferSelect;
+export type NewConversation = typeof conversations.$inferInsert;
+
+export type ConversationMessage = typeof conversationMessages.$inferSelect;
+export type NewConversationMessage = typeof conversationMessages.$inferInsert;
+
+export type ConversationParticipant = typeof conversationParticipants.$inferSelect;
+export type NewConversationParticipant = typeof conversationParticipants.$inferInsert;
 
 export type CalendarEvent = typeof calendarEvents.$inferSelect;
 export type NewCalendarEvent = typeof calendarEvents.$inferInsert;

@@ -1011,17 +1011,28 @@ Be creative, engaging, and write content that resonates!`;
             Manage campaigns, content, channels, and marketing performance.
           </p>
 
-          {/* Stat Badges */}
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            {statBadges.map((stat, index) => (
-              <Badge 
-                key={index}
-                className={`${stat.color} px-6 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2`}
-              >
-                <stat.icon className="h-4 w-4" />
-                {stat.label}
-              </Badge>
-            ))}
+          {/* Stats Bar - Compact Inline Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Badge className="px-3 py-1.5 bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100 transition-colors">
+              <Megaphone className="h-3.5 w-3.5 mr-1.5 text-pink-600" />
+              <span className="font-semibold">{stats.activeCampaigns}</span>
+              <span className="ml-1 text-pink-600/70 font-normal">Active Campaigns</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+              <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+              <span className="font-semibold">{formatCurrency(stats.totalBudget)}</span>
+              <span className="ml-1 text-blue-600/70 font-normal">Budget</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+              <BarChart3 className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+              <span className="font-semibold">{stats.totalImpressions.toLocaleString()}</span>
+              <span className="ml-1 text-purple-600/70 font-normal">Impressions</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+              <ArrowUpRight className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+              <span className="font-semibold">{stats.avgROI}%</span>
+              <span className="ml-1 text-green-600/70 font-normal">Avg ROI</span>
+            </Badge>
           </div>
         </div>
 

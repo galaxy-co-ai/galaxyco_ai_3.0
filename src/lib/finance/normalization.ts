@@ -393,3 +393,7 @@ export function getProviderColors(provider: FinanceProvider): {
   return colors[provider];
 }
 
+
+
+
+

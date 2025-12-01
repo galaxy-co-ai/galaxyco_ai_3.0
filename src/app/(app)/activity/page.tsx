@@ -321,7 +321,7 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -356,8 +356,8 @@ export default function ActivityPage() {
         </div>
       </div>
 
-      {/* Stats Bar - Compact Inline */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Stats Bar - Compact Inline Centered */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
           <Activity className="h-3.5 w-3.5 mr-1.5 text-green-600" />
           <span className="font-semibold">{stats.activeAgents}</span>
@@ -381,8 +381,8 @@ export default function ActivityPage() {
       </div>
 
       {/* Main Content */}
-      <Card className="p-6 shadow-lg border-0">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[600px]">
+      <Card className="p-4 sm:p-6 shadow-lg border-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 h-[calc(100vh-340px)] min-h-[400px]">
           {/* Agent Roster - Left Panel */}
           <div className="lg:col-span-4 flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden">
             {/* Header */}
@@ -852,34 +852,6 @@ export default function ActivityPage() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-      </Card>
-
-      {/* Daily Summary Footer */}
-      <Card className="p-4 border-0 shadow-sm bg-gradient-to-r from-slate-50 to-gray-50">
-        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-sm">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <span className="text-gray-600">Today:</span>
-            <span className="font-semibold text-gray-900">{stats.totalTasks} tasks completed</span>
-          </div>
-          <span className="text-gray-300 hidden md:inline">•</span>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-purple-600" />
-            <span className="font-semibold text-gray-900">{stats.totalTimeSaved} hours saved</span>
-          </div>
-          <span className="text-gray-300 hidden md:inline">•</span>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-amber-600" />
-            <span className="font-semibold text-gray-900">{stats.successRate}% success rate</span>
-          </div>
-          <span className="text-gray-300 hidden md:inline">•</span>
-          <div className="flex items-center gap-2">
-            <AlertCircle className={cn("h-4 w-4", stats.errors > 0 ? "text-red-600" : "text-green-600")} />
-            <span className={cn("font-semibold", stats.errors > 0 ? "text-red-600" : "text-green-600")}>
-              {stats.errors} {stats.errors === 1 ? "error" : "errors"}
-            </span>
           </div>
         </div>
       </Card>

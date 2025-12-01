@@ -18,6 +18,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   TrendingUp,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ const mainNavItems = [
   { icon: Workflow, label: "Studio", href: "/studio", id: "studio" },
   { icon: BookOpen, label: "Library", href: "/library", id: "library" },
   { icon: Users, label: "CRM", href: "/crm", id: "crm" },
+  { icon: MessageSquare, label: "Conversations", href: "/conversations", id: "conversations" },
   { icon: TrendingUp, label: "Finance HQ", href: "/finance", id: "finance" },
   { icon: Megaphone, label: "Marketing", href: "/marketing", id: "marketing" },
   { icon: FlaskConical, label: "Lunar Labs", href: "/lunar-labs", id: "lunar-labs" },
@@ -79,14 +81,14 @@ export function Sidebar({ className, user }: SidebarProps) {
     <aside
       className={cn(
         "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64",
+        isCollapsed ? "w-14" : "w-52",
         className
       )}
       aria-label="Main navigation"
     >
       {/* Header */}
       <div className={cn(
-        "flex items-center border-b border-sidebar-border p-4",
+        "flex items-center border-b border-sidebar-border px-3 py-3",
         isCollapsed ? "flex-col gap-2" : "justify-between"
       )}>
         <Link 
@@ -120,9 +122,9 @@ export function Sidebar({ className, user }: SidebarProps) {
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {!isCollapsed && (
-          <div className="px-3 mb-2">
+          <div className="px-2 mb-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Main
             </p>
@@ -138,9 +140,9 @@ export function Sidebar({ className, user }: SidebarProps) {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full h-10 rounded-lg transition-colors",
-                  "flex items-center gap-3",
-                  isCollapsed ? "justify-center px-0" : "justify-start px-3",
+                  "w-full h-9 rounded-lg transition-colors",
+                  "flex items-center gap-2.5",
+                  isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
                   active
                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/50",
@@ -154,7 +156,7 @@ export function Sidebar({ className, user }: SidebarProps) {
                   <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
                 )}
                 {active && !isCollapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-sidebar-primary rounded-r-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-sidebar-primary rounded-r-full" />
                 )}
               </Button>
             </Link>
@@ -163,16 +165,16 @@ export function Sidebar({ className, user }: SidebarProps) {
       </nav>
 
       {/* Secondary Navigation */}
-      <div className="px-2 py-4 border-t border-sidebar-border">
+      <div className="px-2 py-3 border-t border-sidebar-border">
         {!isCollapsed && (
-          <div className="px-3 mb-2">
+          <div className="px-2 mb-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Secondary
             </p>
           </div>
         )}
 
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {secondaryNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -182,9 +184,9 @@ export function Sidebar({ className, user }: SidebarProps) {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full h-10 rounded-lg transition-colors",
-                    "flex items-center gap-3",
-                    isCollapsed ? "justify-center px-0" : "justify-start px-3",
+                    "w-full h-9 rounded-lg transition-colors",
+                    "flex items-center gap-2.5",
+                    isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
                     active
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent/50",
@@ -198,7 +200,7 @@ export function Sidebar({ className, user }: SidebarProps) {
                     <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
                   )}
                   {active && !isCollapsed && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-sidebar-primary rounded-r-full" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-sidebar-primary rounded-r-full" />
                   )}
                 </Button>
               </Link>
@@ -211,10 +213,10 @@ export function Sidebar({ className, user }: SidebarProps) {
       {user && (
         <>
           <Separator />
-          <div className="p-4">
+          <div className="p-3">
             <div
               className={cn(
-                "flex items-center gap-3",
+                "flex items-center gap-2.5",
                 isCollapsed && "justify-center"
               )}
             >

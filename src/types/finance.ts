@@ -695,3 +695,7 @@ export function isMetricData(data: FinanceModuleData): data is MetricData {
   return 'formattedValue' in data && !('dataPoints' in data) && !('items' in data);
 }
 
+
+
+
+

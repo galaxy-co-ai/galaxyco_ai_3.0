@@ -369,17 +369,23 @@ export default function LunarLabs() {
             Interactive learning center. Master GalaxyCo.ai features through hands-on exploration.
           </p>
 
-          {/* Stat Badges */}
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            {statBadges.map((stat, index) => (
-              <Badge 
-                key={index}
-                className={`${stat.color} px-6 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2`}
-              >
-                <stat.icon className="h-4 w-4" />
-                {stat.label}
-              </Badge>
-            ))}
+          {/* Stats Bar - Compact Inline Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+              <span className="font-semibold">{completedCount}</span>
+              <span className="ml-1 text-green-600/70 font-normal">Steps Completed</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+              <BookOpen className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+              <span className="font-semibold">{totalSteps}</span>
+              <span className="ml-1 text-blue-600/70 font-normal">Total Steps</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+              <Target className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+              <span className="font-semibold">{progressPercentage}%</span>
+              <span className="ml-1 text-purple-600/70 font-normal">Complete</span>
+            </Badge>
           </div>
         </div>
 

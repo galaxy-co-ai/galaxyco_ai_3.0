@@ -1378,9 +1378,9 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
   }, [selectedAgent, agentsList]);
 
   return (
-    <div className="min-h-0 bg-gray-50/50 overflow-hidden">
+    <div className="min-h-0 bg-gray-50/50 overflow-y-auto">
       {/* Header Section - Matching CRM/Marketing */}
-      <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
         {/* Header */}
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -1388,23 +1388,29 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
             Welcome back! Here&apos;s an overview of your AI agents and workflows.
           </p>
 
-          {/* Stat Badges */}
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            {statBadges.map((stat, index) => (
-              <Badge 
-                key={index}
-                className={`${stat.color} px-6 py-2.5 text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2`}
-              >
-                <stat.icon className="h-4 w-4" />
-                {stat.label}
-              </Badge>
-            ))}
+          {/* Stats Bar - Compact Inline Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+              <Activity className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+              <span className="font-semibold">{stats?.activeAgents ?? 0}</span>
+              <span className="ml-1 text-blue-600/70 font-normal">Active Agents</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+              <span className="font-semibold">{stats?.tasksCompleted ?? 0}</span>
+              <span className="ml-1 text-green-600/70 font-normal">Tasks Completed</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+              <Clock className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+              <span className="font-semibold">{stats?.hoursSaved ?? 0}</span>
+              <span className="ml-1 text-purple-600/70 font-normal">Hours Saved</span>
+            </Badge>
           </div>
         </div>
 
         {/* Floating Tab Bar - Matching CRM/Marketing */}
-        <div className="flex justify-center">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
+        <div className="flex justify-center overflow-x-auto pb-2 -mb-2">
+          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -1439,12 +1445,12 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2 }}
-          className="max-w-7xl mx-auto px-6 pb-6"
+          className="max-w-7xl mx-auto px-4 sm:px-6 pb-6"
         >
           {/* AI ASSISTANT TAB */}
           {activeTab === 'assistant' && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-[600px]">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 h-[calc(100vh-360px)] min-h-[400px]">
                 {/* Left: Capabilities / History */}
                 <div className="flex flex-col rounded-xl border bg-white overflow-hidden shadow-sm">
                   {/* Header with Tabs */}
@@ -1513,7 +1519,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                         const isSelected = selectedConvoId === conv.id;
                         const ConvIcon = getCapIcon(conv.capability);
                         return (
-                          <button key={conv.id} onClick={() => handleSelectConvo(conv)} className={cn("w-full text-left p-4 rounded-lg border-2 transition-all duration-200 group", isSelected ? `${getCapBgColor(conv.capability)} border-indigo-200 shadow-md` : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50")} aria-label={`View conversation: ${conv.title}`} aria-pressed={isSelected}>
+                          <div key={conv.id} onClick={() => handleSelectConvo(conv)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectConvo(conv); } }} role="button" tabIndex={0} className={cn("w-full text-left p-4 rounded-lg border-2 transition-all duration-200 group cursor-pointer", isSelected ? `${getCapBgColor(conv.capability)} border-indigo-200 shadow-md` : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50")} aria-label={`View conversation: ${conv.title}`} aria-pressed={isSelected}>
                             <div className="flex items-start gap-3">
                               <div className={cn("p-2 rounded-lg", getCapBgColor(conv.capability))}><ConvIcon className={cn("h-5 w-5", getCapColor(conv.capability))} aria-hidden="true" /></div>
                       <div className="flex-1 min-w-0">
@@ -1527,7 +1533,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                     </div>
                   </div>
                               </div>
-                          </button>
+                          </div>
                         );
                       })
                     )}
@@ -1606,10 +1612,10 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
 
           {/* SNAPSHOT TAB */}
           {activeTab === 'snapshot' && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
                 {/* Left: Categories List */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-360px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
                     <div className="flex items-center gap-3">
@@ -1666,7 +1672,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                 </div>
 
                 {/* Right: Performance Breakdown */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-360px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     {(() => {
                       const category = categories.find(c => c.id === selectedCategory);
                     
@@ -1789,10 +1795,10 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
 
           {/* AUTOMATIONS TAB */}
           {activeTab === 'automations' && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
                 {/* Left: Automation List */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-360px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex-shrink-0">
                     <div className="flex items-center gap-3">
@@ -1875,7 +1881,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                 </div>
 
                 {/* Right: Automation Flow */}
-                <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                <div className="flex flex-col h-[calc(100vh-360px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     {(() => {
                     const selectedAuto = automations.find(a => a.id === selectedAutomation);
                       const nodes = getAutomationNodes(selectedAutomation);
@@ -2183,10 +2189,10 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
 
           {/* MESSAGES TAB */}
           {activeTab === 'messages' && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="shadow-sm border rounded-xl overflow-hidden h-[600px] flex bg-white">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="shadow-sm border rounded-xl overflow-hidden h-[calc(100vh-360px)] min-h-[400px] flex flex-col lg:flex-row bg-white">
               {/* Messages List - iOS Style */}
-              <div className="w-[360px] border-r flex flex-col flex-shrink-0 bg-white">
+              <div className="w-full lg:w-[280px] xl:w-[360px] border-b lg:border-b-0 lg:border-r flex flex-col flex-shrink-0 bg-white max-h-[200px] lg:max-h-none">
                 {/* Header */}
                 <div className="px-5 py-4 border-b flex-shrink-0">
                   <h3 className="text-2xl font-bold tracking-tight">Messages</h3>
@@ -2194,7 +2200,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                 </div>
                 
                 {/* Conversation List */}
-                <div className="flex-1 overflow-y-scroll" style={{ maxHeight: 'calc(600px - 80px)' }}>
+                <div className="flex-1 overflow-y-auto">
                   {messagesList.map((msg, index) => (
                     <div 
                       key={index}
@@ -2261,7 +2267,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-scroll px-6 py-4" style={{ maxHeight: 'calc(600px - 140px)' }}>
+                <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4">
                   <div className="space-y-3">
                     {messagesList[selectedConversation]?.conversation?.map((msg, index) => (
                       <div 
@@ -2313,10 +2319,10 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
 
           {/* AGENTS TAB */}
           {activeTab === 'agents' && (
-            <Card className="p-8 shadow-lg border-0">
-              <div className="shadow-sm border rounded-xl overflow-hidden h-[600px] flex bg-white">
+            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
+              <div className="shadow-sm border rounded-xl overflow-hidden h-[calc(100vh-360px)] min-h-[400px] flex flex-col lg:flex-row bg-white">
                 {/* Agents List - iOS Style */}
-              <div className="w-[360px] border-r flex flex-col flex-shrink-0 bg-white">
+              <div className="w-full lg:w-[280px] xl:w-[360px] border-b lg:border-b-0 lg:border-r flex flex-col flex-shrink-0 bg-white max-h-[200px] lg:max-h-none">
                 {/* Header */}
                 <div className="px-5 py-4 border-b flex-shrink-0">
                   <h3 className="text-2xl font-bold tracking-tight">AI Agents</h3>
@@ -2330,7 +2336,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                 </div>
                 
                 {/* Agent List */}
-                <div className="flex-1 overflow-y-scroll" style={{ maxHeight: 'calc(600px - 80px)' }}>
+                <div className="flex-1 overflow-y-auto">
                   {isLoadingAgents ? (
                     <div className="p-4 space-y-3">
                       {[1, 2, 3].map((i) => (
@@ -2443,7 +2449,7 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
                     </div>
 
                     {/* Messages Area */}
-                    <div className="flex-1 overflow-y-scroll px-6 py-4" style={{ maxHeight: 'calc(600px - 140px)' }}>
+                    <div className="flex-1 overflow-y-auto px-4 lg:px-6 py-4">
                       <div className="space-y-3">
                         {(() => {
                           const agentId = agentsList[selectedAgent]?.id;

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useUser } from "@clerk/nextjs";
+import useSWR from "swr";
 import { 
   User, 
   Building2, 
@@ -51,6 +52,16 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+// SWR fetcher
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: 'Failed to fetch' }));
+    throw new Error(error.error || 'Failed to fetch');
+  }
+  return res.json();
+};
+
 type SettingsSection = "profile" | "workspace" | "team" | "billing" | "security" | "notifications" | "api";
 
 interface SettingsCategory {
@@ -70,43 +81,28 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
   { id: "api", name: "API Keys", icon: Key, description: "Developer access" },
 ];
 
-const mockWorkspace = {
-  name: "GalaxyCo",
-  slug: "galaxyco",
-  plan: "Pro",
-  members: 5,
-  createdAt: "2024-01-15",
-};
-
-const mockTeamMembers = [
-  { id: "1", name: "John Doe", email: "john@company.com", role: "Owner", avatar: "", status: "active" },
-  { id: "2", name: "Sarah Chen", email: "sarah@company.com", role: "Admin", avatar: "", status: "active" },
-  { id: "3", name: "Mike Johnson", email: "mike@company.com", role: "Member", avatar: "", status: "active" },
-  { id: "4", name: "Emily Brown", email: "emily@company.com", role: "Member", avatar: "", status: "pending" },
-];
-
-const mockApiKeys = [
-  { id: "1", name: "Production API", key: "gx_prod_****8a3f", created: "2024-10-01", lastUsed: "2 hours ago" },
-  { id: "2", name: "Development", key: "gx_dev_****2b1c", created: "2024-11-15", lastUsed: "5 days ago" },
-];
-
-const mockSessions = [
-  { id: "1", device: "Chrome on macOS", location: "New York, US", current: true, lastActive: "Now" },
-  { id: "2", device: "Safari on iPhone", location: "New York, US", current: false, lastActive: "1 hour ago" },
-];
+// Removed mock data - using SWR to fetch real data
 
 export default function SettingsPage() {
   const { user, isLoaded } = useUser();
   const [activeSection, setActiveSection] = React.useState<SettingsSection>("profile");
   const [showApiKey, setShowApiKey] = React.useState<string | null>(null);
+  const [isSaving, setIsSaving] = React.useState(false);
   
-  // Build user profile from Clerk data
+  // Fetch data using SWR
+  const { data: profileData, mutate: mutateProfile } = useSWR('/api/settings/profile', fetcher);
+  const { data: workspaceData, mutate: mutateWorkspace } = useSWR('/api/settings/workspace', fetcher);
+  const { data: teamData, mutate: mutateTeam } = useSWR('/api/settings/team', fetcher);
+  const { data: apiKeysData, mutate: mutateApiKeys } = useSWR('/api/settings/api-keys', fetcher);
+  const { data: notificationsData, mutate: mutateNotifications } = useSWR('/api/settings/notifications', fetcher);
+  
+  // Build user profile from Clerk data and API
   const userProfile = React.useMemo(() => {
     if (!user) return null;
     const fullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
-    const email = user.primaryEmailAddress?.emailAddress || '';
+    const email = user.primaryEmailAddress?.emailAddress || profileData?.email || '';
     const phone = user.primaryPhoneNumber?.phoneNumber || '';
-    const avatar = user.imageUrl || '';
+    const avatar = user.imageUrl || profileData?.avatarUrl || '';
     
     return {
       name: fullName,
@@ -114,39 +110,156 @@ export default function SettingsPage() {
       phone,
       avatar,
       role: "Owner", // TODO: Get from workspace membership
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      timezone: profileData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
-  }, [user]);
+  }, [user, profileData]);
   
-  // Form states - initialize with user data when available
+  // Form states - initialize with API data when available
   const [profileForm, setProfileForm] = React.useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     avatar: "",
     role: "Owner",
     timezone: "America/New_York",
   });
-  const [workspaceForm, setWorkspaceForm] = React.useState(mockWorkspace);
   
-  // Update form when user data loads
+  const [workspaceForm, setWorkspaceForm] = React.useState({
+    name: "",
+    slug: "",
+    plan: "Free",
+    members: 0,
+    createdAt: new Date().toISOString(),
+  });
+  
+  // Update forms when API data loads
   React.useEffect(() => {
-    if (userProfile) {
-      setProfileForm(userProfile);
+    if (profileData) {
+      const nameParts = (profileData.firstName && profileData.lastName) 
+        ? { firstName: profileData.firstName, lastName: profileData.lastName }
+        : { firstName: user?.firstName || '', lastName: user?.lastName || '' };
+      setProfileForm({
+        firstName: nameParts.firstName || '',
+        lastName: nameParts.lastName || '',
+        email: profileData.email || user?.primaryEmailAddress?.emailAddress || '',
+        phone: user?.primaryPhoneNumber?.phoneNumber || '',
+        avatar: profileData.avatarUrl || user?.imageUrl || '',
+        role: "Owner",
+        timezone: profileData.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
     }
-  }, [userProfile]);
+  }, [profileData, user]);
+  
+  React.useEffect(() => {
+    if (workspaceData) {
+      setWorkspaceForm({
+        name: workspaceData.name || '',
+        slug: workspaceData.slug || '',
+        plan: workspaceData.plan || 'Free',
+        members: workspaceData.members || 0,
+        createdAt: workspaceData.createdAt || new Date().toISOString(),
+      });
+    }
+  }, [workspaceData]);
   
   // Notification preferences
   const [notifications, setNotifications] = React.useState({
-    emailDigest: true,
-    emailAlerts: true,
-    pushNotifications: false,
-    weeklyReport: true,
-    marketingEmails: false,
+    email: true,
+    push: true,
+    sms: false,
+    marketing: false,
   });
+  
+  React.useEffect(() => {
+    if (notificationsData) {
+      setNotifications({
+        email: notificationsData.email ?? true,
+        push: notificationsData.push ?? true,
+        sms: notificationsData.sms ?? false,
+        marketing: notificationsData.marketing ?? false,
+      });
+    }
+  }, [notificationsData]);
 
-  const handleSave = () => {
-    toast.success("Settings saved successfully");
+  // Save handlers
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const [firstName, ...lastNameParts] = profileForm.firstName.split(' ');
+      const lastName = lastNameParts.join(' ') || profileForm.lastName;
+      
+      const res = await fetch('/api/settings/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: firstName || profileForm.firstName,
+          lastName: lastName || profileForm.lastName,
+          timezone: profileForm.timezone,
+        }),
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to save profile');
+      }
+      
+      await mutateProfile();
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleSaveWorkspace = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/settings/workspace', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: workspaceForm.name,
+          slug: workspaceForm.slug,
+        }),
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to save workspace');
+      }
+      
+      await mutateWorkspace();
+      toast.success("Workspace updated successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save workspace");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleSaveNotifications = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch('/api/settings/notifications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notifications),
+      });
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to save notifications');
+      }
+      
+      await mutateNotifications();
+      toast.success("Notification preferences saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save notifications");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCopyApiKey = (key: string) => {
@@ -165,7 +278,7 @@ export default function SettingsPage() {
                 <Avatar className="h-16 w-16 ring-2 ring-gray-100">
                   <AvatarImage src={profileForm.avatar} />
                   <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 text-lg font-medium">
-                    {profileForm.name.split(' ').map(n => n[0]).join('')}
+                    {[profileForm.firstName, profileForm.lastName].filter(Boolean).map(n => n[0]).join('') || profileForm.email[0]?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <button 
@@ -176,7 +289,9 @@ export default function SettingsPage() {
                 </button>
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">{profileForm.name}</h3>
+                <h3 className="font-medium text-gray-900">
+                  {[profileForm.firstName, profileForm.lastName].filter(Boolean).join(' ') || profileForm.email || 'User'}
+                </h3>
                 <p className="text-sm text-gray-500">{profileForm.email}</p>
                 <Badge className="mt-1 bg-indigo-100 text-indigo-700 border-0 text-xs">
                   <Crown className="h-3 w-3 mr-1" />
@@ -189,14 +304,27 @@ export default function SettingsPage() {
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-xs text-gray-600">Full Name</Label>
+                  <Label htmlFor="firstName" className="text-xs text-gray-600">First Name</Label>
                   <Input
-                    id="name"
-                    value={profileForm.name}
-                    onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                    id="firstName"
+                    value={profileForm.firstName}
+                    onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })}
                     className="h-9 text-sm"
+                    disabled={isSaving}
                   />
                 </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lastName" className="text-xs text-gray-600">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={profileForm.lastName}
+                    onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })}
+                    className="h-9 text-sm"
+                    disabled={isSaving}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-xs text-gray-600">Email Address</Label>
                   <div className="relative">
@@ -205,23 +333,10 @@ export default function SettingsPage() {
                       id="email"
                       type="email"
                       value={profileForm.email}
-                      onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                      className="h-9 text-sm pl-8"
+                      disabled
+                      className="h-9 text-sm pl-8 bg-gray-50"
                     />
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone" className="text-xs text-gray-600">Phone Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
-                    <Input
-                      id="phone"
-                      value={profileForm.phone}
-                      onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      className="h-9 text-sm pl-8"
-                    />
+                    <p className="text-xs text-gray-500 mt-1">Email is managed by Clerk</p>
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -233,6 +348,7 @@ export default function SettingsPage() {
                       value={profileForm.timezone}
                       onChange={(e) => setProfileForm({ ...profileForm, timezone: e.target.value })}
                       className="h-9 text-sm pl-8"
+                      disabled={isSaving}
                     />
                   </div>
                 </div>
@@ -240,8 +356,20 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-4 border-t border-gray-100">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleSave}>
-                Save Changes
+              <Button 
+                size="sm" 
+                className="bg-indigo-600 hover:bg-indigo-700 text-white" 
+                onClick={handleSaveProfile}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
               </Button>
             </div>
           </div>
@@ -294,18 +422,31 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-4 border-t border-gray-100">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleSave}>
-                Save Changes
+              <Button 
+                size="sm" 
+                className="bg-indigo-600 hover:bg-indigo-700 text-white" 
+                onClick={handleSaveWorkspace}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
               </Button>
             </div>
           </div>
         );
 
       case "team":
+        const teamMembers = teamData?.members || [];
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{mockTeamMembers.length} members</span>
+              <span className="text-sm text-gray-500">{teamMembers.length} members</span>
               <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white">
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 Invite Member
@@ -313,10 +454,12 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-2">
-              {mockTeamMembers.map((member) => {
+              {teamMembers.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">No team members yet</p>
+              ) : teamMembers.map((member: any) => {
                 const isCurrentUser = userProfile?.email === member.email;
-                const isPaused = member.status === "paused";
-                const isOwner = member.role === "Owner";
+                const isPaused = member.status === "paused" || member.status === "paused";
+                const isOwner = member.role === "owner";
                 
                 return (
                   <div
@@ -350,14 +493,14 @@ export default function SettingsPage() {
                       
                       {/* Role badge - clickable dropdown for non-owners */}
                       {isOwner ? (
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline" className="text-[10px] capitalize">
                           {member.role}
                         </Badge>
                       ) : (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button
-                              className="inline-flex items-center gap-1 h-6 px-2.5 text-[11px] font-medium border border-gray-200 rounded-full bg-white text-gray-700 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400"
+                              className="inline-flex items-center gap-1 h-6 px-2.5 text-[11px] font-medium border border-gray-200 rounded-full bg-white text-gray-700 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 capitalize"
                               aria-label={`Change ${member.name}'s role`}
                             >
                               {member.role}
@@ -368,32 +511,33 @@ export default function SettingsPage() {
                             align="end" 
                             className="min-w-[120px] rounded-xl shadow-lg border border-gray-200/80 bg-white/95 backdrop-blur-xl p-1"
                           >
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                if (member.role !== "Admin") {
-                                  toast.success(`${member.name}'s role changed to Admin`);
-                                }
-                              }}
-                              className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer hover:bg-gray-100/80 transition-colors"
-                            >
-                              <span>Admin</span>
-                              {member.role === "Admin" && (
-                                <Check className="h-4 w-4 text-indigo-600" />
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                if (member.role !== "Member") {
-                                  toast.success(`${member.name}'s role changed to Member`);
-                                }
-                              }}
-                              className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer hover:bg-gray-100/80 transition-colors"
-                            >
-                              <span>Member</span>
-                              {member.role === "Member" && (
-                                <Check className="h-4 w-4 text-indigo-600" />
-                              )}
-                            </DropdownMenuItem>
+                            {['admin', 'member', 'viewer'].map((role) => (
+                              <DropdownMenuItem 
+                                key={role}
+                                onClick={async () => {
+                                  if (member.role !== role) {
+                                    try {
+                                      const res = await fetch(`/api/settings/team/${member.id}`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ role }),
+                                      });
+                                      if (!res.ok) throw new Error('Failed to update role');
+                                      await mutateTeam();
+                                      toast.success(`${member.name}'s role changed to ${role}`);
+                                    } catch (error) {
+                                      toast.error('Failed to update role');
+                                    }
+                                  }
+                                }}
+                                className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer hover:bg-gray-100/80 transition-colors capitalize"
+                              >
+                                <span>{role}</span>
+                                {member.role === role && (
+                                  <Check className="h-4 w-4 text-indigo-600" />
+                                )}
+                              </DropdownMenuItem>
+                            ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       )}
@@ -405,8 +549,19 @@ export default function SettingsPage() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-gray-400 hover:text-amber-600 hover:bg-amber-50"
-                            onClick={() => {
-                              toast.success(isPaused ? `${member.name} has been reactivated` : `${member.name} has been paused`);
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/settings/team/${member.id}`, {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ isActive: !isPaused }),
+                                });
+                                if (!res.ok) throw new Error('Failed to update status');
+                                await mutateTeam();
+                                toast.success(isPaused ? `${member.name} has been reactivated` : `${member.name} has been paused`);
+                              } catch (error) {
+                                toast.error('Failed to update status');
+                              }
                             }}
                             aria-label={isPaused ? `Reactivate ${member.name}` : `Pause ${member.name}`}
                           >
@@ -420,8 +575,18 @@ export default function SettingsPage() {
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => {
-                              toast.success(`${member.name} has been removed from the team`);
+                            onClick={async () => {
+                              if (!confirm(`Remove ${member.name} from the team?`)) return;
+                              try {
+                                const res = await fetch(`/api/settings/team/${member.id}`, {
+                                  method: 'DELETE',
+                                });
+                                if (!res.ok) throw new Error('Failed to remove member');
+                                await mutateTeam();
+                                toast.success(`${member.name} has been removed from the team`);
+                              } catch (error) {
+                                toast.error('Failed to remove member');
+                              }
                             }}
                             aria-label={`Remove ${member.name}`}
                           >
@@ -585,11 +750,10 @@ export default function SettingsPage() {
         return (
           <div className="space-y-4">
             {[
-              { key: "emailDigest", label: "Daily Email Digest", description: "Summary of your daily activity" },
-              { key: "emailAlerts", label: "Email Alerts", description: "Important notifications via email" },
-              { key: "pushNotifications", label: "Push Notifications", description: "Browser push notifications" },
-              { key: "weeklyReport", label: "Weekly Report", description: "Performance summary every week" },
-              { key: "marketingEmails", label: "Marketing Emails", description: "Product updates and news" },
+              { key: "email", label: "Email Notifications", description: "Receive notifications via email" },
+              { key: "push", label: "Push Notifications", description: "Browser push notifications" },
+              { key: "sms", label: "SMS Notifications", description: "Text message alerts" },
+              { key: "marketing", label: "Marketing Emails", description: "Product updates and news" },
             ].map((item) => (
               <div
                 key={item.key}
@@ -605,23 +769,37 @@ export default function SettingsPage() {
                     setNotifications({ ...notifications, [item.key]: checked })
                   }
                   aria-label={`Toggle ${item.label}`}
+                  disabled={isSaving}
                 />
               </div>
             ))}
 
             <div className="pt-4 border-t border-gray-100">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" onClick={handleSave}>
-                Save Preferences
+              <Button 
+                size="sm" 
+                className="bg-indigo-600 hover:bg-indigo-700 text-white" 
+                onClick={handleSaveNotifications}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Preferences'
+                )}
               </Button>
             </div>
           </div>
         );
 
       case "api":
+        const apiKeys = apiKeysData?.apiKeys || [];
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{mockApiKeys.length} API keys</span>
+              <span className="text-sm text-gray-500">{apiKeys.length} API keys</span>
               <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white">
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 Create Key
@@ -629,7 +807,9 @@ export default function SettingsPage() {
             </div>
 
             <div className="space-y-2">
-              {mockApiKeys.map((apiKey) => (
+              {apiKeys.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">No API keys yet</p>
+              ) : apiKeys.map((apiKey: any) => (
                 <div
                   key={apiKey.id}
                   className="p-3 rounded-lg border border-gray-100"
@@ -643,6 +823,19 @@ export default function SettingsPage() {
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={async () => {
+                        if (!confirm(`Delete API key "${apiKey.name}"?`)) return;
+                        try {
+                          const res = await fetch(`/api/settings/api-keys/${apiKey.id}`, {
+                            method: 'DELETE',
+                          });
+                          if (!res.ok) throw new Error('Failed to delete API key');
+                          await mutateApiKeys();
+                          toast.success('API key deleted');
+                        } catch (error) {
+                          toast.error('Failed to delete API key');
+                        }
+                      }}
                     >
                       <Trash2 className="h-3 w-3" />
                     </Button>
@@ -710,7 +903,7 @@ export default function SettingsPage() {
   // Show loading state while user data is being fetched
   if (!isLoaded) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-center min-h-[400px]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
           <p className="text-sm text-gray-500">Loading settings...</p>
@@ -720,7 +913,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -735,7 +928,7 @@ export default function SettingsPage() {
 
       {/* Main Content - Two Panel Layout */}
       <Card className="p-6 shadow-lg border-0">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[550px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 min-h-[400px] lg:min-h-[550px]">
           
           {/* Left Panel - Settings Categories */}
           <div className="lg:col-span-3 flex flex-col rounded-xl border border-gray-200 bg-white overflow-hidden">
