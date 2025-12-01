@@ -41,18 +41,21 @@ export default async function LibraryPage() {
           color: col.color || undefined,
           icon: col.icon || undefined,
         }))}
-        initialItems={items.map((item) => ({
-          id: item.id,
-          name: item.title,
-          type: item.type.toUpperCase(),
-          project: item.collection?.name || 'Uncategorized',
-          createdBy: 'User',
-          createdAt: formatRelativeTime(item.createdAt),
-          size: item.fileSize ? formatFileSize(item.fileSize) : 'N/A',
-          description: item.summary || item.content?.substring(0, 100) || '',
-          content: item.content || undefined,
-          url: item.sourceUrl || undefined,
-        }))}
+        initialItems={items.map((item) => {
+          const collection = item.collection as { name?: string } | null;
+          return {
+            id: item.id,
+            name: item.title,
+            type: item.type.toUpperCase(),
+            project: collection?.name || 'Uncategorized',
+            createdBy: 'User',
+            createdAt: formatRelativeTime(item.createdAt),
+            size: item.fileSize ? formatFileSize(item.fileSize) : 'N/A',
+            description: item.summary || item.content?.substring(0, 100) || '',
+            content: item.content || undefined,
+            url: item.sourceUrl || undefined,
+          };
+        })}
         />
       </ErrorBoundary>
     );
