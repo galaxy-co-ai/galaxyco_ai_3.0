@@ -79,7 +79,7 @@ interface KnowledgeBaseDashboardProps {
   initialItems: KnowledgeItem[];
 }
 
-type TabType = 'articles' | 'categories' | 'favorites' | 'recent';
+type TabType = 'articles' | 'categories' | 'favorites' | 'recent' | 'upload';
 
 export default function KnowledgeBaseDashboard({
   initialCollections,
@@ -331,6 +331,7 @@ export default function KnowledgeBaseDashboard({
     { id: 'categories' as TabType, label: 'Categories', icon: Folder, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'favorites' as TabType, label: 'Favorites', icon: Star, badge: '12', badgeColor: 'bg-amber-500', activeColor: 'bg-amber-100 text-amber-700' },
     { id: 'recent' as TabType, label: 'Recent', icon: Clock, activeColor: 'bg-cyan-100 text-cyan-700' },
+    { id: 'upload' as TabType, label: 'Upload', icon: Plus, activeColor: 'bg-green-100 text-green-700' },
   ];
 
   // Get icon for document type
@@ -647,13 +648,19 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
           </div>
         </div>
 
-        {/* Floating Tab Bar + Upload Button */}
-        <div className="flex justify-center items-center gap-4 overflow-x-auto pb-2 -mb-2">
+        {/* Floating Tab Bar */}
+        <div className="flex justify-center overflow-x-auto pb-2 -mb-2">
           <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  if (tab.id === 'upload') {
+                    setShowUploadDialog(true);
+                  } else {
+                    setActiveTab(tab.id);
+                  }
+                }}
                 className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
                   activeTab === tab.id
                     ? `${tab.activeColor} shadow-sm`
@@ -673,16 +680,6 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
               </button>
             ))}
           </div>
-          
-          {/* Upload Button */}
-          <Button
-            onClick={() => setShowUploadDialog(true)}
-            className="rounded-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md h-9 px-4"
-            aria-label="Upload document"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Upload
-          </Button>
         </div>
 
         {/* Search Bar - Below Tab Bar */}
