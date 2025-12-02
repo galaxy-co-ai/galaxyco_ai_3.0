@@ -269,7 +269,7 @@ export default function MyAgentsDashboard({
               )}
               {isLive ? "Pause" : "Resume"}
             </Button>
-            <Link href="/studio">
+            <Link href="/lunar-labs">
               <Button
                 size="sm"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"

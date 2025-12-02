@@ -20,7 +20,9 @@ import {
   ChevronRight,
   Globe,
   Shield,
-  Clock
+  Clock,
+  Phone,
+  Headphones,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -47,8 +49,30 @@ interface Integration {
   popularity: "high" | "medium" | "low";
 }
 
-// Mock Data
+// Integration Data
 const INTEGRATIONS: Integration[] = [
+  {
+    id: "twilio",
+    name: "Twilio",
+    description: "Full-featured SMS, WhatsApp, and Voice calling. Powers all conversation channels.",
+    icon: Phone,
+    iconColor: "text-rose-600",
+    iconBg: "bg-rose-50",
+    category: "Communication",
+    features: ["SMS", "WhatsApp", "Voice"],
+    popularity: "high",
+  },
+  {
+    id: "twilio-flex",
+    name: "Twilio Flex",
+    description: "Enterprise contact center with intelligent routing, agent management, and real-time analytics.",
+    icon: Headphones,
+    iconColor: "text-rose-600",
+    iconBg: "bg-rose-50",
+    category: "Communication",
+    features: ["Contact Center", "TaskRouter", "Analytics"],
+    popularity: "high",
+  },
   {
     id: "gmail",
     name: "Gmail",
@@ -126,8 +150,8 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { id: "all", name: "All Integrations", icon: Plug, count: 6, color: "text-indigo-600" },
-  { id: "Communication", name: "Communication", icon: MessageSquare, count: 2, color: "text-purple-600" },
+  { id: "all", name: "All Integrations", icon: Plug, count: 8, color: "text-indigo-600" },
+  { id: "Communication", name: "Communication", icon: MessageSquare, count: 4, color: "text-purple-600" },
   { id: "Productivity", name: "Productivity", icon: Zap, count: 1, color: "text-blue-600" },
   { id: "Sales", name: "Sales", icon: Users, count: 1, color: "text-emerald-600" },
   { id: "Marketing", name: "Marketing", icon: Globe, count: 1, color: "text-orange-600" },
@@ -147,19 +171,23 @@ export function GalaxyIntegrations() {
   });
 
   // Map integration IDs to provider names
-  const providerMap: Record<string, 'google' | 'microsoft'> = {
+  const providerMap: Record<string, 'google' | 'microsoft' | 'slack' | 'twilio'> = {
     'gmail': 'google',
     'calendar': 'google',
-    'slack': 'microsoft',
+    'slack': 'slack',
     'notion': 'microsoft',
     'salesforce': 'microsoft',
     'hubspot': 'microsoft',
+    'twilio': 'twilio',
+    'twilio-flex': 'twilio',
   };
 
   // Get connected IDs from API status
   const connectedIds = React.useMemo(() => {
     if (!statusData?.status) return new Set<string>();
     const connected = new Set<string>();
+    
+    // Check OAuth-based integrations
     Object.entries(statusData.status).forEach(([provider, isConnected]) => {
       if (isConnected) {
         Object.entries(providerMap).forEach(([id, prov]) => {
@@ -169,19 +197,34 @@ export function GalaxyIntegrations() {
         });
       }
     });
+    
+    // Check Twilio (env-var based)
+    if (statusData.twilio?.configured && statusData.twilio?.verified) {
+      connected.add('twilio');
+      if (statusData.twilio?.flexEnabled) {
+        connected.add('twilio-flex');
+      }
+    }
+    
     return connected;
   }, [statusData]);
 
   const handleConnect = async (id: string) => {
+    // Twilio is configured via environment variables, not OAuth
+    if (id === 'twilio' || id === 'twilio-flex') {
+      toast.info('Twilio is configured via environment variables. Check your .env file or Vercel settings.');
+      return;
+    }
+
     const provider = providerMap[id];
-    if (!provider) {
+    if (!provider || provider === 'twilio') {
       toast.error('Provider not configured');
       return;
     }
 
     setConnectingId(id);
     try {
-      await connect(provider);
+      await connect(provider as 'google' | 'microsoft');
     } catch (error) {
       logger.error('Connect error', error);
       toast.error('Failed to connect. Please try again.');
@@ -388,52 +431,109 @@ export function GalaxyIntegrations() {
 
                         {/* Expanded Actions */}
                         {isSelected && (
-                          <div className="mt-3 pt-3 border-t border-indigo-100 flex gap-2" onClick={(e) => e.stopPropagation()}>
-                            {isConnected ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex-1 h-8 text-xs"
-                                  onClick={() => handleDisconnect(integration.id)}
-                                >
-                                  Disconnect
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Settings className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </Button>
-                              </>
-                            ) : (
-                              <Button
-                                size="sm"
-                                className="flex-1 h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
-                                onClick={() => handleConnect(integration.id)}
-                                disabled={isLoading}
-                              >
-                                {isLoading ? (
-                                  <>
-                                    <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
-                                    Connecting...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Plus className="h-3 w-3 mr-1.5" />
-                                    Connect
-                                  </>
+                          <div className="mt-3 pt-3 border-t border-indigo-100" onClick={(e) => e.stopPropagation()}>
+                            {/* Show Twilio info if it's a Twilio integration */}
+                            {(integration.id === 'twilio' || integration.id === 'twilio-flex') && statusData?.twilio && (
+                              <div className="mb-3 text-xs space-y-1.5">
+                                {statusData.twilio.phoneNumber && (
+                                  <div className="flex items-center justify-between text-gray-600">
+                                    <span>Phone Number:</span>
+                                    <span className="font-mono">{statusData.twilio.phoneNumber}</span>
+                                  </div>
                                 )}
-                              </Button>
+                                {integration.id === 'twilio-flex' && (
+                                  <div className="flex items-center justify-between text-gray-600">
+                                    <span>TaskRouter:</span>
+                                    <span className={statusData.twilio.flexEnabled ? "text-green-600" : "text-gray-400"}>
+                                      {statusData.twilio.flexEnabled ? "Enabled" : "Not configured"}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             )}
+                            
+                            <div className="flex gap-2">
+                              {isConnected ? (
+                                <>
+                                  {(integration.id === 'twilio' || integration.id === 'twilio-flex') ? (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 h-8 text-xs"
+                                        onClick={() => window.open('https://console.twilio.com', '_blank')}
+                                      >
+                                        <ExternalLink className="h-3 w-3 mr-1.5" />
+                                        Twilio Console
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                        onClick={() => window.location.href = '/conversations'}
+                                      >
+                                        <MessageSquare className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 h-8 text-xs"
+                                        onClick={() => handleDisconnect(integration.id)}
+                                      >
+                                        Disconnect
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Settings className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </>
+                              ) : (
+                                (integration.id === 'twilio' || integration.id === 'twilio-flex') ? (
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 h-8 text-xs bg-rose-600 hover:bg-rose-700 text-white"
+                                    onClick={() => window.open('https://console.twilio.com', '_blank')}
+                                  >
+                                    <ExternalLink className="h-3 w-3 mr-1.5" />
+                                    Setup in Twilio
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    onClick={() => handleConnect(integration.id)}
+                                    disabled={isLoading}
+                                  >
+                                    {isLoading ? (
+                                      <>
+                                        <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                                        Connecting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Plus className="h-3 w-3 mr-1.5" />
+                                        Connect
+                                      </>
+                                    )}
+                                  </Button>
+                                )
+                              )}
+                            </div>
                           </div>
                         )}
                       </button>
@@ -472,6 +572,12 @@ export function GalaxyIntegrations() {
                   <CheckCircle2 className="h-3 w-3 text-green-600" />
                   {connectedCount} connected
                 </span>
+                {statusData?.twilio?.configured && (
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="h-3 w-3 text-rose-600" />
+                    Twilio Active
+                  </span>
+                )}
               </div>
               <span className="text-gray-400">Last synced: Just now</span>
             </div>

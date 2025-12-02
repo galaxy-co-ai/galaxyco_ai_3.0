@@ -21,6 +21,7 @@
 - **Database**: PostgreSQL with Drizzle ORM
 - **Auth**: Clerk
 - **AI Providers**: OpenAI, Anthropic Claude, Google Gemini, Gamma.app
+- **Communications**: Twilio (SMS, WhatsApp, Voice) with Flex Contact Center
 - **Styling**: Tailwind CSS
 - **Deployment**: Vercel
 
@@ -49,6 +50,46 @@
 ---
 
 ## Recent Changes
+
+### December 2, 2024 (Session 3)
+
+#### New Features
+- **Twilio Flex Integration** - Full contact center capabilities
+  - New lib: `src/lib/twilio.ts` - Complete Twilio API client with:
+    - SMS sending/receiving
+    - WhatsApp messaging
+    - Voice calls with TwiML support
+    - TaskRouter for intelligent call routing
+    - Worker management and activities
+    - Real-time workspace statistics
+  - New webhook: `/api/webhooks/twilio/status` - Delivery status callbacks
+  - Updated `/api/integrations/status` - Shows Twilio connection status
+  - **Impact**: Conversations page now fully powered by Twilio
+
+- **Twilio in Connected Apps**
+  - Added Twilio and Twilio Flex cards to Connected Apps page
+  - Shows phone number, Flex status, and TaskRouter configuration
+  - Quick link to Twilio Console for management
+  - **Impact**: Users can see Twilio connection status at a glance
+
+#### Bug Fixes
+- **Fixed "Add Agent" link** - Changed from non-existent `/studio` to `/lunar-labs`
+- **Wired Agent Messages to real API** - Messages tab now uses `/api/agents/[id]/chat` instead of mock data
+  - Full conversation persistence in database
+  - AI-powered agent responses
+  - Clear history functionality
+
+#### Environment Variables
+New Twilio variables (all configured):
+```
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_PHONE_NUMBER
+TWILIO_FLEX_INSTANCE_SID
+TWILIO_TASKROUTER_WORKSPACE_SID
+```
+
+---
 
 ### December 2, 2024 (Session 2)
 
@@ -146,6 +187,14 @@
 - `GOOGLE_GENERATIVE_AI_API_KEY` - Gemini models
 - `GAMMA_API_KEY` - Gamma.app document generation
 
+### Twilio (Required for Conversations)
+- `TWILIO_ACCOUNT_SID` - Twilio Account SID
+- `TWILIO_AUTH_TOKEN` - Twilio Auth Token
+- `TWILIO_PHONE_NUMBER` - SMS/Voice phone number
+- `TWILIO_WHATSAPP_NUMBER` - WhatsApp Business number (optional)
+- `TWILIO_FLEX_INSTANCE_SID` - Flex instance for contact center (optional)
+- `TWILIO_TASKROUTER_WORKSPACE_SID` - TaskRouter workspace for routing (optional)
+
 ### Optional
 - `PINECONE_API_KEY` - Vector database for RAG
 - `BLOB_READ_WRITE_TOKEN` - Vercel Blob file storage
@@ -189,8 +238,10 @@ src/
 │   │   ├── dashboard-v2/    # Redesigned dashboard
 │   │   └── ...
 │   └── api/       # API routes
-│       └── creator/
-│           └── gamma/       # Gamma.app integration
+│       ├── creator/
+│       │   └── gamma/       # Gamma.app integration
+│       └── webhooks/
+│           └── twilio/      # Twilio webhooks (messages, status)
 ├── components/    # React components
 │   ├── agents/    # My Agents page components
 │   ├── creator/   # Creator page components
@@ -204,7 +255,10 @@ src/
 │   └── ...
 ├── db/            # Database schema
 ├── lib/           # Utilities and services
-│   └── gamma.ts   # Gamma.app API client
+│   ├── gamma.ts   # Gamma.app API client
+│   ├── twilio.ts  # Twilio API client (SMS, WhatsApp, Voice, Flex)
+│   └── communications/
+│       └── channels.ts  # Multi-channel message sending
 └── types/         # TypeScript types
 ```
 
@@ -218,6 +272,11 @@ src/
 4. **Schema changes** - The `replyToId` self-reference uses relations, not inline `.references()`
 5. **Gamma integration** - Requires Pro/Ultra/Teams/Business subscription for API access
 6. **Lunar Labs** - Scheduled for complete redesign, don't invest in current implementation
+7. **Twilio webhooks** - Configure these URLs in Twilio Console after deployment:
+   - SMS: `https://yourdomain.com/api/webhooks/twilio?type=sms&workspace=WORKSPACE_ID`
+   - WhatsApp: `https://yourdomain.com/api/webhooks/twilio?type=whatsapp&workspace=WORKSPACE_ID`
+   - Voice: `https://yourdomain.com/api/webhooks/twilio?type=voice&workspace=WORKSPACE_ID`
+   - Status Callback: `https://yourdomain.com/api/webhooks/twilio/status`
 
 ---
 

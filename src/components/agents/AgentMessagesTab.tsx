@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -26,9 +25,11 @@ import {
   Database,
   Workflow,
   Search,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import type { Agent } from "./AgentList";
 
 interface Message {
@@ -38,6 +39,14 @@ interface Message {
   sender: "user" | "agent";
   timestamp: Date;
   type?: "text" | "update" | "error" | "tip" | "win";
+}
+
+// API response types
+interface ApiMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
 }
 
 interface AgentMessagesTabProps {
@@ -90,44 +99,17 @@ const agentTypeColors: Record<string, { text: string; bg: string }> = {
   scope: { text: "text-indigo-600", bg: "bg-indigo-50" },
 };
 
-// Mock messages for demo - in production these would come from the API
-const getMockMessages = (agentId: string): Message[] => {
-  const baseMessages: Message[] = [
-    {
-      id: "1",
-      agentId,
-      content: "Hello! I'm ready to assist you. How can I help today?",
-      sender: "agent",
-      timestamp: new Date(Date.now() - 3600000),
-      type: "text",
-    },
-    {
-      id: "2",
-      agentId,
-      content: "Can you tell me about your recent activity?",
-      sender: "user",
-      timestamp: new Date(Date.now() - 3500000),
-      type: "text",
-    },
-    {
-      id: "3",
-      agentId,
-      content: "I've completed 12 tasks today with a 98% success rate. I processed 45 emails and scheduled 3 follow-ups.",
-      sender: "agent",
-      timestamp: new Date(Date.now() - 3400000),
-      type: "update",
-    },
-    {
-      id: "4",
-      agentId,
-      content: "💡 Tip: I noticed you often send follow-ups on Tuesdays. Would you like me to automate this pattern?",
-      sender: "agent",
-      timestamp: new Date(Date.now() - 1800000),
-      type: "tip",
-    },
-  ];
-  return baseMessages;
-};
+// Transform API messages to local format
+function transformApiMessage(msg: ApiMessage, agentId: string): Message {
+  return {
+    id: msg.id,
+    agentId,
+    content: msg.content,
+    sender: msg.role === "assistant" ? "agent" : "user",
+    timestamp: new Date(msg.timestamp),
+    type: "text",
+  };
+}
 
 function getMessageTypeIcon(type?: string) {
   switch (type) {
@@ -185,24 +167,48 @@ export default function AgentMessagesTab({
   onConfigureAgent,
 }: AgentMessagesTabProps) {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch messages from API
+  const fetchMessages = useCallback(async (agentId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/agents/${agentId}/chat`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+      const data = await response.json();
+      
+      if (data.messages && Array.isArray(data.messages)) {
+        setMessages(data.messages.map((msg: ApiMessage) => transformApiMessage(msg, agentId)));
+        setConversationId(data.conversation?.id || null);
+      } else {
+        setMessages([]);
+        setConversationId(null);
+      }
+    } catch (error) {
+      logger.error("Failed to fetch agent messages", error);
+      toast.error("Failed to load messages");
+      setMessages([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Load messages when agent changes
   useEffect(() => {
     if (selectedAgent) {
-      setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setMessages(getMockMessages(selectedAgent.id));
-        setIsLoading(false);
-      }, 500);
+      fetchMessages(selectedAgent.id);
     } else {
       setMessages([]);
+      setConversationId(null);
     }
-  }, [selectedAgent?.id]);
+  }, [selectedAgent?.id, fetchMessages]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -212,10 +218,13 @@ export default function AgentMessagesTab({
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !selectedAgent || isSending) return;
 
+    const messageContent = inputValue.trim();
+    
+    // Optimistically add user message
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `temp-${Date.now()}`,
       agentId: selectedAgent.id,
-      content: inputValue.trim(),
+      content: messageContent,
       sender: "user",
       timestamp: new Date(),
       type: "text",
@@ -225,19 +234,73 @@ export default function AgentMessagesTab({
     setInputValue("");
     setIsSending(true);
 
-    // Simulate agent response
-    setTimeout(() => {
-      const agentResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        agentId: selectedAgent.id,
-        content: "I understand. Let me process that request and get back to you shortly.",
-        sender: "agent",
-        timestamp: new Date(),
-        type: "text",
-      };
-      setMessages((prev) => [...prev, agentResponse]);
+    try {
+      const response = await fetch(`/api/agents/${selectedAgent.id}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: messageContent,
+          conversationId: conversationId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send message");
+      }
+
+      const data = await response.json();
+      
+      // Update conversation ID if new
+      if (data.conversationId && data.conversationId !== conversationId) {
+        setConversationId(data.conversationId);
+      }
+
+      // Add agent response
+      if (data.message) {
+        const agentResponse: Message = {
+          id: data.message.id,
+          agentId: selectedAgent.id,
+          content: data.message.content,
+          sender: "agent",
+          timestamp: new Date(data.message.timestamp),
+          type: "text",
+        };
+        setMessages((prev) => [...prev, agentResponse]);
+      }
+    } catch (error) {
+      logger.error("Failed to send message", error);
+      toast.error(error instanceof Error ? error.message : "Failed to send message");
+      // Remove the optimistic user message on error
+      setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
+      setInputValue(messageContent); // Restore input
+    } finally {
       setIsSending(false);
-    }, 1000);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!selectedAgent || isClearing) return;
+    
+    setIsClearing(true);
+    try {
+      const response = await fetch(`/api/agents/${selectedAgent.id}/chat`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to clear history");
+      }
+
+      setMessages([]);
+      setConversationId(null);
+      toast.success("Chat history cleared");
+    } catch (error) {
+      logger.error("Failed to clear chat history", error);
+      toast.error("Failed to clear history");
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -306,17 +369,35 @@ export default function AgentMessagesTab({
               </p>
             </div>
           </div>
-          {onConfigureAgent && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onConfigureAgent(selectedAgent)}
-              className="h-8"
-              aria-label="Agent settings"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearHistory}
+                disabled={isClearing}
+                className="h-8 text-gray-500 hover:text-red-600"
+                aria-label="Clear chat history"
+              >
+                {isClearing ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+            {onConfigureAgent && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onConfigureAgent(selectedAgent)}
+                className="h-8"
+                aria-label="Agent settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
