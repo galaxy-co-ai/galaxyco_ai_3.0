@@ -19,6 +19,13 @@ import {
   Smile,
   Paperclip,
   AtSign,
+  X,
+  FileText,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Download,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -46,6 +53,17 @@ interface TeamChannel {
   }>;
 }
 
+interface Attachment {
+  type: "file" | "image" | "link";
+  url: string;
+  name?: string;
+  size?: number;
+  mimeType?: string;
+  previewUrl?: string;
+  title?: string;
+  description?: string;
+}
+
 interface TeamMessage {
   id: string;
   content: string;
@@ -59,6 +77,7 @@ interface TeamMessage {
     avatarUrl: string | null;
   };
   reactions: Record<string, string[]>;
+  attachments?: Attachment[];
 }
 
 const fetcher = async (url: string) => {
@@ -74,7 +93,10 @@ export default function TeamChat() {
   const [showNewChannel, setShowNewChannel] = useState(false);
   const [newChannelName, setNewChannelName] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch channels
   const { data: channelsData, mutate: mutateChannels } = useSWR<{ channels: TeamChannel[] }>(
@@ -105,19 +127,23 @@ export default function TeamChat() {
   const selectedChannelData = channels.find((ch) => ch.id === selectedChannel);
 
   const handleSendMessage = async () => {
-    if (!message.trim() || !selectedChannel) return;
+    if ((!message.trim() && pendingAttachments.length === 0) || !selectedChannel) return;
 
     setIsSending(true);
     try {
       const res = await fetch(`/api/team/channels/${selectedChannel}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: message }),
+        body: JSON.stringify({ 
+          content: message || (pendingAttachments.length > 0 ? " " : ""), // Space for attachment-only messages
+          attachments: pendingAttachments.length > 0 ? pendingAttachments : undefined,
+        }),
       });
 
       if (!res.ok) throw new Error("Failed to send message");
 
       setMessage("");
+      setPendingAttachments([]);
       await mutateMessages();
       await mutateChannels();
     } catch (error) {
@@ -125,6 +151,93 @@ export default function TeamChat() {
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    
+    for (const file of Array.from(files)) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/team/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Upload failed");
+        }
+
+        const data = await res.json();
+        setPendingAttachments(prev => [...prev, data.attachment]);
+        toast.success(`${file.name} uploaded`);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to upload file");
+      }
+    }
+
+    setIsUploading(false);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) continue;
+
+        setIsUploading(true);
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const res = await fetch("/api/team/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!res.ok) throw new Error("Upload failed");
+
+          const data = await res.json();
+          setPendingAttachments(prev => [...prev, data.attachment]);
+          toast.success("Image pasted");
+        } catch (error) {
+          toast.error("Failed to upload pasted image");
+        } finally {
+          setIsUploading(false);
+        }
+      }
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setPendingAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Auto-detect links in message
+  const detectLinks = (text: string): string[] => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.match(urlRegex) || [];
+  };
+
+  const formatFileSize = (bytes?: number): string => {
+    if (!bytes) return "";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const handleCreateChannel = async () => {
@@ -328,7 +441,7 @@ export default function TeamChat() {
                     return (
                       <div key={msg.id} className={cn("flex gap-3", !showAvatar && "ml-11")}>
                         {showAvatar && (
-                          <Avatar className="h-8 w-8 flex-shrink-0">
+                          <Avatar className="h-8 w-8 shrink-0">
                             <AvatarImage src={msg.sender.avatarUrl || undefined} />
                             <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xs">
                               {getInitials(msg.sender.firstName, msg.sender.lastName, msg.sender.email)}
@@ -351,9 +464,84 @@ export default function TeamChat() {
                               )}
                             </div>
                           )}
-                          <p className="text-sm text-foreground whitespace-pre-wrap break-words">
-                            {msg.content}
-                          </p>
+                          {/* Message Content with Link Detection */}
+                          {msg.content.trim() && (
+                            <p className="text-sm text-foreground whitespace-pre-wrap break-words">
+                              {msg.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) => 
+                                part.match(/^https?:\/\//) ? (
+                                  <a
+                                    key={i}
+                                    href={part}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-indigo-600 hover:underline inline-flex items-center gap-1"
+                                  >
+                                    {part}
+                                    <ExternalLink className="h-3 w-3 inline" />
+                                  </a>
+                                ) : part
+                              )}
+                            </p>
+                          )}
+                          {/* Attachments */}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <div className="mt-2 space-y-2">
+                              {msg.attachments.map((att, attIdx) => (
+                                <div key={attIdx}>
+                                  {att.type === "image" ? (
+                                    <a
+                                      href={att.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block max-w-md"
+                                    >
+                                      <img
+                                        src={att.url}
+                                        alt={att.name || "Shared image"}
+                                        className="rounded-lg border max-h-64 object-cover hover:opacity-90 transition-opacity"
+                                      />
+                                    </a>
+                                  ) : att.type === "file" ? (
+                                    <a
+                                      href={att.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors max-w-sm"
+                                    >
+                                      <div className="p-2 rounded-lg bg-indigo-100">
+                                        <FileText className="h-5 w-5 text-indigo-600" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{att.name || "File"}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {formatFileSize(att.size)}
+                                        </p>
+                                      </div>
+                                      <Download className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    </a>
+                                  ) : att.type === "link" ? (
+                                    <a
+                                      href={att.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors max-w-sm"
+                                    >
+                                      <div className="p-2 rounded-lg bg-blue-100">
+                                        <LinkIcon className="h-5 w-5 text-blue-600" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{att.title || att.url}</p>
+                                        {att.description && (
+                                          <p className="text-xs text-muted-foreground truncate">{att.description}</p>
+                                        )}
+                                      </div>
+                                      <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    </a>
+                                  ) : null}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -363,11 +551,82 @@ export default function TeamChat() {
               </div>
             </ScrollArea>
 
+            {/* Pending Attachments Preview */}
+            <AnimatePresence>
+              {pendingAttachments.length > 0 && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="px-4 py-2 border-t bg-muted/30"
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {pendingAttachments.map((att, idx) => (
+                      <div
+                        key={idx}
+                        className="relative group bg-background border rounded-lg p-2 flex items-center gap-2"
+                      >
+                        {att.type === "image" ? (
+                          <>
+                            <img
+                              src={att.url}
+                              alt={att.name || "Image"}
+                              className="h-12 w-12 rounded object-cover"
+                            />
+                            <span className="text-xs text-muted-foreground max-w-24 truncate">
+                              {att.name}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="h-6 w-6 text-indigo-600" />
+                            <div className="max-w-32">
+                              <p className="text-xs font-medium truncate">{att.name}</p>
+                              <p className="text-xs text-muted-foreground">{formatFileSize(att.size)}</p>
+                            </div>
+                          </>
+                        )}
+                        <button
+                          onClick={() => removeAttachment(idx)}
+                          className="absolute -top-1 -right-1 p-0.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="Remove attachment"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Message Input */}
             <div className="p-4 border-t">
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.json,.zip,.rar,.gz"
+                onChange={handleFileSelect}
+                className="hidden"
+                aria-label="Upload file"
+              />
+              
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
-                  <Paperclip className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  aria-label="Attach file"
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Paperclip className="h-4 w-4" />
+                  )}
                 </Button>
                 <div className="relative flex-1">
                   <Input
@@ -375,12 +634,20 @@ export default function TeamChat() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                    onPaste={handlePaste}
                     className="pr-20"
-                    disabled={isSending}
+                    disabled={isSending || isUploading}
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <AtSign className="h-4 w-4" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      aria-label="Add image"
+                    >
+                      <ImageIcon className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7">
                       <Smile className="h-4 w-4" />
@@ -389,13 +656,16 @@ export default function TeamChat() {
                 </div>
                 <Button
                   size="icon"
-                  className="h-9 w-9 flex-shrink-0"
+                  className="h-9 w-9 shrink-0"
                   onClick={handleSendMessage}
-                  disabled={!message.trim() || isSending}
+                  disabled={(!message.trim() && pendingAttachments.length === 0) || isSending || isUploading}
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
+              <p className="mt-2 text-xs text-muted-foreground text-center">
+                Drop files here or paste images • Max 10MB per file
+              </p>
             </div>
           </>
         ) : (

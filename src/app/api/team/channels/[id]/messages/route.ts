@@ -7,9 +7,21 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
+const attachmentSchema = z.object({
+  type: z.enum(['file', 'image', 'link']),
+  url: z.string().url(),
+  name: z.string().optional(),
+  size: z.number().optional(),
+  mimeType: z.string().optional(),
+  previewUrl: z.string().url().optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+});
+
 const sendMessageSchema = z.object({
-  content: z.string().min(1).max(4000),
+  content: z.string().max(4000),
   replyToId: z.string().uuid().optional(),
+  attachments: z.array(attachmentSchema).optional(),
 });
 
 // GET - Get messages for a channel
@@ -75,6 +87,7 @@ export async function GET(
         isEdited: msg.isEdited,
         reactions: msg.reactions,
         sender: msg.sender,
+        attachments: msg.attachments,
       })),
     });
   } catch (error) {
@@ -101,7 +114,15 @@ export async function POST(
       );
     }
 
-    const { content, replyToId } = validationResult.data;
+    const { content, replyToId, attachments } = validationResult.data;
+
+    // Require either content or attachments
+    if (!content?.trim() && (!attachments || attachments.length === 0)) {
+      return NextResponse.json(
+        { error: 'Message must have content or attachments' },
+        { status: 400 }
+      );
+    }
 
     // Verify channel exists and user has access
     const channel = await db.query.teamChannels.findFirst({
@@ -150,8 +171,9 @@ export async function POST(
         workspaceId,
         channelId,
         senderId: user.id,
-        content,
+        content: content || '',
         replyToId,
+        attachments: attachments || [],
       })
       .returning();
 
@@ -191,6 +213,7 @@ export async function POST(
         isEdited: messageWithSender?.isEdited,
         reactions: messageWithSender?.reactions,
         sender: messageWithSender?.sender,
+        attachments: messageWithSender?.attachments,
       },
     }, { status: 201 });
   } catch (error) {
