@@ -34,11 +34,11 @@
 | Landing | `/` | ✅ Static |
 | Dashboard | `/dashboard` | ✅ Dynamic |
 | My Agents | `/activity` | ✅ Dynamic |
+| Creator | `/creator` | ✅ Dynamic |
+| Library | `/library` | ✅ Dynamic |
 | CRM | `/crm` | ✅ Dynamic |
 | Conversations | `/conversations` | ✅ Dynamic |
 | Finance HQ | `/finance` | ✅ Dynamic |
-| Library | `/library` | ✅ Dynamic |
-| Studio | `/studio` | ✅ Dynamic |
 | Marketing | `/marketing` | ✅ Dynamic |
 | Lunar Labs | `/lunar-labs` | ✅ Dynamic |
 | Settings | `/settings` | ✅ Dynamic |
@@ -47,6 +47,31 @@
 ---
 
 ## Recent Changes
+
+### December 2, 2024
+- **Fixed stale closure bug in Creator components** (Commit: `9363a8d`)
+  - `CreatorNeptunePanel.tsx`: Fixed `handleQuickAction` to pass prompt directly to `handleSend()` instead of using `setInput()` + `setTimeout()` pattern
+  - `GuidedSession.tsx`: Already fixed - `handleOptionSelect` passes option directly to `handleSend(messageOverride)`
+  - Both components now use `handleSend(messageOverride?: string)` pattern to avoid stale closures
+  - Removed unused Badge import
+  - **Impact**: Quick action buttons and option selects now send correct messages instead of stale state
+  - **Status**: ✅ Committed and build verified
+
+### December 1, 2024
+- **Created new "Creator" page** - AI-powered content and asset creation studio
+  - Tabs: Create | Collections | Templates
+  - Create tab: Multi-step guided flow (Select Type → Guided Session → Preview & Save)
+  - Step 1: Type selector with 8 document types (Document, Image, Newsletter, Brand Kit, Blog, Presentation, Social Post, Proposal)
+  - Step 2: Neptune-guided session with dynamic questions and live requirements checklist
+  - Step 3: Document preview with section-based editing, AI edit suggestions, and save/share/download options
+  - Collections tab: Auto-organized library with AI tagging
+  - Templates tab: Coming Soon placeholder
+  - "Ask Neptune" toggleable AI assistant panel
+- **Removed Studio page** - Replaced with Creator
+- **Simplified Marketing page** - Removed Content and Assets tabs (moved to Creator)
+  - Marketing now focused on: Campaigns, Channels, Analytics, Audiences, Automations
+- **Updated sidebar navigation** - Studio → Creator with Palette icon
+- Created new `src/components/creator/` component library
 
 ### December 2, 2024
 - **Rebuilt Activity page into "My Agents" hub** with 2-column layout matching Conversations page
@@ -99,11 +124,13 @@ src/
 │   ├── (app)/     # Authenticated app pages
 │   └── api/       # API routes
 ├── components/    # React components
-│   ├── agents/    # My Agents page components (NEW)
+│   ├── agents/    # My Agents page components
+│   ├── creator/   # Creator page components (NEW)
 │   ├── conversations/
 │   ├── crm/
 │   ├── dashboard/
 │   ├── finance-hq/
+│   ├── marketing/
 │   └── ...
 ├── db/            # Database schema
 ├── lib/           # Utilities and services
