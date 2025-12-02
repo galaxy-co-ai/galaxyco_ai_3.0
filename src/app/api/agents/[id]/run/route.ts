@@ -216,7 +216,7 @@ export async function POST(
         workspaceId,
         userId: user.clerkUserId || user.id,
         userEmail: user.email || 'agent@galaxyco.ai',
-        userName: user.name || agent.name,
+        userName: user.firstName || agent.name,
       };
 
       // Build system prompt

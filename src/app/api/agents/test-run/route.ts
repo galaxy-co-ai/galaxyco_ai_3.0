@@ -131,7 +131,7 @@ export async function POST(request: Request) {
         workspaceId,
         userId: user.clerkUserId || user.id,
         userEmail: user.email || 'test@galaxyco.ai',
-        userName: user.name || config.name,
+        userName: user.firstName || config.name,
       };
 
       // Build system prompt
