@@ -12,6 +12,7 @@
 | **Date** | December 2, 2024 |
 | **Build Status** | ✅ Passing |
 | **Deployment** | Vercel Production |
+| **Latest Commit** | `4f0c130` - Team chat file sharing |
 
 ---
 
@@ -19,9 +20,10 @@
 
 - **Framework**: Next.js 16.0.3 (Turbopack)
 - **Database**: PostgreSQL with Drizzle ORM
-- **Auth**: Clerk
+- **Auth**: Clerk (with Organizations for multi-tenancy)
 - **AI Providers**: OpenAI, Anthropic Claude, Google Gemini, Gamma.app
 - **Communications**: Twilio (SMS, WhatsApp, Voice) with Flex Contact Center
+- **File Storage**: Vercel Blob
 - **Styling**: Tailwind CSS
 - **Deployment**: Vercel
 
@@ -34,22 +36,99 @@
 | Landing | `/` | ✅ Static |
 | Dashboard | `/dashboard` | ✅ Dynamic |
 | Dashboard v2 | `/dashboard-v2` | ✅ Dynamic (User-first redesign) |
-| My Agents | `/activity` | ✅ Dynamic |
+| My Agents | `/activity` | ✅ Dynamic (with Laboratory) |
 | Creator | `/creator` | ✅ Dynamic |
 | Library | `/library` | ✅ Dynamic |
 | CRM | `/crm` | ✅ Dynamic |
-| Conversations | `/conversations` | ✅ Dynamic |
+| Conversations | `/conversations` | ✅ Dynamic (with Team Chat) |
 | Finance HQ | `/finance` | ✅ Dynamic |
 | Marketing | `/marketing` | ✅ Dynamic |
 | Lunar Labs | `/lunar-labs` | 🔄 Redesign planned |
 | Connected Apps | `/connected-apps` | ✅ Dynamic |
-| Settings | `/settings` | ✅ Dynamic |
+| Settings | `/settings` | ✅ Dynamic (with Clerk Organizations) |
 | Assistant | `/assistant` | ✅ Dynamic |
 | Onboarding | `/onboarding` | ✅ Dynamic |
 
 ---
 
 ## Recent Changes
+
+### December 2, 2024 (Session 4)
+
+#### New Features
+
+- **Team Chat** - Internal workspace messaging (Commits: `f2a5f8d`, `4f0c130`)
+  - New "Team" tab on Conversations page for internal communication
+  - Channel-based messaging (`#general`, `#sales`, etc.)
+  - Channel types: General, Group, Announcement, Direct Message
+  - Public channels auto-join on first message
+  - File sharing with Vercel Blob storage:
+    - Images: JPG, PNG, GIF, WebP, SVG
+    - Documents: PDF, Word, Excel, PowerPoint, TXT, CSV, JSON
+    - Archives: ZIP, RAR, GZ
+    - Max 10MB per file
+  - Paste images from clipboard (Ctrl+V)
+  - Auto-detect and linkify URLs in messages
+  - Real-time polling (5s refresh)
+  - New database tables: `team_channels`, `team_messages`, `team_channel_members`
+  - New API routes:
+    - `/api/team/channels` - List/create channels
+    - `/api/team/channels/[id]/messages` - Send/receive messages
+    - `/api/team/upload` - File uploads
+  - **Impact**: Teams can now communicate internally without leaving the platform
+
+- **Agent Laboratory** - Complete agent creation wizard (Commit: `0861019`)
+  - Replaced "Coming Soon" placeholder with full wizard
+  - 3-step flow: Choose Base → Customize → Activate
+  - 6 pre-built templates: Lead Qualifier, Meeting Prep, Customer Support, Data Analyst, Content Creator, Task Automator
+  - Live preview panel showing agent as you build
+  - AI-generated names and descriptions (editable)
+  - Capability-based configuration (CRM Access, Email, Calendar, etc.)
+  - Communication tone settings (Professional, Friendly, Concise)
+  - Test run functionality before activation
+  - NikeID/Oakley-style customization (not node-based)
+  - New components in `src/components/agents/laboratory/`
+  - New API: `/api/agent-templates` for template data
+  - **Impact**: Users can easily create production-ready agents
+
+- **Agent Execution System** - Real AI-powered agents
+  - New API: `/api/agents/[id]/run` - Execute capability-based agents
+  - New API: `/api/agents/test-run` - Test agent before creation
+  - Agents use real database tools:
+    - `create_lead` - Add leads to CRM
+    - `schedule_meeting` - Book calendar events
+    - `search_knowledge` - Query knowledge base
+    - `send_email` - Send emails
+  - Enhanced `workflow-executor.ts` for production execution
+  - **Impact**: Agents perform real actions, not simulations
+
+- **Enhanced Agent Chat** - Personalized, self-adjusting conversations
+  - Concise responses (like talking to an employee)
+  - Agent personality and contextual awareness
+  - Self-adjustment tools:
+    - `update_my_preferences` - Remember user preferences
+    - `add_note_to_self` - Store context for future
+    - `get_my_recent_activity` - Access recent executions
+  - Preferences and notes stored in agent config
+  - GPT-4o with tuned parameters (temp: 0.8, max_tokens: 300)
+  - **Impact**: Agents learn and improve through conversation
+
+- **Clerk Organizations** - Multi-tenant team management
+  - Organization switcher in sidebar
+  - OrganizationProfile in Settings for team management
+  - Invite team members (even non-registered users) via email
+  - Updated `auth.ts` to handle orgId context
+  - Workspaces linked to Clerk Organization IDs
+  - **Impact**: Full team collaboration support
+
+#### Bug Fixes
+
+- **Fixed workspace settings save** - Name/URL changes now persist correctly
+  - Fixed API slug uniqueness check logic
+  - Fixed client-side state update after save
+- **Fixed Messages tab** - Removed random unread count causing erratic updates
+
+---
 
 ### December 2, 2024 (Session 3)
 
@@ -79,16 +158,6 @@
   - AI-powered agent responses
   - Clear history functionality
 
-#### Environment Variables
-New Twilio variables (all configured):
-```
-TWILIO_ACCOUNT_SID
-TWILIO_AUTH_TOKEN
-TWILIO_PHONE_NUMBER
-TWILIO_FLEX_INSTANCE_SID
-TWILIO_TASKROUTER_WORKSPACE_SID
-```
-
 ---
 
 ### December 2, 2024 (Session 2)
@@ -110,11 +179,7 @@ TWILIO_TASKROUTER_WORKSPACE_SID
   - Updated all internal links (Finance HQ reconnect links, etc.)
   - **Impact**: Clearer, more user-friendly terminology
 
-#### Documentation
-- **Identified undocumented pages** for future reference:
-  - Dashboard v2 (`/dashboard-v2`) - User-first redesigned dashboard
-  - Onboarding (`/onboarding`) - New user onboarding flow
-  - Connected Apps (`/connected-apps`) - Third-party integrations
+---
 
 ### December 2, 2024 (Session 1)
 
@@ -146,31 +211,10 @@ TWILIO_TASKROUTER_WORKSPACE_SID
   - Added 3 tabs: Activity, Messages, Laboratory
   - Agent list with simplified 3-status badges (Active/Paused/Inactive)
   - Messages tab for chat-style agent communication and training
-  - Laboratory tab with "Coming Soon" placeholder
+  - Laboratory tab with full agent creation wizard
 - **Updated sidebar**: Renamed "Activity" to "My Agents" with Bot icon
 - **Cleaned up Dashboard**: Removed redundant Messages and Agents tabs (now in dedicated pages)
 - Created new `src/components/agents/` component library
-
-### December 1, 2024
-- **Created new "Creator" page** - AI-powered content and asset creation studio
-  - Tabs: Create | Collections | Templates
-  - Create tab: Multi-step guided flow (Select Type → Guided Session → Preview & Save)
-  - Step 1: Type selector with 8 document types (Document, Image, Newsletter, Brand Kit, Blog, Presentation, Social Post, Proposal)
-  - Step 2: Neptune-guided session with dynamic questions and live requirements checklist
-  - Step 3: Document preview with section-based editing, AI edit suggestions, and save/share/download options
-  - Collections tab: Auto-organized library with AI tagging
-  - Templates tab: Coming Soon placeholder
-  - "Ask Neptune" toggleable AI assistant panel
-- **Removed Studio page** - Replaced with Creator
-- **Simplified Marketing page** - Removed Content and Assets tabs (moved to Creator)
-  - Marketing now focused on: Campaigns, Channels, Analytics, Audiences, Automations
-- **Updated sidebar navigation** - Studio → Creator with Palette icon
-- Created new `src/components/creator/` component library
-- Fixed Drizzle ORM relation type inference issues for Vercel build
-- Fixed circular reference in `conversationMessages` schema
-- Normalized relation types (agent, user, collection, workspace)
-- Removed non-existent schema fields
-- All TypeScript errors resolved
 
 ---
 
@@ -179,10 +223,9 @@ TWILIO_TASKROUTER_WORKSPACE_SID
 ### Required
 - `DATABASE_URL` - Neon PostgreSQL connection string
 - `CLERK_SECRET_KEY` / `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Authentication
-- `OPENAI_API_KEY` - AI assistant (Neptune)
 
 ### AI Providers (at least one required)
-- `OPENAI_API_KEY` - OpenAI GPT models
+- `OPENAI_API_KEY` - OpenAI GPT models (required for agents)
 - `ANTHROPIC_API_KEY` - Claude models
 - `GOOGLE_GENERATIVE_AI_API_KEY` - Gemini models
 - `GAMMA_API_KEY` - Gamma.app document generation
@@ -197,10 +240,37 @@ TWILIO_TASKROUTER_WORKSPACE_SID
 
 ### Optional
 - `PINECONE_API_KEY` - Vector database for RAG
-- `BLOB_READ_WRITE_TOKEN` - Vercel Blob file storage
+- `BLOB_READ_WRITE_TOKEN` - Vercel Blob file storage (required for team chat attachments)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth
 - `TRIGGER_SECRET_KEY` - Background jobs
 - `NEXT_PUBLIC_SENTRY_DSN` - Error tracking
+
+---
+
+## Database Schema (Key Tables)
+
+### Team Messaging (New)
+```
+team_channels        - Workspace chat channels
+team_messages        - Chat messages with attachments
+team_channel_members - Channel membership and read status
+```
+
+### Agents
+```
+agents              - Agent configurations with capabilities
+agent_templates     - Pre-built agent templates
+agent_executions    - Execution history and results
+agent_schedules     - Scheduled agent runs
+agent_logs          - Detailed execution logs
+```
+
+### AI Conversations
+```
+ai_conversations    - Chat sessions (Neptune, agent chats)
+ai_messages         - Individual messages
+ai_user_preferences - User AI preferences
+```
 
 ---
 
@@ -234,32 +304,50 @@ npx drizzle-kit push
 src/
 ├── app/           # Next.js App Router pages
 │   ├── (app)/     # Authenticated app pages
-│   │   ├── connected-apps/  # Third-party integrations
-│   │   ├── dashboard-v2/    # Redesigned dashboard
-│   │   └── ...
+│   │   ├── activity/       # My Agents page
+│   │   ├── conversations/  # Conversations + Team Chat
+│   │   ├── connected-apps/ # Third-party integrations
+│   │   ├── dashboard-v2/   # Redesigned dashboard
+│   │   └── settings/       # Settings with Clerk Org
 │   └── api/       # API routes
+│       ├── agents/
+│       │   ├── [id]/
+│       │   │   ├── chat/   # Agent conversations
+│       │   │   └── run/    # Agent execution
+│       │   └── test-run/   # Test before creation
+│       ├── agent-templates/
+│       ├── team/
+│       │   ├── channels/   # Team chat channels
+│       │   └── upload/     # File uploads
 │       ├── creator/
-│       │   └── gamma/       # Gamma.app integration
+│       │   └── gamma/      # Gamma.app integration
 │       └── webhooks/
-│           └── twilio/      # Twilio webhooks (messages, status)
+│           └── twilio/     # Twilio webhooks
 ├── components/    # React components
-│   ├── agents/    # My Agents page components
-│   ├── creator/   # Creator page components
-│   ├── dashboard-v2/  # Dashboard v2 components
-│   ├── integrations/  # Connected Apps components
+│   ├── agents/
+│   │   ├── laboratory/     # Agent creation wizard
+│   │   │   ├── steps/      # Wizard steps
+│   │   │   └── ...
+│   │   └── ...
 │   ├── conversations/
-│   ├── crm/
-│   ├── dashboard/
-│   ├── finance-hq/
-│   ├── marketing/
+│   │   ├── TeamChat.tsx    # Team messaging UI
+│   │   └── ...
+│   ├── creator/
+│   ├── dashboard-v2/
+│   ├── galaxy/
+│   │   └── sidebar.tsx     # With OrganizationSwitcher
 │   └── ...
-├── db/            # Database schema
-├── lib/           # Utilities and services
-│   ├── gamma.ts   # Gamma.app API client
-│   ├── twilio.ts  # Twilio API client (SMS, WhatsApp, Voice, Flex)
+├── db/
+│   └── schema.ts           # Drizzle schema (all tables)
+├── lib/
+│   ├── auth.ts             # With Clerk org support
+│   ├── ai/
+│   │   └── tools.ts        # AI agent tools
+│   ├── gamma.ts
+│   ├── twilio.ts
+│   ├── storage.ts          # Vercel Blob
 │   └── communications/
-│       └── channels.ts  # Multi-channel message sending
-└── types/         # TypeScript types
+└── types/
 ```
 
 ---
@@ -272,11 +360,14 @@ src/
 4. **Schema changes** - The `replyToId` self-reference uses relations, not inline `.references()`
 5. **Gamma integration** - Requires Pro/Ultra/Teams/Business subscription for API access
 6. **Lunar Labs** - Scheduled for complete redesign, don't invest in current implementation
-7. **Twilio webhooks** - Configure these URLs in Twilio Console after deployment:
-   - SMS: `https://yourdomain.com/api/webhooks/twilio?type=sms&workspace=WORKSPACE_ID`
-   - WhatsApp: `https://yourdomain.com/api/webhooks/twilio?type=whatsapp&workspace=WORKSPACE_ID`
-   - Voice: `https://yourdomain.com/api/webhooks/twilio?type=voice&workspace=WORKSPACE_ID`
-   - Status Callback: `https://yourdomain.com/api/webhooks/twilio/status`
+7. **Clerk Organizations** - Enabled for multi-tenant workspaces; personal accounts also supported
+8. **Team Chat** - Requires `BLOB_READ_WRITE_TOKEN` for file attachments
+9. **Agent Tools** - All tools in `src/lib/ai/tools.ts` use real database operations
+10. **Twilio webhooks** - Configure these URLs in Twilio Console after deployment:
+    - SMS: `https://yourdomain.com/api/webhooks/twilio?type=sms&workspace=WORKSPACE_ID`
+    - WhatsApp: `https://yourdomain.com/api/webhooks/twilio?type=whatsapp&workspace=WORKSPACE_ID`
+    - Voice: `https://yourdomain.com/api/webhooks/twilio?type=voice&workspace=WORKSPACE_ID`
+    - Status Callback: `https://yourdomain.com/api/webhooks/twilio/status`
 
 ---
 
