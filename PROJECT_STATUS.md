@@ -10,7 +10,7 @@
 | Field | Value |
 |-------|-------|
 | **Date** | December 2, 2024 |
-| **Commit** | `92aea53` |
+| **Commit** | `e58718a` |
 | **Build Status** | ✅ Passing |
 | **Deployment** | Vercel Production |
 
@@ -49,6 +49,23 @@
 ## Recent Changes
 
 ### December 2, 2024
+
+#### UI/UX Improvements
+- **Refactored Library page tabs** (Commits: `d268a8a`, `e58718a`)
+  - Removed "Create" tab to eliminate confusion with Creator page
+  - Converted Upload button to a tab for consistent UI
+  - New tab structure: Articles | Categories | Favorites | Recent | Upload
+  - Library now focuses on browsing, organizing, and uploading documents
+  - Creator page (`/creator`) is the dedicated space for creating new content
+  - **Impact**: Clearer separation of concerns and more intuitive navigation
+
+- **Fixed document type card hover states** (Commit: `595601e`)
+  - `TypeSelector.tsx`: Fixed gradient background not showing on icon hover
+  - Implemented layered backgrounds with smooth opacity transitions
+  - Base color layer fades out, gradient layer fades in on hover
+  - **Impact**: Document type cards now have proper visual feedback on hover
+
+#### Bug Fixes
 - **Fixed stale closure bug in Creator components** (Commit: `9363a8d`)
   - `CreatorNeptunePanel.tsx`: Fixed `handleQuickAction` to pass prompt directly to `handleSend()` instead of using `setInput()` + `setTimeout()` pattern
   - `GuidedSession.tsx`: Already fixed - `handleOptionSelect` passes option directly to `handleSend(messageOverride)`
