@@ -425,7 +425,7 @@ export async function POST(
     });
 
     // Build personalized system prompt
-    const userName = user.name || 'Boss';
+    const userName = user.firstName || 'Boss';
     const systemPrompt = buildAgentChatPrompt(agent, userName);
 
     // Prepare messages for OpenAI
