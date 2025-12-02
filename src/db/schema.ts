@@ -2258,6 +2258,198 @@ export const conversationParticipants = pgTable(
 );
 
 // ============================================================================
+// TEAM MESSAGING - Internal Communication
+// ============================================================================
+
+export const teamChannelTypeEnum = pgEnum('team_channel_type', ['general', 'direct', 'group', 'announcement']);
+
+export const teamChannels = pgTable(
+  'team_channels',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Channel info
+    name: text('name').notNull(),
+    description: text('description'),
+    type: teamChannelTypeEnum('type').notNull().default('general'),
+
+    // For direct messages - stores sorted user IDs to ensure uniqueness
+    dmParticipantIds: text('dm_participant_ids'), // comma-separated user IDs for DMs
+
+    // Settings
+    isPrivate: boolean('is_private').default(false),
+    isArchived: boolean('is_archived').default(false),
+
+    // Stats
+    messageCount: integer('message_count').default(0),
+    lastMessageAt: timestamp('last_message_at'),
+
+    // Relationships
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('team_channel_tenant_idx').on(table.workspaceId),
+    typeIdx: index('team_channel_type_idx').on(table.type),
+    dmIdx: index('team_channel_dm_idx').on(table.dmParticipantIds),
+  }),
+);
+
+export const teamMessages = pgTable(
+  'team_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Channel reference
+    channelId: uuid('channel_id')
+      .notNull()
+      .references(() => teamChannels.id, { onDelete: 'cascade' }),
+
+    // Sender
+    senderId: uuid('sender_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Message content
+    content: text('content').notNull(),
+    
+    // Reply threading
+    replyToId: uuid('reply_to_id'),
+    
+    // Attachments
+    attachments: jsonb('attachments').$type<Array<{
+      type: 'file' | 'image' | 'link';
+      url: string;
+      name?: string;
+      size?: number;
+      mimeType?: string;
+    }>>().default([]),
+
+    // Reactions (emoji reactions from team members)
+    reactions: jsonb('reactions').$type<Record<string, string[]>>().default({}), // { "👍": ["user-id-1", "user-id-2"] }
+
+    // Status
+    isEdited: boolean('is_edited').default(false),
+    isDeleted: boolean('is_deleted').default(false),
+    editedAt: timestamp('edited_at'),
+    deletedAt: timestamp('deleted_at'),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('team_message_tenant_idx').on(table.workspaceId),
+    channelIdx: index('team_message_channel_idx').on(table.channelId),
+    senderIdx: index('team_message_sender_idx').on(table.senderId),
+    createdAtIdx: index('team_message_created_at_idx').on(table.createdAt),
+  }),
+);
+
+export const teamChannelMembers = pgTable(
+  'team_channel_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Channel reference
+    channelId: uuid('channel_id')
+      .notNull()
+      .references(() => teamChannels.id, { onDelete: 'cascade' }),
+
+    // User reference
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Role in channel
+    role: text('role').default('member'), // 'admin', 'member'
+
+    // Read status
+    lastReadAt: timestamp('last_read_at'),
+    lastReadMessageId: uuid('last_read_message_id'),
+
+    // Notifications
+    isMuted: boolean('is_muted').default(false),
+
+    // Timestamps
+    joinedAt: timestamp('joined_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('team_channel_member_tenant_idx').on(table.workspaceId),
+    channelIdx: index('team_channel_member_channel_idx').on(table.channelId),
+    userIdx: index('team_channel_member_user_idx').on(table.userId),
+    uniqueMembership: index('team_channel_member_unique_idx').on(table.channelId, table.userId),
+  }),
+);
+
+// Relations for team messaging
+export const teamChannelsRelations = relations(teamChannels, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [teamChannels.workspaceId],
+    references: [workspaces.id],
+  }),
+  createdByUser: one(users, {
+    fields: [teamChannels.createdBy],
+    references: [users.id],
+  }),
+  messages: many(teamMessages),
+  members: many(teamChannelMembers),
+}));
+
+export const teamMessagesRelations = relations(teamMessages, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [teamMessages.workspaceId],
+    references: [workspaces.id],
+  }),
+  channel: one(teamChannels, {
+    fields: [teamMessages.channelId],
+    references: [teamChannels.id],
+  }),
+  sender: one(users, {
+    fields: [teamMessages.senderId],
+    references: [users.id],
+  }),
+  replyTo: one(teamMessages, {
+    fields: [teamMessages.replyToId],
+    references: [teamMessages.id],
+  }),
+}));
+
+export const teamChannelMembersRelations = relations(teamChannelMembers, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [teamChannelMembers.workspaceId],
+    references: [workspaces.id],
+  }),
+  channel: one(teamChannels, {
+    fields: [teamChannelMembers.channelId],
+    references: [teamChannels.id],
+  }),
+  user: one(users, {
+    fields: [teamChannelMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
 // DEVELOPER - WEBHOOKS
 // ============================================================================
 
@@ -3237,6 +3429,18 @@ export type GridNodeType = (typeof gridNodeTypeEnum.enumValues)[number];
 export type GridNodeStatus = (typeof gridNodeStatusEnum.enumValues)[number];
 export type GridEdgeType = (typeof gridEdgeTypeEnum.enumValues)[number];
 export type GridExecutionStatus = (typeof gridExecutionStatusEnum.enumValues)[number];
+
+// Team Messaging Types
+export type TeamChannel = typeof teamChannels.$inferSelect;
+export type NewTeamChannel = typeof teamChannels.$inferInsert;
+
+export type TeamMessage = typeof teamMessages.$inferSelect;
+export type NewTeamMessage = typeof teamMessages.$inferInsert;
+
+export type TeamChannelMember = typeof teamChannelMembers.$inferSelect;
+export type NewTeamChannelMember = typeof teamChannelMembers.$inferInsert;
+
+export type TeamChannelType = (typeof teamChannelTypeEnum.enumValues)[number];
 
 
 

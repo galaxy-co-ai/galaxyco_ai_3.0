@@ -19,7 +19,8 @@ import ConversationList from "./ConversationList";
 import ConversationThread from "./ConversationThread";
 import ContactProfileCard from "./ContactProfileCard";
 import NeptuneAssistPanel from "./NeptuneAssistPanel";
-import ChannelTabs from "./ChannelTabs";
+import ChannelTabs, { ChannelType } from "./ChannelTabs";
+import TeamChat from "./TeamChat";
 
 export interface Conversation {
   id: string;
@@ -66,8 +67,6 @@ interface ConversationsDashboardProps {
     avgResponseTime: number;
   };
 }
-
-type ChannelType = 'all' | 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat';
 
 export default function ConversationsDashboard({
   initialConversations,
@@ -168,6 +167,7 @@ export default function ConversationsDashboard({
             onChannelChange={setActiveChannel}
             counts={{
               all: conversations.length,
+              team: 0, // Team chat has its own UI
               email: conversations.filter(c => c.channel === 'email').length,
               sms: conversations.filter(c => c.channel === 'sms').length,
               call: conversations.filter(c => c.channel === 'call').length,
@@ -180,93 +180,103 @@ export default function ConversationsDashboard({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden p-6 gap-6">
-        {/* Left Panel - Conversation List */}
-        <Card className={`flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden transition-all ${
-          showNeptune ? 'w-[25%]' : 'w-[30%]'
-        }`}>
-          <div className="border-b p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search conversations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-          <ConversationList
-            conversations={filteredConversations}
-            selectedId={selectedConversation}
-            onSelect={setSelectedConversation}
-            activeChannel={activeChannel}
-          />
-        </Card>
-
-        {/* Center Panel - Conversation Thread */}
-        <Card className={`flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden transition-all ${
-          showNeptune ? 'w-[45%]' : 'w-[70%]'
-        }`}>
-          {selectedConv ? (
-            <>
-              <ContactProfileCard conversation={selectedConv} />
-              <ConversationThread
-                conversationId={selectedConv.id}
-                channel={selectedConv.channel}
-              />
-            </>
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center max-w-md px-8">
-                <div className="rounded-2xl bg-muted/50 p-6 mb-6 inline-block">
-                  <MessageSquare className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">
-                  {filteredConversations.length === 0 
-                    ? "No conversations yet" 
-                    : "Select a conversation"}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  {filteredConversations.length === 0 
-                    ? "Once you connect your channels, incoming messages will appear in the sidebar."
-                    : "Choose a conversation from the list to view the message thread and respond."}
-                </p>
-                {filteredConversations.length === 0 && (
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                    <Button variant="outline" size="sm" asChild>
-                      <a href="/settings">
-                        <Zap className="mr-2 h-4 w-4" />
-                        Connect Channels
-                      </a>
-                    </Button>
-                  </div>
-                )}
+      {activeChannel === 'team' ? (
+        // Team Chat View - Full width
+        <div className="flex flex-1 overflow-hidden p-6">
+          <Card className="flex flex-col flex-1 rounded-2xl shadow-sm border bg-card overflow-hidden">
+            <TeamChat />
+          </Card>
+        </div>
+      ) : (
+        // Regular Conversations View
+        <div className="flex flex-1 overflow-hidden p-6 gap-6">
+          {/* Left Panel - Conversation List */}
+          <Card className={`flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden transition-all ${
+            showNeptune ? 'w-[25%]' : 'w-[30%]'
+          }`}>
+            <div className="border-b p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search conversations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
               </div>
             </div>
-          )}
-        </Card>
+            <ConversationList
+              conversations={filteredConversations}
+              selectedId={selectedConversation}
+              onSelect={setSelectedConversation}
+              activeChannel={activeChannel}
+            />
+          </Card>
 
-        {/* Right Panel - Neptune AI (Toggleable) */}
-        <AnimatePresence>
-          {showNeptune && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: '30%', opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col"
-            >
-              <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
-                <NeptuneAssistPanel
-                  conversationId={selectedConversation}
-                  conversation={selectedConv}
+          {/* Center Panel - Conversation Thread */}
+          <Card className={`flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden transition-all ${
+            showNeptune ? 'w-[45%]' : 'w-[70%]'
+          }`}>
+            {selectedConv ? (
+              <>
+                <ContactProfileCard conversation={selectedConv} />
+                <ConversationThread
+                  conversationId={selectedConv.id}
+                  channel={selectedConv.channel}
                 />
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+              </>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center max-w-md px-8">
+                  <div className="rounded-2xl bg-muted/50 p-6 mb-6 inline-block">
+                    <MessageSquare className="h-10 w-10 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    {filteredConversations.length === 0 
+                      ? "No conversations yet" 
+                      : "Select a conversation"}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    {filteredConversations.length === 0 
+                      ? "Once you connect your channels, incoming messages will appear in the sidebar."
+                      : "Choose a conversation from the list to view the message thread and respond."}
+                  </p>
+                  {filteredConversations.length === 0 && (
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href="/settings">
+                          <Zap className="mr-2 h-4 w-4" />
+                          Connect Channels
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Right Panel - Neptune AI (Toggleable) */}
+          <AnimatePresence>
+            {showNeptune && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: '30%', opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col"
+              >
+                <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+                  <NeptuneAssistPanel
+                    conversationId={selectedConversation}
+                    conversation={selectedConv}
+                  />
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

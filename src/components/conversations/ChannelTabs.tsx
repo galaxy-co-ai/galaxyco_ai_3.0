@@ -1,9 +1,9 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Mail, MessageSquare, Phone, MessageCircle, Globe, Inbox } from "lucide-react";
+import { Mail, MessageSquare, Phone, MessageCircle, Globe, Inbox, Users } from "lucide-react";
 
-type ChannelType = 'all' | 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat';
+export type ChannelType = 'all' | 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat' | 'team';
 
 interface ChannelTabsProps {
   activeChannel: ChannelType;
@@ -19,6 +19,7 @@ const channels: Array<{
   badgeColor: string;
 }> = [
   { value: 'all', label: 'All', icon: Inbox, activeColor: 'bg-gray-100 text-gray-700', badgeColor: 'bg-gray-500' },
+  { value: 'team', label: 'Team', icon: Users, activeColor: 'bg-indigo-100 text-indigo-700', badgeColor: 'bg-indigo-500' },
   { value: 'email', label: 'Email', icon: Mail, activeColor: 'bg-blue-100 text-blue-700', badgeColor: 'bg-blue-500' },
   { value: 'sms', label: 'SMS', icon: MessageSquare, activeColor: 'bg-green-100 text-green-700', badgeColor: 'bg-green-500' },
   { value: 'call', label: 'Calls', icon: Phone, activeColor: 'bg-purple-100 text-purple-700', badgeColor: 'bg-purple-500' },
