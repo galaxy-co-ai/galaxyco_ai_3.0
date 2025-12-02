@@ -9,8 +9,8 @@
 
 | Field | Value |
 |-------|-------|
-| **Date** | December 1, 2024 |
-| **Commit** | `15c0336` |
+| **Date** | December 2, 2024 |
+| **Commit** | `92aea53` |
 | **Build Status** | ✅ Passing |
 | **Deployment** | Vercel Production |
 
@@ -33,6 +33,7 @@
 |------|-------|--------|
 | Landing | `/` | ✅ Static |
 | Dashboard | `/dashboard` | ✅ Dynamic |
+| My Agents | `/activity` | ✅ Dynamic |
 | CRM | `/crm` | ✅ Dynamic |
 | Conversations | `/conversations` | ✅ Dynamic |
 | Finance HQ | `/finance` | ✅ Dynamic |
@@ -40,13 +41,22 @@
 | Studio | `/studio` | ✅ Dynamic |
 | Marketing | `/marketing` | ✅ Dynamic |
 | Lunar Labs | `/lunar-labs` | ✅ Dynamic |
-| Activity | `/activity` | ✅ Dynamic |
 | Settings | `/settings` | ✅ Dynamic |
 | Assistant | `/assistant` | ✅ Dynamic |
 
 ---
 
 ## Recent Changes
+
+### December 2, 2024
+- **Rebuilt Activity page into "My Agents" hub** with 2-column layout matching Conversations page
+  - Added 3 tabs: Activity, Messages, Laboratory
+  - Agent list with simplified 3-status badges (Active/Paused/Inactive)
+  - Messages tab for chat-style agent communication and training
+  - Laboratory tab with "Coming Soon" placeholder
+- **Updated sidebar**: Renamed "Activity" to "My Agents" with Bot icon
+- **Cleaned up Dashboard**: Removed redundant Messages and Agents tabs (now in dedicated pages)
+- Created new `src/components/agents/` component library
 
 ### December 1, 2024
 - Fixed Drizzle ORM relation type inference issues for Vercel build
@@ -89,6 +99,12 @@ src/
 │   ├── (app)/     # Authenticated app pages
 │   └── api/       # API routes
 ├── components/    # React components
+│   ├── agents/    # My Agents page components (NEW)
+│   ├── conversations/
+│   ├── crm/
+│   ├── dashboard/
+│   ├── finance-hq/
+│   └── ...
 ├── db/            # Database schema
 ├── lib/           # Utilities and services
 └── types/         # TypeScript types
