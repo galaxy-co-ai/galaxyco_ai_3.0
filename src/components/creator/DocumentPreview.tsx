@@ -31,6 +31,8 @@ import {
   FolderOpen,
   ExternalLink,
   MoreHorizontal,
+  Wand2,
+  FileCode,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -81,6 +83,29 @@ export default function DocumentPreview({
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  
+  // Gamma integration state
+  const [isGammaAvailable, setIsGammaAvailable] = useState(false);
+  const [isGeneratingGamma, setIsGeneratingGamma] = useState(false);
+  const [gammaResult, setGammaResult] = useState<{
+    editUrl?: string;
+    embedUrl?: string;
+    exportFormats?: { pdf?: string; pptx?: string };
+  } | null>(null);
+
+  // Check if Gamma is available on mount
+  useEffect(() => {
+    async function checkGammaStatus() {
+      try {
+        const response = await fetch('/api/creator/gamma');
+        const data = await response.json();
+        setIsGammaAvailable(data.configured && data.supportedTypes?.includes(docType.id));
+      } catch {
+        setIsGammaAvailable(false);
+      }
+    }
+    checkGammaStatus();
+  }, [docType.id]);
 
   // Simulate document generation on mount
   useEffect(() => {
@@ -116,6 +141,76 @@ export default function DocumentPreview({
     toast.success("Document generated!", {
       description: "Review and edit your content below",
     });
+  };
+
+  // Generate polished document with Gamma
+  const handleGenerateWithGamma = async () => {
+    if (!isGammaAvailable) return;
+    
+    setIsGeneratingGamma(true);
+    
+    try {
+      const response = await fetch('/api/creator/gamma', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          docTypeId: docType.id,
+          docTypeName: docType.name,
+          answers,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to generate with Gamma');
+      }
+      
+      // Store Gamma result
+      setGammaResult({
+        editUrl: data.data.editUrl,
+        embedUrl: data.data.embedUrl,
+        exportFormats: data.data.exportFormats,
+      });
+      
+      // Update document with Gamma content
+      if (data.data.cards && data.data.cards.length > 0) {
+        const gammaSections: DocumentSection[] = [
+          {
+            id: 'gamma-title',
+            type: 'title',
+            content: data.data.title || document?.title || 'Untitled',
+            editable: true,
+          },
+          ...data.data.cards.map((card: { title: string; content: string }, index: number) => ({
+            id: `gamma-${index}`,
+            type: index === 0 ? 'heading' : 'paragraph' as const,
+            content: card.title ? `${card.title}\n\n${card.content}` : card.content,
+            editable: true,
+          })),
+        ];
+        
+        setDocument({
+          id: data.data.id || document?.id || `gamma-${Date.now()}`,
+          title: data.data.title || document?.title || 'Gamma Document',
+          type: docType.id,
+          sections: gammaSections,
+          createdAt: new Date(),
+          metadata: { ...answers, gammaGenerated: 'true' },
+        });
+      }
+      
+      toast.success("Polished with Gamma! ✨", {
+        description: "Your content has been enhanced with professional design",
+      });
+      
+    } catch (error) {
+      toast.error("Gamma generation failed", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    } finally {
+      setIsGeneratingGamma(false);
+    }
   };
 
   // Handle section click to edit
@@ -286,6 +381,56 @@ export default function DocumentPreview({
         </Button>
 
         <div className="flex items-center gap-2">
+          {/* Gamma Polish Button */}
+          {isGammaAvailable && !gammaResult && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGenerateWithGamma}
+              disabled={isGeneratingGamma}
+              className="border-violet-200 text-violet-700 hover:bg-violet-50"
+            >
+              {isGeneratingGamma ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Polishing...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 mr-1" />
+                  Polish with Gamma
+                </>
+              )}
+            </Button>
+          )}
+          
+          {/* Gamma Actions (when generated) */}
+          {gammaResult && (
+            <>
+              {gammaResult.editUrl && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(gammaResult.editUrl, '_blank')}
+                  className="border-violet-200 text-violet-700 hover:bg-violet-50"
+                >
+                  <ExternalLink className="h-4 w-4 mr-1" />
+                  Edit in Gamma
+                </Button>
+              )}
+              {gammaResult.exportFormats?.pdf && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(gammaResult.exportFormats?.pdf, '_blank')}
+                >
+                  <FileCode className="h-4 w-4 mr-1" />
+                  Export PDF
+                </Button>
+              )}
+            </>
+          )}
+          
           <Button variant="outline" size="sm" onClick={handleCopy}>
             <Copy className="h-4 w-4 mr-1" />
             Copy
@@ -324,9 +469,17 @@ export default function DocumentPreview({
               <docType.icon className="h-6 w-6" />
             </div>
             <div>
-              <Badge className={cn(docType.bgColor, docType.iconColor, "border", docType.borderColor, "mb-2")}>
-                {docType.name}
-              </Badge>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className={cn(docType.bgColor, docType.iconColor, "border", docType.borderColor)}>
+                  {docType.name}
+                </Badge>
+                {gammaResult && (
+                  <Badge className="bg-gradient-to-r from-violet-500 to-purple-500 text-white border-0">
+                    <Wand2 className="h-3 w-3 mr-1" />
+                    Polished with Gamma
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs text-gray-400">
                 Created just now • Click any section to edit
               </p>

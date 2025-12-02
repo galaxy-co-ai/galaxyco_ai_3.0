@@ -88,11 +88,12 @@ export default function GuidedSession({
     }, 500);
   }, [docType]);
 
-  // Handle user sending a message
-  const handleSend = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
+  // Handle user sending a message - accepts optional override to avoid stale closure issues
+  const handleSend = useCallback(async (messageOverride?: string) => {
+    const messageToSend = messageOverride ?? input;
+    if (!messageToSend.trim() || isLoading) return;
 
-    const userInput = input.trim();
+    const userInput = messageToSend.trim();
     setInput("");
     setIsLoading(true);
 
@@ -173,13 +174,10 @@ export default function GuidedSession({
     }
   };
 
-  // Handle select-type requirements
+  // Handle select-type requirements - pass option directly to avoid stale closure
   const handleOptionSelect = (option: string) => {
-    setInput(option);
-    // Auto-send after selecting
-    setTimeout(() => {
-      handleSend();
-    }, 100);
+    if (isLoading) return;
+    handleSend(option);
   };
 
   return (
@@ -307,7 +305,7 @@ export default function GuidedSession({
               disabled={isLoading || allComplete}
             />
             <Button
-              onClick={handleSend}
+              onClick={() => handleSend()}
               disabled={!input.trim() || isLoading}
               size="icon"
               className="rounded-full bg-violet-600 hover:bg-violet-700"

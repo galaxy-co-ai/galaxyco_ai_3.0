@@ -40,7 +40,7 @@ const mainNavItems = [
 
 const bottomNavItems = [
   { icon: Sparkles, label: "Neptune", href: "#", id: "assistant" },
-  { icon: Plug, label: "Integrations", href: "#", id: "integrations" },
+  { icon: Plug, label: "Connected Apps", href: "#", id: "connected-apps" },
   { icon: Settings, label: "Settings", href: "#", id: "settings" },
 ];
 

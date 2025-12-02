@@ -390,7 +390,7 @@ function FinanceEmptyState() {
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Button asChild>
-          <a href="/integrations" aria-label="Go to integrations page to connect finance tools">
+          <a href="/connected-apps" aria-label="Go to connected apps page to connect finance tools">
             <Plug className="h-4 w-4 mr-2" aria-hidden="true" />
             Connect Integrations
           </a>
@@ -468,7 +468,7 @@ function ReconnectBanner({ provider }: { provider: FinanceProvider }) {
         className="border-amber-300 text-amber-700 hover:bg-amber-100 dark:border-amber-700 dark:text-amber-300 dark:hover:bg-amber-900/30"
         asChild
       >
-        <a href={`/integrations?reconnect=${provider}`}>
+        <a href={`/connected-apps?reconnect=${provider}`}>
           <RefreshCw className="h-3 w-3 mr-2" aria-hidden="true" />
           Reconnect
         </a>

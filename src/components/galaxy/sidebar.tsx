@@ -40,7 +40,7 @@ const mainNavItems = [
 // Secondary navigation items
 const secondaryNavItems = [
   { icon: Sparkles, label: "Neptune", href: "/assistant", id: "assistant" },
-  { icon: Plug, label: "Integrations", href: "/integrations", id: "integrations" },
+  { icon: Plug, label: "Connected Apps", href: "/connected-apps", id: "connected-apps" },
   { icon: Settings, label: "Settings", href: "/settings", id: "settings" },
 ];
 

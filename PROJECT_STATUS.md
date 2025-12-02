@@ -10,7 +10,6 @@
 | Field | Value |
 |-------|-------|
 | **Date** | December 2, 2024 |
-| **Commit** | `e58718a` |
 | **Build Status** | ✅ Passing |
 | **Deployment** | Vercel Production |
 
@@ -21,7 +20,7 @@
 - **Framework**: Next.js 16.0.3 (Turbopack)
 - **Database**: PostgreSQL with Drizzle ORM
 - **Auth**: Clerk
-- **AI**: OpenAI GPT-4
+- **AI Providers**: OpenAI, Anthropic Claude, Google Gemini, Gamma.app
 - **Styling**: Tailwind CSS
 - **Deployment**: Vercel
 
@@ -33,6 +32,7 @@
 |------|-------|--------|
 | Landing | `/` | ✅ Static |
 | Dashboard | `/dashboard` | ✅ Dynamic |
+| Dashboard v2 | `/dashboard-v2` | ✅ Dynamic (User-first redesign) |
 | My Agents | `/activity` | ✅ Dynamic |
 | Creator | `/creator` | ✅ Dynamic |
 | Library | `/library` | ✅ Dynamic |
@@ -40,15 +40,42 @@
 | Conversations | `/conversations` | ✅ Dynamic |
 | Finance HQ | `/finance` | ✅ Dynamic |
 | Marketing | `/marketing` | ✅ Dynamic |
-| Lunar Labs | `/lunar-labs` | ✅ Dynamic |
+| Lunar Labs | `/lunar-labs` | 🔄 Redesign planned |
+| Connected Apps | `/connected-apps` | ✅ Dynamic |
 | Settings | `/settings` | ✅ Dynamic |
 | Assistant | `/assistant` | ✅ Dynamic |
+| Onboarding | `/onboarding` | ✅ Dynamic |
 
 ---
 
 ## Recent Changes
 
-### December 2, 2024
+### December 2, 2024 (Session 2)
+
+#### New Features
+- **Gamma.app Integration for Creator** 
+  - Added `GAMMA_API_KEY` environment variable support
+  - New API route: `/api/creator/gamma` for polished document generation
+  - New lib: `src/lib/gamma.ts` - Gamma API client with generation, polling, and helpers
+  - Creator page now shows "Polish with Gamma" button after initial document generation
+  - Supported types: Presentation, Document, Proposal, Newsletter, Blog, Social Post
+  - Features: Edit in Gamma link, PDF export, "Polished with Gamma" badge
+  - **Impact**: Users can now generate professionally designed documents with one click
+
+#### UI/UX Improvements
+- **Renamed "Integrations" to "Connected Apps"**
+  - Route changed: `/integrations` → `/connected-apps`
+  - Updated sidebar navigation label and href
+  - Updated all internal links (Finance HQ reconnect links, etc.)
+  - **Impact**: Clearer, more user-friendly terminology
+
+#### Documentation
+- **Identified undocumented pages** for future reference:
+  - Dashboard v2 (`/dashboard-v2`) - User-first redesigned dashboard
+  - Onboarding (`/onboarding`) - New user onboarding flow
+  - Connected Apps (`/connected-apps`) - Third-party integrations
+
+### December 2, 2024 (Session 1)
 
 #### UI/UX Improvements
 - **Refactored Library page tabs** (Commits: `d268a8a`, `e58718a`)
@@ -74,6 +101,15 @@
   - **Impact**: Quick action buttons and option selects now send correct messages instead of stale state
   - **Status**: ✅ Committed and build verified
 
+- **Rebuilt Activity page into "My Agents" hub** with 2-column layout matching Conversations page
+  - Added 3 tabs: Activity, Messages, Laboratory
+  - Agent list with simplified 3-status badges (Active/Paused/Inactive)
+  - Messages tab for chat-style agent communication and training
+  - Laboratory tab with "Coming Soon" placeholder
+- **Updated sidebar**: Renamed "Activity" to "My Agents" with Bot icon
+- **Cleaned up Dashboard**: Removed redundant Messages and Agents tabs (now in dedicated pages)
+- Created new `src/components/agents/` component library
+
 ### December 1, 2024
 - **Created new "Creator" page** - AI-powered content and asset creation studio
   - Tabs: Create | Collections | Templates
@@ -89,23 +125,33 @@
   - Marketing now focused on: Campaigns, Channels, Analytics, Audiences, Automations
 - **Updated sidebar navigation** - Studio → Creator with Palette icon
 - Created new `src/components/creator/` component library
-
-### December 2, 2024
-- **Rebuilt Activity page into "My Agents" hub** with 2-column layout matching Conversations page
-  - Added 3 tabs: Activity, Messages, Laboratory
-  - Agent list with simplified 3-status badges (Active/Paused/Inactive)
-  - Messages tab for chat-style agent communication and training
-  - Laboratory tab with "Coming Soon" placeholder
-- **Updated sidebar**: Renamed "Activity" to "My Agents" with Bot icon
-- **Cleaned up Dashboard**: Removed redundant Messages and Agents tabs (now in dedicated pages)
-- Created new `src/components/agents/` component library
-
-### December 1, 2024
 - Fixed Drizzle ORM relation type inference issues for Vercel build
 - Fixed circular reference in `conversationMessages` schema
 - Normalized relation types (agent, user, collection, workspace)
 - Removed non-existent schema fields
 - All TypeScript errors resolved
+
+---
+
+## Environment Variables
+
+### Required
+- `DATABASE_URL` - Neon PostgreSQL connection string
+- `CLERK_SECRET_KEY` / `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Authentication
+- `OPENAI_API_KEY` - AI assistant (Neptune)
+
+### AI Providers (at least one required)
+- `OPENAI_API_KEY` - OpenAI GPT models
+- `ANTHROPIC_API_KEY` - Claude models
+- `GOOGLE_GENERATIVE_AI_API_KEY` - Gemini models
+- `GAMMA_API_KEY` - Gamma.app document generation
+
+### Optional
+- `PINECONE_API_KEY` - Vector database for RAG
+- `BLOB_READ_WRITE_TOKEN` - Vercel Blob file storage
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - Google OAuth
+- `TRIGGER_SECRET_KEY` - Background jobs
+- `NEXT_PUBLIC_SENTRY_DSN` - Error tracking
 
 ---
 
@@ -139,10 +185,17 @@ npx drizzle-kit push
 src/
 ├── app/           # Next.js App Router pages
 │   ├── (app)/     # Authenticated app pages
+│   │   ├── connected-apps/  # Third-party integrations
+│   │   ├── dashboard-v2/    # Redesigned dashboard
+│   │   └── ...
 │   └── api/       # API routes
+│       └── creator/
+│           └── gamma/       # Gamma.app integration
 ├── components/    # React components
 │   ├── agents/    # My Agents page components
-│   ├── creator/   # Creator page components (NEW)
+│   ├── creator/   # Creator page components
+│   ├── dashboard-v2/  # Dashboard v2 components
+│   ├── integrations/  # Connected Apps components
 │   ├── conversations/
 │   ├── crm/
 │   ├── dashboard/
@@ -151,6 +204,7 @@ src/
 │   └── ...
 ├── db/            # Database schema
 ├── lib/           # Utilities and services
+│   └── gamma.ts   # Gamma.app API client
 └── types/         # TypeScript types
 ```
 
@@ -162,6 +216,8 @@ src/
 2. **Drizzle relations** - Use helper functions to normalize `object | array` union types
 3. **Vercel builds** - Run `npm run build` locally before pushing to catch TypeScript errors
 4. **Schema changes** - The `replyToId` self-reference uses relations, not inline `.references()`
+5. **Gamma integration** - Requires Pro/Ultra/Teams/Business subscription for API access
+6. **Lunar Labs** - Scheduled for complete redesign, don't invest in current implementation
 
 ---
 

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Sparkles,
   Send,
@@ -74,15 +75,14 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handle sending message - accepts optional override to avoid stale closure issues
-  const handleSend = async (messageOverride?: string) => {
-    const messageToSend = messageOverride ?? input;
-    if (!messageToSend.trim() || isLoading) return;
+  // Handle sending message
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: messageToSend.trim(),
+      content: input.trim(),
       timestamp: new Date(),
     };
 
@@ -96,7 +96,7 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: messageToSend.trim(),
+          message: input.trim(),
           context: {
             workspace: "Creator",
             feature: "content-creation",
@@ -144,10 +144,14 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
     }
   };
 
-  // Handle quick action - pass prompt directly to avoid stale closure
+  // Handle quick action
   const handleQuickAction = (prompt: string) => {
-    if (isLoading) return;
-    handleSend(prompt);
+    setInput(prompt);
+    // Auto-send after setting input
+    setTimeout(() => {
+      const fakeEvent = { preventDefault: () => {} };
+      handleSend();
+    }, 100);
   };
 
   // Copy message content
@@ -282,7 +286,7 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
             aria-label="Message Neptune"
           />
           <Button
-            onClick={() => handleSend()}
+            onClick={handleSend}
             disabled={!input.trim() || isLoading}
             size="icon"
             className="rounded-full bg-purple-600 hover:bg-purple-700 h-9 w-9"

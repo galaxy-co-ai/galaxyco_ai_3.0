@@ -54,6 +54,7 @@ export function checkBackendIntegrations(): IntegrationStatus[] {
   if (process.env.OPENAI_API_KEY) aiProviders.push('OpenAI');
   if (process.env.ANTHROPIC_API_KEY) aiProviders.push('Claude');
   if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) aiProviders.push('Gemini');
+  if (process.env.GAMMA_API_KEY) aiProviders.push('Gamma');
 
   integrations.push({
     name: 'AI Providers',
@@ -189,6 +190,12 @@ export function getBackendHealthScore(): {
     grade,
   };
 }
+
+
+
+
+
+
 
 
 

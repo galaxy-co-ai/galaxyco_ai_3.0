@@ -85,6 +85,27 @@ export function FloatingAIAssistant() {
     }
   }, [isOpen, isMinimized]);
 
+  // Listen for openNeptune custom event from dashboard
+  useEffect(() => {
+    const handleOpenNeptune = (event: CustomEvent) => {
+      const { query } = event.detail;
+      setIsOpen(true);
+      setIsMinimized(false);
+      if (query) {
+        setInputValue(query);
+        // Optionally auto-send the query
+        setTimeout(() => {
+          handleSendMessage(query);
+        }, 300);
+      }
+    };
+
+    window.addEventListener('openNeptune', handleOpenNeptune as EventListener);
+    return () => {
+      window.removeEventListener('openNeptune', handleOpenNeptune as EventListener);
+    };
+  }, []);
+
   const handleSendMessage = useCallback(async (messageText?: string) => {
     const textToSend = messageText || inputValue.trim();
     if (!textToSend) return;
