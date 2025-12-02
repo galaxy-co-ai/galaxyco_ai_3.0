@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { workspaces, workspaceMembers } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
@@ -66,15 +66,12 @@ export async function PUT(request: Request) {
     // Check if slug is being changed and if it's available
     if (updates.slug && updates.slug !== workspace.slug) {
       const existingWorkspace = await db.query.workspaces.findFirst({
-        where: and(
-          eq(workspaces.slug, updates.slug),
-          eq(workspaces.id, workspaceId)
-        ),
+        where: eq(workspaces.slug, updates.slug),
       });
 
       if (existingWorkspace && existingWorkspace.id !== workspaceId) {
         return NextResponse.json(
-          { error: 'Workspace slug already taken' },
+          { error: 'Workspace URL already taken' },
           { status: 409 }
         );
       }

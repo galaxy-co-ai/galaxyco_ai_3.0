@@ -229,11 +229,22 @@ export default function SettingsPage() {
         }),
       });
       
+      const data = await res.json();
+      
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to save workspace');
+        throw new Error(data.error || 'Failed to save workspace');
       }
       
+      // Update form with returned data to avoid stale state
+      if (data.workspace) {
+        setWorkspaceForm(prev => ({
+          ...prev,
+          name: data.workspace.name,
+          slug: data.workspace.slug,
+        }));
+      }
+      
+      // Revalidate cache
       await mutateWorkspace();
       toast.success("Workspace updated successfully");
     } catch (error) {
