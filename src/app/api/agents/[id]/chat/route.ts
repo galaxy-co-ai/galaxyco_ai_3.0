@@ -307,7 +307,7 @@ export async function GET(
     });
 
     const agentConversation = conversations.find(c => 
-      (c.context as { agentId?: string })?.agentId === agentId
+      (c.context as { selectedItems?: { agentId?: string } })?.selectedItems?.agentId === agentId
     );
 
     if (!agentConversation) {
@@ -401,7 +401,10 @@ export async function POST(
           title: `Chat with ${agent.name}`,
           lastMessageAt: new Date(),
           messageCount: 0,
-          context: { agentId: agent.id },
+          context: { 
+            page: `/agents/${agent.id}`,
+            selectedItems: { agentId: agent.id },
+          },
         })
         .returning();
       conversation = newConv;
@@ -545,7 +548,7 @@ export async function DELETE(
     });
 
     const agentConversation = conversations.find(c => 
-      (c.context as { agentId?: string })?.agentId === agentId
+      (c.context as { selectedItems?: { agentId?: string } })?.selectedItems?.agentId === agentId
     );
 
     if (agentConversation) {
