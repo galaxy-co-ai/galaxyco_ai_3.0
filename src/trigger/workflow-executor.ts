@@ -1,12 +1,123 @@
 import { task, schedules } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
-import { agents, agentExecutions } from "@/db/schema";
+import { agents, agentExecutions, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import OpenAI from "openai";
+import { aiTools, executeTool, type ToolContext } from "@/lib/ai/tools";
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+/**
+ * Map agent capabilities to tool names
+ */
+const CAPABILITY_TOOLS: Record<string, string[]> = {
+  crm: ["create_lead", "search_leads", "update_lead_stage", "create_contact", "get_hot_leads", "get_pipeline_summary"],
+  email: ["draft_email", "send_email"],
+  calendar: ["schedule_meeting", "get_upcoming_events"],
+  knowledge: ["search_knowledge", "create_document"],
+  web: [], // Would need web search implementation
+};
+
+/**
+ * Get system prompt for an agent based on its config and template
+ */
+function buildAgentSystemPrompt(agent: {
+  name: string;
+  type: string;
+  description: string | null;
+  config: unknown;
+}): string {
+  const config = agent.config as {
+    systemPrompt?: string;
+    tone?: "professional" | "friendly" | "concise";
+    capabilities?: string[];
+  } | null;
+
+  // Use custom system prompt if provided
+  if (config?.systemPrompt) {
+    return config.systemPrompt;
+  }
+
+  // Generate default prompt based on agent type and tone
+  const tone = config?.tone || "professional";
+  const toneDescriptions = {
+    professional: "formal, business-focused, and precise",
+    friendly: "warm, approachable, and conversational",
+    concise: "brief, direct, and efficient",
+  };
+
+  return `You are ${agent.name}, an AI agent specialized in ${agent.type} tasks.
+
+Your communication style is ${toneDescriptions[tone]}.
+
+${agent.description || ""}
+
+You have access to various tools to complete your tasks. Use them proactively to gather information and take action.
+
+When completing tasks:
+1. Analyze the input to understand what's needed
+2. Use available tools to gather necessary information
+3. Take appropriate actions based on your analysis
+4. Provide a clear summary of what you accomplished
+
+Be thorough but efficient. Complete the task autonomously without asking clarifying questions unless absolutely necessary.`;
+}
+
+/**
+ * Get tools for an agent based on its capabilities
+ */
+function getAgentTools(agent: { config: unknown }) {
+  const config = agent.config as {
+    capabilities?: string[];
+    tools?: string[];
+  } | null;
+
+  // If specific tools are configured, use those
+  if (config?.tools && config.tools.length > 0) {
+    return aiTools.filter((tool) => {
+      if (tool.type === "function" && "function" in tool) {
+        return config.tools!.includes(tool.function.name);
+      }
+      return false;
+    });
+  }
+
+  // Otherwise, derive tools from capabilities
+  const capabilities = config?.capabilities || [];
+  const toolNames = new Set<string>();
+
+  for (const capability of capabilities) {
+    const tools = CAPABILITY_TOOLS[capability] || [];
+    tools.forEach((t) => toolNames.add(t));
+  }
+
+  // If no capabilities specified, give access to common tools
+  if (toolNames.size === 0) {
+    return aiTools.filter((tool) => {
+      if (tool.type === "function" && "function" in tool) {
+        // Default safe tools
+        const safeTool = ["search_leads", "get_pipeline_summary", "get_hot_leads", "get_upcoming_events", "search_knowledge"];
+        return safeTool.includes(tool.function.name);
+      }
+      return false;
+    });
+  }
+
+  return aiTools.filter((tool) => {
+    if (tool.type === "function" && "function" in tool) {
+      return toolNames.has(tool.function.name);
+    }
+    return false;
+  });
+}
 
 /**
  * Execute Agent/Workflow Task
- * Runs an AI agent with the given inputs
+ * Runs an AI agent with the given inputs using real AI
  */
 export const executeAgentTask = task({
   id: "execute-agent",
@@ -50,45 +161,126 @@ export const executeAgentTask = task({
     logger.info("Agent execution started", {
       executionId: execution.id,
       agentId,
+      agentName: agent.name,
       workspaceId,
     });
 
-    try {
-      // Get agent configuration
-      const config = agent.config as {
-        nodes?: Array<{
-          id: string;
-          type: string;
-          data: Record<string, unknown>;
-        }>;
-        edges?: Array<{
-          source: string;
-          target: string;
-        }>;
-        systemPrompt?: string;
-        tools?: string[];
-      } | null;
+    const startTime = Date.now();
 
-      // Simple workflow execution
-      // In a full implementation, this would parse nodes/edges and execute each step
-      const results: Record<string, unknown> = {
+    try {
+      // Check if OpenAI is configured
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error("OpenAI API key not configured");
+      }
+
+      // Get agent creator for tool context
+      const creator = agent.createdBy
+        ? await db.query.users.findFirst({
+            where: eq(users.id, agent.createdBy),
+          })
+        : null;
+
+      // Build tool context
+      const toolContext: ToolContext = {
+        workspaceId,
+        userId: triggeredBy !== "system" ? triggeredBy : (creator?.clerkUserId || "system"),
+        userEmail: creator?.email || "agent@galaxyco.ai",
+        userName: agent.name,
+      };
+
+      // Build system prompt
+      const systemPrompt = buildAgentSystemPrompt(agent);
+
+      // Get tools for this agent
+      const agentTools = getAgentTools(agent);
+
+      // Build user message from inputs
+      let userMessage = "Execute your task.";
+      if (inputs && Object.keys(inputs).length > 0) {
+        if (inputs.task) {
+          userMessage = String(inputs.task);
+        } else if (inputs.message) {
+          userMessage = String(inputs.message);
+        } else {
+          userMessage = `Execute your task with these inputs:\n${JSON.stringify(inputs, null, 2)}`;
+        }
+      }
+
+      // Call OpenAI
+      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ];
+
+      let response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages,
+        tools: agentTools.length > 0 ? agentTools : undefined,
+        temperature: 0.7,
+        max_tokens: 2000,
+      });
+
+      // Handle tool calls in a loop
+      const toolResults: Array<{ tool: string; result: unknown }> = [];
+      let iterations = 0;
+      const maxIterations = 5; // Prevent infinite loops
+
+      while (response.choices[0]?.message?.tool_calls && iterations < maxIterations) {
+        iterations++;
+        const toolCalls = response.choices[0].message.tool_calls;
+
+        // Add assistant message with tool calls
+        messages.push(response.choices[0].message);
+
+        // Execute each tool call
+        for (const toolCall of toolCalls) {
+          // Type guard for function tool calls
+          if (toolCall.type !== "function") continue;
+          const toolName = toolCall.function.name;
+          const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
+
+          logger.info("Agent executing tool", {
+            executionId: execution.id,
+            tool: toolName,
+            args: toolArgs,
+          });
+
+          const result = await executeTool(toolName, toolArgs, toolContext);
+          toolResults.push({ tool: toolName, result });
+
+          // Add tool result to messages
+          messages.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result),
+          });
+        }
+
+        // Get next response
+        response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages,
+          tools: agentTools.length > 0 ? agentTools : undefined,
+          temperature: 0.7,
+          max_tokens: 2000,
+        });
+      }
+
+      // Get final response content
+      const finalResponse = response.choices[0]?.message?.content || "Task completed.";
+      const durationMs = Date.now() - startTime;
+
+      // Build results
+      const results = {
         agentName: agent.name,
         agentType: agent.type,
         executedAt: new Date().toISOString(),
+        durationMs,
+        response: finalResponse,
+        toolsUsed: toolResults.map((tr) => tr.tool),
+        toolResults,
         inputs,
       };
-
-      // Simulate processing based on configuration
-      const nodeCount = config?.nodes?.length || 0;
-      const toolCount = config?.tools?.length || 0;
-      
-      if (nodeCount > 0) {
-        results.nodesProcessed = nodeCount;
-      }
-      if (toolCount > 0) {
-        results.toolsAvailable = toolCount;
-      }
-      results.message = `Agent "${agent.name}" executed successfully`;
 
       // Update execution record with success
       await db
@@ -97,6 +289,7 @@ export const executeAgentTask = task({
           status: "completed",
           output: results,
           completedAt: new Date(),
+          durationMs,
         })
         .where(eq(agentExecutions.id, execution.id));
 
@@ -113,7 +306,8 @@ export const executeAgentTask = task({
       logger.info("Agent execution completed", {
         executionId: execution.id,
         agentId,
-        workspaceId,
+        durationMs,
+        toolsUsed: toolResults.length,
       });
 
       return {
@@ -123,7 +317,8 @@ export const executeAgentTask = task({
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
+      const durationMs = Date.now() - startTime;
+
       // Update execution record with error
       await db
         .update(agentExecutions)
@@ -131,6 +326,7 @@ export const executeAgentTask = task({
           status: "failed",
           error: { message: errorMessage },
           completedAt: new Date(),
+          durationMs,
         })
         .where(eq(agentExecutions.id, execution.id));
 
@@ -138,6 +334,7 @@ export const executeAgentTask = task({
         executionId: execution.id,
         agentId,
         error: errorMessage,
+        durationMs,
       });
 
       return {
@@ -173,7 +370,7 @@ export const processActiveAgentsTask = task({
       workspaceId: workspaceId || "all",
     });
 
-    // For now, just return the count - scheduled execution would need 
+    // For now, just return the count - scheduled execution would need
     // a separate scheduling mechanism (e.g., using agentSchedules table)
     return {
       success: true,
@@ -201,7 +398,7 @@ export const scheduledAgentHealthCheck = schedules.task({
 
     // Get stats on all agents
     const allAgents = await db.query.agents.findMany();
-    
+
     const stats = {
       total: allAgents.length,
       active: allAgents.filter((a) => a.status === "active").length,

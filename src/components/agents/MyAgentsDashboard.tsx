@@ -78,7 +78,7 @@ function transformApiAgent(apiAgent: ApiAgent): Agent {
     lastActive: apiAgent.lastExecutedAt
       ? new Date(apiAgent.lastExecutedAt)
       : new Date(),
-    unreadMessages: Math.floor(Math.random() * 5), // Mock for now
+    unreadMessages: 0, // No unread messages by default - real counts could come from API
   };
 }
 
@@ -324,8 +324,8 @@ export default function MyAgentsDashboard({
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden p-6 gap-6">
         {activeTab === "laboratory" ? (
-          // Laboratory tab is full width
-          <Card className="flex-1 rounded-2xl shadow-sm border bg-card overflow-hidden">
+          // Laboratory tab is full width - overflow-visible to show template badges
+          <Card className="flex-1 rounded-2xl shadow-sm border bg-card overflow-visible">
             <AgentLaboratoryTab />
           </Card>
         ) : (

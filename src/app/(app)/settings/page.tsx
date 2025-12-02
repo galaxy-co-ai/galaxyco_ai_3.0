@@ -93,6 +93,10 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = React.useState<SettingsSection>("profile");
   const [showApiKey, setShowApiKey] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [showInviteModal, setShowInviteModal] = React.useState(false);
+  const [inviteEmail, setInviteEmail] = React.useState("");
+  const [inviteRole, setInviteRole] = React.useState<"admin" | "member" | "viewer">("member");
+  const [isInviting, setIsInviting] = React.useState(false);
   
   // Fetch data using SWR
   const { data: profileData, mutate: mutateProfile } = useSWR('/api/settings/profile', fetcher);
@@ -270,6 +274,38 @@ export default function SettingsPage() {
   const handleCopyApiKey = (key: string) => {
     navigator.clipboard.writeText(key);
     toast.success("API key copied to clipboard");
+  };
+
+  const handleInviteMember = async () => {
+    if (!inviteEmail.trim()) {
+      toast.error("Please enter an email address");
+      return;
+    }
+    
+    setIsInviting(true);
+    try {
+      const res = await fetch('/api/settings/team', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to invite member');
+      }
+      
+      await mutateTeam();
+      toast.success(`${inviteEmail} has been added to your team!`);
+      setShowInviteModal(false);
+      setInviteEmail("");
+      setInviteRole("member");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to invite member");
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   const renderContent = () => {
@@ -451,12 +487,104 @@ export default function SettingsPage() {
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{teamMembers.length} members</span>
-              <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white">
+              <span className="text-sm text-gray-500">{teamMembers.length} member{teamMembers.length !== 1 ? 's' : ''}</span>
+              <Button 
+                size="sm" 
+                className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
+                onClick={() => setShowInviteModal(true)}
+              >
                 <Plus className="h-3.5 w-3.5 mr-1" />
                 Invite Member
               </Button>
             </div>
+            
+            {/* Invite Modal */}
+            {showInviteModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div 
+                  className="absolute inset-0 bg-black/50" 
+                  onClick={() => setShowInviteModal(false)}
+                />
+                <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6 m-4">
+                  <button
+                    onClick={() => setShowInviteModal(false)}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                    aria-label="Close"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                  
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Invite Team Member</h3>
+                  <p className="text-sm text-gray-500 mb-4">Add someone to your workspace</p>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="invite-email" className="text-xs text-gray-600">Email Address</Label>
+                      <Input
+                        id="invite-email"
+                        type="email"
+                        placeholder="colleague@company.com"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        className="h-10"
+                        disabled={isInviting}
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-gray-600">Role</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['admin', 'member', 'viewer'] as const).map((role) => (
+                          <button
+                            key={role}
+                            onClick={() => setInviteRole(role)}
+                            className={cn(
+                              "px-3 py-2 text-sm rounded-lg border transition-colors capitalize",
+                              inviteRole === role
+                                ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                : "border-gray-200 hover:border-gray-300 text-gray-600"
+                            )}
+                            disabled={isInviting}
+                          >
+                            {role}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {inviteRole === 'admin' && 'Can manage team members and settings'}
+                        {inviteRole === 'member' && 'Can access all features'}
+                        {inviteRole === 'viewer' && 'Read-only access'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3 mt-6">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setShowInviteModal(false)}
+                      disabled={isInviting}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                      onClick={handleInviteMember}
+                      disabled={isInviting || !inviteEmail.trim()}
+                    >
+                      {isInviting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Inviting...
+                        </>
+                      ) : (
+                        'Send Invite'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               {teamMembers.length === 0 ? (
