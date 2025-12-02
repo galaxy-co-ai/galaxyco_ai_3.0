@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { OrganizationSwitcher } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   Palette,
@@ -206,6 +207,33 @@ export function Sidebar({ className, user }: SidebarProps) {
             );
           })}
         </div>
+      </div>
+
+      {/* Organization Switcher */}
+      <Separator />
+      <div className={cn("p-3", isCollapsed && "flex justify-center")}>
+        <OrganizationSwitcher
+          hidePersonal={false}
+          afterCreateOrganizationUrl="/dashboard"
+          afterLeaveOrganizationUrl="/dashboard"
+          afterSelectOrganizationUrl="/dashboard"
+          afterSelectPersonalUrl="/dashboard"
+          appearance={{
+            elements: {
+              rootBox: cn(
+                "w-full",
+                isCollapsed && "w-auto"
+              ),
+              organizationSwitcherTrigger: cn(
+                "w-full rounded-lg border border-sidebar-border bg-sidebar hover:bg-sidebar-accent/50 transition-colors",
+                isCollapsed ? "p-1.5 justify-center" : "p-2 justify-start gap-2"
+              ),
+              organizationPreviewMainIdentifier: "text-sm font-medium text-sidebar-foreground",
+              organizationPreviewSecondaryIdentifier: "text-xs text-muted-foreground",
+              organizationSwitcherTriggerIcon: "text-muted-foreground",
+            },
+          }}
+        />
       </div>
 
       {/* User Profile */}

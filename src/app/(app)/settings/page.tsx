@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, OrganizationProfile, useOrganization } from "@clerk/nextjs";
 import useSWR from "swr";
 import { 
   User, 
@@ -93,15 +93,10 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = React.useState<SettingsSection>("profile");
   const [showApiKey, setShowApiKey] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [showInviteModal, setShowInviteModal] = React.useState(false);
-  const [inviteEmail, setInviteEmail] = React.useState("");
-  const [inviteRole, setInviteRole] = React.useState<"admin" | "member" | "viewer">("member");
-  const [isInviting, setIsInviting] = React.useState(false);
   
   // Fetch data using SWR
   const { data: profileData, mutate: mutateProfile } = useSWR('/api/settings/profile', fetcher);
   const { data: workspaceData, mutate: mutateWorkspace } = useSWR('/api/settings/workspace', fetcher);
-  const { data: teamData, mutate: mutateTeam } = useSWR('/api/settings/team', fetcher);
   const { data: apiKeysData, mutate: mutateApiKeys } = useSWR('/api/settings/api-keys', fetcher);
   const { data: notificationsData, mutate: mutateNotifications } = useSWR('/api/settings/notifications', fetcher);
   
@@ -274,38 +269,6 @@ export default function SettingsPage() {
   const handleCopyApiKey = (key: string) => {
     navigator.clipboard.writeText(key);
     toast.success("API key copied to clipboard");
-  };
-
-  const handleInviteMember = async () => {
-    if (!inviteEmail.trim()) {
-      toast.error("Please enter an email address");
-      return;
-    }
-    
-    setIsInviting(true);
-    try {
-      const res = await fetch('/api/settings/team', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
-      });
-      
-      const data = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to invite member');
-      }
-      
-      await mutateTeam();
-      toast.success(`${inviteEmail} has been added to your team!`);
-      setShowInviteModal(false);
-      setInviteEmail("");
-      setInviteRole("member");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to invite member");
-    } finally {
-      setIsInviting(false);
-    }
   };
 
   const renderContent = () => {
@@ -483,255 +446,20 @@ export default function SettingsPage() {
         );
 
       case "team":
-        const teamMembers = teamData?.members || [];
         return (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{teamMembers.length} member{teamMembers.length !== 1 ? 's' : ''}</span>
-              <Button 
-                size="sm" 
-                className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
-                onClick={() => setShowInviteModal(true)}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                Invite Member
-              </Button>
-            </div>
-            
-            {/* Invite Modal */}
-            {showInviteModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center">
-                <div 
-                  className="absolute inset-0 bg-black/50" 
-                  onClick={() => setShowInviteModal(false)}
-                />
-                <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md p-6 m-4">
-                  <button
-                    onClick={() => setShowInviteModal(false)}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                    aria-label="Close"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                  
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Invite Team Member</h3>
-                  <p className="text-sm text-gray-500 mb-4">Add someone to your workspace</p>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="invite-email" className="text-xs text-gray-600">Email Address</Label>
-                      <Input
-                        id="invite-email"
-                        type="email"
-                        placeholder="colleague@company.com"
-                        value={inviteEmail}
-                        onChange={(e) => setInviteEmail(e.target.value)}
-                        className="h-10"
-                        disabled={isInviting}
-                      />
-                    </div>
-                    
-                    <div className="space-y-1.5">
-                      <Label className="text-xs text-gray-600">Role</Label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {(['admin', 'member', 'viewer'] as const).map((role) => (
-                          <button
-                            key={role}
-                            onClick={() => setInviteRole(role)}
-                            className={cn(
-                              "px-3 py-2 text-sm rounded-lg border transition-colors capitalize",
-                              inviteRole === role
-                                ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                                : "border-gray-200 hover:border-gray-300 text-gray-600"
-                            )}
-                            disabled={isInviting}
-                          >
-                            {role}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {inviteRole === 'admin' && 'Can manage team members and settings'}
-                        {inviteRole === 'member' && 'Can access all features'}
-                        {inviteRole === 'viewer' && 'Read-only access'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3 mt-6">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setShowInviteModal(false)}
-                      disabled={isInviting}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white"
-                      onClick={handleInviteMember}
-                      disabled={isInviting || !inviteEmail.trim()}
-                    >
-                      {isInviting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Inviting...
-                        </>
-                      ) : (
-                        'Send Invite'
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {teamMembers.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">No team members yet</p>
-              ) : teamMembers.map((member: any) => {
-                const isCurrentUser = userProfile?.email === member.email;
-                const isPaused = member.status === "paused" || member.status === "paused";
-                const isOwner = member.role === "owner";
-                
-                return (
-                  <div
-                    key={member.id}
-                    className={cn(
-                      "flex items-center justify-between p-3 rounded-lg border transition-colors",
-                      isPaused 
-                        ? "border-gray-200 bg-gray-50 opacity-60" 
-                        : "border-gray-100 hover:border-gray-200"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                          {member.name.split(' ').map((n: string) => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{member.name}</p>
-                        <p className="text-xs text-gray-500">{member.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {member.status === "pending" && (
-                        <Badge className="bg-amber-100 text-amber-700 border-0 text-[10px]">Pending</Badge>
-                      )}
-                      {isPaused && (
-                        <Badge className="bg-gray-200 text-gray-600 border-0 text-[10px]">Paused</Badge>
-                      )}
-                      
-                      {/* Role badge - clickable dropdown for non-owners */}
-                      {isOwner ? (
-                        <Badge variant="outline" className="text-[10px] capitalize">
-                          {member.role}
-                        </Badge>
-                      ) : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              className="inline-flex items-center gap-1 h-6 px-2.5 text-[11px] font-medium border border-gray-200 rounded-full bg-white text-gray-700 cursor-pointer hover:bg-gray-50 hover:border-gray-300 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 capitalize"
-                              aria-label={`Change ${member.name}'s role`}
-                            >
-                              {member.role}
-                              <ChevronDown className="h-3 w-3 text-gray-400" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            align="end" 
-                            className="min-w-[120px] rounded-xl shadow-lg border border-gray-200/80 bg-white/95 backdrop-blur-xl p-1"
-                          >
-                            {['admin', 'member', 'viewer'].map((role) => (
-                              <DropdownMenuItem 
-                                key={role}
-                                onClick={async () => {
-                                  if (member.role !== role) {
-                                    try {
-                                      const res = await fetch(`/api/settings/team/${member.id}`, {
-                                        method: 'PUT',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ role }),
-                                      });
-                                      if (!res.ok) throw new Error('Failed to update role');
-                                      await mutateTeam();
-                                      toast.success(`${member.name}'s role changed to ${role}`);
-                                    } catch (error) {
-                                      toast.error('Failed to update role');
-                                    }
-                                  }
-                                }}
-                                className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer hover:bg-gray-100/80 transition-colors capitalize"
-                              >
-                                <span>{role}</span>
-                                {member.role === role && (
-                                  <Check className="h-4 w-4 text-indigo-600" />
-                                )}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                      
-                      {/* Action buttons - only show for non-owners and not current user */}
-                      {!isCurrentUser && !isOwner && (
-                        <div className="flex items-center gap-1 ml-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-gray-400 hover:text-amber-600 hover:bg-amber-50"
-                            onClick={async () => {
-                              try {
-                                const res = await fetch(`/api/settings/team/${member.id}`, {
-                                  method: 'PATCH',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ isActive: !isPaused }),
-                                });
-                                if (!res.ok) throw new Error('Failed to update status');
-                                await mutateTeam();
-                                toast.success(isPaused ? `${member.name} has been reactivated` : `${member.name} has been paused`);
-                              } catch (error) {
-                                toast.error('Failed to update status');
-                              }
-                            }}
-                            aria-label={isPaused ? `Reactivate ${member.name}` : `Pause ${member.name}`}
-                          >
-                            {isPaused ? (
-                              <Play className="h-3.5 w-3.5" />
-                            ) : (
-                              <Pause className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                            onClick={async () => {
-                              if (!confirm(`Remove ${member.name} from the team?`)) return;
-                              try {
-                                const res = await fetch(`/api/settings/team/${member.id}`, {
-                                  method: 'DELETE',
-                                });
-                                if (!res.ok) throw new Error('Failed to remove member');
-                                await mutateTeam();
-                                toast.success(`${member.name} has been removed from the team`);
-                              } catch (error) {
-                                toast.error('Failed to remove member');
-                              }
-                            }}
-                            aria-label={`Remove ${member.name}`}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <OrganizationProfile
+              appearance={{
+                elements: {
+                  rootBox: "w-full",
+                  card: "shadow-none border-0 w-full",
+                  navbar: "hidden",
+                  pageScrollBox: "p-0",
+                  page: "p-0",
+                },
+              }}
+              routing="hash"
+            />
           </div>
         );
 

@@ -11,6 +11,8 @@ import { logger } from '@/lib/logger';
  * @throws Error if user is not authenticated (unless ALLOW_DEV_BYPASS is enabled)
  * 
  * @remarks
+ * - Supports Clerk Organizations - if user is in an org, uses that as workspace
+ * - Falls back to personal workspace if not in an organization
  * - Creates workspace automatically if user doesn't have one
  * - Creates user record if it doesn't exist (for webhook race conditions)
  * - Uses ALLOW_DEV_BYPASS env var for development (not NODE_ENV)
@@ -21,7 +23,7 @@ import { logger } from '@/lib/logger';
  * ```
  */
 export async function getCurrentWorkspace() {
-  const { userId } = await auth();
+  const { userId, orgId, orgSlug } = await auth();
   
   // TEMPORARY: Development bypass for testing
   // Use explicit environment variable instead of NODE_ENV to prevent accidental production deployment
@@ -115,7 +117,71 @@ export async function getCurrentWorkspace() {
     });
   }
 
-  // Get user's workspace membership
+  // Check if user is in a Clerk Organization
+  if (orgId) {
+    // User is in an organization - find or create workspace for this org
+    const orgWorkspaceSlug = `org-${orgId}`;
+    
+    let orgWorkspace = await db.query.workspaces.findFirst({
+      where: eq(workspaces.slug, orgWorkspaceSlug),
+    });
+
+    if (!orgWorkspace) {
+      // Create workspace for this organization
+      // Get org name from Clerk
+      const clerkClient = await import('@clerk/nextjs/server').then(m => m.clerkClient());
+      const org = await clerkClient.organizations.getOrganization({ organizationId: orgId });
+      
+      [orgWorkspace] = await db
+        .insert(workspaces)
+        .values({
+          name: org.name,
+          slug: orgWorkspaceSlug,
+        })
+        .returning();
+    }
+
+    // Check if user is member of this org workspace
+    let orgMembership = await db.query.workspaceMembers.findFirst({
+      where: and(
+        eq(workspaceMembers.userId, user.id),
+        eq(workspaceMembers.workspaceId, orgWorkspace.id),
+        eq(workspaceMembers.isActive, true)
+      ),
+    });
+
+    if (!orgMembership) {
+      // Add user to org workspace
+      // Get their role from Clerk org membership
+      const clerkClient = await import('@clerk/nextjs/server').then(m => m.clerkClient());
+      const memberships = await clerkClient.organizations.getOrganizationMembershipList({
+        organizationId: orgId,
+      });
+      const clerkMembership = memberships.data.find(m => m.publicUserData?.userId === userId);
+      const role = clerkMembership?.role === 'org:admin' ? 'admin' : 'member';
+
+      [orgMembership] = await db
+        .insert(workspaceMembers)
+        .values({
+          userId: user.id,
+          workspaceId: orgWorkspace.id,
+          role,
+          isActive: true,
+        })
+        .returning();
+    }
+
+    return {
+      workspaceId: orgWorkspace.id,
+      workspace: orgWorkspace,
+      userId,
+      user,
+      membership: orgMembership,
+      orgId, // Include org info
+    };
+  }
+
+  // User is NOT in an organization - use personal workspace
   let membership = await db.query.workspaceMembers.findFirst({
     where: and(
       eq(workspaceMembers.userId, user.id),
