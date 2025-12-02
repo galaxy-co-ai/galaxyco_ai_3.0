@@ -54,17 +54,23 @@ export default function TypeSelector({ onSelect, className }: TypeSelectorProps)
             />
 
             {/* Icon */}
-            <div
-              className={cn(
-                "w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all",
-                "bg-gray-50 group-hover:bg-gradient-to-br",
-                `group-hover:${docType.gradientFrom} group-hover:${docType.gradientTo}`,
-                docType.bgColor
-              )}
-            >
+            <div className="relative w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all overflow-hidden">
+              {/* Base background */}
+              <div className={cn("absolute inset-0 transition-opacity", docType.bgColor, "group-hover:opacity-0")} />
+              
+              {/* Gradient background on hover */}
+              <div
+                className={cn(
+                  "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br",
+                  docType.gradientFrom,
+                  docType.gradientTo
+                )}
+              />
+              
+              {/* Icon */}
               <docType.icon
                 className={cn(
-                  "h-6 w-6 transition-colors",
+                  "h-6 w-6 transition-colors relative z-10",
                   docType.iconColor,
                   "group-hover:text-white"
                 )}
