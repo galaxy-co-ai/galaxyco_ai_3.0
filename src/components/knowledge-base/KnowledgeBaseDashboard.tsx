@@ -79,13 +79,13 @@ interface KnowledgeBaseDashboardProps {
   initialItems: KnowledgeItem[];
 }
 
-type TabType = 'articles' | 'categories' | 'create' | 'favorites' | 'recent';
+type TabType = 'articles' | 'categories' | 'favorites' | 'recent';
 
 export default function KnowledgeBaseDashboard({
   initialCollections,
   initialItems,
 }: KnowledgeBaseDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('create');
+  const [activeTab, setActiveTab] = useState<TabType>('articles');
   const [selectedItem, setSelectedItem] = useState<KnowledgeItem | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -327,10 +327,9 @@ export default function KnowledgeBaseDashboard({
 
   // Tab configuration
   const tabs = [
-    { id: 'create' as TabType, label: 'Create', icon: Plus, activeColor: 'bg-green-100 text-green-700' },
-    { id: 'favorites' as TabType, label: 'Favorites', icon: Star, badge: '12', badgeColor: 'bg-amber-500', activeColor: 'bg-amber-100 text-amber-700' },
-    { id: 'categories' as TabType, label: 'Categories', icon: Folder, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'articles' as TabType, label: 'Articles', icon: FileText, activeColor: 'bg-blue-100 text-blue-700' },
+    { id: 'categories' as TabType, label: 'Categories', icon: Folder, activeColor: 'bg-purple-100 text-purple-700' },
+    { id: 'favorites' as TabType, label: 'Favorites', icon: Star, badge: '12', badgeColor: 'bg-amber-500', activeColor: 'bg-amber-100 text-amber-700' },
     { id: 'recent' as TabType, label: 'Recent', icon: Clock, activeColor: 'bg-cyan-100 text-cyan-700' },
   ];
 
@@ -648,8 +647,8 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
           </div>
         </div>
 
-        {/* Floating Tab Bar - Matching CRM/Marketing */}
-        <div className="flex justify-center overflow-x-auto pb-2 -mb-2">
+        {/* Floating Tab Bar + Upload Button */}
+        <div className="flex justify-center items-center gap-4 overflow-x-auto pb-2 -mb-2">
           <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
             {tabs.map((tab) => (
               <button
@@ -674,6 +673,16 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
               </button>
             ))}
           </div>
+          
+          {/* Upload Button */}
+          <Button
+            onClick={() => setShowUploadDialog(true)}
+            className="rounded-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md h-9 px-4"
+            aria-label="Upload document"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Upload
+          </Button>
         </div>
 
         {/* Search Bar - Below Tab Bar */}
@@ -851,7 +860,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                             <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
                               {searchQuery 
                                 ? `Try a different search term or browse categories.`
-                                : `Go to the Create tab to start building your knowledge base.`}
+                                : `Upload documents or create content in the Creator page to build your knowledge base.`}
                             </p>
                           </>
                         )}
@@ -1173,372 +1182,6 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
               </div>
             </Card>
           )}
-
-          {/* CREATE TAB */}
-          {activeTab === 'create' && (
-            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-                {/* Left: Template List */}
-                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex-shrink-0">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md">
-                          <FileText className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-[15px] text-gray-900">Templates</h3>
-                          <p className="text-[13px] text-green-600 flex items-center gap-1">
-                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                            {documentTemplates.length} templates
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Templates List */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {documentTemplates.map((template) => {
-                      const isSelected = selectedTemplate === template.id;
-                      return (
-                        <button
-                          key={template.id}
-                          onClick={() => handleTemplateSelect(template.id)}
-                          className={cn(
-                            "w-full p-3 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1",
-                            isSelected
-                              ? "border-green-300 bg-green-50/30 shadow-sm"
-                              : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
-                          )}
-                          aria-label={`Select template: ${template.name}`}
-                          aria-pressed={isSelected}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${template.iconColor} flex-shrink-0`}>
-                              <template.icon className="h-4 w-4 text-white" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-sm font-semibold text-gray-900">{template.name}</p>
-                                <Badge
-                                  variant="outline"
-                                  className="text-[10px] px-1.5 py-0 h-4 bg-slate-50 text-slate-700 border-slate-200"
-                                >
-                                  {template.category}
-                                </Badge>
-                              </div>
-                              <p className="text-xs text-gray-500">{template.description}</p>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Right: AI Chat Interface */}
-                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {selectedTemplate ? (
-                    <>
-                      {/* Chat Header */}
-                      <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex items-center justify-between flex-shrink-0">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white">
-                            <Sparkles className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-sm text-gray-900">
-                              AI Document Creator
-                            </h3>
-                            <p className="text-xs text-green-600">
-                              {documentTemplates.find(t => t.id === selectedTemplate)?.name || 'Document'} creation
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => {
-                            setSelectedTemplate(null);
-                            setCreateChatMessages([]);
-                            setCreateChatInput("");
-                            setDocumentData({
-                              title: "",
-                              type: "",
-                              category: "",
-                              content: "",
-                              description: "",
-                            });
-                          }}
-                          className="h-7 w-7"
-                          aria-label="Close chat"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {/* Chat Messages */}
-                      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
-                        {createChatMessages.map((message) => (
-                          <div
-                            key={message.id}
-                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div className={`max-w-[80%] rounded-lg p-3 ${
-                              message.role === 'user'
-                                ? 'bg-green-500 text-white rounded-br-md'
-                                : 'bg-slate-100 text-gray-900 rounded-bl-md'
-                            }`}>
-                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                            </div>
-                          </div>
-                        ))}
-
-                        {/* Loading Indicator */}
-                        {isCreatingDocument && (
-                          <div className="flex justify-start">
-                            <div className="max-w-[80%] rounded-lg p-3 bg-slate-100 text-gray-900 rounded-bl-md">
-                              <div className="flex items-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin text-green-600" />
-                                <p className="text-sm text-gray-600">Creating your document...</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Generated Document Preview */}
-                        {documentData.content && (
-                          <div className="mt-4 p-4 rounded-lg border border-green-200 bg-green-50/50">
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="text-sm font-semibold text-gray-900">Generated Document</h4>
-                              <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">
-                                Ready
-                              </Badge>
-                            </div>
-                            <div className="text-xs text-gray-600 mb-3">
-                              <p><strong>Title:</strong> {documentData.title}</p>
-                              {documentData.category && <p><strong>Category:</strong> {documentData.category}</p>}
-                            </div>
-                            <div className="max-h-40 overflow-y-auto p-3 bg-white rounded border border-slate-200 text-xs text-gray-700 whitespace-pre-wrap">
-                              {documentData.content ? (
-                                <>
-                                  {documentData.content.substring(0, 300)}
-                                  {documentData.content.length > 300 && '...'}
-                                </>
-                              ) : (
-                                <span className="text-gray-400">No content generated yet</span>
-                              )}
-                            </div>
-                            <div className="flex gap-2 mt-3">
-                              <Button
-                                size="sm"
-                                className="flex-1"
-                                onClick={async () => {
-                                  if (!documentData.content || !documentData.title) {
-                                    toast.error('Document title and content are required');
-                                    return;
-                                  }
-                                  
-                                  try {
-                                    // Call Neptune to save the document
-                                    const response = await fetch('/api/assistant/chat', {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({
-                                        message: `Save this document to the knowledge base using the create_document tool:
-Title: ${documentData.title}
-Category: ${documentData.category || 'General'}
-Content:
-${documentData.content}`,
-                                      }),
-                                    });
-
-                                    if (!response.ok) {
-                                      throw new Error('Failed to save document');
-                                    }
-
-                                    toast.success('Document saved to knowledge base!');
-                                    mutateKnowledge(); // Refresh the knowledge base data
-                                    setSelectedTemplate(null);
-                                    setCreateChatMessages([]);
-                                    setDocumentData({
-                                      title: "",
-                                      type: "",
-                                      category: "",
-                                      content: "",
-                                      description: "",
-                                    });
-                                  } catch (error) {
-                                    logger.error('Save document error', error);
-                                    toast.error('Failed to save document. Please try again.');
-                                  }
-                                }}
-                                aria-label="Save document"
-                              >
-                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                Save Document
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  if (documentData.content && selectedTemplate) {
-                                    setViewingDocument({
-                                      id: 'preview',
-                                      name: documentData.title || 'Untitled Document',
-                                      type: documentTemplates.find(t => t.id === selectedTemplate)?.name || 'DOCUMENT',
-                                      project: documentData.category || 'Uncategorized',
-                                      createdBy: 'You',
-                                      createdAt: 'Just now',
-                                      size: 'N/A',
-                                      content: documentData.content,
-                                      description: documentData.description || '',
-                                    });
-                                    setShowDocumentDialog(true);
-                                  }
-                                }}
-                                aria-label="Preview document"
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                Preview
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Chat Input */}
-                      <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
-                        <Input
-                          placeholder="Type your answer..."
-                          value={createChatInput}
-                          onChange={(e) => setCreateChatInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey && !isCreatingDocument) {
-                              e.preventDefault();
-                              handleSendCreateMessage();
-                            }
-                          }}
-                          className="flex-1 rounded-full"
-                          disabled={isCreatingDocument}
-                          aria-label="Type message to AI"
-                        />
-                        <Button
-                          size="icon"
-                          onClick={handleSendCreateMessage}
-                          disabled={!createChatInput.trim() || isCreatingDocument}
-                          className="bg-green-500 hover:bg-green-600 rounded-full"
-                          aria-label="Send message"
-                        >
-                          {isCreatingDocument ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Neptune Chat Header */}
-                      <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50 flex items-center justify-between flex-shrink-0">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
-                            <Sparkles className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-sm text-gray-900">Neptune</h3>
-                            <p className="text-xs text-indigo-600 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                              Ready to help you create
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Neptune Chat Messages */}
-                      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
-                        {neptuneChatMessages.map((message) => (
-                          <div
-                            key={message.id}
-                            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div className={`max-w-[80%] rounded-lg p-3 ${
-                              message.role === 'user'
-                                ? 'bg-indigo-500 text-white rounded-br-md'
-                                : 'bg-white text-gray-700 shadow-sm border border-slate-100 rounded-bl-md'
-                            }`}>
-                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                            </div>
-                          </div>
-                        ))}
-                        {isNeptuneTyping && (
-                          <div className="flex justify-start">
-                            <div className="bg-white text-gray-700 shadow-sm border border-slate-100 rounded-lg rounded-bl-md p-3">
-                              <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Quick Suggestions */}
-                      <div className="px-4 py-2 border-t bg-slate-50/50 flex gap-2 flex-wrap">
-                        {['Write an article', 'Create SOP', 'Draft proposal', 'Meeting notes'].map((suggestion) => (
-                          <button
-                            key={suggestion}
-                            onClick={() => {
-                              setNeptuneChatInput(suggestion);
-                              setTimeout(() => handleSendNeptuneMessage(), 100);
-                            }}
-                            className="text-xs px-3 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Neptune Chat Input */}
-                      <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
-                        <Input
-                          placeholder="Tell me what you want to create..."
-                          value={neptuneChatInput}
-                          onChange={(e) => setNeptuneChatInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey && !isNeptuneTyping) {
-                              e.preventDefault();
-                              handleSendNeptuneMessage();
-                            }
-                          }}
-                          className="flex-1 rounded-full"
-                          disabled={isNeptuneTyping}
-                          aria-label="Message Neptune"
-                        />
-                        <Button
-                          size="icon"
-                          onClick={handleSendNeptuneMessage}
-                          disabled={!neptuneChatInput.trim() || isNeptuneTyping}
-                          className="bg-indigo-500 hover:bg-indigo-600 rounded-full"
-                          aria-label="Send message"
-                        >
-                          {isNeptuneTyping ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Card>
-          )}
         </motion.div>
       </AnimatePresence>
 
@@ -1745,4 +1388,3 @@ ${documentData.content}`,
     </div>
   );
 }
-
