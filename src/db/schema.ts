@@ -399,6 +399,11 @@ export const agents = pgTable(
           collectionIds?: string[];
           maxResults?: number;
         };
+        // Agent chat self-adjustment features
+        tone?: 'professional' | 'friendly' | 'concise';
+        capabilities?: string[];
+        preferences?: Record<string, { value: string; updatedAt: string; reason?: string | null }>;
+        notes?: Array<{ note: string; category: string; createdAt: string }>;
       }>()
       .notNull()
       .default({}),

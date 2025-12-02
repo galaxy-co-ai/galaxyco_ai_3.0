@@ -102,20 +102,23 @@ async function executeAgentTool(
         });
         if (!agent) return { success: false, message: 'Agent not found' };
 
-        const currentConfig = (agent.config as Record<string, unknown>) || {};
-        const preferences = (currentConfig.preferences as Record<string, unknown>) || {};
+        const currentConfig = agent.config || {};
+        const preferences = currentConfig.preferences || {};
         
         // Update the preference
-        preferences[args.preference_type as string] = {
-          value: args.value,
-          updatedAt: new Date().toISOString(),
-          reason: args.reason || null,
+        const updatedPreferences = {
+          ...preferences,
+          [args.preference_type as string]: {
+            value: args.value as string,
+            updatedAt: new Date().toISOString(),
+            reason: (args.reason as string) || null,
+          },
         };
 
         await db
           .update(agents)
           .set({
-            config: { ...currentConfig, preferences },
+            config: { ...currentConfig, preferences: updatedPreferences },
             updatedAt: new Date(),
           })
           .where(eq(agents.id, agentId));
@@ -158,22 +161,22 @@ async function executeAgentTool(
         });
         if (!agent) return { success: false, message: 'Agent not found' };
 
-        const currentConfig = (agent.config as Record<string, unknown>) || {};
-        const notes = (currentConfig.notes as Array<unknown>) || [];
+        const currentConfig = agent.config || {};
+        const existingNotes = currentConfig.notes || [];
         
-        notes.push({
-          note: args.note,
-          category: args.category || 'general',
+        const newNote = {
+          note: args.note as string,
+          category: (args.category as string) || 'general',
           createdAt: new Date().toISOString(),
-        });
+        };
 
         // Keep only last 20 notes
-        const trimmedNotes = notes.slice(-20);
+        const updatedNotes = [...existingNotes, newNote].slice(-20);
 
         await db
           .update(agents)
           .set({
-            config: { ...currentConfig, notes: trimmedNotes },
+            config: { ...currentConfig, notes: updatedNotes },
             updatedAt: new Date(),
           })
           .where(eq(agents.id, agentId));
