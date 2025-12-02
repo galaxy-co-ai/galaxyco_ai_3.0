@@ -1,0 +1,746 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Save,
+  Share2,
+  Download,
+  Copy,
+  Plus,
+  ArrowLeft,
+  Sparkles,
+  Loader2,
+  Check,
+  Edit3,
+  X,
+  Send,
+  FileText,
+  FolderOpen,
+  ExternalLink,
+  MoreHorizontal,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { type DocumentTypeConfig } from "./documentRequirements";
+
+// Document section structure
+interface DocumentSection {
+  id: string;
+  type: "title" | "heading" | "paragraph" | "list" | "cta";
+  content: string;
+  editable: boolean;
+}
+
+interface DocumentPreviewProps {
+  docType: DocumentTypeConfig;
+  answers: Record<string, string>;
+  onBack: () => void;
+  onSaveToCollections: (document: GeneratedDocument) => void;
+  onCreateNew: () => void;
+}
+
+interface GeneratedDocument {
+  id: string;
+  title: string;
+  type: string;
+  sections: DocumentSection[];
+  createdAt: Date;
+  metadata: Record<string, string>;
+}
+
+export default function DocumentPreview({
+  docType,
+  answers,
+  onBack,
+  onSaveToCollections,
+  onCreateNew,
+}: DocumentPreviewProps) {
+  // State
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [document, setDocument] = useState<GeneratedDocument | null>(null);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState("");
+  const [showAiEdit, setShowAiEdit] = useState<string | null>(null);
+  const [aiEditPrompt, setAiEditPrompt] = useState("");
+  const [isApplyingAiEdit, setIsApplyingAiEdit] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+
+  // Simulate document generation on mount
+  useEffect(() => {
+    generateDocument();
+  }, []);
+
+  const generateDocument = async () => {
+    setIsGenerating(true);
+    setGenerationProgress(0);
+
+    // Simulate generation progress
+    const progressInterval = setInterval(() => {
+      setGenerationProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 300);
+
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 2500));
+
+    clearInterval(progressInterval);
+    setGenerationProgress(100);
+
+    // Generate mock document based on type
+    const generatedDoc = generateMockDocument(docType, answers);
+    setDocument(generatedDoc);
+    setIsGenerating(false);
+
+    toast.success("Document generated!", {
+      description: "Review and edit your content below",
+    });
+  };
+
+  // Handle section click to edit
+  const handleSectionClick = (sectionId: string) => {
+    if (editingSection === sectionId) return;
+    
+    const section = document?.sections.find((s) => s.id === sectionId);
+    if (section?.editable) {
+      setEditingSection(sectionId);
+      setEditedContent(section.content);
+      setShowAiEdit(null);
+    }
+  };
+
+  // Save section edit
+  const handleSaveEdit = () => {
+    if (!document || !editingSection) return;
+
+    setDocument({
+      ...document,
+      sections: document.sections.map((s) =>
+        s.id === editingSection ? { ...s, content: editedContent } : s
+      ),
+    });
+    setEditingSection(null);
+    setEditedContent("");
+    toast.success("Section updated");
+  };
+
+  // Cancel edit
+  const handleCancelEdit = () => {
+    setEditingSection(null);
+    setEditedContent("");
+  };
+
+  // Show AI edit input for a section
+  const handleShowAiEdit = (sectionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowAiEdit(sectionId);
+    setAiEditPrompt("");
+  };
+
+  // Apply AI edit
+  const handleApplyAiEdit = async (sectionId: string) => {
+    if (!aiEditPrompt.trim() || !document) return;
+
+    setIsApplyingAiEdit(true);
+
+    // Simulate AI edit
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    // Mock AI edit result
+    const section = document.sections.find((s) => s.id === sectionId);
+    if (section) {
+      const aiEditedContent = applyMockAiEdit(section.content, aiEditPrompt);
+      setDocument({
+        ...document,
+        sections: document.sections.map((s) =>
+          s.id === sectionId ? { ...s, content: aiEditedContent } : s
+        ),
+      });
+      toast.success("AI edit applied", {
+        description: "Neptune updated this section",
+      });
+    }
+
+    setIsApplyingAiEdit(false);
+    setShowAiEdit(null);
+    setAiEditPrompt("");
+  };
+
+  // Save to collections
+  const handleSave = async () => {
+    if (!document) return;
+
+    setIsSaving(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    onSaveToCollections(document);
+    setIsSaving(false);
+    setShowSaveDialog(false);
+    
+    toast.success("Saved to Collections!", {
+      description: `"${document.title}" has been organized`,
+    });
+  };
+
+  // Copy to clipboard
+  const handleCopy = async () => {
+    if (!document) return;
+    
+    const text = document.sections.map((s) => s.content).join("\n\n");
+    await navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard");
+  };
+
+  // Download
+  const handleDownload = () => {
+    if (!document) return;
+    
+    const text = document.sections.map((s) => s.content).join("\n\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement("a");
+    a.href = url;
+    a.download = `${document.title.replace(/\s+/g, "-").toLowerCase()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Downloaded");
+  };
+
+  // Generation loading state
+  if (isGenerating) {
+    return (
+      <Card className="h-full flex flex-col items-center justify-center rounded-2xl shadow-sm border bg-card p-8">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center space-y-6"
+        >
+          <div className="relative">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto shadow-lg">
+              <Sparkles className="h-10 w-10 text-white animate-pulse" />
+            </div>
+            <motion.div
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="absolute inset-0 rounded-2xl border-2 border-violet-300 border-t-violet-600"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xl font-semibold text-gray-900">
+              Neptune is creating your {docType.name.toLowerCase()}...
+            </h3>
+            <p className="text-sm text-gray-500">
+              Crafting the perfect content based on your inputs
+            </p>
+          </div>
+
+          <div className="w-64 mx-auto space-y-2">
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${generationProgress}%` }}
+                className="h-full bg-gradient-to-r from-violet-500 to-purple-600 rounded-full"
+              />
+            </div>
+            <p className="text-xs text-gray-400">
+              {Math.round(generationProgress)}% complete
+            </p>
+          </div>
+        </motion.div>
+      </Card>
+    );
+  }
+
+  if (!document) return null;
+
+  return (
+    <div className="h-full flex flex-col gap-4">
+      {/* Header Actions */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back to Edit
+        </Button>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCopy}>
+            <Copy className="h-4 w-4 mr-1" />
+            Copy
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownload}>
+            <Download className="h-4 w-4 mr-1" />
+            Download
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowShareDialog(true)}>
+            <Share2 className="h-4 w-4 mr-1" />
+            Share
+          </Button>
+          <Button
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => setShowSaveDialog(true)}
+          >
+            <Save className="h-4 w-4 mr-1" />
+            Save to Collections
+          </Button>
+        </div>
+      </div>
+
+      {/* Document Preview */}
+      <Card className="flex-1 overflow-hidden rounded-2xl shadow-sm border bg-white">
+        <div className="h-full overflow-y-auto p-8">
+          {/* Document Header */}
+          <div className="flex items-start gap-4 mb-8 pb-6 border-b">
+            <div
+              className={cn(
+                "p-3 rounded-xl bg-gradient-to-br text-white shadow-lg",
+                docType.gradientFrom,
+                docType.gradientTo
+              )}
+            >
+              <docType.icon className="h-6 w-6" />
+            </div>
+            <div>
+              <Badge className={cn(docType.bgColor, docType.iconColor, "border", docType.borderColor, "mb-2")}>
+                {docType.name}
+              </Badge>
+              <p className="text-xs text-gray-400">
+                Created just now • Click any section to edit
+              </p>
+            </div>
+          </div>
+
+          {/* Document Sections */}
+          <div className="space-y-6 max-w-3xl mx-auto">
+            {document.sections.map((section) => (
+              <motion.div
+                key={section.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative group"
+              >
+                {editingSection === section.id ? (
+                  // Edit mode
+                  <div className="space-y-3">
+                    {section.type === "title" || section.type === "heading" ? (
+                      <Input
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        className={cn(
+                          section.type === "title" && "text-2xl font-bold",
+                          section.type === "heading" && "text-lg font-semibold"
+                        )}
+                        autoFocus
+                      />
+                    ) : (
+                      <Textarea
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        className="min-h-[100px]"
+                        autoFocus
+                      />
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={handleSaveEdit}>
+                        <Check className="h-4 w-4 mr-1" />
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                      >
+                        <X className="h-4 w-4 mr-1" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : showAiEdit === section.id ? (
+                  // AI Edit mode
+                  <div className="space-y-3 p-4 bg-violet-50 rounded-xl border border-violet-200">
+                    <div className="flex items-center gap-2 text-sm text-violet-700">
+                      <Sparkles className="h-4 w-4" />
+                      <span className="font-medium">Neptune AI Edit</span>
+                    </div>
+                    <div
+                      className={cn(
+                        "text-gray-700 p-3 bg-white rounded-lg border",
+                        section.type === "title" && "text-2xl font-bold",
+                        section.type === "heading" && "text-lg font-semibold"
+                      )}
+                    >
+                      {section.content}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={aiEditPrompt}
+                        onChange={(e) => setAiEditPrompt(e.target.value)}
+                        placeholder="Describe the change (e.g., 'make it more casual')"
+                        className="flex-1"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !isApplyingAiEdit) {
+                            handleApplyAiEdit(section.id);
+                          }
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        onClick={() => handleApplyAiEdit(section.id)}
+                        disabled={!aiEditPrompt.trim() || isApplyingAiEdit}
+                        className="bg-violet-600 hover:bg-violet-700"
+                      >
+                        {isApplyingAiEdit ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowAiEdit(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // Display mode
+                  <div
+                    onClick={() => handleSectionClick(section.id)}
+                    className={cn(
+                      "relative rounded-lg transition-all cursor-pointer",
+                      section.editable &&
+                        "hover:bg-gray-50 hover:ring-2 hover:ring-violet-200 p-4 -m-4"
+                    )}
+                  >
+                    {section.type === "title" && (
+                      <h1 className="text-2xl font-bold text-gray-900">
+                        {section.content}
+                      </h1>
+                    )}
+                    {section.type === "heading" && (
+                      <h2 className="text-lg font-semibold text-gray-800">
+                        {section.content}
+                      </h2>
+                    )}
+                    {section.type === "paragraph" && (
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        {section.content}
+                      </p>
+                    )}
+                    {section.type === "list" && (
+                      <ul className="list-disc list-inside space-y-1 text-gray-700">
+                        {section.content.split("\n").map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {section.type === "cta" && (
+                      <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 text-center">
+                        <p className="font-medium text-violet-700">
+                          {section.content}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Edit buttons - show on hover */}
+                    {section.editable && (
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSectionClick(section.id);
+                          }}
+                          className="p-1.5 rounded-lg bg-white border shadow-sm hover:bg-gray-50"
+                          title="Edit manually"
+                        >
+                          <Edit3 className="h-3.5 w-3.5 text-gray-500" />
+                        </button>
+                        <button
+                          onClick={(e) => handleShowAiEdit(section.id, e)}
+                          className="p-1.5 rounded-lg bg-violet-100 border border-violet-200 shadow-sm hover:bg-violet-200"
+                          title="AI edit with Neptune"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 text-violet-600" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Create New Button */}
+      <div className="flex justify-center">
+        <Button
+          variant="outline"
+          onClick={onCreateNew}
+          className="text-gray-500"
+        >
+          <Plus className="h-4 w-4 mr-1" />
+          Create Another
+        </Button>
+      </div>
+
+      {/* Save Dialog */}
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FolderOpen className="h-5 w-5 text-emerald-600" />
+              Save to Collections
+            </DialogTitle>
+            <DialogDescription>
+              Your document will be organized and saved to your Collections.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Document Title
+              </label>
+              <Input value={document.title} readOnly className="bg-gray-50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                Type
+              </label>
+              <Badge className={cn(docType.bgColor, docType.iconColor, "border", docType.borderColor)}>
+                {docType.name}
+              </Badge>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowSaveDialog(false)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-blue-600" />
+              Share Document
+            </DialogTitle>
+            <DialogDescription>
+              Share this document with your team or externally.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            <Button variant="outline" className="w-full justify-start" onClick={handleCopy}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copy to Clipboard
+            </Button>
+            <Button variant="outline" className="w-full justify-start" onClick={handleDownload}>
+              <Download className="h-4 w-4 mr-2" />
+              Download as Text File
+            </Button>
+            <Button variant="outline" className="w-full justify-start" disabled>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Get Shareable Link (Coming Soon)
+            </Button>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowShareDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ============================================
+// MOCK DOCUMENT GENERATION
+// ============================================
+
+function generateMockDocument(
+  docType: DocumentTypeConfig,
+  answers: Record<string, string>
+): GeneratedDocument {
+  const sections: DocumentSection[] = [];
+
+  // Generate title based on answers
+  const title = generateTitle(docType, answers);
+  sections.push({
+    id: "title",
+    type: "title",
+    content: title,
+    editable: true,
+  });
+
+  // Generate content based on document type
+  switch (docType.id) {
+    case "newsletter":
+      sections.push(
+        { id: "intro", type: "paragraph", content: `Dear valued subscribers,\n\n${answers.headline || "We're excited to share some updates with you!"} Here's what's new this week.`, editable: true },
+        { id: "heading1", type: "heading", content: "Featured Updates", editable: true },
+        { id: "content1", type: "paragraph", content: "We've been working hard to bring you the best experience possible. Our team has been focused on delivering value and innovation.", editable: true },
+        { id: "heading2", type: "heading", content: "What's Coming Next", editable: true },
+        { id: "content2", type: "paragraph", content: "Stay tuned for more exciting announcements. We have some great things in the pipeline that we can't wait to share.", editable: true },
+        { id: "cta", type: "cta", content: answers.cta || "Click here to learn more →", editable: true }
+      );
+      break;
+
+    case "blog":
+      sections.push(
+        { id: "intro", type: "paragraph", content: `${answers.topic || "In this article"}, we'll explore everything you need to know. Whether you're a beginner or an expert, there's something here for everyone.`, editable: true },
+        { id: "heading1", type: "heading", content: "Understanding the Basics", editable: true },
+        { id: "content1", type: "paragraph", content: "Let's start with the fundamentals. Understanding the core concepts will help you build a strong foundation for more advanced topics.", editable: true },
+        { id: "heading2", type: "heading", content: "Key Strategies", editable: true },
+        { id: "list1", type: "list", content: "Research thoroughly before starting\nImplement best practices consistently\nMeasure and iterate based on results\nStay updated with industry trends", editable: true },
+        { id: "heading3", type: "heading", content: "Conclusion", editable: true },
+        { id: "conclusion", type: "paragraph", content: "By following these guidelines, you'll be well on your way to success. Remember, consistency and continuous learning are key.", editable: true }
+      );
+      break;
+
+    case "social":
+      const platform = answers.platform || "LinkedIn";
+      sections.push(
+        { id: "hook", type: "paragraph", content: `🚀 ${answers.topic || "Big announcement!"}\n\nWe're thrilled to share some exciting news with our community.`, editable: true },
+        { id: "body", type: "paragraph", content: "Here's what this means for you:\n\n✅ Better experience\n✅ More value\n✅ Exciting opportunities", editable: true },
+        { id: "cta", type: "cta", content: answers.cta === "Engage (like, comment)" ? "What do you think? Drop a comment below! 👇" : "Learn more → [link in bio]", editable: true },
+        { id: "hashtags", type: "paragraph", content: answers.hashtags || "#Innovation #Growth #Business", editable: true }
+      );
+      break;
+
+    case "proposal":
+      sections.push(
+        { id: "intro", type: "paragraph", content: `Dear ${answers.clientName || "Client"},\n\nThank you for considering us for your ${answers.projectScope || "project"}. We're excited about the opportunity to work together.`, editable: true },
+        { id: "heading1", type: "heading", content: "Project Overview", editable: true },
+        { id: "scope", type: "paragraph", content: `We propose to deliver ${answers.projectScope || "a comprehensive solution"} that meets your specific needs and exceeds your expectations.`, editable: true },
+        { id: "heading2", type: "heading", content: "Deliverables", editable: true },
+        { id: "deliverables", type: "paragraph", content: answers.deliverables || "Complete project deliverables as discussed", editable: true },
+        { id: "heading3", type: "heading", content: "Investment & Timeline", editable: true },
+        { id: "investment", type: "paragraph", content: `Investment: ${answers.budget || "To be discussed"}\nTimeline: ${answers.timeline || "To be determined"}`, editable: true },
+        { id: "heading4", type: "heading", content: "Why Choose Us", editable: true },
+        { id: "usp", type: "paragraph", content: answers.usp || "Our unique approach and expertise ensure exceptional results.", editable: true }
+      );
+      break;
+
+    default:
+      // Generic document structure
+      sections.push(
+        { id: "intro", type: "paragraph", content: `${answers.purpose || "This document provides"} comprehensive information for ${answers.audience || "our stakeholders"}.`, editable: true },
+        { id: "heading1", type: "heading", content: "Overview", editable: true },
+        { id: "content1", type: "paragraph", content: "This section covers the key points and objectives outlined for this document.", editable: true },
+        { id: "heading2", type: "heading", content: "Details", editable: true },
+        { id: "content2", type: "paragraph", content: answers.sections || "Detailed information and analysis.", editable: true },
+        { id: "heading3", type: "heading", content: "Conclusion", editable: true },
+        { id: "conclusion", type: "paragraph", content: "In summary, we've covered the essential aspects of this topic. For any questions, please don't hesitate to reach out.", editable: true }
+      );
+  }
+
+  return {
+    id: `doc-${Date.now()}`,
+    title,
+    type: docType.id,
+    sections,
+    createdAt: new Date(),
+    metadata: answers,
+  };
+}
+
+function generateTitle(
+  docType: DocumentTypeConfig,
+  answers: Record<string, string>
+): string {
+  switch (docType.id) {
+    case "newsletter":
+      return answers.headline || `${answers.purpose || "Weekly"} Newsletter`;
+    case "blog":
+      return answers.topic || "Untitled Blog Post";
+    case "social":
+      return `${answers.platform || "Social"} Post: ${answers.topic?.slice(0, 30) || "Update"}`;
+    case "proposal":
+      return `Proposal for ${answers.clientName || "Client"}`;
+    case "document":
+      return answers.purpose?.slice(0, 50) || "New Document";
+    case "presentation":
+      return `${answers.purpose || "Presentation"}: ${answers.keyMessage?.slice(0, 30) || ""}`;
+    case "brand-kit":
+      return `${answers.brandName || "Brand"} Brand Guidelines`;
+    case "image":
+      return `${answers.imageType || "Image"} - ${answers.textOverlay?.slice(0, 30) || "Design"}`;
+    default:
+      return `New ${docType.name}`;
+  }
+}
+
+function applyMockAiEdit(content: string, prompt: string): string {
+  // Mock AI edit - in real implementation, call AI API
+  const lowerPrompt = prompt.toLowerCase();
+  
+  if (lowerPrompt.includes("shorter") || lowerPrompt.includes("concise")) {
+    return content.split(".").slice(0, 2).join(".") + ".";
+  }
+  if (lowerPrompt.includes("casual") || lowerPrompt.includes("friendly")) {
+    return content.replace(/\./g, "!").replace(/We are/g, "We're").replace(/It is/g, "It's");
+  }
+  if (lowerPrompt.includes("formal") || lowerPrompt.includes("professional")) {
+    return content.replace(/!/g, ".").replace(/We're/g, "We are");
+  }
+  if (lowerPrompt.includes("exciting") || lowerPrompt.includes("energetic")) {
+    return "🚀 " + content + " 🎉";
+  }
+  
+  // Default: just acknowledge the edit was made
+  return content + " [Updated based on your feedback]";
+}

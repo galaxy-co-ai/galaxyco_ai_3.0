@@ -12,7 +12,7 @@ import { Sparkles, Bot, Workflow, BarChart3, ArrowRight, Zap, Shield, Users } fr
 import { useRouter } from "next/navigation";
 import DashboardDashboard from "@/components/dashboard/DashboardDashboard";
 import CRMDashboard from "@/components/crm/CRMDashboard";
-import StudioDashboard from "@/components/studio/StudioDashboard";
+import CreatorDashboard from "@/components/creator/CreatorDashboard";
 
 export default function FeaturesPage() {
   const router = useRouter();
@@ -145,7 +145,7 @@ export default function FeaturesPage() {
                 <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] xl:h-[800px] rounded-xl overflow-hidden">
                   <div className="relative h-full w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
                     <DemoWrapper scale={0.75} height={800} needsSidebar={false}>
-                      <StudioDashboard initialTab="create" />
+                      <CreatorDashboard />
                     </DemoWrapper>
                   </div>
                 </div>

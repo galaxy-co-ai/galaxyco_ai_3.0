@@ -109,7 +109,7 @@ interface MarketingDashboardProps {
   };
 }
 
-type TabType = 'campaigns' | 'content' | 'assets' | 'channels' | 'analytics' | 'audiences' | 'automations';
+type TabType = 'campaigns' | 'channels' | 'analytics' | 'audiences' | 'automations';
 
 interface ChatMessage {
   id: string;
@@ -332,11 +332,9 @@ export default function MarketingDashboard({
     { label: `${stats.avgROI}% Avg ROI`, icon: ArrowUpRight, color: "bg-green-100 text-green-700" },
   ];
 
-  // Tab configuration
+  // Tab configuration - Content and Assets moved to Creator page
   const tabs = [
     { id: 'campaigns' as TabType, label: 'Campaigns', icon: Megaphone, badge: stats.activeCampaigns.toString(), badgeColor: 'bg-pink-500', activeColor: 'bg-pink-100 text-pink-700' },
-    { id: 'content' as TabType, label: 'Content', icon: FileText, activeColor: 'bg-blue-100 text-blue-700' },
-    { id: 'assets' as TabType, label: 'Assets', icon: Palette, activeColor: 'bg-emerald-100 text-emerald-700' },
     { id: 'channels' as TabType, label: 'Channels', icon: Share2, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3, activeColor: 'bg-indigo-100 text-indigo-700' },
     { id: 'audiences' as TabType, label: 'Audiences', icon: Users, activeColor: 'bg-cyan-100 text-cyan-700' },
@@ -1337,8 +1335,11 @@ Be creative, engaging, and write content that resonates!`;
               </Card>
             )}
 
-            {/* CONTENT TAB - Template-based with Neptune */}
-            {activeTab === 'content' && (
+            {/* NOTE: Content and Assets tabs moved to Creator page */}
+
+            {/* REMOVED: CONTENT TAB - now in Creator page */}
+            {/* activeTab === 'content' REMOVED */}
+            {false && (
               <Card className="p-8 shadow-lg border-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Left: Content Templates */}
@@ -1599,8 +1600,9 @@ Be creative, engaging, and write content that resonates!`;
               </Card>
             )}
 
-            {/* ASSETS TAB */}
-            {activeTab === 'assets' && (
+            {/* REMOVED: ASSETS TAB - now in Creator page */}
+            {/* activeTab === 'assets' REMOVED */}
+            {false && (
               <Card className="p-8 shadow-lg border-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Left: Asset Templates */}

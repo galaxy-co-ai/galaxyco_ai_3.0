@@ -14,7 +14,7 @@ import { DemoWrapper } from "../components/shared/DemoWrapper";
 import { FloatingSalesChat } from "../components/landing/FloatingSalesChat";
 import DashboardDashboard from "../components/dashboard/DashboardDashboard";
 import CRMDashboard from "../components/crm/CRMDashboard";
-import StudioDashboard from "../components/studio/StudioDashboard";
+import CreatorDashboard from "../components/creator/CreatorDashboard";
 import MarketingDashboard from "../components/marketing/MarketingDashboard";
 
 interface LandingProps {
@@ -168,7 +168,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                   <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
-                    <StudioDashboard />
+                    <CreatorDashboard />
                   </DemoWrapper>
                 </div>
               </div>
