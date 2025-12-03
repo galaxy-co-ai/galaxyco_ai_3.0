@@ -208,11 +208,11 @@ export default function LaunchpadLayout({
           
           {/* Center - Logo & Title */}
             <Link href="/launchpad" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
-                <Rocket className="h-4 w-4 text-white" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
+                <Rocket className="h-5 w-5 text-white" />
               </div>
               <span 
-                className="font-bold text-xl text-white tracking-wide"
+                className="font-bold text-2xl text-white tracking-wide"
                 style={{ 
                   textShadow: '0 0 20px rgba(129, 140, 248, 0.5), 0 0 40px rgba(129, 140, 248, 0.2)',
                   letterSpacing: '0.05em'
