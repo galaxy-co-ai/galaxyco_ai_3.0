@@ -4,13 +4,15 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { blogPosts, blogCategories, users } from '@/db/schema';
 import { eq, desc, and, ne } from 'drizzle-orm';
-import { Clock, Calendar, ChevronRight, ArrowLeft, Bookmark, Share2, ThumbsUp } from 'lucide-react';
+import { Clock, Calendar, ChevronRight, ArrowLeft, Share2, ThumbsUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
+import { ReadingProgressBar } from '@/components/launchpad/ReadingProgressBar';
+import { BookmarkButton } from '@/components/launchpad/BookmarkButton';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -147,7 +149,11 @@ export default async function ArticlePage({ params }: PageProps) {
     : 'GT';
 
   return (
-    <article className="container py-8">
+    <>
+      {/* Reading Progress Bar */}
+      <ReadingProgressBar postId={post.id} />
+      
+      <article className="container py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/launchpad" className="hover:text-foreground transition-colors">
@@ -256,9 +262,7 @@ export default async function ArticlePage({ params }: PageProps) {
               <ThumbsUp className="h-4 w-4" />
               Was this helpful?
             </Button>
-            <Button variant="ghost" size="icon">
-              <Bookmark className="h-4 w-4" />
-            </Button>
+            <BookmarkButton postId={post.id} />
             <Button variant="ghost" size="icon">
               <Share2 className="h-4 w-4" />
             </Button>
@@ -358,5 +362,6 @@ export default async function ArticlePage({ params }: PageProps) {
         </section>
       )}
     </article>
+    </>
   );
 }
