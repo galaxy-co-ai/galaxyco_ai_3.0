@@ -131,8 +131,9 @@ export default function LaunchpadLayout({
         className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 backdrop-blur-xl"
       >
         
-        <div className="mx-auto max-w-6xl px-6 flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="mx-auto max-w-6xl px-6 flex h-16 items-center">
+          {/* Left - Back button (if logged in) */}
+          <div className="flex-1 flex items-center">
             {isLoaded && user && (
               <Link href="/dashboard">
                 <Button 
@@ -145,18 +146,29 @@ export default function LaunchpadLayout({
                 </Button>
               </Link>
             )}
-            <Link href="/launchpad" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
-                <Rocket className="h-4 w-4 text-white" />
-              </div>
-              <span className="font-semibold text-lg text-white">
-                Launchpad
-              </span>
-            </Link>
           </div>
           
-          <div className="flex items-center gap-3">
-            <Link href="/launchpad/search">
+          {/* Center - Logo & Title */}
+          <Link href="/launchpad" className="flex items-center gap-2.5 group">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
+              <Rocket className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-semibold text-lg text-white">
+              Launchpad
+            </span>
+          </Link>
+          
+          {/* Right - Search & Sign In */}
+          <div className="flex-1 flex items-center justify-end gap-3">
+            <div className="relative hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Search articles..."
+                className="w-48 lg:w-56 h-9 pl-9 pr-3 rounded-full bg-white/95 border-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400/50 shadow-sm"
+              />
+            </div>
+            <Link href="/launchpad/search" className="sm:hidden">
               <Button 
                 variant="ghost" 
                 size="icon" 
