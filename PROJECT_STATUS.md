@@ -12,7 +12,7 @@
 | **Date** | December 2, 2024 |
 | **Build Status** | ✅ Passing |
 | **Deployment** | Vercel Production |
-| **Latest Commit** | `4f0c130` - Team chat file sharing |
+| **Latest Commit** | `bccc45f` - Dashboard Ask Neptune + layout improvements |
 
 ---
 
@@ -52,6 +52,34 @@
 ---
 
 ## Recent Changes
+
+### December 2, 2024 (Session 5)
+
+#### Dashboard Improvements
+
+- **Ask Neptune on Dashboard** - Neptune AI assistant now accessible from dashboard
+  - "Ask Neptune" button in dashboard header
+  - Sliding panel from right side with proper Card styling
+  - Panel aligns with content cards (not header/tabs)
+  - Main content adjusts when panel is open
+  - Header and tabs stay fixed (don't shift)
+  - **Impact**: Users can get AI help directly from dashboard
+
+- **Personalized Greeting** - Dashboard now shows user's actual first name
+  - Updated `getDashboardData()` to accept `userName` parameter
+  - Dashboard page fetches user's first name from auth
+  - Shows "Good evening, Galaxy!" instead of "Good evening, User!"
+  - Fallback to "there" if no first name available
+  - **Impact**: More personal, welcoming experience
+
+- **Fixed Dashboard Layout** - Eliminated harsh visual line between tab bar and content
+  - Restructured all content into single continuous container
+  - Unified spacing with `space-y-4` throughout
+  - Tab bar now part of same visual flow as content
+  - Added proper `pt-4` spacing after tabs
+  - **Impact**: Cleaner, more polished dashboard appearance
+
+---
 
 ### December 2, 2024 (Session 4)
 
