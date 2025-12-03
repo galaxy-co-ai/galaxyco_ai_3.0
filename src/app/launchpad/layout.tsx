@@ -212,18 +212,18 @@ export default function LaunchpadLayout({
               <div className="relative h-10 w-10 flex items-center justify-center">
                 {/* Gradient moon base */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300" />
-                {/* Dark cutout to create crescent */}
+                {/* Dark cutout to create crescent - flipped horizontally */}
                 <div 
                   className="absolute rounded-full bg-slate-900"
                   style={{
                     width: '75%',
                     height: '75%',
                     top: '-5%',
-                    left: '30%',
+                    right: '30%',
                   }}
                 />
                 {/* Rocket flying past */}
-                <Rocket className="relative z-10 h-5 w-5 text-white -rotate-45 -translate-x-0.5" />
+                <Rocket className="relative z-10 h-5 w-5 text-white -rotate-45 translate-x-0.5" />
               </div>
               <span 
                 className="font-bold text-2xl text-white tracking-wide"
@@ -350,19 +350,19 @@ export default function LaunchpadLayout({
                 <div className="relative h-10 w-10 flex items-center justify-center">
                   {/* Gradient moon base */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-lg shadow-indigo-500/30" />
-                  {/* Dark cutout to create crescent */}
+                  {/* Dark cutout to create crescent - flipped horizontally */}
                   <div 
                     className="absolute rounded-full"
                     style={{
                       width: '75%',
                       height: '75%',
                       top: '-5%',
-                      left: '30%',
+                      right: '30%',
                       background: 'linear-gradient(to bottom right, rgb(15, 23, 42), rgb(30, 27, 75))',
                     }}
                   />
                   {/* Rocket flying past */}
-                  <Rocket className="relative z-10 h-5 w-5 text-white -rotate-45 -translate-x-0.5" />
+                  <Rocket className="relative z-10 h-5 w-5 text-white -rotate-45 translate-x-0.5" />
                 </div>
                 <span 
                   className="font-bold text-2xl text-white tracking-wide"
