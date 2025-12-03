@@ -33,7 +33,7 @@ export default function TypeSelector({ onSelect, className }: TypeSelectorProps)
             transition={{ delay: index * 0.05 }}
             onClick={() => onSelect(docType)}
             className={cn(
-              "relative p-5 rounded-xl border-2 text-left transition-all duration-200 group",
+              "relative p-4 rounded-xl border-2 text-left transition-all duration-200 group",
               "bg-white border-gray-100",
               "hover:shadow-lg hover:scale-[1.02] hover:border-gray-200",
               "focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
@@ -53,35 +53,37 @@ export default function TypeSelector({ onSelect, className }: TypeSelectorProps)
               )}
             />
 
-            {/* Icon */}
-            <div className="relative w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all overflow-hidden">
-              {/* Base background */}
-              <div className={cn("absolute inset-0 transition-opacity", docType.bgColor, "group-hover:opacity-0")} />
-              
-              {/* Gradient background on hover */}
-              <div
-                className={cn(
-                  "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br",
-                  docType.gradientFrom,
-                  docType.gradientTo
-                )}
-              />
-              
-              {/* Icon */}
-              <docType.icon
-                className={cn(
-                  "h-6 w-6 transition-colors relative z-10",
-                  docType.iconColor,
-                  "group-hover:text-white"
-                )}
-              />
+            {/* Icon + Title Row */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="relative w-10 h-10 rounded-lg flex items-center justify-center transition-all overflow-hidden shrink-0">
+                {/* Base background */}
+                <div className={cn("absolute inset-0 transition-opacity", docType.bgColor, "group-hover:opacity-0")} />
+                
+                {/* Gradient background on hover */}
+                <div
+                  className={cn(
+                    "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br",
+                    docType.gradientFrom,
+                    docType.gradientTo
+                  )}
+                />
+                
+                {/* Icon */}
+                <docType.icon
+                  className={cn(
+                    "h-5 w-5 transition-colors relative z-10",
+                    docType.iconColor,
+                    "group-hover:text-white"
+                  )}
+                />
+              </div>
+              <h3 className="font-semibold text-sm text-gray-900 group-hover:text-gray-900">
+                {docType.name}
+              </h3>
             </div>
 
-            {/* Text */}
-            <h3 className="font-semibold text-base text-gray-900 mb-1 group-hover:text-gray-900">
-              {docType.name}
-            </h3>
-            <p className="text-xs text-gray-500 line-clamp-2 mb-3">
+            {/* Description */}
+            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
               {docType.description}
             </p>
 

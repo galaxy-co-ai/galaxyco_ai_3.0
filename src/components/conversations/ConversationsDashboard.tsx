@@ -118,46 +118,48 @@ export default function ConversationsDashboard({
     <div className="flex h-full flex-col bg-background">
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Conversations</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage all your communications in one place
-            </p>
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
+              <p className="text-muted-foreground text-base mt-1">
+                Manage all your communications in one place
+              </p>
+            </div>
+            <Button
+              variant={showNeptune ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="gap-2 shrink-0"
+            >
+              <Sparkles className="h-4 w-4" />
+              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
+            </Button>
           </div>
-          <Button
-            variant={showNeptune ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowNeptune(!showNeptune)}
-            className="gap-2"
-          >
-            <Sparkles className="h-4 w-4" />
-            {showNeptune ? "Hide Neptune" : "Ask Neptune"}
-          </Button>
-        </div>
 
-        {/* Stats Bar - Compact Inline Centered */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-          <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-            <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-            <span className="font-semibold">{stats.totalConversations}</span>
-            <span className="ml-1 text-blue-600/70 font-normal">Conversations</span>
-          </Badge>
-          <Badge className="px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 transition-colors">
-            <Mail className="h-3.5 w-3.5 mr-1.5 text-orange-600" />
-            <span className="font-semibold">{stats.unreadMessages}</span>
-            <span className="ml-1 text-orange-600/70 font-normal">Unread</span>
-          </Badge>
-          <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-            <Clock className="h-3.5 w-3.5 mr-1.5 text-green-600" />
-            <span className="font-semibold">{stats.avgResponseTime > 0 ? `${stats.avgResponseTime}m` : "—"}</span>
-            <span className="ml-1 text-green-600/70 font-normal">Avg Response</span>
-          </Badge>
-          <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-            <Users className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
-            <span className="font-semibold">{stats.activeChannels}</span>
-            <span className="ml-1 text-purple-600/70 font-normal">Channels</span>
-          </Badge>
+          {/* Stats Bar - Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+              <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+              <span className="font-semibold">{stats.totalConversations}</span>
+              <span className="ml-1 text-blue-600/70 font-normal">Conversations</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 transition-colors">
+              <Mail className="h-3.5 w-3.5 mr-1.5 text-orange-600" />
+              <span className="font-semibold">{stats.unreadMessages}</span>
+              <span className="ml-1 text-orange-600/70 font-normal">Unread</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+              <Clock className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+              <span className="font-semibold">{stats.avgResponseTime > 0 ? `${stats.avgResponseTime}m` : "—"}</span>
+              <span className="ml-1 text-green-600/70 font-normal">Avg Response</span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+              <Users className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+              <span className="font-semibold">{stats.activeChannels}</span>
+              <span className="ml-1 text-purple-600/70 font-normal">Channels</span>
+            </Badge>
+          </div>
         </div>
 
         {/* Floating Tab Bar - Matching CRM Dashboard */}

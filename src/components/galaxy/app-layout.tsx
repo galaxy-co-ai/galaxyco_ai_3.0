@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Sidebar } from "./sidebar";
 import { Header, HeaderProps } from "./header";
-import { FloatingAIAssistant } from "../shared/FloatingAIAssistant";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
@@ -44,9 +43,6 @@ export function AppLayout({
         </main>
       </div>
 
-      {/* Floating Assistant Overlay */}
-      <FloatingAIAssistant />
-      
       {/* Toast Notifications */}
       <Toaster />
     </div>

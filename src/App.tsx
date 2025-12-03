@@ -13,7 +13,6 @@ import { Integrations } from "./pages/Integrations";
 import { Landing } from "./pages/Landing";
 import LunarLabs from "./pages/LunarLabs";
 
-import { FloatingAIAssistant } from "./components/shared/FloatingAIAssistant";
 import { OnboardingFlow } from "./components/shared/OnboardingFlow";
 import { Toaster } from "./components/ui/sonner";
 
@@ -102,9 +101,6 @@ export default function App() {
             {renderPage()}
           </div>
         </main>
-        
-        {/* Floating AI Assistant */}
-        <FloatingAIAssistant />
         </div>
         <Toaster />
       </SidebarProvider>

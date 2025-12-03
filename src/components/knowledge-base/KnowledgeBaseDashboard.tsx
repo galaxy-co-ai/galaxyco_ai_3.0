@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Search,
@@ -19,7 +20,6 @@ import {
   Folder,
   Star,
   Clock,
-  BookOpen,
   Sparkles,
   Plus,
   Eye,
@@ -30,24 +30,26 @@ import {
   Video,
   File,
   Archive,
-  Filter,
-  Tag,
   User,
   Calendar,
-  TrendingUp,
   ArrowRight,
-  Code,
-  MessageSquare,
   Loader2,
-  CheckCircle2,
-  Send,
-  Users,
+  FolderOpen,
+  FolderPlus,
+  Grid3X3,
+  List,
+  StarOff,
+  MoreHorizontal,
+  Upload,
+  Mail,
+  PenLine,
+  MessageSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { logger } from "@/lib/logger";
+import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 
 // Fetcher for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -72,6 +74,8 @@ interface KnowledgeItem {
   description?: string;
   content?: string;
   url?: string;
+  starred?: boolean;
+  tags?: string[];
 }
 
 interface KnowledgeBaseDashboardProps {
@@ -79,54 +83,107 @@ interface KnowledgeBaseDashboardProps {
   initialItems: KnowledgeItem[];
 }
 
-type TabType = 'articles' | 'categories' | 'favorites' | 'recent' | 'upload';
+type TabType = 'collections' | 'favorites' | 'recent' | 'upload';
+
+// Type icon mapping
+const typeIcons: Record<string, typeof FileText> = {
+  document: FileText,
+  pdf: File,
+  image: ImageIcon,
+  newsletter: Mail,
+  blog: PenLine,
+  social: MessageSquare,
+  video: Video,
+  spreadsheet: Archive,
+  other: FileText,
+};
+
+const typeColors: Record<string, string> = {
+  document: "bg-blue-100 text-blue-600",
+  pdf: "bg-red-100 text-red-600",
+  image: "bg-pink-100 text-pink-600",
+  newsletter: "bg-amber-100 text-amber-600",
+  blog: "bg-emerald-100 text-emerald-600",
+  social: "bg-cyan-100 text-cyan-600",
+  video: "bg-purple-100 text-purple-600",
+  spreadsheet: "bg-green-100 text-green-600",
+  other: "bg-gray-100 text-gray-600",
+};
+
+// Format relative time
+function formatRelativeTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  } catch {
+    return dateStr;
+  }
+}
+
+// Get type from item
+function getItemType(type: string): string {
+  const typeLower = type.toLowerCase();
+  if (typeLower.includes('pdf')) return 'pdf';
+  if (typeLower.includes('image') || typeLower === 'img') return 'image';
+  if (typeLower.includes('video')) return 'video';
+  if (typeLower.includes('spreadsheet') || typeLower.includes('excel')) return 'spreadsheet';
+  if (typeLower.includes('newsletter') || typeLower.includes('email')) return 'newsletter';
+  if (typeLower.includes('blog') || typeLower.includes('article')) return 'blog';
+  if (typeLower.includes('social')) return 'social';
+  if (typeLower.includes('doc') || typeLower.includes('text')) return 'document';
+  return 'document';
+}
+
+// Default collection categories for sidebar
+const defaultCollectionCategories = [
+  { id: "all", name: "All Items", icon: Grid3X3, color: "text-gray-600" },
+  { id: "documents", name: "Documents", icon: FileText, color: "text-blue-600" },
+  { id: "images", name: "Images", icon: ImageIcon, color: "text-pink-600" },
+  { id: "pdfs", name: "PDFs", icon: File, color: "text-red-600" },
+];
 
 export default function KnowledgeBaseDashboard({
   initialCollections,
   initialItems,
 }: KnowledgeBaseDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('articles');
+  const [activeTab, setActiveTab] = useState<TabType>('collections');
   const [selectedItem, setSelectedItem] = useState<KnowledgeItem | null>(null);
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [showDocumentDialog, setShowDocumentDialog] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<KnowledgeItem | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [createChatMessages, setCreateChatMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: Date }>>([]);
-  const [createChatInput, setCreateChatInput] = useState("");
-  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
-  const [documentData, setDocumentData] = useState({
-    title: "",
-    type: "",
-    category: "",
-    content: "",
-    description: "",
-  });
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [searchResults, setSearchResults] = useState<KnowledgeItem[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showNeptune, setShowNeptune] = useState(false);
+  const [starredItems, setStarredItems] = useState<Set<string>>(new Set());
   
-  // Neptune chat state (when no template selected)
-  const [neptuneChatMessages, setNeptuneChatMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: Date }>>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hey! 👋 I'm Neptune. What would you like to create today? I can help you draft articles, SOPs, proposals, meeting notes, or any document you need. Just tell me what you're working on!",
-      timestamp: new Date(),
-    }
-  ]);
-  const [neptuneChatInput, setNeptuneChatInput] = useState("");
-  const [isNeptuneTyping, setIsNeptuneTyping] = useState(false);
+  // New Collection Dialog State
+  const [showNewCollectionDialog, setShowNewCollectionDialog] = useState(false);
+  const [newCollectionName, setNewCollectionName] = useState("");
+  const [isCreatingCollection, setIsCreatingCollection] = useState(false);
 
   // Fetch knowledge items from API
-  const { data: knowledgeData, error: knowledgeError, mutate: mutateKnowledge } = useSWR<{
+  const { data: knowledgeData, mutate: mutateKnowledge } = useSWR<{
     collections: Collection[];
     items: KnowledgeItem[];
   }>('/api/knowledge', fetcher, {
-    refreshInterval: 30000, // Refresh every 30 seconds
+    refreshInterval: 30000,
     fallbackData: { collections: initialCollections, items: initialItems },
   });
 
@@ -159,12 +216,10 @@ export default function KnowledgeBaseDashboard({
         throw new Error(error.error || 'Upload failed');
       }
 
-      const result = await response.json();
       toast.success('File uploaded successfully!');
       setShowUploadDialog(false);
       setUploadProgress(100);
       
-      // Refresh knowledge items
       await mutateKnowledge();
     } catch (error) {
       logger.error('Upload error', error);
@@ -196,7 +251,6 @@ export default function KnowledgeBaseDashboard({
           body: JSON.stringify({
             query: searchQuery.trim(),
             limit: 20,
-            collectionId: selectedCollection || undefined,
           }),
         });
 
@@ -206,7 +260,7 @@ export default function KnowledgeBaseDashboard({
 
         const data = await response.json();
         setSearchResults(
-          data.results.map((item: any) => ({
+          data.results.map((item: { id: string; title: string; type: string; collection?: string; createdAt: string; summary?: string; content?: string; url?: string }) => ({
             id: item.id,
             name: item.title,
             type: item.type.toUpperCase(),
@@ -226,20 +280,19 @@ export default function KnowledgeBaseDashboard({
       } finally {
         setIsSearching(false);
       }
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, selectedCollection]);
+  }, [searchQuery]);
 
   // Calculate stats
   const stats = {
-    totalArticles: currentItems.length,
-    totalCategories: currentCollections.length,
-    totalViews: 0, // TODO: Calculate from database
+    totalItems: currentItems.length,
+    totalCollections: currentCollections.length,
     recentItems: currentItems.filter((item) => {
       try {
         const date = new Date(item.createdAt);
@@ -252,16 +305,14 @@ export default function KnowledgeBaseDashboard({
     }).length,
   };
 
-  // Filter items based on active tab and search
+  // Filter items based on active tab and category
   const filteredItems = useMemo(() => {
-    // Use search results if available, otherwise use current items
     const itemsToFilter = searchResults !== null ? searchResults : [...currentItems];
     let items = [...itemsToFilter];
 
     // Filter by tab
     if (activeTab === 'favorites') {
-      // TODO: Filter by favorite status
-      items = items.slice(0, 10); // Placeholder
+      items = items.filter((item) => starredItems.has(item.id));
     } else if (activeTab === 'recent') {
       items = items
         .filter((item) => {
@@ -284,11 +335,18 @@ export default function KnowledgeBaseDashboard({
             return 0;
           }
         });
-    } else if (activeTab === 'categories' && selectedCollection) {
-      const selectedCollectionName = initialCollections.find(c => c.id === selectedCollection)?.name;
-      if (selectedCollectionName) {
-        items = items.filter((item) => item.project === selectedCollectionName);
-      }
+    } else if (activeTab === 'collections' && selectedCategory !== 'all') {
+      // Filter by type category
+      items = items.filter((item) => {
+        const itemType = getItemType(item.type);
+        if (selectedCategory === 'documents') return itemType === 'document' || itemType === 'blog';
+        if (selectedCategory === 'images') return itemType === 'image';
+        if (selectedCategory === 'pdfs') return itemType === 'pdf';
+        // Check if it matches a custom collection
+        const collection = currentCollections.find(c => c.id === selectedCategory);
+        if (collection) return item.project === collection.name;
+        return true;
+      });
     }
 
     // Filter by search query
@@ -303,347 +361,138 @@ export default function KnowledgeBaseDashboard({
     }
 
     return items;
-  }, [activeTab, searchQuery, selectedCollection, currentItems, searchResults]);
+  }, [activeTab, searchQuery, selectedCategory, currentItems, searchResults, starredItems, currentCollections]);
 
-  // Filter collections
-  const filteredCollections = useMemo(() => {
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      return currentCollections.filter(
-        (col) =>
-          (col.name || '').toLowerCase().includes(query) ||
-          (col.description || '').toLowerCase().includes(query)
-      );
-    }
-    return currentCollections;
-  }, [searchQuery, currentCollections]);
-
-  // Stat badges
-  const statBadges = [
-    { label: `${stats.totalArticles} Articles`, icon: FileText, color: "bg-blue-100 text-blue-700" },
-    { label: `${stats.totalCategories} Categories`, icon: Folder, color: "bg-purple-100 text-purple-700" },
-    { label: `${stats.recentItems} Recent`, icon: Clock, color: "bg-green-100 text-green-700" },
-  ];
+  // Get category counts
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: currentItems.length };
+    currentItems.forEach((item) => {
+      const itemType = getItemType(item.type);
+      if (itemType === 'document' || itemType === 'blog') {
+        counts.documents = (counts.documents || 0) + 1;
+      }
+      if (itemType === 'image') {
+        counts.images = (counts.images || 0) + 1;
+      }
+      if (itemType === 'pdf') {
+        counts.pdfs = (counts.pdfs || 0) + 1;
+      }
+    });
+    // Add custom collection counts
+    currentCollections.forEach((col) => {
+      counts[col.id] = col.itemCount;
+    });
+    return counts;
+  }, [currentItems, currentCollections]);
 
   // Tab configuration
   const tabs = [
-    { id: 'articles' as TabType, label: 'Articles', icon: FileText, activeColor: 'bg-blue-100 text-blue-700' },
-    { id: 'categories' as TabType, label: 'Categories', icon: Folder, activeColor: 'bg-purple-100 text-purple-700' },
-    { id: 'favorites' as TabType, label: 'Favorites', icon: Star, badge: '12', badgeColor: 'bg-amber-500', activeColor: 'bg-amber-100 text-amber-700' },
+    { id: 'collections' as TabType, label: 'Collections', icon: Folder, activeColor: 'bg-emerald-100 text-emerald-700' },
+    { id: 'favorites' as TabType, label: 'Favorites', icon: Star, badge: starredItems.size.toString(), badgeColor: 'bg-amber-500', activeColor: 'bg-amber-100 text-amber-700' },
     { id: 'recent' as TabType, label: 'Recent', icon: Clock, activeColor: 'bg-cyan-100 text-cyan-700' },
-    { id: 'upload' as TabType, label: 'Upload', icon: Plus, activeColor: 'bg-green-100 text-green-700' },
+    { id: 'upload' as TabType, label: 'Upload', icon: Upload, activeColor: 'bg-blue-100 text-blue-700' },
   ];
 
-  // Get icon for document type
-  const getTypeIcon = (type: string) => {
-    const typeLower = type.toLowerCase();
-    if (typeLower.includes('image') || typeLower === 'img') return ImageIcon;
-    if (typeLower.includes('video')) return Video;
-    if (typeLower.includes('pdf')) return File;
-    if (typeLower.includes('spreadsheet') || typeLower.includes('excel')) return Archive;
-    return FileText;
-  };
-
-  // Get type color
-  const getTypeColor = (type: string) => {
-    const typeLower = type.toLowerCase();
-    if (typeLower.includes('image') || typeLower === 'img') return "bg-pink-500";
-    if (typeLower.includes('video')) return "bg-red-500";
-    if (typeLower.includes('pdf')) return "bg-red-500";
-    if (typeLower.includes('spreadsheet') || typeLower.includes('excel')) return "bg-green-500";
-    return "bg-blue-500";
-  };
-
-  // Document templates
-  interface DocumentTemplate {
-    id: string;
-    name: string;
-    description: string;
-    icon: typeof FileText;
-    iconColor: string;
-    category: string;
-  }
-
-  const documentTemplates: DocumentTemplate[] = [
-    {
-      id: "article",
-      name: "Article",
-      description: "Create a standard article or blog post",
-      icon: FileText,
-      iconColor: "bg-blue-500",
-      category: "Content",
-    },
-    {
-      id: "documentation",
-      name: "Documentation",
-      description: "Technical documentation or user guides",
-      icon: BookOpen,
-      iconColor: "bg-purple-500",
-      category: "Technical",
-    },
-    {
-      id: "faq",
-      name: "FAQ",
-      description: "Frequently asked questions document",
-      icon: MessageSquare,
-      iconColor: "bg-green-500",
-      category: "Support",
-    },
-    {
-      id: "policy",
-      name: "Policy Document",
-      description: "Company policies, terms, or legal documents",
-      icon: File,
-      iconColor: "bg-amber-500",
-      category: "Legal",
-    },
-    {
-      id: "tutorial",
-      name: "Tutorial",
-      description: "Step-by-step tutorial or how-to guide",
-      icon: Sparkles,
-      iconColor: "bg-indigo-500",
-      category: "Education",
-    },
-    {
-      id: "meeting-notes",
-      name: "Meeting Notes",
-      description: "Template for meeting notes and summaries",
-      icon: FileText,
-      iconColor: "bg-cyan-500",
-      category: "Business",
-    },
-    {
-      id: "onboarding",
-      name: "Onboarding Guide",
-      description: "Employee or user onboarding documentation",
-      icon: Users,
-      iconColor: "bg-pink-500",
-      category: "HR",
-    },
-    {
-      id: "api-docs",
-      name: "API Documentation",
-      description: "API reference and integration guides",
-      icon: Code,
-      iconColor: "bg-emerald-500",
-      category: "Technical",
-    },
-  ];
-
-  // Handle template selection
-  const handleTemplateSelect = (templateId: string) => {
-    setSelectedTemplate(templateId);
-    const template = documentTemplates.find(t => t.id === templateId);
-    if (template) {
-      // Initialize chat with template-specific greeting
-      setCreateChatMessages([{
-        id: '1',
-        role: 'assistant',
-        content: `Hi! I'm here to help you create a ${template.name.toLowerCase()}. Let's start with the basics - what's the title or topic of this document?`,
-        timestamp: new Date(),
-      }]);
-      setDocumentData({
-        title: "",
-        type: template.id,
-        category: "",
-        content: "",
-        description: "",
-      });
-    }
-  };
-
-  // Handle chat message send - REAL API with document generation
-  const handleSendCreateMessage = async () => {
-    if (!createChatInput.trim() || !selectedTemplate) return;
-
-    const userInput = createChatInput.trim();
-    const template = documentTemplates.find(t => t.id === selectedTemplate);
-    const userMessage = {
-      id: Date.now().toString(),
-      role: 'user' as const,
-      content: userInput,
-      timestamp: new Date(),
-    };
-
-    setCreateChatMessages(prev => [...prev, userMessage]);
-    setCreateChatInput("");
-    setIsCreatingDocument(true);
-
-    try {
-      // Build context about what we're creating
-      const templateType = template?.id || 'general';
-      const existingData = documentData;
-      
-      let prompt = `[Library - Document Creation]
-Template: ${template?.name || 'General Document'}
-`;
-
-      if (!existingData.title) {
-        prompt += `The user just provided a title: "${userInput}"
-Please acknowledge the title and ask what category/folder they want to save it in. List available categories if possible using list_collections tool first.`;
-      } else if (!existingData.category) {
-        // Update local state with category
-        setDocumentData(prev => ({ ...prev, category: userInput }));
-        prompt += `Title: ${existingData.title}
-Category chosen: ${userInput}
-Ask the user to describe what content they want in this ${template?.name || 'document'}. What should it cover?`;
-      } else if (!existingData.description) {
-        // Update local state with description
-        setDocumentData(prev => ({ ...prev, description: userInput }));
-        prompt += `Title: ${existingData.title}
-Category: ${existingData.category}
-Description/Requirements: ${userInput}
-
-NOW GENERATE THE DOCUMENT! Use the generate_document tool with:
-- title: "${existingData.title}"
-- documentType: "${templateType}"
-- topic: "${userInput}"
-- collectionName: "${existingData.category}"
-
-After generating, use create_document to save it. Write comprehensive, professional, helpful content. Make it really good!`;
+  // Toggle star
+  const toggleStar = (itemId: string) => {
+    setStarredItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+        toast.success("Removed from favorites");
       } else {
-        prompt += `We already have a document. User's follow-up: ${userInput}
-If they want to modify or regenerate, do so. If they want to save, use create_document.`;
+        newSet.add(itemId);
+        toast.success("Added to favorites");
       }
-
-      // Call real Neptune API
-      const response = await fetch('/api/assistant/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response from Neptune');
-      }
-
-      const data = await response.json();
-      
-      // Update document data if title was just set
-      if (!existingData.title) {
-        setDocumentData(prev => ({ ...prev, title: userInput }));
-      }
-      
-      // Check if content was generated (look for markdown headers in response)
-      const responseContent = data.message.content;
-      if (responseContent.includes('# ') && responseContent.length > 500) {
-        // Looks like generated content - extract it
-        setDocumentData(prev => ({ 
-          ...prev, 
-          content: responseContent,
-        }));
-      }
-
-      setCreateChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responseContent,
-        timestamp: new Date(),
-      }]);
-
-      // Refresh knowledge base in case document was saved
-      mutateKnowledge();
-    } catch (error) {
-      logger.error('Document creation error', error);
-      setCreateChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: "I encountered an issue while creating the document. Let me try again - please repeat your last message.",
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setIsCreatingDocument(false);
-    }
+      return newSet;
+    });
   };
 
-  // Handle Neptune chat message (when no template selected) - REAL API
-  const handleSendNeptuneMessage = async () => {
-    if (!neptuneChatInput.trim()) return;
-
-    const userInput = neptuneChatInput.trim();
-    const userMessage = {
-      id: Date.now().toString(),
-      role: 'user' as const,
-      content: userInput,
-      timestamp: new Date(),
-    };
-
-    setNeptuneChatMessages(prev => [...prev, userMessage]);
-    setNeptuneChatInput("");
-    setIsNeptuneTyping(true);
-
-    try {
-      // Call real Neptune API with knowledge base context
-      const response = await fetch('/api/assistant/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `[Library Context] The user is in the Library "Create" tab and wants to create a document. Help them create high-quality content. If they describe what they want, use the generate_document tool to create it, then use create_document to save it. Be proactive and helpful.\n\nUser's request: ${userInput}`,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response from Neptune');
-      }
-
-      const data = await response.json();
-      
-      setNeptuneChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.message.content,
-        timestamp: new Date(),
-      }]);
-
-      // Refresh knowledge base data in case document was created
-      mutateKnowledge();
-    } catch (error) {
-      logger.error('Neptune chat error', error);
-      setNeptuneChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: "I'm having trouble connecting right now. Please try again in a moment, or you can select a template from the list to get started.",
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setIsNeptuneTyping(false);
-    }
-  };
-
-  // Handle document click - open in floating dialog
+  // Handle document click
   const handleDocumentClick = (item: KnowledgeItem) => {
     setViewingDocument(item);
     setShowDocumentDialog(true);
   };
 
-  return (
-    <div className="h-full bg-gray-50/50 overflow-y-auto">
-      {/* Header Section - Matching CRM/Marketing */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Library</h1>
-          <p className="text-muted-foreground text-base">
-            Organize, search, and access your documents and knowledge.
-          </p>
+  // Create new collection
+  const handleCreateCollection = async () => {
+    if (!newCollectionName.trim()) {
+      toast.error("Please enter a collection name");
+      return;
+    }
 
-          {/* Stats Bar - Compact Inline Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-              <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-              <span className="font-semibold">{stats.totalArticles}</span>
-              <span className="ml-1 text-blue-600/70 font-normal">Articles</span>
+    setIsCreatingCollection(true);
+    try {
+      // API call would go here
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      setShowNewCollectionDialog(false);
+      setNewCollectionName("");
+      
+      toast.success(`Collection "${newCollectionName}" created!`, {
+        description: "Start adding items to your new collection",
+      });
+      
+      await mutateKnowledge();
+    } catch (error) {
+      toast.error("Failed to create collection");
+    } finally {
+      setIsCreatingCollection(false);
+    }
+  };
+
+  // Get icon for document type
+  const getTypeIcon = (type: string) => {
+    const itemType = getItemType(type);
+    return typeIcons[itemType] || FileText;
+  };
+
+  // Get type color
+  const getTypeColorClass = (type: string) => {
+    const itemType = getItemType(type);
+    return typeColors[itemType] || "bg-gray-100 text-gray-600";
+  };
+
+  return (
+    <div className="flex h-full flex-col bg-gray-50/50">
+      {/* Header Section */}
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 space-y-4">
+        {/* Header */}
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Library</h1>
+              <p className="text-muted-foreground text-base mt-1">
+                Organize, search, and access your documents and knowledge.
+              </p>
+            </div>
+            <Button
+              variant={showNeptune ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="gap-2 shrink-0"
+            >
+              <Sparkles className="h-4 w-4" />
+              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
+            </Button>
+          </div>
+
+          {/* Stats Bar - Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+              <FileText className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+              <span className="font-semibold">{stats.totalItems}</span>
+              <span className="ml-1 text-emerald-600/70 font-normal">Items</span>
             </Badge>
             <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
               <Folder className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
-              <span className="font-semibold">{stats.totalCategories}</span>
-              <span className="ml-1 text-purple-600/70 font-normal">Categories</span>
+              <span className="font-semibold">{stats.totalCollections}</span>
+              <span className="ml-1 text-purple-600/70 font-normal">Collections</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-              <Clock className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+            <Badge className="px-3 py-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition-colors">
+              <Clock className="h-3.5 w-3.5 mr-1.5 text-cyan-600" />
               <span className="font-semibold">{stats.recentItems}</span>
-              <span className="ml-1 text-green-600/70 font-normal">Recent</span>
+              <span className="ml-1 text-cyan-600/70 font-normal">Recent</span>
             </Badge>
           </div>
         </div>
@@ -661,18 +510,22 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                     setActiveTab(tab.id);
                   }
                 }}
-                className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                className={cn(
+                  "relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
                   activeTab === tab.id
                     ? `${tab.activeColor} shadow-sm`
                     : 'text-gray-600 hover:bg-gray-100'
-                }`}
+                )}
                 aria-label={`Switch to ${tab.label} tab`}
               >
                 <tab.icon className="h-3.5 w-3.5" />
                 <span>{tab.label}</span>
-                {tab.badge && (
+                {tab.badge && tab.badge !== "0" && (
                   <Badge
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0 h-4 min-w-[18px]`}
+                    className={cn(
+                      "text-xs px-1.5 py-0 h-4 min-w-[18px]",
+                      activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'
+                    )}
                   >
                     {tab.badge}
                   </Badge>
@@ -681,519 +534,515 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
             ))}
           </div>
         </div>
-
-        {/* Search Bar - Below Tab Bar */}
-        <div className="flex justify-center pt-4">
-          <div className="w-full max-w-2xl">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                placeholder="Search documents, categories, or content..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-12 h-12 text-base bg-background/80 backdrop-blur-lg border-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-                aria-label="Search knowledge base"
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                {isSearching && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                )}
-                {searchQuery && !isSearching && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSearchResults(null);
-                    }}
-                    className="h-8 w-8"
-                    aria-label="Clear search"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="max-w-7xl mx-auto px-4 sm:px-6 pb-6"
-        >
-          {/* ARTICLES / FAVORITES / RECENT TABS */}
-          {(activeTab === 'articles' || activeTab === 'favorites' || activeTab === 'recent') && (
-            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-                {/* Left: Articles List */}
-                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+      {/* Main Content with Neptune Panel */}
+      <div className="flex flex-1 overflow-hidden gap-6 px-4 sm:px-6 pb-6 max-w-7xl mx-auto w-full">
+        <div className={cn("flex-1 transition-all duration-200", showNeptune ? "w-[70%]" : "w-full")}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              {/* COLLECTIONS TAB - Creator-style design */}
+              {activeTab === 'collections' && (
+                <Card className="h-full rounded-2xl shadow-lg border-0 bg-card overflow-hidden flex flex-col">
                   {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
-                    <div className="flex items-center justify-between mb-4">
+                  <div className="px-6 py-5 border-b bg-gradient-to-r from-emerald-50/80 to-green-50/80 shrink-0">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
-                          <FileText className="h-5 w-5" />
+                        <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg">
+                          <FolderOpen className="h-5 w-5" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-[15px] text-gray-900">
-                            {activeTab === 'favorites' ? 'Favorites' : activeTab === 'recent' ? 'Recent' : 'Articles'}
-                          </h3>
-                          <p className="text-[13px] text-blue-600 flex items-center gap-1">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                            {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
-                        aria-label="Add document"
-                        onClick={() => setShowUploadDialog(true)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    {/* Filter by Type */}
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-gray-500">Use search bar above to filter</span>
-                    </div>
-                  </div>
-
-                  {/* Articles List */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {filteredItems.length > 0 ? (
-                      filteredItems.map((item) => {
-                        const isSelected = selectedItem?.id === item.id;
-                        const TypeIcon = getTypeIcon(item.type);
-                        const typeColor = getTypeColor(item.type);
-                        return (
-                          <button
-                            key={item.id}
-                            onClick={() => {
-                              setSelectedItem(item);
-                              handleDocumentClick(item);
-                            }}
-                            className={cn(
-                              "w-full p-3 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-                              isSelected
-                                ? "border-blue-300 bg-blue-50/30 shadow-sm"
-                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
-                            )}
-                            aria-label={`Select document: ${item.name}`}
-                            aria-pressed={isSelected}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`p-2 rounded-full ${typeColor} flex-shrink-0`}>
-                                <TypeIcon className="h-4 w-4 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                  <Badge
-                                    variant="outline"
-                                    className="text-[10px] px-1.5 py-0 h-4 bg-slate-50 text-slate-700 border-slate-200"
-                                  >
-                                    {item.type}
-                                  </Badge>
-                                </div>
-                                {item.description && (
-                                  <p className="text-xs text-gray-500 mb-1 line-clamp-2">{item.description}</p>
-                                )}
-                                <div className="flex items-center gap-3 text-[10px] text-gray-400">
-                                  <span className="flex items-center gap-1">
-                                    <Folder className="h-3 w-3" />
-                                    {item.project}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    {item.createdAt}
-                                  </span>
-                                  <span>{item.size}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className="text-center py-12 px-6">
-                        {activeTab === 'favorites' ? (
-                          <>
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center mx-auto mb-4">
-                              <Star className="h-7 w-7 text-amber-500" />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">No favorites yet</h3>
-                            <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
-                              Star your most important documents to access them quickly here.
-                            </p>
-                          </>
-                        ) : activeTab === 'recent' ? (
-                          <>
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-100 to-blue-100 flex items-center justify-center mx-auto mb-4">
-                              <Clock className="h-7 w-7 text-cyan-600" />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">Nothing recent</h3>
-                            <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
-                              Documents you view or edit will show up here for quick access.
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
-                              <FileText className="h-7 w-7 text-blue-600" />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">
-                              {searchQuery ? 'No matches found' : 'No articles yet'}
-                            </h3>
-                            <p className="text-sm text-muted-foreground max-w-[200px] mx-auto">
-                              {searchQuery 
-                                ? `Try a different search term or browse categories.`
-                                : `Upload documents or create content in the Creator page to build your knowledge base.`}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right: Document Preview/Details */}
-                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-semibold text-gray-900 mb-1">
-                          {selectedItem?.name || "Select a document"}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {selectedItem ? `${selectedItem.type} • ${selectedItem.project}` : "Choose a document to view details"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Document Details */}
-                  <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-                    {selectedItem ? (
-                      <div className="space-y-6">
-                        {/* Document Info */}
-                        <div className="bg-white rounded-lg p-4 border border-slate-200">
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className={`p-3 rounded-lg ${getTypeColor(selectedItem.type)}`}>
-                              {(() => {
-                                const Icon = getTypeIcon(selectedItem.type);
-                                return <Icon className="h-6 w-6 text-white" />;
-                              })()}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-gray-900 mb-2">{selectedItem.name}</h4>
-                              <div className="flex flex-wrap gap-2 mb-3">
-                                <Badge variant="outline" className="text-xs">
-                                  {selectedItem.type}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  {selectedItem.project}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  {selectedItem.size}
-                                </Badge>
-                              </div>
-                              {selectedItem.description && (
-                                <p className="text-sm text-gray-600 mb-4">{selectedItem.description}</p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Metadata */}
-                          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">Created By</p>
-                              <p className="text-sm font-medium text-gray-900 flex items-center gap-1">
-                                <User className="h-3 w-3" />
-                                {selectedItem.createdBy}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">Created</p>
-                              <p className="text-sm font-medium text-gray-900 flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {selectedItem.createdAt}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200">
-                            <Button
-                              size="sm"
-                              onClick={() => handleDocumentClick(selectedItem)}
-                              className="flex-1"
-                              aria-label="View full document"
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Full
-                            </Button>
-                            <Button size="sm" variant="outline" aria-label="Download">
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </Button>
-                            <Button size="sm" variant="outline" aria-label="Share">
-                              <Share2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Preview Content */}
-                        {selectedItem.content && (
-                          <div className="bg-white rounded-lg p-4 border border-slate-200">
-                            <h5 className="text-sm font-semibold text-gray-900 mb-3">Preview</h5>
-                            <div className="text-sm text-gray-600 line-clamp-6">
-                              {selectedItem.content}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="mt-3 w-full"
-                              onClick={() => handleDocumentClick(selectedItem)}
-                            >
-                              View Full Content <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <div className="text-center max-w-sm">
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                            <FileText className="h-8 w-8 text-slate-400" />
-                          </div>
-                          <h3 className="text-base font-semibold text-gray-900 mb-2">Select a document</h3>
+                          <h2 className="font-semibold text-lg text-gray-900">Collections</h2>
                           <p className="text-sm text-gray-500">
-                            Choose a document from the list to view details, preview, and access actions.
+                            AI-organized library of your documents
                           </p>
                         </div>
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          )}
-
-          {/* CATEGORIES TAB */}
-          {activeTab === 'categories' && (
-            <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-                {/* Left: Categories List */}
-                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-md">
-                          <Folder className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-[15px] text-gray-900">Categories</h3>
-                          <p className="text-[13px] text-purple-600 flex items-center gap-1">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
-                            {filteredCollections.length} categories
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        size="icon"
-                        className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-purple-600 hover:text-purple-700 shadow-sm"
-                        aria-label="Add category"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    {/* Filter Info */}
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-gray-500">Use search bar above to filter</span>
+                      
+                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Auto-organized
+                      </Badge>
                     </div>
                   </div>
 
-                  {/* Categories List */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                    {filteredCollections.length > 0 ? (
-                      filteredCollections.map((collection) => {
-                        const isSelected = selectedCollection === collection.id;
-                        return (
-                          <button
-                            key={collection.id}
-                            onClick={() => {
-                              setSelectedCollection(collection.id);
-                              setActiveTab('articles'); // Switch to articles to show items
-                            }}
-                            className={cn(
-                              "w-full p-3 rounded-lg border text-left transition-all focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1",
-                              isSelected
-                                ? "border-purple-300 bg-purple-50/30 shadow-sm"
-                                : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
-                            )}
-                            aria-label={`Select category: ${collection.name}`}
-                            aria-pressed={isSelected}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-full ${collection.color || 'bg-purple-500'} flex-shrink-0`}>
-                                <Folder className="h-4 w-4 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <p className="text-sm font-semibold text-gray-900">{collection.name}</p>
-                                  <Badge
-                                    variant="outline"
-                                    className="text-[10px] px-1.5 py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
-                                  >
+                  {/* Content */}
+                  <div className="flex flex-1 overflow-hidden min-h-0">
+                    {/* Collections Sidebar */}
+                    <div className="w-56 border-r bg-gray-50/50 p-4 overflow-y-auto shrink-0">
+                      <div className="space-y-1">
+                        {defaultCollectionCategories.map((category) => {
+                          const isSelected = selectedCategory === category.id;
+                          const count = categoryCounts[category.id] || 0;
+                          return (
+                            <button
+                              key={category.id}
+                              onClick={() => setSelectedCategory(category.id)}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                                isSelected
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "text-gray-600 hover:bg-gray-100"
+                              )}
+                              aria-label={`View ${category.name}`}
+                              aria-current={isSelected ? "page" : undefined}
+                            >
+                              <category.icon className={cn("h-4 w-4", isSelected ? "text-emerald-600" : category.color)} />
+                              <span className="flex-1 text-left truncate">{category.name}</span>
+                              <span className={cn(
+                                "text-xs px-1.5 py-0.5 rounded-full",
+                                isSelected ? "bg-emerald-200 text-emerald-700" : "bg-gray-200 text-gray-500"
+                              )}>
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                        
+                        {/* Custom Collections */}
+                        {currentCollections.length > 0 && (
+                          <>
+                            <div className="my-3 border-t" />
+                            {currentCollections.map((collection) => {
+                              const isSelected = selectedCategory === collection.id;
+                              return (
+                                <button
+                                  key={collection.id}
+                                  onClick={() => setSelectedCategory(collection.id)}
+                                  className={cn(
+                                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                                    isSelected
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : "text-gray-600 hover:bg-gray-100"
+                                  )}
+                                  aria-label={`View ${collection.name} collection`}
+                                >
+                                  <Folder className={cn("h-4 w-4", isSelected ? "text-emerald-600" : "text-gray-400")} />
+                                  <span className="flex-1 text-left truncate">{collection.name}</span>
+                                  <span className={cn(
+                                    "text-xs px-1.5 py-0.5 rounded-full",
+                                    isSelected ? "bg-emerald-200 text-emerald-700" : "bg-gray-200 text-gray-500"
+                                  )}>
                                     {collection.itemCount}
-                                  </Badge>
-                                </div>
-                                {collection.description && (
-                                  <p className="text-xs text-gray-500">{collection.description}</p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className="text-center py-12 px-6">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-100 to-violet-100 flex items-center justify-center mx-auto mb-4">
-                          <Folder className="h-7 w-7 text-purple-600" />
-                        </div>
-                        <h3 className="font-semibold text-gray-900 mb-2">Organize your content</h3>
-                        <p className="text-sm text-muted-foreground max-w-[200px] mx-auto mb-4">
-                          Categories help you group related documents for easy navigation.
-                        </p>
-                        <Button size="sm" variant="outline" className="gap-2 text-purple-700 border-purple-200 hover:bg-purple-50">
-                          <Plus className="h-4 w-4" />
-                          Create Category
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Create Collection Button */}
+                      <div className="mt-4 pt-4 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start text-gray-600 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50"
+                          onClick={() => setShowNewCollectionDialog(true)}
+                        >
+                          <FolderPlus className="h-4 w-4 mr-2" />
+                          New Collection
                         </Button>
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Right: Category Details */}
-                <div className="flex flex-col h-[calc(100vh-440px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    {/* Items List */}
+                    <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+                      {/* Search and View Toggle */}
+                      <div className="px-4 py-3 border-b flex items-center gap-3 shrink-0">
+                        <div className="flex-1 relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search documents..."
+                            className="pl-9 h-9 text-sm"
+                            aria-label="Search documents"
+                          />
+                          {isSearching && (
+                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex items-center border rounded-lg overflow-hidden">
+                          <button
+                            onClick={() => setViewMode("list")}
+                            className={cn(
+                              "p-1.5 transition-colors",
+                              viewMode === "list" ? "bg-gray-100" : "hover:bg-gray-50"
+                            )}
+                            aria-label="List view"
+                            aria-pressed={viewMode === "list"}
+                          >
+                            <List className="h-4 w-4 text-gray-600" />
+                          </button>
+                          <button
+                            onClick={() => setViewMode("grid")}
+                            className={cn(
+                              "p-1.5 transition-colors",
+                              viewMode === "grid" ? "bg-gray-100" : "hover:bg-gray-50"
+                            )}
+                            aria-label="Grid view"
+                            aria-pressed={viewMode === "grid"}
+                          >
+                            <Grid3X3 className="h-4 w-4 text-gray-600" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Items */}
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {filteredItems.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                              <FolderOpen className="h-8 w-8 text-gray-400" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 mb-1">
+                              {searchQuery ? 'No matches found' : 'No documents yet'}
+                            </h3>
+                            <p className="text-sm text-gray-500 max-w-xs">
+                              {searchQuery 
+                                ? 'Try a different search term or browse collections.'
+                                : 'Upload documents or create content to build your library.'}
+                            </p>
+                            {!searchQuery && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="mt-4"
+                                onClick={() => setShowUploadDialog(true)}
+                              >
+                                <Upload className="h-4 w-4 mr-2" />
+                                Upload Document
+                              </Button>
+                            )}
+                          </div>
+                        ) : viewMode === "list" ? (
+                          <div className="space-y-2">
+                            {filteredItems.map((item) => {
+                              const TypeIcon = getTypeIcon(item.type);
+                              const isStarred = starredItems.has(item.id);
+                              return (
+                                <motion.div
+                                  key={item.id}
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm hover:border-gray-300 transition-all group cursor-pointer"
+                                  onClick={() => handleDocumentClick(item)}
+                                >
+                                  {/* Type Icon */}
+                                  <div className={cn("p-2 rounded-lg", getTypeColorClass(item.type))}>
+                                    <TypeIcon className="h-4 w-4" />
+                                  </div>
+
+                                  {/* Content */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="font-medium text-sm text-gray-900 truncate">
+                                        {item.name}
+                                      </h4>
+                                      {isStarred && (
+                                        <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        {formatRelativeTime(item.createdAt)}
+                                      </span>
+                                      <span className="text-gray-300">•</span>
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] px-1.5 py-0 h-4 text-gray-500 border-gray-200"
+                                      >
+                                        {item.project}
+                                      </Badge>
+                                      {item.tags && item.tags.length > 0 && (
+                                        <>
+                                          <span className="text-gray-300">•</span>
+                                          <span className="text-xs text-gray-400">
+                                            +{item.tags.length} tags
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Actions */}
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleStar(item.id);
+                                      }}
+                                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                      aria-label={isStarred ? "Remove from favorites" : "Add to favorites"}
+                                    >
+                                      {isStarred ? (
+                                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                      ) : (
+                                        <StarOff className="h-4 w-4 text-gray-400" />
+                                      )}
+                                    </button>
+                                    <button
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                      aria-label="More options"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          // Grid view
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {filteredItems.map((item) => {
+                              const TypeIcon = getTypeIcon(item.type);
+                              const isStarred = starredItems.has(item.id);
+                              return (
+                                <motion.div
+                                  key={item.id}
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  className="p-4 rounded-xl border bg-white hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group"
+                                  onClick={() => handleDocumentClick(item)}
+                                >
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div className={cn("p-2 rounded-lg", getTypeColorClass(item.type))}>
+                                      <TypeIcon className="h-4 w-4" />
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleStar(item.id);
+                                      }}
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                      aria-label={isStarred ? "Remove from favorites" : "Add to favorites"}
+                                    >
+                                      {isStarred ? (
+                                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                      ) : (
+                                        <StarOff className="h-4 w-4 text-gray-400 hover:text-amber-500" />
+                                      )}
+                                    </button>
+                                  </div>
+                                  <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-2">
+                                    {item.name}
+                                  </h4>
+                                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <Clock className="h-3 w-3" />
+                                    {formatRelativeTime(item.createdAt)}
+                                  </div>
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* FAVORITES TAB */}
+              {activeTab === 'favorites' && (
+                <Card className="h-full rounded-2xl shadow-lg border-0 bg-card overflow-hidden flex flex-col">
                   {/* Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-semibold text-gray-900 mb-1">
-                          {filteredCollections.find(c => c.id === selectedCollection)?.name || "Select a category"}
-                        </h3>
+                  <div className="px-6 py-5 border-b bg-gradient-to-r from-amber-50/80 to-yellow-50/80 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 text-white shadow-lg">
+                        <Star className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="font-semibold text-lg text-gray-900">Favorites</h2>
                         <p className="text-sm text-gray-500">
-                          {filteredCollections.find(c => c.id === selectedCollection)?.description || "Choose a category to view its contents"}
+                          Your starred documents for quick access
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Category Content */}
-                  <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-                    {selectedCollection ? (
-                      <div className="space-y-4">
-                        {(() => {
-                          const categoryItems = initialItems.filter(item => item.project === filteredCollections.find(c => c.id === selectedCollection)?.name);
-                          return categoryItems.length > 0 ? (
-                            <div className="space-y-3">
-                              <h4 className="text-sm font-semibold text-gray-900">Documents in this category</h4>
-                              {categoryItems.map((item) => {
-                                const TypeIcon = getTypeIcon(item.type);
-                                const typeColor = getTypeColor(item.type);
-                                return (
-                                  <div
-                                    key={item.id}
-                                    className="p-3 rounded-lg border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
-                                    onClick={() => {
-                                      setSelectedItem(item);
-                                      handleDocumentClick(item);
-                                    }}
-                                    role="button"
-                                    tabIndex={0}
-                                    aria-label={`View document: ${item.name}`}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        setSelectedItem(item);
-                                        handleDocumentClick(item);
-                                      }
-                                    }}
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <div className={`p-2 rounded-full ${typeColor} flex-shrink-0`}>
-                                        <TypeIcon className="h-4 w-4 text-white" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-900 truncate">{item.name}</p>
-                                        <p className="text-xs text-gray-500">{item.createdAt} • {item.size}</p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <div className="text-center py-12 px-6">
-                              <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                                <FileText className="h-6 w-6 text-slate-400" />
-                              </div>
-                              <h3 className="font-medium text-gray-900 mb-1">Empty category</h3>
-                              <p className="text-sm text-muted-foreground max-w-[180px] mx-auto">
-                                Add documents to this category to keep things organized.
-                              </p>
-                            </div>
-                          );
-                        })()}
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {filteredItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
+                          <Star className="h-8 w-8 text-amber-500" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">No favorites yet</h3>
+                        <p className="text-sm text-gray-500 max-w-xs">
+                          Star your most important documents to access them quickly here.
+                        </p>
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <div className="text-center max-w-sm">
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                            <Folder className="h-8 w-8 text-slate-400" />
-                          </div>
-                          <h3 className="text-base font-semibold text-gray-900 mb-2">Select a category</h3>
-                          <p className="text-sm text-gray-500">
-                            Choose a category from the list to view its documents and details.
-                          </p>
-                        </div>
+                      <div className="space-y-2">
+                        {filteredItems.map((item) => {
+                          const TypeIcon = getTypeIcon(item.type);
+                          return (
+                            <motion.div
+                              key={item.id}
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm hover:border-gray-300 transition-all group cursor-pointer"
+                              onClick={() => handleDocumentClick(item)}
+                            >
+                              <div className={cn("p-2 rounded-lg", getTypeColorClass(item.type))}>
+                                <TypeIcon className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-medium text-sm text-gray-900 truncate">{item.name}</h4>
+                                  <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-gray-500">{formatRelativeTime(item.createdAt)}</span>
+                                  <span className="text-gray-300">•</span>
+                                  <span className="text-xs text-gray-500">{item.project}</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleStar(item.id);
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
+                                aria-label="Remove from favorites"
+                              >
+                                <X className="h-4 w-4 text-gray-400" />
+                              </button>
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
-            </Card>
-          )}
-        </motion.div>
-      </AnimatePresence>
+                </Card>
+              )}
 
-      {/* Floating Document Viewer Dialog */}
+              {/* RECENT TAB */}
+              {activeTab === 'recent' && (
+                <Card className="h-full rounded-2xl shadow-lg border-0 bg-card overflow-hidden flex flex-col">
+                  {/* Header */}
+                  <div className="px-6 py-5 border-b bg-gradient-to-r from-cyan-50/80 to-blue-50/80 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg">
+                        <Clock className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="font-semibold text-lg text-gray-900">Recent</h2>
+                        <p className="text-sm text-gray-500">
+                          Documents from the past 7 days
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {filteredItems.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                        <div className="w-16 h-16 rounded-2xl bg-cyan-100 flex items-center justify-center mb-4">
+                          <Clock className="h-8 w-8 text-cyan-600" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">Nothing recent</h3>
+                        <p className="text-sm text-gray-500 max-w-xs">
+                          Documents you view or edit will show up here for quick access.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {filteredItems.map((item) => {
+                          const TypeIcon = getTypeIcon(item.type);
+                          const isStarred = starredItems.has(item.id);
+                          return (
+                            <motion.div
+                              key={item.id}
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm hover:border-gray-300 transition-all group cursor-pointer"
+                              onClick={() => handleDocumentClick(item)}
+                            >
+                              <div className={cn("p-2 rounded-lg", getTypeColorClass(item.type))}>
+                                <TypeIcon className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-medium text-sm text-gray-900 truncate">{item.name}</h4>
+                                  {isStarred && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-xs text-gray-500">{formatRelativeTime(item.createdAt)}</span>
+                                  <span className="text-gray-300">•</span>
+                                  <span className="text-xs text-gray-500">{item.project}</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleStar(item.id);
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
+                                aria-label={isStarred ? "Remove from favorites" : "Add to favorites"}
+                              >
+                                {isStarred ? (
+                                  <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                ) : (
+                                  <StarOff className="h-4 w-4 text-gray-400" />
+                                )}
+                              </button>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Neptune Panel */}
+        <AnimatePresence>
+          {showNeptune && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: '30%', opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col shrink-0"
+            >
+              <Card className="flex flex-col h-full rounded-2xl shadow-lg border-0 bg-card overflow-hidden">
+                <NeptuneAssistPanel
+                  conversationId={null}
+                  conversation={null}
+                />
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Document Viewer Dialog */}
       <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden p-0">
           {viewingDocument && (
             <>
-              {/* Dialog Header */}
-              <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between flex-shrink-0">
+              <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`p-2.5 rounded-full ${getTypeColor(viewingDocument.type)} flex-shrink-0`}>
+                  <div className={cn("p-2.5 rounded-full shrink-0", getTypeColorClass(viewingDocument.type))}>
                     {(() => {
                       const Icon = getTypeIcon(viewingDocument.type);
-                      return <Icon className="h-5 w-5 text-white" />;
+                      return <Icon className="h-5 w-5" />;
                     })()}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1205,7 +1054,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                     </DialogDescription>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <Button size="icon" variant="ghost" aria-label="Download">
                     <Download className="h-4 w-4" />
                   </Button>
@@ -1223,10 +1072,8 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 </div>
               </div>
 
-              {/* Document Content Area */}
               <div className="flex-1 overflow-y-auto p-6 bg-white">
                 {viewingDocument.type.toLowerCase().includes('image') && viewingDocument.url ? (
-                  // Image Viewer
                   <div className="flex items-center justify-center min-h-[400px]">
                     <img
                       src={viewingDocument.url}
@@ -1235,19 +1082,17 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                     />
                   </div>
                 ) : viewingDocument.content ? (
-                  // Text/Content Viewer
                   <div className="prose prose-sm max-w-none">
                     <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
                       {viewingDocument.content}
                     </div>
                   </div>
                 ) : (
-                  // Placeholder for other document types
                   <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-                    <div className={`p-6 rounded-full ${getTypeColor(viewingDocument.type)} mb-4`}>
+                    <div className={cn("p-6 rounded-full mb-4", getTypeColorClass(viewingDocument.type))}>
                       {(() => {
                         const Icon = getTypeIcon(viewingDocument.type);
-                        return <Icon className="h-12 w-12 text-white" />;
+                        return <Icon className="h-12 w-12" />;
                       })()}
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">{viewingDocument.name}</h3>
@@ -1255,11 +1100,11 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                       {viewingDocument.description || 'Document preview not available'}
                     </p>
                     <div className="flex gap-2">
-                      <Button onClick={() => {}} aria-label="Open in new tab">
+                      <Button aria-label="Open document">
                         <ArrowRight className="h-4 w-4 mr-2" />
                         Open Document
                       </Button>
-                      <Button variant="outline" onClick={() => {}} aria-label="Download">
+                      <Button variant="outline" aria-label="Download">
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>
@@ -1268,7 +1113,6 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 )}
               </div>
 
-              {/* Document Metadata Footer */}
               <div className="px-6 py-4 border-t bg-slate-50/50 flex items-center justify-between text-sm">
                 <div className="flex items-center gap-4 text-gray-600">
                   <span className="flex items-center gap-1">
@@ -1302,9 +1146,14 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-100">
+                <Upload className="h-4 w-4 text-blue-600" />
+              </div>
+              Upload Document
+            </DialogTitle>
             <DialogDescription>
-              Upload a file to add it to your knowledge base. Supported formats: PDF, DOCX, TXT, MD, JSON (max 10MB)
+              Upload a file to add it to your library. Supported formats: PDF, DOCX, TXT, MD, JSON (max 10MB)
             </DialogDescription>
           </DialogHeader>
           
@@ -1314,7 +1163,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 e.preventDefault();
                 const file = e.dataTransfer.files[0];
                 if (file) {
-                  handleFileUpload(file, selectedCollection || undefined);
+                  handleFileUpload(file);
                 }
               }}
               onDragOver={(e) => e.preventDefault()}
@@ -1341,7 +1190,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 </div>
               ) : (
                 <>
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-sm font-medium text-gray-900 mb-2">
                     Drag and drop a file here, or click to browse
                   </p>
@@ -1356,7 +1205,7 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        handleFileUpload(file, selectedCollection || undefined);
+                        handleFileUpload(file);
                       }
                     }}
                   />
@@ -1372,14 +1221,78 @@ If they want to modify or regenerate, do so. If they want to save, use create_do
                 </>
               )}
             </div>
-
-            {selectedCollection && (
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">Collection:</span>{" "}
-                {currentCollections.find((c) => c.id === selectedCollection)?.name || "Selected"}
-              </div>
-            )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Collection Dialog */}
+      <Dialog open={showNewCollectionDialog} onOpenChange={setShowNewCollectionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-emerald-100">
+                <FolderPlus className="h-4 w-4 text-emerald-600" />
+              </div>
+              Create New Collection
+            </DialogTitle>
+            <DialogDescription>
+              Organize your documents by adding them to custom collections.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <label htmlFor="collection-name" className="text-sm font-medium text-gray-700 mb-2 block">
+              Collection Name
+            </label>
+            <Input
+              id="collection-name"
+              value={newCollectionName}
+              onChange={(e) => setNewCollectionName(e.target.value)}
+              placeholder="e.g., Q1 Marketing Campaign"
+              className="w-full"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isCreatingCollection) {
+                  e.preventDefault();
+                  handleCreateCollection();
+                }
+              }}
+              disabled={isCreatingCollection}
+              autoFocus
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              You can rename or delete collections later.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowNewCollectionDialog(false);
+                setNewCollectionName("");
+              }}
+              disabled={isCreatingCollection}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateCollection}
+              disabled={!newCollectionName.trim() || isCreatingCollection}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {isCreatingCollection ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  Create Collection
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

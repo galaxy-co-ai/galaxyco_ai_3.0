@@ -58,6 +58,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import MarketingAutomationsTab from "./MarketingAutomationsTab";
 import { logger } from "@/lib/logger";
+import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 
 interface Campaign {
   id: string;
@@ -126,6 +127,7 @@ export default function MarketingDashboard({
 }: MarketingDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('campaigns');
   const [searchQuery, setSearchQuery] = useState("");
+  const [showNeptune, setShowNeptune] = useState(false);
   const [showCampaignChat, setShowCampaignChat] = useState(false);
   const [showContentChat, setShowContentChat] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -1003,14 +1005,27 @@ Be creative, engaging, and write content that resonates!`;
       {/* Header Section - Matching CRM */}
       <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Marketing</h1>
-          <p className="text-muted-foreground text-base">
-            Manage campaigns, content, channels, and marketing performance.
-          </p>
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Marketing</h1>
+              <p className="text-muted-foreground text-base mt-1">
+                Manage campaigns, content, channels, and marketing performance.
+              </p>
+            </div>
+            <Button
+              variant={showNeptune ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="gap-2 shrink-0"
+            >
+              <Sparkles className="h-4 w-4" />
+              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
+            </Button>
+          </div>
 
-          {/* Stats Bar - Compact Inline Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          {/* Stats Bar - Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <Badge className="px-3 py-1.5 bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100 transition-colors">
               <Megaphone className="h-3.5 w-3.5 mr-1.5 text-pink-600" />
               <span className="font-semibold">{stats.activeCampaigns}</span>
@@ -1063,16 +1078,18 @@ Be creative, engaging, and write content that resonates!`;
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="max-w-7xl mx-auto px-6 pb-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
+      {/* Content Area with Neptune Panel */}
+      <div className="flex flex-1 overflow-hidden gap-6 px-6 pb-6">
+        <div className={`transition-all duration-200 ${showNeptune ? 'flex-1' : 'flex-1'}`}>
+          <div className="max-w-7xl mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
             {/* CAMPAIGNS TAB - Template-based with Neptune */}
             {activeTab === 'campaigns' && (
               <Card className="p-8 shadow-lg border-0">
@@ -2892,7 +2909,29 @@ Be creative, engaging, and write content that resonates!`;
             {activeTab === 'automations' && (
               <MarketingAutomationsTab />
             )}
-          </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Neptune Panel */}
+        <AnimatePresence>
+          {showNeptune && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: '30%', opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col"
+            >
+              <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+                <NeptuneAssistPanel
+                  conversationId={null}
+                  conversation={null}
+                />
+              </Card>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>

@@ -61,53 +61,55 @@ export default function CreatorDashboard() {
       {/* Header Section */}
       <div className="max-w-7xl mx-auto w-full px-6 py-4 space-y-4">
         {/* Header with title and Neptune button */}
-        <div className="flex items-start justify-between">
-          <div className="text-center flex-1 space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Creator</h1>
-            <p className="text-muted-foreground text-base">
-              AI-powered content and asset creation studio
-            </p>
-
-            {/* Stats Bar */}
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <Badge className="px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-colors">
-                <FileText className="h-3.5 w-3.5 mr-1.5 text-violet-600" />
-                <span className="font-semibold">{stats.totalCreations}</span>
-                <span className="ml-1 text-violet-600/70 font-normal">
-                  Creations
-                </span>
-              </Badge>
-              <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
-                <FolderOpen className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
-                <span className="font-semibold">{stats.collections}</span>
-                <span className="ml-1 text-emerald-600/70 font-normal">
-                  Collections
-                </span>
-              </Badge>
-              <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-                <LayoutTemplate className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-                <span className="font-semibold">{stats.templates}</span>
-                <span className="ml-1 text-blue-600/70 font-normal">
-                  Templates
-                </span>
-              </Badge>
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Creator</h1>
+              <p className="text-muted-foreground text-base mt-1">
+                AI-powered content and asset creation studio
+              </p>
             </div>
+
+            {/* Ask Neptune Button */}
+            <Button
+              variant={showNeptune ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className={cn(
+                "gap-2 transition-all shrink-0",
+                showNeptune && "bg-purple-600 hover:bg-purple-700"
+              )}
+              aria-label={showNeptune ? "Hide Neptune assistant" : "Show Neptune assistant"}
+            >
+              <Sparkles className="h-4 w-4" />
+              {showNeptune ? "Hide" : "Ask"} Neptune
+            </Button>
           </div>
 
-          {/* Ask Neptune Button */}
-          <Button
-            variant={showNeptune ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowNeptune(!showNeptune)}
-            className={cn(
-              "gap-2 transition-all",
-              showNeptune && "bg-purple-600 hover:bg-purple-700"
-            )}
-            aria-label={showNeptune ? "Hide Neptune assistant" : "Show Neptune assistant"}
-          >
-            <Sparkles className="h-4 w-4" />
-            {showNeptune ? "Hide" : "Ask"} Neptune
-          </Button>
+          {/* Stats Bar - Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Badge className="px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-colors">
+              <FileText className="h-3.5 w-3.5 mr-1.5 text-violet-600" />
+              <span className="font-semibold">{stats.totalCreations}</span>
+              <span className="ml-1 text-violet-600/70 font-normal">
+                Creations
+              </span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+              <FolderOpen className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+              <span className="font-semibold">{stats.collections}</span>
+              <span className="ml-1 text-emerald-600/70 font-normal">
+                Collections
+              </span>
+            </Badge>
+            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+              <LayoutTemplate className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+              <span className="font-semibold">{stats.templates}</span>
+              <span className="ml-1 text-blue-600/70 font-normal">
+                Templates
+              </span>
+            </Badge>
+          </div>
         </div>
 
         {/* Floating Tab Bar */}

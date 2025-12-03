@@ -56,6 +56,7 @@ import AutomationsTab from "./AutomationsTab";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 
 export interface Lead {
   id: string;
@@ -222,6 +223,7 @@ export default function CRMDashboard({
   const [crmChatInput, setCrmChatInput] = useState("");
   const [isCrmChatLoading, setIsCrmChatLoading] = useState(false);
   const crmChatEndRef = useRef<HTMLDivElement>(null);
+  const [showNeptune, setShowNeptune] = useState(false);
 
   // Floating detail dialog states
   const [showLeadDetailDialog, setShowLeadDetailDialog] = useState(false);
@@ -654,18 +656,31 @@ Be helpful, proactive, and use CRM tools when needed.`;
   const selectedDealData = deals.find(d => d.id === selectedDeal);
 
   return (
-    <div className="h-full bg-gray-50/50 overflow-y-auto">
+    <div className="flex h-full flex-col bg-gray-50/50">
       {/* Header Section - Matching Dashboard */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4 w-full">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">CRM</h1>
-          <p className="text-muted-foreground text-base">
-            Manage your leads, organizations, and customer relationships.
-          </p>
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">CRM</h1>
+              <p className="text-muted-foreground text-base mt-1">
+                Manage your leads, organizations, and customer relationships.
+              </p>
+            </div>
+            <Button
+              variant={showNeptune ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="gap-2 shrink-0"
+            >
+              <Sparkles className="h-4 w-4" />
+              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
+            </Button>
+          </div>
 
-          {/* Stats Bar - Compact Inline Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          {/* Stats Bar - Centered */}
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
               <Users className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
               <span className="font-semibold">{stats.totalLeads}</span>
@@ -718,16 +733,18 @@ Be helpful, proactive, and use CRM tools when needed.`;
         </div>
       </div>
 
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="max-w-7xl mx-auto px-4 sm:px-6"
-        >
+      {/* Tab Content with Neptune Panel */}
+      <div className="flex flex-1 overflow-hidden gap-6 px-4 sm:px-6 pb-6">
+        <div className="flex-1 overflow-y-auto min-w-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="max-w-7xl mx-auto"
+            >
           {/* LEADS TAB */}
           {activeTab === 'leads' && (
             <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
@@ -807,7 +824,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                 {/* Right: Neptune Chat */}
                 <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   {/* Chat Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between flex-shrink-0">
+                  <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                         <Sparkles className="h-4 w-4" />
@@ -837,8 +854,8 @@ Be helpful, proactive, and use CRM tools when needed.`;
                     </Button>
                   </div>
 
-                  {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
+                  {/* Chat Messages - Scrollable Area */}
+                  <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
                     {crmChatMessages.map((message) => (
                       <div
                         key={message.id}
@@ -905,9 +922,9 @@ Be helpful, proactive, and use CRM tools when needed.`;
                     <div ref={crmChatEndRef} />
                   </div>
 
-                  {/* Quick Suggestions */}
+                  {/* Quick Suggestions - Fixed at bottom */}
                   {crmChatMessages.length === 1 && (
-                    <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+                    <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50 shrink-0">
                       <p className="text-[10px] text-gray-500 mb-2">Quick actions:</p>
                       <div className="flex flex-wrap gap-1.5">
                         {[
@@ -931,8 +948,8 @@ Be helpful, proactive, and use CRM tools when needed.`;
                     </div>
                   )}
 
-                  {/* Chat Input */}
-                  <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
+                  {/* Chat Input - Fixed at bottom */}
+                  <div className="px-4 py-3 border-t flex items-center gap-2 shrink-0 bg-white/80 backdrop-blur-sm">
                     <Input
                       placeholder="Ask Neptune anything about your CRM..."
                       value={crmChatInput}
@@ -1425,8 +1442,30 @@ Be helpful, proactive, and use CRM tools when needed.`;
           {activeTab === 'automations' && (
             <AutomationsTab />
           )}
-        </motion.div>
-      </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Neptune Panel */}
+        <AnimatePresence>
+          {showNeptune && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: '30%', opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col shrink-0"
+            >
+              <Card className="flex flex-col h-[calc(100vh-316px)] min-h-[464px] rounded-2xl shadow-lg border-0 bg-card overflow-hidden mb-6">
+                <NeptuneAssistPanel
+                  conversationId={null}
+                  conversation={null}
+                />
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Add Lead Dialog */}
       <Dialog open={showAddLeadDialog} onOpenChange={setShowAddLeadDialog}>
