@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
+import { NewsletterSignup } from '@/components/launchpad/NewsletterSignup';
 
 export const metadata: Metadata = {
   title: 'Launchpad | GalaxyCo.ai',
@@ -295,20 +296,7 @@ export default async function LaunchpadHomePage() {
       ) : null}
 
       {/* Newsletter CTA */}
-      <section className="mt-16 p-8 rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border text-center">
-        <h2 className="text-2xl font-bold mb-2">Stay Updated</h2>
-        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Get practical AI tips delivered to your inbox. No spam, just value.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2 max-w-md mx-auto">
-          <input 
-            type="email" 
-            placeholder="Enter your email"
-            className="flex-1 px-4 py-2 rounded-lg border bg-background"
-          />
-          <Button>Subscribe</Button>
-        </div>
-      </section>
+      <NewsletterSignup variant="card" className="mt-16" />
     </div>
   );
 }
