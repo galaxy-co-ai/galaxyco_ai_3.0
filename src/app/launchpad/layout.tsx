@@ -126,9 +126,9 @@ export default function LaunchpadLayout({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header - Gradient matches top of hero for seamless blend */}
+      {/* Header - Semi-transparent to blend with hero gradient behind */}
       <header 
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/90 backdrop-blur-xl"
+        className="fixed top-0 left-0 right-0 z-50 bg-slate-900/70 backdrop-blur-xl"
       >
         
         <div className="mx-auto max-w-6xl px-6 flex h-16 items-center">
