@@ -1,8 +1,94 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { workspaces, workspaceMembers, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+
+/**
+ * System admin email whitelist
+ * These emails have access to Mission Control (/admin)
+ * 
+ * To add a new admin:
+ * 1. Add their email here
+ * 2. Or set publicMetadata.isSystemAdmin = true in Clerk Dashboard
+ */
+const SYSTEM_ADMIN_EMAILS: string[] = [
+  // Add admin emails here, e.g.:
+  // 'admin@galaxyco.ai',
+];
+
+/**
+ * Checks if the current user is a system administrator
+ * 
+ * @returns boolean indicating if user has system admin access
+ * 
+ * @remarks
+ * Admin access is granted if:
+ * 1. User's email is in SYSTEM_ADMIN_EMAILS whitelist, OR
+ * 2. User has `isSystemAdmin: true` in Clerk publicMetadata
+ * 
+ * @example
+ * ```typescript
+ * const isAdmin = await isSystemAdmin();
+ * if (!isAdmin) {
+ *   redirect('/dashboard');
+ * }
+ * ```
+ */
+export async function isSystemAdmin(): Promise<boolean> {
+  try {
+    const user = await currentUser();
+    
+    if (!user) {
+      return false;
+    }
+    
+    // Check Clerk metadata first (most secure)
+    const metadata = user.publicMetadata as { isSystemAdmin?: boolean } | undefined;
+    if (metadata?.isSystemAdmin === true) {
+      return true;
+    }
+    
+    // Check email whitelist as fallback
+    const primaryEmail = user.emailAddresses.find(
+      e => e.id === user.primaryEmailAddressId
+    )?.emailAddress;
+    
+    if (primaryEmail && SYSTEM_ADMIN_EMAILS.includes(primaryEmail)) {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    logger.error('Error checking system admin status', { error });
+    return false;
+  }
+}
+
+/**
+ * Gets system admin status with user info
+ * Useful for components that need both admin check and user data
+ */
+export async function getAdminContext() {
+  const user = await currentUser();
+  
+  if (!user) {
+    return { isAdmin: false, user: null };
+  }
+  
+  const isAdmin = await isSystemAdmin();
+  
+  return {
+    isAdmin,
+    user: {
+      id: user.id,
+      email: user.emailAddresses.find(e => e.id === user.primaryEmailAddressId)?.emailAddress,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      imageUrl: user.imageUrl,
+    },
+  };
+}
 
 /**
  * Gets the current authenticated user's workspace

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { OrganizationSwitcher } from "@clerk/nextjs";
+import { OrganizationSwitcher, useUser } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   Palette,
@@ -19,6 +19,8 @@ import {
   PanelLeftOpen,
   TrendingUp,
   MessageSquare,
+  Rocket,
+  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,7 @@ const mainNavItems = [
 
 // Secondary navigation items
 const secondaryNavItems = [
+  { icon: Rocket, label: "Launchpad", href: "/launchpad", id: "launchpad" },
   { icon: Sparkles, label: "Neptune", href: "/assistant", id: "assistant" },
   { icon: Plug, label: "Connected Apps", href: "/connected-apps", id: "connected-apps" },
   { icon: Settings, label: "Settings", href: "/settings", id: "settings" },
@@ -58,6 +61,14 @@ interface SidebarProps {
 export function Sidebar({ className, user }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const { user: clerkUser } = useUser();
+  
+  // Check if user is system admin
+  const isSystemAdmin = React.useMemo(() => {
+    if (!clerkUser) return false;
+    const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
+    return metadata?.isSystemAdmin === true;
+  }, [clerkUser]);
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -208,6 +219,46 @@ export function Sidebar({ className, user }: SidebarProps) {
           })}
         </div>
       </div>
+
+      {/* Mission Control (Admin Only) */}
+      {isSystemAdmin && (
+        <>
+          <Separator />
+          <div className="px-2 py-3">
+            {!isCollapsed && (
+              <div className="px-2 mb-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Admin
+                </p>
+              </div>
+            )}
+            <Link href="/admin">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full h-9 rounded-lg transition-colors",
+                  "flex items-center gap-2.5",
+                  isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
+                  isActive("/admin")
+                    ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50",
+                  "font-normal relative"
+                )}
+                aria-label={isCollapsed ? "Mission Control" : undefined}
+                aria-current={isActive("/admin") ? "page" : undefined}
+              >
+                <Gauge className="h-4 w-4 flex-shrink-0" />
+                {!isCollapsed && (
+                  <span className="text-sm font-medium whitespace-nowrap">Mission Control</span>
+                )}
+                {isActive("/admin") && !isCollapsed && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-r-full" />
+                )}
+              </Button>
+            </Link>
+          </div>
+        </>
+      )}
 
       {/* Organization Switcher */}
       <Separator />

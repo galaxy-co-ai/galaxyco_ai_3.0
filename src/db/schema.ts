@@ -225,6 +225,46 @@ export const integrationStatusEnum = pgEnum('integration_status', [
   'expired',
 ]);
 
+// Launchpad (Blog) enums
+export const blogPostStatusEnum = pgEnum('blog_post_status', [
+  'draft',
+  'published',
+  'scheduled',
+  'archived',
+]);
+
+export const blogReactionTypeEnum = pgEnum('blog_reaction_type', [
+  'helpful',
+  'insightful',
+  'inspiring',
+]);
+
+// Platform Feedback enums
+export const feedbackTypeEnum = pgEnum('feedback_type', [
+  'bug',
+  'suggestion',
+  'general',
+  'feature_request',
+]);
+
+export const feedbackStatusEnum = pgEnum('feedback_status', [
+  'new',
+  'in_review',
+  'planned',
+  'in_progress',
+  'done',
+  'closed',
+  'wont_fix',
+]);
+
+export const feedbackSentimentEnum = pgEnum('feedback_sentiment', [
+  'very_negative',
+  'negative',
+  'neutral',
+  'positive',
+  'very_positive',
+]);
+
 // ============================================================================
 // WORKSPACES (Tenant Boundary)
 // ============================================================================
@@ -2450,6 +2490,438 @@ export const teamChannelMembersRelations = relations(teamChannelMembers, ({ one 
 }));
 
 // ============================================================================
+// LAUNCHPAD - BLOG SYSTEM
+// ============================================================================
+
+// Blog Categories (newspaper-style sections)
+export const blogCategories = pgTable(
+  'blog_categories',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    slug: text('slug').notNull().unique(),
+    description: text('description'),
+    icon: text('icon'), // Lucide icon name
+    color: text('color'), // Hex color for category badge
+    sortOrder: integer('sort_order').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_categories_slug_idx').on(table.slug),
+    index('blog_categories_sort_order_idx').on(table.sortOrder),
+  ]
+);
+
+// Blog Tags (fine-grained topics)
+export const blogTags = pgTable(
+  'blog_tags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    slug: text('slug').notNull().unique(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_tags_slug_idx').on(table.slug),
+  ]
+);
+
+// Blog Posts
+export const blogPosts = pgTable(
+  'blog_posts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Content
+    title: text('title').notNull(),
+    slug: text('slug').notNull().unique(),
+    excerpt: text('excerpt'), // Short summary for cards
+    content: text('content').notNull(), // HTML from Tiptap
+    
+    // Categorization
+    categoryId: uuid('category_id').references(() => blogCategories.id),
+    
+    // Authorship
+    authorId: uuid('author_id').references(() => users.id),
+    
+    // Status & Scheduling
+    status: blogPostStatusEnum('status').notNull().default('draft'),
+    publishedAt: timestamp('published_at'),
+    scheduledAt: timestamp('scheduled_at'),
+    
+    // Display
+    featured: boolean('featured').notNull().default(false),
+    featuredImage: text('featured_image'), // URL to image
+    readingTimeMinutes: integer('reading_time_minutes'),
+    
+    // SEO
+    metaTitle: text('meta_title'),
+    metaDescription: text('meta_description'),
+    ogImage: text('og_image'),
+    
+    // Analytics
+    viewCount: integer('view_count').notNull().default(0),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_posts_slug_idx').on(table.slug),
+    index('blog_posts_category_idx').on(table.categoryId),
+    index('blog_posts_status_idx').on(table.status),
+    index('blog_posts_published_at_idx').on(table.publishedAt),
+    index('blog_posts_featured_idx').on(table.featured),
+    index('blog_posts_author_idx').on(table.authorId),
+  ]
+);
+
+// Blog Post Tags (many-to-many)
+export const blogPostTags = pgTable(
+  'blog_post_tags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    postId: uuid('post_id').notNull().references(() => blogPosts.id, { onDelete: 'cascade' }),
+    tagId: uuid('tag_id').notNull().references(() => blogTags.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_post_tags_post_idx').on(table.postId),
+    index('blog_post_tags_tag_idx').on(table.tagId),
+    uniqueIndex('blog_post_tags_unique_idx').on(table.postId, table.tagId),
+  ]
+);
+
+// Blog Collections (curated reading lists)
+export const blogCollections = pgTable(
+  'blog_collections',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    slug: text('slug').notNull().unique(),
+    description: text('description'),
+    authorId: uuid('author_id').references(() => users.id),
+    isFeatured: boolean('is_featured').notNull().default(false),
+    isPublished: boolean('is_published').notNull().default(false),
+    coverImage: text('cover_image'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_collections_slug_idx').on(table.slug),
+    index('blog_collections_featured_idx').on(table.isFeatured),
+  ]
+);
+
+// Blog Collection Posts (many-to-many with ordering)
+export const blogCollectionPosts = pgTable(
+  'blog_collection_posts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    collectionId: uuid('collection_id').notNull().references(() => blogCollections.id, { onDelete: 'cascade' }),
+    postId: uuid('post_id').notNull().references(() => blogPosts.id, { onDelete: 'cascade' }),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_collection_posts_collection_idx').on(table.collectionId),
+    index('blog_collection_posts_post_idx').on(table.postId),
+    uniqueIndex('blog_collection_posts_unique_idx').on(table.collectionId, table.postId),
+  ]
+);
+
+// ============================================================================
+// LAUNCHPAD - USER ENGAGEMENT
+// ============================================================================
+
+// Reading Progress (track where user left off)
+export const blogReadingProgress = pgTable(
+  'blog_reading_progress',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull(), // Clerk user ID
+    postId: uuid('post_id').notNull().references(() => blogPosts.id, { onDelete: 'cascade' }),
+    progressPercent: integer('progress_percent').notNull().default(0),
+    completed: boolean('completed').notNull().default(false),
+    lastReadAt: timestamp('last_read_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_reading_progress_user_idx').on(table.userId),
+    index('blog_reading_progress_post_idx').on(table.postId),
+    uniqueIndex('blog_reading_progress_unique_idx').on(table.userId, table.postId),
+  ]
+);
+
+// Bookmarks (save for later)
+export const blogBookmarks = pgTable(
+  'blog_bookmarks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull(), // Clerk user ID
+    postId: uuid('post_id').notNull().references(() => blogPosts.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_bookmarks_user_idx').on(table.userId),
+    index('blog_bookmarks_post_idx').on(table.postId),
+    uniqueIndex('blog_bookmarks_unique_idx').on(table.userId, table.postId),
+  ]
+);
+
+// Reactions (was this helpful?)
+export const blogReactions = pgTable(
+  'blog_reactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull(), // Clerk user ID
+    postId: uuid('post_id').notNull().references(() => blogPosts.id, { onDelete: 'cascade' }),
+    type: blogReactionTypeEnum('type').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_reactions_user_idx').on(table.userId),
+    index('blog_reactions_post_idx').on(table.postId),
+    uniqueIndex('blog_reactions_unique_idx').on(table.userId, table.postId),
+  ]
+);
+
+// User Preferences (for personalization)
+export const blogUserPreferences = pgTable(
+  'blog_user_preferences',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: text('user_id').notNull().unique(), // Clerk user ID
+    preferredCategories: jsonb('preferred_categories').$type<string[]>().default([]),
+    preferredTags: jsonb('preferred_tags').$type<string[]>().default([]),
+    emailNewsletter: boolean('email_newsletter').notNull().default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_user_preferences_user_idx').on(table.userId),
+  ]
+);
+
+// ============================================================================
+// LAUNCHPAD - RELATIONS
+// ============================================================================
+
+export const blogCategoriesRelations = relations(blogCategories, ({ many }) => ({
+  posts: many(blogPosts),
+}));
+
+export const blogTagsRelations = relations(blogTags, ({ many }) => ({
+  postTags: many(blogPostTags),
+}));
+
+export const blogPostsRelations = relations(blogPosts, ({ one, many }) => ({
+  category: one(blogCategories, {
+    fields: [blogPosts.categoryId],
+    references: [blogCategories.id],
+  }),
+  author: one(users, {
+    fields: [blogPosts.authorId],
+    references: [users.id],
+  }),
+  postTags: many(blogPostTags),
+  readingProgress: many(blogReadingProgress),
+  bookmarks: many(blogBookmarks),
+  reactions: many(blogReactions),
+  collectionPosts: many(blogCollectionPosts),
+}));
+
+export const blogPostTagsRelations = relations(blogPostTags, ({ one }) => ({
+  post: one(blogPosts, {
+    fields: [blogPostTags.postId],
+    references: [blogPosts.id],
+  }),
+  tag: one(blogTags, {
+    fields: [blogPostTags.tagId],
+    references: [blogTags.id],
+  }),
+}));
+
+export const blogCollectionsRelations = relations(blogCollections, ({ one, many }) => ({
+  author: one(users, {
+    fields: [blogCollections.authorId],
+    references: [users.id],
+  }),
+  collectionPosts: many(blogCollectionPosts),
+}));
+
+export const blogCollectionPostsRelations = relations(blogCollectionPosts, ({ one }) => ({
+  collection: one(blogCollections, {
+    fields: [blogCollectionPosts.collectionId],
+    references: [blogCollections.id],
+  }),
+  post: one(blogPosts, {
+    fields: [blogCollectionPosts.postId],
+    references: [blogPosts.id],
+  }),
+}));
+
+export const blogReadingProgressRelations = relations(blogReadingProgress, ({ one }) => ({
+  post: one(blogPosts, {
+    fields: [blogReadingProgress.postId],
+    references: [blogPosts.id],
+  }),
+}));
+
+export const blogBookmarksRelations = relations(blogBookmarks, ({ one }) => ({
+  post: one(blogPosts, {
+    fields: [blogBookmarks.postId],
+    references: [blogPosts.id],
+  }),
+}));
+
+export const blogReactionsRelations = relations(blogReactions, ({ one }) => ({
+  post: one(blogPosts, {
+    fields: [blogReactions.postId],
+    references: [blogPosts.id],
+  }),
+}));
+
+// ============================================================================
+// MISSION CONTROL - PLATFORM FEEDBACK
+// ============================================================================
+
+export const platformFeedback = pgTable(
+  'platform_feedback',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // User info
+    userId: text('user_id').notNull(), // Clerk user ID
+    userEmail: text('user_email'),
+    
+    // Context
+    pageUrl: text('page_url').notNull(),
+    featureArea: text('feature_area'), // Auto-detected from URL
+    
+    // Feedback content
+    type: feedbackTypeEnum('type').notNull(),
+    sentiment: feedbackSentimentEnum('sentiment'),
+    title: text('title'),
+    content: text('content'),
+    
+    // Attachments
+    screenshotUrl: text('screenshot_url'),
+    
+    // Metadata
+    metadata: jsonb('metadata').$type<{
+      browser?: string;
+      os?: string;
+      screenSize?: string;
+      sessionId?: string;
+      additionalContext?: Record<string, unknown>;
+    }>().default({}),
+    
+    // Workflow
+    status: feedbackStatusEnum('status').notNull().default('new'),
+    priority: taskPriorityEnum('priority'),
+    assignedTo: uuid('assigned_to').references(() => users.id),
+    
+    // Admin notes
+    internalNotes: text('internal_notes'),
+    resolution: text('resolution'),
+    resolvedAt: timestamp('resolved_at'),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('platform_feedback_user_idx').on(table.userId),
+    index('platform_feedback_type_idx').on(table.type),
+    index('platform_feedback_status_idx').on(table.status),
+    index('platform_feedback_sentiment_idx').on(table.sentiment),
+    index('platform_feedback_created_at_idx').on(table.createdAt),
+    index('platform_feedback_feature_area_idx').on(table.featureArea),
+  ]
+);
+
+export const platformFeedbackRelations = relations(platformFeedback, ({ one }) => ({
+  assignee: one(users, {
+    fields: [platformFeedback.assignedTo],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// MISSION CONTROL - ANALYTICS EVENTS
+// ============================================================================
+
+export const analyticsEvents = pgTable(
+  'analytics_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // User info (optional for anonymous)
+    userId: text('user_id'),
+    sessionId: text('session_id'),
+    
+    // Event details
+    eventType: text('event_type').notNull(), // page_view, click, scroll, etc.
+    eventName: text('event_name'), // Specific event name
+    
+    // Context
+    pageUrl: text('page_url').notNull(),
+    referrer: text('referrer'),
+    
+    // Metadata
+    metadata: jsonb('metadata').$type<{
+      duration?: number;
+      scrollDepth?: number;
+      elementId?: string;
+      searchQuery?: string;
+      postId?: string;
+      categoryId?: string;
+      [key: string]: unknown;
+    }>().default({}),
+    
+    // Device info
+    userAgent: text('user_agent'),
+    deviceType: text('device_type'), // mobile, tablet, desktop
+    
+    // Timestamp
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('analytics_events_user_idx').on(table.userId),
+    index('analytics_events_type_idx').on(table.eventType),
+    index('analytics_events_page_idx').on(table.pageUrl),
+    index('analytics_events_created_at_idx').on(table.createdAt),
+    index('analytics_events_session_idx').on(table.sessionId),
+  ]
+);
+
+// ============================================================================
+// MISSION CONTROL - NEWSLETTER SUBSCRIBERS
+// ============================================================================
+
+export const newsletterSubscribers = pgTable(
+  'newsletter_subscribers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull().unique(),
+    userId: text('user_id'), // Clerk user ID if logged in
+    isVerified: boolean('is_verified').notNull().default(false),
+    isActive: boolean('is_active').notNull().default(true),
+    subscribedAt: timestamp('subscribed_at').notNull().defaultNow(),
+    unsubscribedAt: timestamp('unsubscribed_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('newsletter_subscribers_email_idx').on(table.email),
+    index('newsletter_subscribers_user_idx').on(table.userId),
+    index('newsletter_subscribers_active_idx').on(table.isActive),
+  ]
+);
+
+// ============================================================================
 // DEVELOPER - WEBHOOKS
 // ============================================================================
 
@@ -3442,9 +3914,55 @@ export type NewTeamChannelMember = typeof teamChannelMembers.$inferInsert;
 
 export type TeamChannelType = (typeof teamChannelTypeEnum.enumValues)[number];
 
+// Launchpad (Blog) Types
+export type BlogCategory = typeof blogCategories.$inferSelect;
+export type NewBlogCategory = typeof blogCategories.$inferInsert;
 
+export type BlogTag = typeof blogTags.$inferSelect;
+export type NewBlogTag = typeof blogTags.$inferInsert;
 
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type NewBlogPost = typeof blogPosts.$inferInsert;
 
+export type BlogPostTag = typeof blogPostTags.$inferSelect;
+export type NewBlogPostTag = typeof blogPostTags.$inferInsert;
+
+export type BlogCollection = typeof blogCollections.$inferSelect;
+export type NewBlogCollection = typeof blogCollections.$inferInsert;
+
+export type BlogCollectionPost = typeof blogCollectionPosts.$inferSelect;
+export type NewBlogCollectionPost = typeof blogCollectionPosts.$inferInsert;
+
+export type BlogReadingProgress = typeof blogReadingProgress.$inferSelect;
+export type NewBlogReadingProgress = typeof blogReadingProgress.$inferInsert;
+
+export type BlogBookmark = typeof blogBookmarks.$inferSelect;
+export type NewBlogBookmark = typeof blogBookmarks.$inferInsert;
+
+export type BlogReaction = typeof blogReactions.$inferSelect;
+export type NewBlogReaction = typeof blogReactions.$inferInsert;
+
+export type BlogUserPreferences = typeof blogUserPreferences.$inferSelect;
+export type NewBlogUserPreferences = typeof blogUserPreferences.$inferInsert;
+
+// Launchpad Enum Types
+export type BlogPostStatus = (typeof blogPostStatusEnum.enumValues)[number];
+export type BlogReactionType = (typeof blogReactionTypeEnum.enumValues)[number];
+
+// Mission Control (Feedback & Analytics) Types
+export type PlatformFeedback = typeof platformFeedback.$inferSelect;
+export type NewPlatformFeedback = typeof platformFeedback.$inferInsert;
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type NewAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type NewNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
+
+// Mission Control Enum Types
+export type FeedbackType = (typeof feedbackTypeEnum.enumValues)[number];
+export type FeedbackStatus = (typeof feedbackStatusEnum.enumValues)[number];
+export type FeedbackSentiment = (typeof feedbackSentimentEnum.enumValues)[number];
 
 
 
