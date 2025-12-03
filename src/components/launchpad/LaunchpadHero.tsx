@@ -71,79 +71,132 @@ function StarField({ count = 40 }: { count?: number }) {
   );
 }
 
+// Small star field for the sticky nav
+function NavStarField() {
+  const [stars, setStars] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    size: number;
+    duration: number;
+    delay: number;
+  }>>([]);
+
+  useEffect(() => {
+    const generatedStars = Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 1.5 + 0.5,
+      duration: Math.random() * 4 + 3,
+      delay: Math.random() * 3
+    }));
+    setStars(generatedStars);
+  }, []);
+
+  if (stars.length === 0) return null;
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {stars.map((star) => (
+        <motion.div
+          key={star.id}
+          className="absolute rounded-full bg-white"
+          style={{
+            left: `${star.x}%`,
+            top: `${star.y}%`,
+            width: `${star.size}px`,
+            height: `${star.size}px`,
+          }}
+          animate={{
+            opacity: [0.05, 0.4, 0.05],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: star.duration,
+            repeat: Infinity,
+            delay: star.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
   return (
-    <section className="relative overflow-hidden">
-      {/* Dark Gradient Background - matching footer */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" />
-      
-      {/* Animated Gradient Orbs - matching footer */}
-      <motion.div
-        className="absolute top-0 right-1/4 w-[500px] h-[400px] rounded-full opacity-30"
-        style={{
-          background: "radial-gradient(circle, rgba(129,140,248,0.5) 0%, transparent 70%)",
-        }}
-        animate={{
-          scale: [1, 1.2, 1],
-          x: [0, 60, 0],
-          y: [0, -40, 0],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      <motion.div
-        className="absolute bottom-0 left-1/4 w-[400px] h-[350px] rounded-full opacity-25"
-        style={{
-          background: "radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)",
-        }}
-        animate={{
-          scale: [1.2, 1, 1.2],
-          x: [0, -50, 0],
-          y: [0, 50, 0],
-        }}
-        transition={{
-          duration: 14,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 1,
-        }}
-      />
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full opacity-20"
-        style={{
-          background: "radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)",
-        }}
-        animate={{
-          scale: [1, 1.15, 1],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 2,
-        }}
-      />
-      
-      {/* Star Field - matching footer */}
-      <StarField count={45} />
-      
-      {/* Grid Pattern - matching footer */}
-      <div 
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: "50px 50px",
-        }}
-      />
+    <>
+      {/* Hero Section - with overflow hidden for orbs */}
+      <section className="relative overflow-hidden">
+        {/* Dark Gradient Background - matching footer */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" />
+        
+        {/* Animated Gradient Orbs - matching footer */}
+        <motion.div
+          className="absolute top-0 right-1/4 w-[500px] h-[400px] rounded-full opacity-30"
+          style={{
+            background: "radial-gradient(circle, rgba(129,140,248,0.5) 0%, transparent 70%)",
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 60, 0],
+            y: [0, -40, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-1/4 w-[400px] h-[350px] rounded-full opacity-25"
+          style={{
+            background: "radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)",
+          }}
+          animate={{
+            scale: [1.2, 1, 1.2],
+            x: [0, -50, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{
+            duration: 14,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full opacity-20"
+          style={{
+            background: "radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)",
+          }}
+          animate={{
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2,
+          }}
+        />
+        
+        {/* Star Field - matching footer */}
+        <StarField count={45} />
+        
+        {/* Grid Pattern - matching footer */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: "50px 50px",
+          }}
+        />
 
-      {/* Content */}
-      <div className="relative z-10">
         {/* Hero Content */}
-        <div className="mx-auto max-w-6xl px-6 pt-8 pb-10">
+        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-8 pb-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             {/* Left: Text */}
             <div className="max-w-xl">
@@ -195,12 +248,21 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
             </motion.div>
           </div>
         </div>
+      </section>
 
-      </div>
-
-      {/* Sticky Category Navigation */}
-      <div className="sticky top-16 z-40 border-t border-white/10 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 backdrop-blur-xl">
-        <div className="mx-auto max-w-6xl px-6 py-4">
+      {/* Sticky Category Navigation - OUTSIDE the overflow-hidden section */}
+      <div className="sticky top-16 z-40 relative overflow-hidden">
+        {/* Dark gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950" />
+        
+        {/* Subtle star particles */}
+        <NavStarField />
+        
+        {/* Top border */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/10" />
+        
+        {/* Content */}
+        <div className="relative z-10 mx-auto max-w-6xl px-6 py-4">
           <motion.div 
             className="flex justify-center"
             initial={{ opacity: 0, y: 10 }}
@@ -227,6 +289,6 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
           </motion.div>
         </div>
       </div>
-    </section>
+    </>
   );
 }

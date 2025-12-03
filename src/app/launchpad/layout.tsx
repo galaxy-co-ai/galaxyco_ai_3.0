@@ -126,12 +126,12 @@ export default function LaunchpadLayout({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header - Transparent on dark hero, white when scrolled */}
+      {/* Header - Dark gradient theme matching hero */}
       <header 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled 
             ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-border/50' 
-            : 'bg-transparent'
+            : 'bg-gradient-to-r from-slate-900/95 via-indigo-950/95 to-purple-950/95 backdrop-blur-xl border-b border-white/10'
         }`}
       >
         {/* Subtle gradient line at bottom when scrolled */}
@@ -158,11 +158,7 @@ export default function LaunchpadLayout({
               </Link>
             )}
             <Link href="/launchpad" className="flex items-center gap-2.5 group">
-              <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 ${
-                isScrolled 
-                  ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30'
-                  : 'bg-white/15 backdrop-blur-sm border border-white/20 group-hover:bg-white/20'
-              }`}>
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
                 <Rocket className="h-4 w-4 text-white" />
               </div>
               <span className={`font-semibold text-lg transition-colors ${isScrolled ? 'text-foreground' : 'text-white'}`}>
@@ -203,9 +199,6 @@ export default function LaunchpadLayout({
           </div>
         </div>
       </header>
-
-      {/* Spacer for fixed header */}
-      <div className="h-16" />
 
       {/* Main Content */}
       <main className="flex-1">{children}</main>
