@@ -222,8 +222,8 @@ export default function LaunchpadLayout({
                     right: '30%',
                   }}
                 />
-                {/* Rocket flying past */}
-                <Rocket className="relative z-10 h-5 w-5 text-white" style={{ transform: 'rotate(-45deg) translateX(2px)' }} />
+                {/* Rocket flying past - diagonal like / */}
+                <Rocket className="relative z-10 h-5 w-5 text-white" style={{ transform: 'rotate(45deg) translateX(2px)' }} />
               </div>
               <span 
                 className="font-bold text-2xl text-white tracking-wide"
@@ -361,8 +361,8 @@ export default function LaunchpadLayout({
                       background: 'linear-gradient(to bottom right, rgb(15, 23, 42), rgb(30, 27, 75))',
                     }}
                   />
-                  {/* Rocket flying past */}
-                  <Rocket className="relative z-10 h-5 w-5 text-white" style={{ transform: 'rotate(-45deg) translateX(2px)' }} />
+                  {/* Rocket flying past - diagonal like / */}
+                  <Rocket className="relative z-10 h-5 w-5 text-white" style={{ transform: 'rotate(45deg) translateX(2px)' }} />
                 </div>
                 <span 
                   className="font-bold text-2xl text-white tracking-wide"
