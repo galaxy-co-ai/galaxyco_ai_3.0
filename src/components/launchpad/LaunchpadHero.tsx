@@ -208,7 +208,8 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
               AI for Business Owners
             </motion.div>
             <motion.h1 
-              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white"
+              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-wide text-white"
+              style={{ letterSpacing: '0.04em' }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
@@ -221,8 +222,8 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
 
       {/* Sticky Category Navigation - OUTSIDE the overflow-hidden section */}
       <div className="sticky top-16 z-40 relative overflow-hidden">
-        {/* Dark gradient background - seamless with hero */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950" />
+        {/* Match hero gradient - positioned to continue seamlessly */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-purple-950 to-purple-950" />
         
         {/* Subtle star particles */}
         <NavStarField />
