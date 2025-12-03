@@ -196,56 +196,25 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
         />
 
         {/* Hero Content - pt-24 accounts for fixed header (h-16) + extra spacing */}
-        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-10">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-            {/* Left: Text */}
-            <div className="max-w-xl">
-              <motion.div 
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-indigo-200 text-xs font-medium mb-4 backdrop-blur-sm border border-white/10"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Zap className="h-3 w-3" />
-                AI for Business Owners
-              </motion.div>
-              <motion.h1 
-                className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-white"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                AI Made Simple
-              </motion.h1>
-              <motion.p 
-                className="text-indigo-200/70 text-base md:text-lg leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                Practical guidance to help you use AI for real business results — 
-                no technical background required.
-              </motion.p>
-            </div>
-            
-            {/* Right: Quick Stats */}
+        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-12">
+          <div className="flex flex-col items-center text-center">
             <motion.div 
-              className="flex gap-8 md:gap-10"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-indigo-200 text-sm font-medium mb-6 backdrop-blur-sm border border-white/10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5 }}
             >
-              {[
-                { value: '50+', label: 'Guides' },
-                { value: '10k+', label: 'Readers' },
-                { value: 'Free', label: 'Always' },
-              ].map((stat, i) => (
-                <div key={i} className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
-                  <p className="text-xs text-indigo-300/60">{stat.label}</p>
-                </div>
-              ))}
+              <Zap className="h-3.5 w-3.5" />
+              AI for Business Owners
             </motion.div>
+            <motion.h1 
+              className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              AI Made Simple
+            </motion.h1>
           </div>
         </div>
       </section>
