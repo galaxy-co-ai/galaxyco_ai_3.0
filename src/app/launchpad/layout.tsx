@@ -207,9 +207,23 @@ export default function LaunchpadLayout({
           </div>
           
           {/* Center - Logo & Title */}
-            <Link href="/launchpad" className="flex items-center gap-2.5 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
-                <Rocket className="h-5 w-5 text-white" />
+            <Link href="/launchpad" className="flex items-center gap-3 group">
+              {/* Crescent Moon with Rocket */}
+              <div className="relative h-10 w-10 flex items-center justify-center">
+                {/* Gradient moon base */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300" />
+                {/* Dark cutout to create crescent */}
+                <div 
+                  className="absolute rounded-full bg-slate-900"
+                  style={{
+                    width: '75%',
+                    height: '75%',
+                    top: '-5%',
+                    left: '30%',
+                  }}
+                />
+                {/* Rocket flying past */}
+                <Rocket className="relative z-10 h-5 w-5 text-white -rotate-45 -translate-x-0.5" />
               </div>
               <span 
                 className="font-bold text-2xl text-white tracking-wide"
@@ -331,9 +345,24 @@ export default function LaunchpadLayout({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-10 mb-12">
             {/* Brand Column */}
             <div className="lg:col-span-2">
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 shadow-lg shadow-indigo-500/30">
-                  <Rocket className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-3 mb-4">
+                {/* Crescent Moon with Rocket */}
+                <div className="relative h-10 w-10 flex items-center justify-center">
+                  {/* Gradient moon base */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-lg shadow-indigo-500/30" />
+                  {/* Dark cutout to create crescent */}
+                  <div 
+                    className="absolute rounded-full"
+                    style={{
+                      width: '75%',
+                      height: '75%',
+                      top: '-5%',
+                      left: '30%',
+                      background: 'linear-gradient(to bottom right, rgb(15, 23, 42), rgb(30, 27, 75))',
+                    }}
+                  />
+                  {/* Rocket flying past */}
+                  <Rocket className="relative z-10 h-5 w-5 text-white -rotate-45 -translate-x-0.5" />
                 </div>
                 <span 
                   className="font-bold text-2xl text-white tracking-wide"
