@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { NewsletterSignup } from '@/components/launchpad/NewsletterSignup';
+import { LaunchpadHero } from '@/components/launchpad/LaunchpadHero';
 
 export const metadata: Metadata = {
   title: 'Launchpad | GalaxyCo.ai',
@@ -332,85 +333,11 @@ export default async function LaunchpadHomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Premium Dark Gradient */}
-      <section className="relative overflow-hidden">
-        {/* Dark Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" />
-        
-        {/* Animated Gradient Orbs */}
-        <div className="absolute top-0 right-1/4 w-[500px] h-[300px] rounded-full opacity-30 bg-[radial-gradient(circle,_rgba(129,140,248,0.4)_0%,_transparent_70%)] animate-pulse" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[250px] rounded-full opacity-25 bg-[radial-gradient(circle,_rgba(167,139,250,0.4)_0%,_transparent_70%)] animate-pulse" style={{ animationDelay: '1s' }} />
-        
-        {/* Grid Pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "50px 50px",
-          }}
-        />
-        
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-14 md:py-16">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-            {/* Left: Text */}
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-indigo-200 text-xs font-medium mb-4 backdrop-blur-sm border border-white/10">
-                <Zap className="h-3 w-3" />
-                AI for Business Owners
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3 text-white">
-                AI Made Simple
-              </h1>
-              <p className="text-indigo-200/70 text-base md:text-lg leading-relaxed">
-                Practical guidance to help you use AI for real business results — 
-                no technical background required.
-              </p>
-            </div>
-            
-            {/* Right: Quick Stats */}
-            <div className="flex gap-8 md:gap-10">
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-white">50+</p>
-                <p className="text-xs text-indigo-300/60">Guides</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-white">10k+</p>
-                <p className="text-xs text-indigo-300/60">Readers</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl md:text-3xl font-bold text-white">Free</p>
-                <p className="text-xs text-indigo-300/60">Always</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Bottom fade to white */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent" />
-      </section>
-
-      {/* Sticky Category Navigation */}
-      <section className="sticky top-16 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="mx-auto max-w-6xl px-6 py-3">
-          <div className="flex justify-center">
-            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-muted">
-              <Link href="/launchpad">
-                <button className="px-3.5 py-1.5 text-sm font-medium rounded-md bg-background text-foreground shadow-sm transition-all">
-                  All
-                </button>
-              </Link>
-              {displayCategories.slice(0, 5).map((category) => (
-                <Link key={category.id} href={hasContent ? `/launchpad/category/${category.slug}` : '#'}>
-                  <button className="px-3.5 py-1.5 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all">
-                    {category.name}
-                  </button>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section with Category Nav - Client Component */}
+      <LaunchpadHero 
+        categories={displayCategories} 
+        hasContent={hasContent} 
+      />
 
       {/* Main Content */}
       <div className="mx-auto max-w-6xl px-6 py-10">
