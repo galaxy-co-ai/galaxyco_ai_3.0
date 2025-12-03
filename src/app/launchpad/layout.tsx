@@ -126,12 +126,47 @@ export default function LaunchpadLayout({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header - Solid indigo to match hero gradient */}
+      {/* Header - Gradient with subtle orbs to match hero */}
       <header 
-        className="fixed top-0 left-0 right-0 z-50 bg-indigo-950"
+        className="fixed top-0 left-0 right-0 z-50 overflow-hidden"
       >
+        {/* Gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" />
         
-        <div className="mx-auto max-w-6xl px-6 flex h-16 items-center">
+        {/* Animated orbs */}
+        <motion.div
+          className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-40"
+          style={{
+            background: "radial-gradient(circle, rgba(129,140,248,0.5) 0%, transparent 70%)",
+          }}
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 10, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute -top-5 left-1/4 w-24 h-24 rounded-full opacity-30"
+          style={{
+            background: "radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)",
+          }}
+          animate={{
+            scale: [1.1, 1, 1.1],
+            x: [0, -15, 0],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+        />
+        
+        <div className="relative z-10 mx-auto max-w-6xl px-6 flex h-16 items-center">
           {/* Left - Back button (if logged in) */}
           <div className="flex-1 flex items-center">
             {isLoaded && user && (
