@@ -62,6 +62,59 @@ function StarField({ count = 25 }: { count?: number }) {
   );
 }
 
+// Smaller star field for header
+function HeaderStarField() {
+  const [stars, setStars] = useState<Array<{
+    id: number;
+    x: number;
+    y: number;
+    size: number;
+    duration: number;
+    delay: number;
+  }>>([]);
+
+  useEffect(() => {
+    const generatedStars = Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 1.5 + 0.5,
+      duration: Math.random() * 4 + 3,
+      delay: Math.random() * 3
+    }));
+    setStars(generatedStars);
+  }, []);
+
+  if (stars.length === 0) return null;
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {stars.map((star) => (
+        <motion.div
+          key={star.id}
+          className="absolute rounded-full bg-white"
+          style={{
+            left: `${star.x}%`,
+            top: `${star.y}%`,
+            width: `${star.size}px`,
+            height: `${star.size}px`,
+          }}
+          animate={{
+            opacity: [0.1, 0.5, 0.1],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: star.duration,
+            repeat: Infinity,
+            delay: star.delay,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /**
  * Launchpad Layout
  * 
@@ -133,38 +186,8 @@ export default function LaunchpadLayout({
         {/* Gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950" />
         
-        {/* Animated orbs */}
-        <motion.div
-          className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-40"
-          style={{
-            background: "radial-gradient(circle, rgba(129,140,248,0.5) 0%, transparent 70%)",
-          }}
-          animate={{
-            scale: [1, 1.2, 1],
-            x: [0, 10, 0],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute -top-5 left-1/4 w-24 h-24 rounded-full opacity-30"
-          style={{
-            background: "radial-gradient(circle, rgba(167,139,250,0.5) 0%, transparent 70%)",
-          }}
-          animate={{
-            scale: [1.1, 1, 1.1],
-            x: [0, -15, 0],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
+        {/* Floating particles */}
+        <HeaderStarField />
         
         <div className="relative z-10 mx-auto max-w-6xl px-6 flex h-16 items-center">
           {/* Left - Back button (if logged in) */}
