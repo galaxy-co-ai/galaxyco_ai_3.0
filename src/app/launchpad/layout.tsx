@@ -128,10 +128,10 @@ export default function LaunchpadLayout({
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header 
-        className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        className={`sticky top-0 z-50 w-full transition-all duration-500 ${
           isScrolled 
-            ? 'bg-white/90 backdrop-blur-xl shadow-sm border-b border-border/50' 
-            : 'bg-gradient-to-r from-white via-indigo-50/30 to-purple-50/30 border-b border-transparent'
+            ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-border/50' 
+            : 'bg-gradient-to-r from-slate-900/95 via-indigo-950/95 to-purple-950/95 backdrop-blur-xl border-b border-white/10'
         }`}
       >
         {/* Subtle gradient line at bottom when scrolled */}
@@ -143,23 +143,41 @@ export default function LaunchpadLayout({
           <div className="flex items-center gap-4">
             {isLoaded && user && (
               <Link href="/dashboard">
-                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground rounded-full">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`gap-2 rounded-full transition-colors ${
+                    isScrolled 
+                      ? 'text-muted-foreground hover:text-foreground' 
+                      : 'text-indigo-200/70 hover:text-white hover:bg-white/10'
+                  }`}
+                >
                   <ArrowLeft className="h-4 w-4" />
                   <span className="hidden sm:inline">Back to App</span>
                 </Button>
               </Link>
             )}
             <Link href="/launchpad" className="flex items-center gap-2.5 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 shadow-md shadow-indigo-500/30 group-hover:shadow-lg group-hover:shadow-indigo-500/40 transition-all duration-300">
                 <Rocket className="h-4.5 w-4.5 text-white" />
               </div>
-              <span className="font-semibold text-lg">Launchpad</span>
+              <span className={`font-semibold text-lg transition-colors ${isScrolled ? 'text-foreground' : 'text-white'}`}>
+                Launchpad
+              </span>
             </Link>
           </div>
           
           <div className="flex items-center gap-3">
             <Link href="/launchpad/search">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`rounded-full transition-colors ${
+                  isScrolled 
+                    ? 'text-muted-foreground hover:text-foreground' 
+                    : 'text-indigo-200/70 hover:text-white hover:bg-white/10'
+                }`}
+              >
                 <Search className="h-4 w-4" />
                 <span className="sr-only">Search</span>
               </Button>
@@ -168,7 +186,11 @@ export default function LaunchpadLayout({
               <Link href="/sign-in">
                 <Button 
                   size="sm" 
-                  className="rounded-full px-5 shadow-md shadow-indigo-500/25 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-300"
+                  className={`rounded-full px-5 transition-all duration-300 ${
+                    isScrolled
+                      ? 'shadow-md shadow-indigo-500/25 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg hover:shadow-indigo-500/30'
+                      : 'bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/20 hover:shadow-white/30'
+                  }`}
                 >
                   Sign In
                 </Button>

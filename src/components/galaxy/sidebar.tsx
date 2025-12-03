@@ -110,8 +110,8 @@ export function Sidebar({ className, user }: SidebarProps) {
           )}
           aria-label="Go to landing page"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-            <Bot className="h-5 w-5 text-sidebar-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25">
+            <Rocket className="h-4.5 w-4.5 text-white" />
           </div>
           {!isCollapsed && (
             <h2 className="text-base font-semibold text-sidebar-foreground">GalaxyCo.ai</h2>

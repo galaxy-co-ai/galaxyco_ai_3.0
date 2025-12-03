@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "../ui/button";
-import { Sparkles, LogIn, Menu, X } from "lucide-react";
+import { Rocket, LogIn, Menu, X } from "lucide-react";
 
 interface SmartNavigationProps {
   onEnterApp?: () => void;
@@ -55,8 +55,8 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
               whileHover={{ scale: 1.02 }}
               onClick={() => window.location.href = "/"}
             >
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-md">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/25">
+                <Rocket className="h-4 w-4 text-white" />
               </div>
               <span className="text-lg">GalaxyCo.ai</span>
             </motion.div>

@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { 
-  Sparkles, 
+  Rocket, 
   Twitter, 
   Linkedin, 
   Github, 
@@ -107,8 +107,8 @@ export function Footer() {
             transition={{ duration: 0.5 }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/25">
+                <Rocket className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl">GalaxyCo.ai</span>
             </div>
