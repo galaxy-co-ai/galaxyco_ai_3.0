@@ -195,8 +195,8 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
           }}
         />
 
-        {/* Hero Content */}
-        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-8 pb-10">
+        {/* Hero Content - pt-24 accounts for fixed header (h-16) + extra spacing */}
+        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-24 pb-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             {/* Left: Text */}
             <div className="max-w-xl">
@@ -252,14 +252,11 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
 
       {/* Sticky Category Navigation - OUTSIDE the overflow-hidden section */}
       <div className="sticky top-16 z-40 relative overflow-hidden">
-        {/* Dark gradient background */}
+        {/* Dark gradient background - seamless with hero */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950" />
         
         {/* Subtle star particles */}
         <NavStarField />
-        
-        {/* Top border */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/10" />
         
         {/* Content */}
         <div className="relative z-10 mx-auto max-w-6xl px-6 py-4">

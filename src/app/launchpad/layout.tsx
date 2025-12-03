@@ -126,18 +126,10 @@ export default function LaunchpadLayout({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header - Dark gradient theme matching hero */}
+      {/* Header - Always dark to match hero and sticky nav */}
       <header 
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled 
-            ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-border/50' 
-            : 'bg-gradient-to-r from-slate-900/95 via-indigo-950/95 to-purple-950/95 backdrop-blur-xl border-b border-white/10'
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 backdrop-blur-xl"
       >
-        {/* Subtle gradient line at bottom when scrolled */}
-        {isScrolled && (
-          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent" />
-        )}
         
         <div className="mx-auto max-w-6xl px-6 flex h-16 items-center justify-between">
           <div className="flex items-center gap-4">
@@ -146,11 +138,7 @@ export default function LaunchpadLayout({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className={`gap-2 rounded-full transition-colors ${
-                    isScrolled 
-                      ? 'text-muted-foreground hover:text-foreground' 
-                      : 'text-indigo-200/70 hover:text-white hover:bg-white/10'
-                  }`}
+                  className="gap-2 rounded-full text-indigo-200/70 hover:text-white hover:bg-white/10 transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span className="hidden sm:inline">Back to App</span>
@@ -161,7 +149,7 @@ export default function LaunchpadLayout({
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300">
                 <Rocket className="h-4 w-4 text-white" />
               </div>
-              <span className={`font-semibold text-lg transition-colors ${isScrolled ? 'text-foreground' : 'text-white'}`}>
+              <span className="font-semibold text-lg text-white">
                 Launchpad
               </span>
             </Link>
@@ -172,11 +160,7 @@ export default function LaunchpadLayout({
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className={`rounded-full transition-colors ${
-                  isScrolled 
-                    ? 'text-muted-foreground hover:text-foreground' 
-                    : 'text-indigo-200/70 hover:text-white hover:bg-white/10'
-                }`}
+                className="rounded-full text-indigo-200/70 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <Search className="h-4 w-4" />
                 <span className="sr-only">Search</span>
@@ -186,11 +170,7 @@ export default function LaunchpadLayout({
               <Link href="/sign-in">
                 <Button 
                   size="sm" 
-                  className={`rounded-full px-5 transition-all duration-300 ${
-                    isScrolled
-                      ? 'shadow-md shadow-indigo-500/25 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg hover:shadow-indigo-500/30'
-                      : 'bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/20 hover:shadow-white/30'
-                  }`}
+                  className="rounded-full px-5 bg-white text-indigo-600 hover:bg-indigo-50 shadow-lg shadow-white/20 hover:shadow-white/30 transition-all duration-300"
                 >
                   Sign In
                 </Button>
