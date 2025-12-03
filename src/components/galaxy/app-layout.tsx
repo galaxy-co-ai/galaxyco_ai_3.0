@@ -4,6 +4,7 @@ import * as React from "react";
 import { Sidebar } from "./sidebar";
 import { Header, HeaderProps } from "./header";
 import { Toaster } from "@/components/ui/sonner";
+import { FeedbackButton } from "@/components/shared/FeedbackButton";
 import { cn } from "@/lib/utils";
 
 export interface AppLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -45,6 +46,9 @@ export function AppLayout({
 
       {/* Toast Notifications */}
       <Toaster />
+      
+      {/* Floating Feedback Button */}
+      <FeedbackButton />
     </div>
   );
 }
