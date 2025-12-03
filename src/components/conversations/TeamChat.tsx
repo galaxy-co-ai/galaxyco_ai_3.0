@@ -374,10 +374,10 @@ export default function TeamChat() {
                     <Hash className="h-4 w-4 flex-shrink-0" />
                   )}
                   <span className="flex-1 truncate text-sm font-medium">{channel.name}</span>
-                  {channel.unreadCount && channel.unreadCount > 0 && (
-                    <Badge className="bg-indigo-500 text-white text-xs px-1.5 py-0 h-5">
-                      {channel.unreadCount}
-                    </Badge>
+                  {typeof channel.unreadCount === 'number' && channel.unreadCount > 0 && (
+                    <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full bg-indigo-500 text-white text-[9px] font-medium leading-none">
+                      {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
+                    </span>
                   )}
                 </button>
               ))

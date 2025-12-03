@@ -20,9 +20,10 @@ export default async function DashboardPage() {
   let initialData;
   
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userName = user?.firstName || 'there';
     logger.info('Loading dashboard for workspace', { workspaceId });
-    initialData = await getDashboardData(workspaceId);
+    initialData = await getDashboardData(workspaceId, userName);
   } catch (error) {
     logger.error('Failed to load initial dashboard data', { error });
     // Fall back to empty data if server-side fetch fails

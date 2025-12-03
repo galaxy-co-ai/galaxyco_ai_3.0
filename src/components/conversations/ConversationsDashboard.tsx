@@ -132,7 +132,7 @@ export default function ConversationsDashboard({
             className="gap-2"
           >
             <Sparkles className="h-4 w-4" />
-            {showNeptune ? "Hide" : "Show"} Neptune
+            {showNeptune ? "Hide Neptune" : "Ask Neptune"}
           </Button>
         </div>
 
@@ -181,11 +181,33 @@ export default function ConversationsDashboard({
 
       {/* Main Content Area */}
       {activeChannel === 'team' ? (
-        // Team Chat View - Full width
-        <div className="flex flex-1 overflow-hidden p-6">
-          <Card className="flex flex-col flex-1 rounded-2xl shadow-sm border bg-card overflow-hidden">
+        // Team Chat View with optional Neptune
+        <div className="flex flex-1 overflow-hidden p-6 gap-6">
+          <Card className={`flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden transition-all ${
+            showNeptune ? 'flex-1' : 'flex-1'
+          }`}>
             <TeamChat />
           </Card>
+          
+          {/* Neptune Panel for Team Chat */}
+          <AnimatePresence>
+            {showNeptune && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: '30%', opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col"
+              >
+                <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+                  <NeptuneAssistPanel
+                    conversationId={null}
+                    conversation={null}
+                  />
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       ) : (
         // Regular Conversations View

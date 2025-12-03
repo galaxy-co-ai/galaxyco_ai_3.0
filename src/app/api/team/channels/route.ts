@@ -41,17 +41,8 @@ export async function GET() {
       },
     });
 
-    // Get unread counts for the current user
-    const memberRecords = await db.query.teamChannelMembers.findMany({
-      where: and(
-        eq(teamChannelMembers.workspaceId, workspaceId),
-        eq(teamChannelMembers.userId, user.id)
-      ),
-    });
-
+    // TODO: Calculate real unread counts from lastReadAt when needed
     const channelsWithUnread = channels.map((channel) => {
-      const membership = memberRecords.find((m) => m.channelId === channel.id);
-      // For now, just return 0 unread - real implementation would count messages after lastReadAt
       return {
         id: channel.id,
         name: channel.name,
@@ -60,7 +51,6 @@ export async function GET() {
         isPrivate: channel.isPrivate,
         messageCount: channel.messageCount,
         lastMessageAt: channel.lastMessageAt,
-        unreadCount: 0, // TODO: Calculate from lastReadAt
         members: channel.members,
       };
     });

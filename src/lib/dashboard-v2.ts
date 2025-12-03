@@ -23,13 +23,14 @@ import { logger } from '@/lib/logger';
 /**
  * Fetches all dashboard data for a workspace
  * @param workspaceId - The workspace ID to fetch data for
+ * @param userName - The user's first name for personalized greeting
  * @returns Complete dashboard data
  */
-export async function getDashboardData(workspaceId: string): Promise<DashboardV2Data> {
+export async function getDashboardData(workspaceId: string, userName: string = 'there'): Promise<DashboardV2Data> {
   // If no workspaceId, return empty data immediately
   if (!workspaceId) {
     logger.warn('getDashboardData called without workspaceId');
-    return getEmptyDashboardData();
+    return getEmptyDashboardData(userName);
   }
 
   // Calculate date thresholds
@@ -144,7 +145,7 @@ export async function getDashboardData(workspaceId: string): Promise<DashboardV2
 
     // Determine user profile
     const user = {
-      name: 'User', // TODO: Get actual name from Clerk or database
+      name: userName,
       isFirstTime: stats.totalAgents === 0 && stats.crmContacts === 0,
       lastLogin: undefined, // TODO: Track last login in database
     };
@@ -164,7 +165,7 @@ export async function getDashboardData(workspaceId: string): Promise<DashboardV2
   } catch (error) {
     logger.error('Failed to fetch dashboard data', { error, workspaceId });
     // Return empty data instead of throwing to keep dashboard functional
-    return getEmptyDashboardData();
+    return getEmptyDashboardData(userName);
   }
 }
 
@@ -172,7 +173,7 @@ export async function getDashboardData(workspaceId: string): Promise<DashboardV2
  * Returns empty/default dashboard data
  * Used for error fallback or new users
  */
-export function getEmptyDashboardData(): DashboardV2Data {
+export function getEmptyDashboardData(userName: string = 'there'): DashboardV2Data {
   return {
     stats: {
       activeAgents: 0,
@@ -199,7 +200,7 @@ export function getEmptyDashboardData(): DashboardV2Data {
     pathways: getDefaultPathways(),
     wins: [],
     user: {
-      name: 'User',
+      name: userName,
       isFirstTime: true,
     },
     onboarding: {

@@ -15,10 +15,13 @@ import {
   Clock,
   TrendingUp,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import { motion, AnimatePresence } from "framer-motion";
+import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 
 import AgentTabs, { type AgentTabType } from "./AgentTabs";
 import AgentList, { type Agent, type AgentStatus } from "./AgentList";
@@ -131,6 +134,7 @@ export default function MyAgentsDashboard({
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [isLive, setIsLive] = useState(true);
   const [isUpdatingAgent, setIsUpdatingAgent] = useState<string | null>(null);
+  const [showNeptune, setShowNeptune] = useState(false);
 
   // Fetch agents from API
   const {
@@ -239,7 +243,55 @@ export default function MyAgentsDashboard({
               Manage, train, and monitor your AI agents
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <Button
+            variant={showNeptune ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowNeptune(!showNeptune)}
+            className="gap-2"
+          >
+            <Sparkles className="h-4 w-4" />
+            {showNeptune ? "Hide Neptune" : "Ask Neptune"}
+          </Button>
+        </div>
+
+        {/* Stats Bar */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+            <Activity className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+            <span className="font-semibold">{stats.activeAgents}</span>
+            <span className="ml-1 text-emerald-600/70 font-normal">Active</span>
+          </Badge>
+          <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+            <span className="font-semibold">{stats.totalTasks}</span>
+            <span className="ml-1 text-blue-600/70 font-normal">Tasks</span>
+          </Badge>
+          <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+            <Clock className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+            <span className="font-semibold">{stats.totalTimeSaved}h</span>
+            <span className="ml-1 text-purple-600/70 font-normal">Saved</span>
+          </Badge>
+          <Badge className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+            <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
+            <span className="font-semibold">{stats.successRate}%</span>
+            <span className="ml-1 text-amber-600/70 font-normal">Success</span>
+          </Badge>
+        </div>
+
+        {/* Tab Bar with Action Buttons */}
+        <div className="mt-6 relative flex items-center justify-center">
+          <AgentTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            counts={{
+              activity: activities.length,
+              messages: agents.reduce(
+                (acc, a) => acc + (a.unreadMessages || 0),
+                0
+              ),
+            }}
+          />
+          <div className="absolute right-0 flex items-center gap-3">
             <Badge
               className={cn(
                 "px-3 py-1.5 flex items-center gap-2",
@@ -280,58 +332,44 @@ export default function MyAgentsDashboard({
             </Link>
           </div>
         </div>
-
-        {/* Stats Bar */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-          <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
-            <Activity className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
-            <span className="font-semibold">{stats.activeAgents}</span>
-            <span className="ml-1 text-emerald-600/70 font-normal">Active</span>
-          </Badge>
-          <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-            <span className="font-semibold">{stats.totalTasks}</span>
-            <span className="ml-1 text-blue-600/70 font-normal">Tasks</span>
-          </Badge>
-          <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-            <Clock className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
-            <span className="font-semibold">{stats.totalTimeSaved}h</span>
-            <span className="ml-1 text-purple-600/70 font-normal">Saved</span>
-          </Badge>
-          <Badge className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
-            <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
-            <span className="font-semibold">{stats.successRate}%</span>
-            <span className="ml-1 text-amber-600/70 font-normal">Success</span>
-          </Badge>
-        </div>
-
-        {/* Tab Bar */}
-        <div className="mt-6">
-          <AgentTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            counts={{
-              activity: activities.length,
-              messages: agents.reduce(
-                (acc, a) => acc + (a.unreadMessages || 0),
-                0
-              ),
-            }}
-          />
-        </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden p-6 gap-6">
         {activeTab === "laboratory" ? (
-          // Laboratory tab is full width - overflow-visible to show template badges
-          <Card className="flex-1 rounded-2xl shadow-sm border bg-card overflow-visible">
-            <AgentLaboratoryTab />
-          </Card>
+          // Laboratory tab with optional Neptune
+          <>
+            <Card className="flex-1 rounded-2xl shadow-sm border bg-card overflow-visible">
+              <AgentLaboratoryTab />
+            </Card>
+            
+            {/* Neptune Panel for Laboratory */}
+            <AnimatePresence>
+              {showNeptune && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: '28%', opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col"
+                >
+                  <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+                    <NeptuneAssistPanel
+                      conversationId={null}
+                      conversation={null}
+                    />
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
         ) : (
           <>
             {/* Left Panel - Agent List */}
-            <Card className="w-[30%] min-w-[280px] max-w-[360px] flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden">
+            <Card className={cn(
+              "flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden transition-all",
+              showNeptune ? "w-[22%] min-w-[240px]" : "w-[30%] min-w-[280px] max-w-[360px]"
+            )}>
               <AgentList
                 agents={agents}
                 selectedAgentId={selectedAgent?.id || null}
@@ -343,8 +381,11 @@ export default function MyAgentsDashboard({
               />
             </Card>
 
-            {/* Right Panel - Content based on active tab */}
-            <Card className="flex-1 flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden">
+            {/* Center Panel - Content based on active tab */}
+            <Card className={cn(
+              "flex flex-col rounded-2xl shadow-sm border bg-card overflow-hidden transition-all",
+              showNeptune ? "flex-1" : "flex-1"
+            )}>
               {activeTab === "activity" ? (
                 <AgentActivityPanel
                   selectedAgent={selectedAgent}
@@ -364,6 +405,26 @@ export default function MyAgentsDashboard({
                 />
               ) : null}
             </Card>
+
+            {/* Right Panel - Neptune AI (Toggleable) */}
+            <AnimatePresence>
+              {showNeptune && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: '28%', opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col"
+                >
+                  <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+                    <NeptuneAssistPanel
+                      conversationId={null}
+                      conversation={null}
+                    />
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         )}
       </div>

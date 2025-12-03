@@ -34,6 +34,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DashboardV2Data } from '@/types/dashboard-v2';
+import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
 
 interface DashboardV2ClientProps {
   initialData: DashboardV2Data;
@@ -44,6 +45,7 @@ type TabType = 'home' | 'pathways' | 'wins' | 'tools';
 export default function DashboardV2Client({ initialData }: DashboardV2ClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [showNeptune, setShowNeptune] = useState(false);
   const { user, nextStep, wins, stats } = initialData;
   
   const isFirstTime = user.isFirstTime ?? false;
@@ -58,20 +60,34 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
   ];
 
   return (
-    <div className="h-full bg-gray-50/50 overflow-y-auto">
-      {/* Header Section - Matching CRM/Finance */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-4">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {greeting}, {user.name}!
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {isFirstTime 
-              ? "Welcome to GalaxyCo. Let's get you your first win."
-              : "Let's help you get your next win quickly."
-            }
-          </p>
+    <div className="h-full bg-background overflow-y-auto flex">
+      {/* Main Content */}
+      <div className="flex-1">
+        {/* All content in one continuous container */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-4">
+          {/* Header with Ask Neptune button */}
+          <div className="relative">
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-bold tracking-tight">
+                {greeting}, {user.name}!
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {isFirstTime 
+                  ? "Welcome to GalaxyCo. Let's get you your first win."
+                  : "Let's help you get your next win quickly."
+                }
+              </p>
+            </div>
+            <Button
+              variant={showNeptune ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="gap-2 absolute right-0 top-0"
+            >
+              <Sparkles className="h-4 w-4" />
+              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
+            </Button>
+          </div>
 
           {/* Stats Bar - Compact Inline Centered */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
@@ -96,10 +112,9 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
               <span className="ml-1 text-amber-600/70 font-normal">Saved</span>
             </Badge>
           </div>
-        </div>
 
-        {/* Floating Tab Bar */}
-        <div className="flex justify-center overflow-x-auto pb-2 -mb-2">
+          {/* Floating Tab Bar */}
+          <div className="flex justify-center overflow-x-auto">
           <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
             {tabs.map((tab) => (
               <button
@@ -125,25 +140,48 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
             ))}
           </div>
         </div>
+
+          {/* Tab Content */}
+          <div className={`transition-all duration-200 ${showNeptune ? 'mr-[380px]' : ''}`}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="pt-4"
+              >
+                {activeTab === 'home' && (
+                  <HomeTab nextStep={nextStep} isFirstTime={isFirstTime} router={router} />
+                )}
+                {activeTab === 'pathways' && <PathwaysTab />}
+                {activeTab === 'wins' && <WinsTab wins={wins} router={router} />}
+                {activeTab === 'tools' && <ToolsTab />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-          className="max-w-5xl mx-auto px-4 sm:px-6 pb-6"
-        >
-          {activeTab === 'home' && (
-            <HomeTab nextStep={nextStep} isFirstTime={isFirstTime} router={router} />
-          )}
-          {activeTab === 'pathways' && <PathwaysTab />}
-          {activeTab === 'wins' && <WinsTab wins={wins} router={router} />}
-          {activeTab === 'tools' && <ToolsTab />}
-        </motion.div>
+      {/* Neptune Panel - Fixed on right side, aligned with content */}
+      <AnimatePresence>
+        {showNeptune && (
+          <motion.div
+            initial={{ x: 400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="fixed right-4 top-[265px] bottom-4 w-[360px] z-40"
+          >
+            <Card className="flex flex-col h-full rounded-2xl shadow-lg border bg-card overflow-hidden">
+              <NeptuneAssistPanel
+                conversationId={null}
+                conversation={null}
+              />
+            </Card>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
