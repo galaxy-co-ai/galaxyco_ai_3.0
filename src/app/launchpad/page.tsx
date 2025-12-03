@@ -3,10 +3,9 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { blogPosts, blogCategories } from '@/db/schema';
 import { eq, desc, and, gte } from 'drizzle-orm';
-import { Clock, ArrowRight, TrendingUp, Sparkles, BookOpen } from 'lucide-react';
+import { Clock, ArrowRight, TrendingUp, Sparkles, BookOpen, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { NewsletterSignup } from '@/components/launchpad/NewsletterSignup';
 
@@ -243,13 +242,13 @@ function PostCard({ post, isDemo = false }: {
   isDemo?: boolean;
 }) {
   const cardContent = (
-    <Card className={`h-full transition-all group overflow-hidden relative ${
+    <Card className={`h-full transition-all duration-200 group overflow-hidden relative ${
       isDemo 
         ? 'opacity-80 border-dashed' 
-        : 'hover:shadow-lg hover:border-primary/20 cursor-pointer'
+        : 'hover:shadow-soft-hover hover:border-primary/20 cursor-pointer'
     }`}>
       {post.featuredImage ? (
-        <div className="aspect-video overflow-hidden bg-muted">
+        <div className="aspect-[16/10] overflow-hidden bg-muted">
           <img 
             src={post.featuredImage} 
             alt={post.title}
@@ -257,31 +256,30 @@ function PostCard({ post, isDemo = false }: {
           />
         </div>
       ) : (
-        <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-          <BookOpen className="h-8 w-8 text-muted-foreground/30" />
+        <div className="aspect-[16/10] bg-gradient-to-br from-muted/80 to-muted/40 flex items-center justify-center">
+          <BookOpen className="h-8 w-8 text-muted-foreground/25" />
         </div>
       )}
-      <CardHeader className="space-y-2 pb-2">
+      <CardHeader className="space-y-2.5 pb-2">
         {post.categoryName && (
           <Badge 
             variant="secondary" 
             className="w-fit text-xs font-medium"
             style={{ 
-              backgroundColor: post.categoryColor ? `${post.categoryColor}15` : undefined,
+              backgroundColor: post.categoryColor ? `${post.categoryColor}12` : undefined,
               color: post.categoryColor || undefined,
-              borderColor: post.categoryColor ? `${post.categoryColor}30` : undefined,
             }}
           >
             {post.categoryName}
           </Badge>
         )}
-        <CardTitle className={`text-lg leading-tight line-clamp-2 ${!isDemo && 'group-hover:text-primary'} transition-colors`}>
+        <CardTitle className={`text-base leading-snug line-clamp-2 ${!isDemo && 'group-hover:text-primary'} transition-colors`}>
           {post.title}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         {post.excerpt && (
-          <CardDescription className="line-clamp-2 mb-4 text-sm">
+          <CardDescription className="line-clamp-2 mb-4 text-sm leading-relaxed">
             {post.excerpt}
           </CardDescription>
         )}
@@ -289,7 +287,7 @@ function PostCard({ post, isDemo = false }: {
           {post.readingTimeMinutes && (
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              {post.readingTimeMinutes} min read
+              {post.readingTimeMinutes} min
             </span>
           )}
           {post.publishedAt && (
@@ -334,51 +332,77 @@ export default async function LaunchpadHomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="border-b bg-gradient-to-b from-muted/30 to-background">
-        <div className="container py-16 md:py-20">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              AI Made Simple for Business Owners
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-              Practical guidance to help you use AI for real business results — 
-              no technical background required.
-            </p>
+      {/* Hero Section - Compact but Premium */}
+      <section className="relative overflow-hidden border-b">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-purple-500/[0.03]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-100/20 via-transparent to-transparent" />
+        
+        <div className="relative mx-auto max-w-6xl px-6 py-12 md:py-14">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            {/* Left: Text */}
+            <div className="max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">
+                <Zap className="h-3 w-3" />
+                AI for Business Owners
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
+                AI Made Simple
+              </h1>
+              <p className="text-muted-foreground text-base md:text-lg leading-relaxed">
+                Practical guidance to help you use AI for real business results — 
+                no technical background required.
+              </p>
+            </div>
+            
+            {/* Right: Quick Stats or Visual Element */}
+            <div className="flex gap-6 md:gap-8">
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-primary">50+</p>
+                <p className="text-xs text-muted-foreground">Guides</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-primary">10k+</p>
+                <p className="text-xs text-muted-foreground">Readers</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-primary">Free</p>
+                <p className="text-xs text-muted-foreground">Always</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Category Pills */}
-      <section className="border-b bg-background/95 backdrop-blur sticky top-14 z-40">
-        <div className="container py-4">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
-            <Link href="/launchpad">
-              <Button variant="secondary" size="sm" className="rounded-full shrink-0 font-medium">
-                All Topics
-              </Button>
-            </Link>
-            {displayCategories.map((category) => (
-              <Link key={category.id} href={hasContent ? `/launchpad/category/${category.slug}` : '#'}>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="rounded-full shrink-0 hover:bg-muted"
-                >
-                  {category.name}
-                </Button>
+      {/* Sticky Category Navigation */}
+      <section className="sticky top-14 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto max-w-6xl px-6 py-3">
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-muted">
+              <Link href="/launchpad">
+                <button className="px-3.5 py-1.5 text-sm font-medium rounded-md bg-background text-foreground shadow-sm transition-all">
+                  All
+                </button>
               </Link>
-            ))}
+              {displayCategories.slice(0, 5).map((category) => (
+                <Link key={category.id} href={hasContent ? `/launchpad/category/${category.slug}` : '#'}>
+                  <button className="px-3.5 py-1.5 text-sm font-medium rounded-md text-muted-foreground hover:text-foreground hover:bg-background/50 transition-all">
+                    {category.name}
+                  </button>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="container py-10">
+      {/* Main Content */}
+      <div className="mx-auto max-w-6xl px-6 py-10">
         {/* Demo Banner */}
         {!hasContent && (
           <div className="mb-10 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              <Sparkles className="inline h-4 w-4 mr-1" />
+              <Sparkles className="inline h-4 w-4 mr-1.5" />
               <strong>Preview Mode:</strong> This is demo content showing the Launchpad layout. 
               Create your first post in Mission Control to see real content here.
             </p>
@@ -387,7 +411,7 @@ export default async function LaunchpadHomePage() {
 
         {/* Featured Posts */}
         <section className="mb-14">
-          <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center gap-2.5 mb-6">
             <div className="p-1.5 rounded-lg bg-amber-500/10">
               <Sparkles className="h-4 w-4 text-amber-500" />
             </div>
@@ -401,15 +425,15 @@ export default async function LaunchpadHomePage() {
         </section>
 
         {/* Two Column Layout */}
-        <div className="grid gap-10 lg:grid-cols-3 mb-14">
+        <div className="grid gap-10 lg:grid-cols-3">
           {/* Latest Articles - 2 columns */}
           <section className="lg:col-span-2">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold">Latest Articles</h2>
               {hasContent && posts.length > 6 && (
-                <Button variant="ghost" size="sm" className="text-primary">
-                  View all <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
+                <Link href="/launchpad/all" className="text-sm font-medium text-primary hover:text-primary/80 flex items-center gap-1">
+                  View all <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               )}
             </div>
             <div className="grid gap-6 sm:grid-cols-2">
@@ -419,28 +443,28 @@ export default async function LaunchpadHomePage() {
             </div>
           </section>
 
-          {/* Sidebar - 1 column */}
+          {/* Sidebar */}
           <aside className="space-y-8">
             {/* Trending This Week */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2.5 mb-4">
                 <div className="p-1.5 rounded-lg bg-green-500/10">
                   <TrendingUp className="h-4 w-4 text-green-500" />
                 </div>
                 <h3 className="text-lg font-semibold">Trending</h3>
               </div>
-              <Card>
-                <CardContent className="py-3 px-0">
-                  <div className="space-y-1">
+              <Card className="shadow-soft">
+                <CardContent className="py-2 px-0">
+                  <div className="divide-y">
                     {displayTrending.map((post, index) => (
                       <Link 
                         key={post.id} 
                         href={hasContent ? `/launchpad/${post.slug}` : '#'}
-                        className={`flex items-start gap-3 px-4 py-2.5 transition-colors ${
-                          hasContent ? 'hover:bg-muted' : 'cursor-default opacity-75'
+                        className={`flex items-start gap-3 px-4 py-3 transition-colors ${
+                          hasContent ? 'hover:bg-muted/50' : 'cursor-default opacity-75'
                         }`}
                       >
-                        <span className="text-lg font-bold text-muted-foreground/40 w-5 shrink-0 tabular-nums">
+                        <span className="text-base font-bold text-muted-foreground/40 w-5 shrink-0 tabular-nums">
                           {index + 1}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -471,13 +495,13 @@ export default async function LaunchpadHomePage() {
                   <Link 
                     key={category.id} 
                     href={hasContent ? `/launchpad/category/${category.slug}` : '#'}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                      hasContent ? 'hover:bg-muted hover:border-primary/20' : 'opacity-75 cursor-default'
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+                      hasContent ? 'hover:bg-muted/50 hover:border-primary/20 hover:shadow-soft' : 'opacity-75 cursor-default'
                     }`}
                   >
                     <div 
                       className="p-2 rounded-lg"
-                      style={{ backgroundColor: `${category.color}15` }}
+                      style={{ backgroundColor: `${category.color}12` }}
                     >
                       <BookOpen 
                         className="h-4 w-4" 
@@ -498,7 +522,9 @@ export default async function LaunchpadHomePage() {
         </div>
 
         {/* Newsletter CTA */}
-        <NewsletterSignup variant="card" />
+        <div className="mt-14">
+          <NewsletterSignup variant="card" />
+        </div>
       </div>
     </div>
   );
