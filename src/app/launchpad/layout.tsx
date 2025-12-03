@@ -212,7 +212,7 @@ export default function LaunchpadLayout({
                 <Rocket className="h-4 w-4 text-white" />
               </div>
               <span 
-                className="font-bold text-lg text-white tracking-wide"
+                className="font-bold text-xl text-white tracking-wide"
                 style={{ 
                   textShadow: '0 0 20px rgba(129, 140, 248, 0.5), 0 0 40px rgba(129, 140, 248, 0.2)',
                   letterSpacing: '0.05em'
