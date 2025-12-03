@@ -208,11 +208,11 @@ export default function LaunchpadLayout({
           
           {/* Center - Logo & Title */}
             <Link href="/launchpad" className="flex items-center gap-3 group">
-              {/* Crescent Moon with Rocket */}
-              <div className="relative h-10 w-10 flex items-center justify-center">
+              {/* Crescent Moon with Rocket - flipped horizontally */}
+              <div className="relative h-10 w-10 flex items-center justify-center" style={{ transform: 'scaleX(-1)' }}>
                 {/* Gradient moon base */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-md shadow-indigo-500/25 group-hover:shadow-lg group-hover:shadow-indigo-500/30 transition-all duration-300" />
-                {/* Dark cutout to create crescent - flipped horizontally */}
+                {/* Dark cutout to create crescent */}
                 <div 
                   className="absolute rounded-full bg-slate-900"
                   style={{
@@ -346,11 +346,11 @@ export default function LaunchpadLayout({
             {/* Brand Column */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                {/* Crescent Moon with Rocket */}
-                <div className="relative h-10 w-10 flex items-center justify-center">
+                {/* Crescent Moon with Rocket - flipped horizontally */}
+                <div className="relative h-10 w-10 flex items-center justify-center" style={{ transform: 'scaleX(-1)' }}>
                   {/* Gradient moon base */}
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 shadow-lg shadow-indigo-500/30" />
-                  {/* Dark cutout to create crescent - flipped horizontally */}
+                  {/* Dark cutout to create crescent */}
                   <div 
                     className="absolute rounded-full"
                     style={{
