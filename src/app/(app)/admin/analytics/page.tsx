@@ -220,84 +220,38 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
-        <p className="text-muted-foreground">
-          Platform engagement and content performance
-        </p>
-      </div>
-
-      {/* Overview Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Page Views Today</p>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-2xl font-bold">{pageViews.today}</p>
-                  {pageViews.changePercent !== 0 && (
-                    <Badge 
-                      variant={pageViews.changePercent > 0 ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {pageViews.changePercent > 0 ? '+' : ''}{pageViews.changePercent}%
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <Eye className="h-5 w-5 text-blue-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Users</p>
-                <p className="text-2xl font-bold">{userStats.activeToday}</p>
-                <p className="text-xs text-muted-foreground">today</p>
-              </div>
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <Users className="h-5 w-5 text-green-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Completion Rate</p>
-                <p className="text-2xl font-bold">{engagement.completionRate}%</p>
-                <p className="text-xs text-muted-foreground">articles finished</p>
-              </div>
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Activity className="h-5 w-5 text-purple-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Bookmarks</p>
-                <p className="text-2xl font-bold">{engagement.totalBookmarks}</p>
-                <p className="text-xs text-muted-foreground">saved articles</p>
-              </div>
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <BookmarkPlus className="h-5 w-5 text-amber-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Bar - Centered badges */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+          <Eye className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+          <span className="font-semibold">{pageViews.today}</span>
+          <span className="ml-1 text-blue-600/70 font-normal">Views Today</span>
+          {pageViews.changePercent !== 0 && (
+            <span className={`ml-1.5 text-xs ${pageViews.changePercent > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {pageViews.changePercent > 0 ? '+' : ''}{pageViews.changePercent}%
+            </span>
+          )}
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+          <Users className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+          <span className="font-semibold">{userStats.activeToday}</span>
+          <span className="ml-1 text-green-600/70 font-normal">Active Users</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+          <Activity className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+          <span className="font-semibold">{engagement.completionRate}%</span>
+          <span className="ml-1 text-purple-600/70 font-normal">Completion</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+          <BookmarkPlus className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
+          <span className="font-semibold">{engagement.totalBookmarks}</span>
+          <span className="ml-1 text-amber-600/70 font-normal">Bookmarks</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition-colors">
+          <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-cyan-600" />
+          <span className="font-semibold">{pageViews.week}</span>
+          <span className="ml-1 text-cyan-600/70 font-normal">This Week</span>
+        </Badge>
       </div>
 
       {/* Second Row */}
@@ -403,33 +357,6 @@ export default async function AnalyticsPage() {
         </CardContent>
       </Card>
 
-      {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold">{pageViews.week}</p>
-              <p className="text-sm text-muted-foreground">Views this week</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold">{pageViews.month}</p>
-              <p className="text-sm text-muted-foreground">Views this month</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold">{userStats.newMonth}</p>
-              <p className="text-sm text-muted-foreground">New users this month</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

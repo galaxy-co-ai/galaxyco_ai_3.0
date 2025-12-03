@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// Card still used for Posts List section
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { formatDistanceToNow } from 'date-fns';
@@ -133,60 +134,28 @@ export default async function ContentStudioPage() {
         </Link>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <FileText className="h-4 w-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total Posts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <Eye className="h-4 w-4 text-green-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.published}</p>
-                <p className="text-sm text-muted-foreground">Published</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-zinc-500/10">
-                <Clock className="h-4 w-4 text-zinc-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats.drafts}</p>
-                <p className="text-sm text-muted-foreground">Drafts</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Folder className="h-4 w-4 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{categories.length}</p>
-                <p className="text-sm text-muted-foreground">Categories</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Bar - Centered badges */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+          <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+          <span className="font-semibold">{stats.total}</span>
+          <span className="ml-1 text-blue-600/70 font-normal">Total Posts</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+          <Eye className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+          <span className="font-semibold">{stats.published}</span>
+          <span className="ml-1 text-green-600/70 font-normal">Published</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-zinc-50 text-zinc-700 border border-zinc-200 hover:bg-zinc-100 transition-colors">
+          <Clock className="h-3.5 w-3.5 mr-1.5 text-zinc-600" />
+          <span className="font-semibold">{stats.drafts}</span>
+          <span className="ml-1 text-zinc-600/70 font-normal">Drafts</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+          <Folder className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+          <span className="font-semibold">{categories.length}</span>
+          <span className="ml-1 text-purple-600/70 font-normal">Categories</span>
+        </Badge>
       </div>
 
       {/* Filters */}

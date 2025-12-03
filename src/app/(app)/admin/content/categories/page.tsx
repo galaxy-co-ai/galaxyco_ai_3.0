@@ -1,12 +1,7 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
 import { db } from '@/lib/db';
 import { blogCategories, blogPosts } from '@/db/schema';
 import { eq, count } from 'drizzle-orm';
-import { ArrowLeft, Plus, Folder, GripVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { CategoriesClient } from '@/components/admin/CategoriesClient';
 
 export const metadata: Metadata = {
@@ -57,25 +52,7 @@ export default async function CategoriesPage() {
   const categories = await getCategories();
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/content">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Categories</h1>
-            <p className="text-muted-foreground">
-              Organize your Launchpad content into categories
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Categories List */}
+    <div className="p-6 h-full">
       <CategoriesClient initialCategories={categories} />
     </div>
   );

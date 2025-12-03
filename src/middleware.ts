@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
  * Keep in sync with SYSTEM_ADMIN_EMAILS in src/lib/auth.ts
  */
 const SYSTEM_ADMIN_EMAILS: string[] = [
-  // Add admin emails here
+  'dev@galaxyco.ai',
 ];
 
 /**
@@ -58,13 +58,18 @@ function checkIsSystemAdmin(
   sessionClaims: { publicMetadata?: { isSystemAdmin?: boolean } } | null,
   userEmail: string | undefined
 ): boolean {
+  // Development bypass - REMOVE FOR PRODUCTION
+  if (process.env.NODE_ENV === 'development' && process.env.ALLOW_ADMIN_BYPASS === 'true') {
+    return true;
+  }
+  
   // Check Clerk metadata
   if (sessionClaims?.publicMetadata?.isSystemAdmin === true) {
     return true;
   }
   
-  // Check email whitelist
-  if (userEmail && SYSTEM_ADMIN_EMAILS.includes(userEmail)) {
+  // Check email whitelist (case-insensitive)
+  if (userEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === userEmail.toLowerCase())) {
     return true;
   }
   
@@ -88,11 +93,14 @@ export default clerkMiddleware(async (auth, request) => {
     }
     
     // Must be system admin
-    const userEmail = (sessionClaims as { email?: string })?.email;
-    const isAdmin = checkIsSystemAdmin(
-      sessionClaims as { publicMetadata?: { isSystemAdmin?: boolean } } | null,
-      userEmail
-    );
+    // Clerk stores email in different places depending on configuration
+    const claims = sessionClaims as { 
+      email?: string; 
+      primaryEmail?: string;
+      publicMetadata?: { isSystemAdmin?: boolean };
+    } | null;
+    const userEmail = claims?.email || claims?.primaryEmail;
+    const isAdmin = checkIsSystemAdmin(claims, userEmail);
     
     if (!isAdmin) {
       // Redirect non-admins to dashboard (no error shown - route just doesn't exist for them)

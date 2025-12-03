@@ -13,8 +13,7 @@ import { logger } from '@/lib/logger';
  * 2. Or set publicMetadata.isSystemAdmin = true in Clerk Dashboard
  */
 const SYSTEM_ADMIN_EMAILS: string[] = [
-  // Add admin emails here, e.g.:
-  // 'admin@galaxyco.ai',
+  'dev@galaxyco.ai',
 ];
 
 /**
@@ -49,12 +48,12 @@ export async function isSystemAdmin(): Promise<boolean> {
       return true;
     }
     
-    // Check email whitelist as fallback
+    // Check email whitelist as fallback (case-insensitive)
     const primaryEmail = user.emailAddresses.find(
       e => e.id === user.primaryEmailAddressId
-    )?.emailAddress;
+    )?.emailAddress?.toLowerCase();
     
-    if (primaryEmail && SYSTEM_ADMIN_EMAILS.includes(primaryEmail)) {
+    if (primaryEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === primaryEmail)) {
       return true;
     }
     

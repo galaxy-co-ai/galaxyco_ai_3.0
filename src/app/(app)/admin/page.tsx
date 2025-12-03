@@ -14,10 +14,7 @@ import {
   MessageSquareWarning, 
   Users, 
   TrendingUp,
-  Eye,
-  BookmarkPlus,
   Mail,
-  Activity
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -115,90 +112,33 @@ export default async function AdminDashboard() {
   const stats = await getAdminStats();
   const recentFeedback = await getRecentFeedback();
 
-  const statCards = [
-    {
-      title: 'Launchpad Posts',
-      value: stats.posts.total,
-      description: `${stats.posts.published} published, ${stats.posts.drafts} drafts`,
-      icon: FileText,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
-    },
-    {
-      title: 'Platform Feedback',
-      value: stats.feedback.total,
-      description: `${stats.feedback.new} new this week`,
-      icon: MessageSquareWarning,
-      color: 'text-amber-500',
-      bgColor: 'bg-amber-500/10',
-      badge: stats.feedback.new > 0 ? `${stats.feedback.new} new` : undefined,
-    },
-    {
-      title: 'Total Users',
-      value: stats.users.total,
-      description: `${stats.users.recent} joined this month`,
-      icon: Users,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/10',
-    },
-    {
-      title: 'Newsletter Subscribers',
-      value: stats.subscribers,
-      description: 'Active subscribers',
-      icon: Mail,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
-    },
-  ];
-
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
-          </h1>
-          <p className="text-muted-foreground">
-            Here&apos;s what&apos;s happening with your platform today.
-          </p>
-        </div>
-        <Badge variant="outline" className="text-xs">
-          <Activity className="h-3 w-3 mr-1" />
-          System Healthy
+      {/* Stats Bar - Centered badges like Conversations page */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+          <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+          <span className="font-semibold">{stats.posts.total}</span>
+          <span className="ml-1 text-blue-600/70 font-normal">Posts</span>
         </Badge>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-baseline gap-2">
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  {stat.badge && (
-                    <Badge variant="secondary" className="text-xs">
-                      {stat.badge}
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
+        <Badge className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+          <MessageSquareWarning className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
+          <span className="font-semibold">{stats.feedback.total}</span>
+          <span className="ml-1 text-amber-600/70 font-normal">Feedback</span>
+          {stats.feedback.new > 0 && (
+            <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-amber-500 text-white rounded-full">{stats.feedback.new}</span>
+          )}
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+          <Users className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+          <span className="font-semibold">{stats.users.total}</span>
+          <span className="ml-1 text-green-600/70 font-normal">Users</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+          <Mail className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+          <span className="font-semibold">{stats.subscribers}</span>
+          <span className="ml-1 text-purple-600/70 font-normal">Subscribers</span>
+        </Badge>
       </div>
 
       {/* Quick Actions & Recent Activity */}

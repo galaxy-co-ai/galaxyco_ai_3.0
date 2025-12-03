@@ -162,78 +162,47 @@ export default async function FeedbackHubPage() {
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Feedback</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <MessageSquareWarning className="h-5 w-5 text-blue-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Needs Attention</p>
-                <p className="text-2xl font-bold">{stats.new}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Bug Reports</p>
-                <p className="text-2xl font-bold">{stats.bugs}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-red-500/10">
-                <Bug className="h-5 w-5 text-red-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Weekly Sentiment</p>
-                <p className="text-2xl font-bold flex items-center gap-2">
-                  {sentimentScore > 0 ? '+' : ''}{sentimentScore}
-                  {sentimentScore > 0 ? (
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                  ) : sentimentScore < 0 ? (
-                    <TrendingDown className="h-4 w-4 text-red-500" />
-                  ) : (
-                    <Minus className="h-4 w-4 text-zinc-400" />
-                  )}
-                </p>
-              </div>
-              <div className={`p-2 rounded-lg ${
-                sentimentScore > 0 ? 'bg-green-500/10' : 
-                sentimentScore < 0 ? 'bg-red-500/10' : 'bg-zinc-500/10'
-              }`}>
-                <TrendingUp className={`h-5 w-5 ${
-                  sentimentScore > 0 ? 'text-green-500' : 
-                  sentimentScore < 0 ? 'text-red-500' : 'text-zinc-400'
-                }`} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Bar - Centered badges */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+          <MessageSquareWarning className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+          <span className="font-semibold">{stats.total}</span>
+          <span className="ml-1 text-blue-600/70 font-normal">Total</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+          <AlertCircle className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
+          <span className="font-semibold">{stats.new}</span>
+          <span className="ml-1 text-amber-600/70 font-normal">New</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors">
+          <Bug className="h-3.5 w-3.5 mr-1.5 text-red-600" />
+          <span className="font-semibold">{stats.bugs}</span>
+          <span className="ml-1 text-red-600/70 font-normal">Bugs</span>
+        </Badge>
+        <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+          <Lightbulb className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+          <span className="font-semibold">{stats.suggestions}</span>
+          <span className="ml-1 text-purple-600/70 font-normal">Suggestions</span>
+        </Badge>
+        <Badge className={`px-3 py-1.5 border transition-colors ${
+          sentimentScore > 0 
+            ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
+            : sentimentScore < 0 
+            ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+            : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
+        }`}>
+          {sentimentScore > 0 ? (
+            <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+          ) : sentimentScore < 0 ? (
+            <TrendingDown className="h-3.5 w-3.5 mr-1.5 text-red-600" />
+          ) : (
+            <Minus className="h-3.5 w-3.5 mr-1.5 text-zinc-600" />
+          )}
+          <span className="font-semibold">{sentimentScore > 0 ? '+' : ''}{sentimentScore}</span>
+          <span className={`ml-1 font-normal ${
+            sentimentScore > 0 ? 'text-green-600/70' : sentimentScore < 0 ? 'text-red-600/70' : 'text-zinc-600/70'
+          }`}>Sentiment</span>
+        </Badge>
       </div>
 
       {/* Feedback List */}
