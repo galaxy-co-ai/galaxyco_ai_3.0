@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { blogPosts, blogCategories } from '@/db/schema';
+import { logger } from '@/lib/logger';
 import { eq, desc, and, like, or } from 'drizzle-orm';
 
 /**
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Failed to fetch launchpad posts:', error);
+    logger.error('Failed to fetch launchpad posts', error);
     return NextResponse.json(
       { error: 'Failed to fetch posts' },
       { status: 500 }

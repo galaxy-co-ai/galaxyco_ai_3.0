@@ -23,6 +23,7 @@ import {
   FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import type {
   FinanceOverviewResponse,
   FinanceModulesResponse,
@@ -728,8 +729,8 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
         documentType={docCreatorType}
         onSave={async (document, asDraft) => {
           // TODO: Save document to Library and sync with external software
-          console.log("Saving document:", { document, asDraft });
-          // After saving, could refresh relevant data
+          // After saving, refresh relevant data
+          toast.success(asDraft ? "Draft saved" : "Document saved");
         }}
       />
     </main>

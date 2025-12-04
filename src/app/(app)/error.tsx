@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { logger } from "@/lib/logger";
 
 export default function AppError({
   error,
@@ -13,8 +14,8 @@ export default function AppError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error("App error:", error);
+    // Log the error to error reporting service
+    logger.error("App error", error);
   }, [error]);
 
   return (

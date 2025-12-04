@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow, format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import MessageComposer from "./MessageComposer";
 import { Loader2 } from "lucide-react";
 
@@ -47,7 +48,7 @@ export default function ConversationThread({
           setMessages(data.messages || []);
         }
       } catch (error) {
-        console.error("Failed to fetch messages:", error);
+        logger.error("Failed to fetch messages", error);
       } finally {
         setIsLoading(false);
       }

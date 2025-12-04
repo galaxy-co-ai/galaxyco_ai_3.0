@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { logger } from '@/lib/logger';
 
 interface TrackEventOptions {
   eventType: string;
@@ -56,7 +57,7 @@ export function useAnalytics(options?: { trackPageViews?: boolean }) {
       });
     } catch (error) {
       // Silently fail - analytics should not break the app
-      console.debug('Analytics tracking failed:', error);
+      logger.debug('Analytics tracking failed', { error });
     }
   }, [pathname]);
 

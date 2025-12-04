@@ -6,6 +6,7 @@ import { Bookmark, BookmarkCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface BookmarkButtonProps {
   postId: string;
@@ -39,7 +40,7 @@ export function BookmarkButton({
           setIsBookmarked(isBookmarkedPost);
         }
       } catch (error) {
-        console.debug('Failed to check bookmark status:', error);
+        logger.debug('Failed to check bookmark status', { error });
       }
     };
 

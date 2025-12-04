@@ -1,4 +1,6 @@
-import { Rocket, Sparkles, Bell } from "lucide-react";
+import { Rocket, Sparkles } from "lucide-react";
+import { NotifyMeForm } from "@/components/lunar-labs/NotifyMeForm";
+import { LunarLabsStars } from "./stars";
 
 export const metadata = {
   title: "Lunar Labs | Coming Soon",
@@ -10,21 +12,8 @@ export default function LunarLabsPage() {
     <div className="relative min-h-[calc(100vh-4rem)] flex items-center justify-center overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950">
-        {/* Stars */}
-        <div className="absolute inset-0 opacity-40">
-          {[...Array(50)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${2 + Math.random() * 2}s`,
-              }}
-            />
-          ))}
-        </div>
+        {/* Stars - client component for random positioning */}
+        <LunarLabsStars />
         {/* Gradient orbs */}
         <div className="absolute top-1/4 -left-32 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
@@ -67,13 +56,7 @@ export default function LunarLabsPage() {
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button 
-            className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-            aria-label="Get notified when Lunar Labs launches"
-          >
-            <Bell className="w-4 h-4" />
-            <span>Notify Me</span>
-          </button>
+          <NotifyMeForm />
           <p className="text-sm text-slate-500">
             Be the first to know when we launch
           </p>

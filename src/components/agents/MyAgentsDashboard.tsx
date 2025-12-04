@@ -292,22 +292,6 @@ export default function MyAgentsDashboard({
             }}
           />
           <div className="absolute right-0 flex items-center gap-3">
-            <Badge
-              className={cn(
-                "px-3 py-1.5 flex items-center gap-2",
-                isLive
-                  ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                  : "bg-gray-100 text-gray-600 border-gray-200"
-              )}
-            >
-              {isLive && (
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
-                </span>
-              )}
-              {isLive ? "LIVE" : "Paused"}
-            </Badge>
             <Button
               variant="outline"
               size="sm"

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { users, workspaceMembers } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
@@ -25,6 +25,7 @@ const updateProfileSchema = z.object({
 export async function GET() {
   try {
     const user = await getCurrentUser();
+    const { workspaceId } = await getCurrentWorkspace();
     
     // Get user's database record
     const userRecord = await db.query.users.findFirst({
@@ -35,6 +36,14 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Get user's role in current workspace
+    const membership = await db.query.workspaceMembers.findFirst({
+      where: and(
+        eq(workspaceMembers.workspaceId, workspaceId),
+        eq(workspaceMembers.userId, userRecord.id)
+      ),
+    });
+
     return NextResponse.json({
       id: userRecord.id,
       email: userRecord.email,
@@ -43,6 +52,7 @@ export async function GET() {
       avatarUrl: userRecord.avatarUrl,
       timezone: (userRecord.preferences as { timezone?: string } | null)?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
       preferences: userRecord.preferences,
+      role: membership?.role || 'member',
       createdAt: userRecord.createdAt,
       updatedAt: userRecord.updatedAt,
     });

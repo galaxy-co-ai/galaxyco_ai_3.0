@@ -332,8 +332,7 @@ export const EstimateForm = React.forwardRef<EstimateFormRef, EstimateFormProps>
           items={lineItems}
           onChange={setLineItems}
           onAIFill={() => {
-            // This will be connected to Neptune
-            console.log("AI Fill requested");
+            // TODO: Connect to Neptune for AI-assisted line item generation
           }}
         />
 

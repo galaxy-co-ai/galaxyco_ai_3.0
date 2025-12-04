@@ -23,6 +23,10 @@ import {
   Clock,
   Phone,
   Headphones,
+  CreditCard,
+  ShoppingCart,
+  Receipt,
+  DollarSign,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -139,6 +143,39 @@ const INTEGRATIONS: Integration[] = [
     features: ["Automation", "Contacts", "Analytics"],
     popularity: "medium",
   },
+  {
+    id: "quickbooks",
+    name: "QuickBooks",
+    description: "Sync invoices, expenses, and financial data for unified reporting in Finance HQ.",
+    icon: Receipt,
+    iconColor: "text-green-600",
+    iconBg: "bg-green-50",
+    category: "Finance",
+    features: ["Invoices", "Expenses", "Reports"],
+    popularity: "high",
+  },
+  {
+    id: "stripe",
+    name: "Stripe",
+    description: "Track payments, subscriptions, and revenue data directly in your dashboard.",
+    icon: CreditCard,
+    iconColor: "text-violet-600",
+    iconBg: "bg-violet-50",
+    category: "Finance",
+    features: ["Payments", "Subscriptions", "Payouts"],
+    popularity: "high",
+  },
+  {
+    id: "shopify",
+    name: "Shopify",
+    description: "Import orders, products, and e-commerce analytics for complete business visibility.",
+    icon: ShoppingCart,
+    iconColor: "text-lime-600",
+    iconBg: "bg-lime-50",
+    category: "Finance",
+    features: ["Orders", "Products", "Analytics"],
+    popularity: "medium",
+  },
 ];
 
 interface Category {
@@ -150,8 +187,9 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { id: "all", name: "All Integrations", icon: Plug, count: 8, color: "text-indigo-600" },
+  { id: "all", name: "All Integrations", icon: Plug, count: 11, color: "text-indigo-600" },
   { id: "Communication", name: "Communication", icon: MessageSquare, count: 4, color: "text-purple-600" },
+  { id: "Finance", name: "Finance", icon: DollarSign, count: 3, color: "text-green-600" },
   { id: "Productivity", name: "Productivity", icon: Zap, count: 1, color: "text-blue-600" },
   { id: "Sales", name: "Sales", icon: Users, count: 1, color: "text-emerald-600" },
   { id: "Marketing", name: "Marketing", icon: Globe, count: 1, color: "text-orange-600" },
@@ -171,7 +209,7 @@ export function GalaxyIntegrations() {
   });
 
   // Map integration IDs to provider names
-  const providerMap: Record<string, 'google' | 'microsoft' | 'slack' | 'twilio'> = {
+  const providerMap: Record<string, 'google' | 'microsoft' | 'slack' | 'twilio' | 'quickbooks' | 'shopify' | 'stripe'> = {
     'gmail': 'google',
     'calendar': 'google',
     'slack': 'slack',
@@ -180,6 +218,9 @@ export function GalaxyIntegrations() {
     'hubspot': 'microsoft',
     'twilio': 'twilio',
     'twilio-flex': 'twilio',
+    'quickbooks': 'quickbooks',
+    'shopify': 'shopify',
+    'stripe': 'stripe',
   };
 
   // Get connected IDs from API status
@@ -205,6 +246,13 @@ export function GalaxyIntegrations() {
         connected.add('twilio-flex');
       }
     }
+
+    // Check Finance integrations
+    if (statusData.finance) {
+      if (statusData.finance.quickbooks) connected.add('quickbooks');
+      if (statusData.finance.stripe) connected.add('stripe');
+      if (statusData.finance.shopify) connected.add('shopify');
+    }
     
     return connected;
   }, [statusData]);
@@ -216,14 +264,26 @@ export function GalaxyIntegrations() {
       return;
     }
 
+    // Stripe uses API key, not OAuth
+    if (id === 'stripe') {
+      toast.info('Stripe is configured via API key. Add STRIPE_SECRET_KEY to your environment variables.');
+      return;
+    }
+
     const provider = providerMap[id];
-    if (!provider || provider === 'twilio') {
+    if (!provider || provider === 'twilio' || provider === 'stripe') {
       toast.error('Provider not configured');
       return;
     }
 
     setConnectingId(id);
     try {
+      // QuickBooks and Shopify use OAuth
+      if (provider === 'quickbooks' || provider === 'shopify') {
+        // Redirect to OAuth flow
+        window.location.href = `/api/auth/oauth/${provider}/authorize`;
+        return;
+      }
       await connect(provider as 'google' | 'microsoft');
     } catch (error) {
       logger.error('Connect error', error);
@@ -409,7 +469,7 @@ export function GalaxyIntegrations() {
                             <div className="flex items-center gap-2">
                               <h3 className="text-sm font-medium text-gray-900">{integration.name}</h3>
                               {isConnected && (
-                                <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
                               )}
                             </div>
                             <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{integration.description}</p>
@@ -424,7 +484,7 @@ export function GalaxyIntegrations() {
                             </div>
                           </div>
                           <ChevronRight className={cn(
-                            "h-4 w-4 text-gray-300 transition-transform flex-shrink-0",
+                            "h-4 w-4 text-gray-300 transition-transform shrink-0",
                             isSelected && "rotate-90 text-indigo-500"
                           )} />
                         </div>
@@ -475,6 +535,64 @@ export function GalaxyIntegrations() {
                                         <MessageSquare className="h-3.5 w-3.5" />
                                       </Button>
                                     </>
+                                  ) : integration.id === 'quickbooks' ? (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 h-8 text-xs"
+                                        onClick={() => handleDisconnect(integration.id)}
+                                      >
+                                        Disconnect
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                        onClick={() => window.location.href = '/finance'}
+                                      >
+                                        <Receipt className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </>
+                                  ) : integration.id === 'stripe' ? (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 h-8 text-xs"
+                                        onClick={() => window.open('https://dashboard.stripe.com', '_blank')}
+                                      >
+                                        <ExternalLink className="h-3 w-3 mr-1.5" />
+                                        Stripe Dashboard
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                        onClick={() => window.location.href = '/finance'}
+                                      >
+                                        <CreditCard className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </>
+                                  ) : integration.id === 'shopify' ? (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex-1 h-8 text-xs"
+                                        onClick={() => handleDisconnect(integration.id)}
+                                      >
+                                        Disconnect
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 w-8 p-0"
+                                        onClick={() => window.location.href = '/finance'}
+                                      >
+                                        <ShoppingCart className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </>
                                   ) : (
                                     <>
                                       <Button
@@ -511,6 +629,39 @@ export function GalaxyIntegrations() {
                                   >
                                     <ExternalLink className="h-3 w-3 mr-1.5" />
                                     Setup in Twilio
+                                  </Button>
+                                ) : integration.id === 'stripe' ? (
+                                  <Button
+                                    size="sm"
+                                    className="flex-1 h-8 text-xs bg-violet-600 hover:bg-violet-700 text-white"
+                                    onClick={() => window.open('https://dashboard.stripe.com/apikeys', '_blank')}
+                                  >
+                                    <ExternalLink className="h-3 w-3 mr-1.5" />
+                                    Get API Key
+                                  </Button>
+                                ) : (integration.id === 'quickbooks' || integration.id === 'shopify') ? (
+                                  <Button
+                                    size="sm"
+                                    className={cn(
+                                      "flex-1 h-8 text-xs text-white",
+                                      integration.id === 'quickbooks' 
+                                        ? "bg-green-600 hover:bg-green-700" 
+                                        : "bg-lime-600 hover:bg-lime-700"
+                                    )}
+                                    onClick={() => handleConnect(integration.id)}
+                                    disabled={isLoading}
+                                  >
+                                    {isLoading ? (
+                                      <>
+                                        <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                                        Connecting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Plus className="h-3 w-3 mr-1.5" />
+                                        Connect with OAuth
+                                      </>
+                                    )}
                                   </Button>
                                 ) : (
                                   <Button

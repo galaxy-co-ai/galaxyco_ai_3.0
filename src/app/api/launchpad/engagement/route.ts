@@ -7,6 +7,7 @@ import {
   blogReactions,
   blogPosts 
 } from '@/db/schema';
+import { logger } from '@/lib/logger';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
   } catch (error) {
-    console.error('Failed to get engagement data:', error);
+    logger.error('Failed to get engagement data', error);
     return NextResponse.json(
       { error: 'Failed to get engagement data' },
       { status: 500 }
@@ -241,7 +242,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Failed to update engagement:', error);
+    logger.error('Failed to update engagement', error);
     return NextResponse.json(
       { error: 'Failed to update engagement' },
       { status: 500 }
@@ -276,7 +277,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete bookmark:', error);
+    logger.error('Failed to delete bookmark', error);
     return NextResponse.json(
       { error: 'Failed to delete bookmark' },
       { status: 500 }

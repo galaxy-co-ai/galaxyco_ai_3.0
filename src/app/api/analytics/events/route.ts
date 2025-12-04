@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { analyticsEvents } from '@/db/schema';
+import { logger } from '@/lib/logger';
 import { z } from 'zod';
 
 // Validation schema for analytics events
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
       count: insertedEvents.length,
     });
   } catch (error) {
-    console.error('Failed to track analytics event:', error);
+    logger.error('Failed to track analytics event', error);
     return NextResponse.json(
       { error: 'Failed to track event' },
       { status: 500 }

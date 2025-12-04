@@ -6,6 +6,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import { NeptuneDocumentSidebar } from "./NeptuneDocumentSidebar";
 import { EstimateForm } from "./forms/EstimateForm";
 import { InvoiceForm } from "./forms/InvoiceForm";
@@ -119,7 +120,7 @@ export function DocumentCreatorDialog({
       await onSave(currentData, asDraft);
       onOpenChange(false);
     } catch (error) {
-      console.error("Failed to save document:", error);
+      logger.error("Failed to save document", error);
     } finally {
       setIsSaving(false);
     }
@@ -169,7 +170,7 @@ export function DocumentCreatorDialog({
         setFormData(prev => ({ ...prev, ...data.formUpdates }));
       }
     } catch (error) {
-      console.error("Neptune error:", error);
+      logger.error("Neptune error", error);
       setChatMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: "assistant",

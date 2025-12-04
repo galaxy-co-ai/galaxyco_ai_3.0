@@ -5,6 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
+import {
   ArrowRight,
   Sparkles,
   Bot,
@@ -13,6 +20,7 @@ import {
   BarChart3,
   FileSearch,
   Play,
+  X,
 } from "lucide-react";
 
 interface HeroSectionProps {
@@ -83,6 +91,7 @@ const particles = [
 export function HeroSection({ onEnterApp }: HeroSectionProps) {
   const [currentFeature, setCurrentFeature] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [showDemoModal, setShowDemoModal] = useState(false);
 
   // Auto-advance features
   useEffect(() => {
@@ -213,6 +222,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
               <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
             </button>
             <button
+              onClick={() => setShowDemoModal(true)}
               className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white/10 text-white/90 border border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-sm group"
               aria-label="Watch a demo video of the platform"
             >
@@ -402,6 +412,43 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
 
       {/* Bottom fade for smooth transition */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+
+      {/* Demo Video Modal */}
+      <Dialog open={showDemoModal} onOpenChange={setShowDemoModal}>
+        <DialogContent className="sm:max-w-3xl bg-slate-900 border-slate-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+              <Play className="h-5 w-5 text-violet-400" />
+              Platform Demo
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              See how GalaxyCo.ai can transform your business operations
+            </DialogDescription>
+          </DialogHeader>
+          <div className="relative aspect-video bg-slate-800 rounded-lg overflow-hidden flex items-center justify-center">
+            {/* Placeholder for demo video - replace with actual video embed */}
+            <div className="text-center p-8">
+              <div className="w-20 h-20 rounded-full bg-violet-500/20 flex items-center justify-center mx-auto mb-4">
+                <Play className="h-10 w-10 text-violet-400" />
+              </div>
+              <h3 className="text-lg font-medium text-white mb-2">Demo Video Coming Soon</h3>
+              <p className="text-slate-400 text-sm max-w-md">
+                We&apos;re putting the finishing touches on our demo video. 
+                In the meantime, click &quot;Start Free Trial&quot; to explore the platform yourself!
+              </p>
+              <button
+                onClick={() => {
+                  setShowDemoModal(false);
+                  onEnterApp();
+                }}
+                className="mt-6 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-colors"
+              >
+                Try It Now
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

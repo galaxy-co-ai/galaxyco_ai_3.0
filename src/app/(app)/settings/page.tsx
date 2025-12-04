@@ -113,7 +113,7 @@ export default function SettingsPage() {
       email,
       phone,
       avatar,
-      role: "Owner", // TODO: Get from workspace membership
+      role: profileData?.role || "member",
       timezone: profileData?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
   }, [user, profileData]);

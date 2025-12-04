@@ -296,7 +296,7 @@ export const InvoiceForm = React.forwardRef<InvoiceFormRef, InvoiceFormProps>(
         <LineItemsEditor
           items={lineItems}
           onChange={setLineItems}
-          onAIFill={() => console.log("AI Fill requested")}
+          onAIFill={() => { /* TODO: Connect to Neptune */ }}
         />
 
         {/* Tax & Totals */}

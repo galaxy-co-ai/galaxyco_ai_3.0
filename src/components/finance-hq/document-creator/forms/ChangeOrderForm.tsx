@@ -217,7 +217,7 @@ export const ChangeOrderForm = React.forwardRef<ChangeOrderFormRef, ChangeOrderF
           <LineItemsEditor
             items={lineItems}
             onChange={setLineItems}
-            onAIFill={() => console.log("AI Fill requested")}
+            onAIFill={() => { /* TODO: Connect to Neptune */ }}
           />
         </div>
 

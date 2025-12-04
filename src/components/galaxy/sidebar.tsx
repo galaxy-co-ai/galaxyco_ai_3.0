@@ -114,7 +114,7 @@ export function Sidebar({ className, user }: SidebarProps) {
             <Rocket className="h-4.5 w-4.5 text-white" />
           </div>
           {!isCollapsed && (
-            <h2 className="text-base font-semibold text-sidebar-foreground">GalaxyCo.ai</h2>
+            <h2 className="text-sm font-bold tracking-[0.25em] text-sidebar-foreground uppercase">Galaxy</h2>
           )}
         </Link>
         <Button

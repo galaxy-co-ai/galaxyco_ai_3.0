@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 interface ReadingProgressBarProps {
   postId: string;
@@ -29,7 +30,7 @@ export function ReadingProgressBar({ postId, className }: ReadingProgressBarProp
       });
     } catch (error) {
       // Silently fail - progress tracking is non-critical
-      console.debug('Failed to save reading progress:', error);
+      logger.debug('Failed to save reading progress', { error });
     }
   }, [postId, isSignedIn]);
 
