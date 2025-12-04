@@ -13,6 +13,7 @@ import {
   Clock,
   Users,
   Zap,
+  MessagesSquare,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConversationList from "./ConversationList";
@@ -24,7 +25,7 @@ import TeamChat from "./TeamChat";
 
 export interface Conversation {
   id: string;
-  channel: 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat';
+  channel: 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat' | 'text' | 'support';
   status: 'active' | 'archived' | 'closed' | 'spam';
   subject: string;
   snippet: string;
@@ -74,7 +75,7 @@ export default function ConversationsDashboard({
 }: ConversationsDashboardProps) {
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [activeChannel, setActiveChannel] = useState<ChannelType>('all');
+  const [activeChannel, setActiveChannel] = useState<ChannelType>('team');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNeptune, setShowNeptune] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -84,8 +85,16 @@ export default function ConversationsDashboard({
     let filtered = conversations;
 
     // Filter by channel
-    if (activeChannel !== 'all') {
-      filtered = filtered.filter(conv => conv.channel === activeChannel);
+    if (activeChannel !== 'team') {
+      if (activeChannel === 'text') {
+        // Combine SMS and WhatsApp into "Text"
+        filtered = filtered.filter(conv => conv.channel === 'sms' || conv.channel === 'whatsapp');
+      } else if (activeChannel === 'support') {
+        // Map "Support" to live_chat
+        filtered = filtered.filter(conv => conv.channel === 'live_chat');
+      } else {
+        filtered = filtered.filter(conv => conv.channel === activeChannel);
+      }
     }
 
     // Filter by status
@@ -118,27 +127,39 @@ export default function ConversationsDashboard({
     <div className="flex h-full flex-col bg-background">
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Conversations</h1>
-              <p className="text-muted-foreground text-base mt-1">
-                Manage all your communications in one place
-              </p>
-            </div>
-            <Button
-              variant={showNeptune ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowNeptune(!showNeptune)}
-              className="gap-2 shrink-0"
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-3">
+            <MessagesSquare 
+              className="w-7 h-7"
+              style={{
+                stroke: 'url(#icon-gradient-conv)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-conv" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 
+              className="text-2xl uppercase"
+              style={{ 
+                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+                fontWeight: 700,
+                letterSpacing: '0.25em',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
+              }}
             >
-              <Sparkles className="h-4 w-4" />
-              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
-            </Button>
+              Conversations
+            </h1>
           </div>
 
-          {/* Stats Bar - Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Stats Bar */}
+          <div className="flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
               <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
               <span className="font-semibold">{stats.totalConversations}</span>
@@ -149,11 +170,6 @@ export default function ConversationsDashboard({
               <span className="font-semibold">{stats.unreadMessages}</span>
               <span className="ml-1 text-orange-600/70 font-normal">Unread</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-              <Clock className="h-3.5 w-3.5 mr-1.5 text-green-600" />
-              <span className="font-semibold">{stats.avgResponseTime > 0 ? `${stats.avgResponseTime}m` : "—"}</span>
-              <span className="ml-1 text-green-600/70 font-normal">Avg Response</span>
-            </Badge>
             <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
               <Users className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
               <span className="font-semibold">{stats.activeChannels}</span>
@@ -162,22 +178,30 @@ export default function ConversationsDashboard({
           </div>
         </div>
 
-        {/* Floating Tab Bar - Matching CRM Dashboard */}
-        <div className="mt-6">
+        {/* Tab Bar with Ask Neptune Button */}
+        <div className="mt-14 relative flex items-center justify-center">
           <ChannelTabs
             activeChannel={activeChannel}
             onChannelChange={setActiveChannel}
             counts={{
-              all: conversations.length,
               team: 0, // Team chat has its own UI
               email: conversations.filter(c => c.channel === 'email').length,
-              sms: conversations.filter(c => c.channel === 'sms').length,
+              text: conversations.filter(c => c.channel === 'sms' || c.channel === 'whatsapp').length,
               call: conversations.filter(c => c.channel === 'call').length,
-              whatsapp: conversations.filter(c => c.channel === 'whatsapp').length,
               social: conversations.filter(c => c.channel === 'social').length,
-              live_chat: conversations.filter(c => c.channel === 'live_chat').length,
+              support: conversations.filter(c => c.channel === 'live_chat').length,
             }}
           />
+          <div className="absolute right-0">
+            <Button
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Neptune
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -201,7 +225,7 @@ export default function ConversationsDashboard({
                 transition={{ duration: 0.2 }}
                 className="flex flex-col relative z-40"
               >
-                <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+                <Card className="flex flex-col h-full rounded-l-2xl shadow-sm border border-r-0 bg-card overflow-hidden">
                   <NeptuneAssistPanel
                     conversationId={null}
                     conversation={null}
@@ -290,7 +314,7 @@ export default function ConversationsDashboard({
                 transition={{ duration: 0.2 }}
                 className="flex flex-col relative z-40"
               >
-                <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+                <Card className="flex flex-col h-full rounded-l-2xl shadow-sm border border-r-0 bg-card overflow-hidden">
                   <NeptuneAssistPanel
                     conversationId={selectedConversation}
                     conversation={selectedConv}

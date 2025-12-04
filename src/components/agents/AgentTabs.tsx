@@ -61,7 +61,7 @@ export default function AgentTabs({
             <button
               key={tab.value}
               onClick={() => onTabChange(tab.value)}
-              className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+              className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                 isActive
                   ? `${tab.activeColor} shadow-sm`
                   : "text-gray-600 hover:bg-gray-100"
@@ -78,7 +78,7 @@ export default function AgentTabs({
                     isActive
                       ? "bg-white/90 text-gray-700"
                       : tab.badgeColor + " text-white"
-                  } text-xs px-1.5 py-0 h-5 min-w-[20px]`}
+                  } text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
                 >
                   {count}
                 </Badge>

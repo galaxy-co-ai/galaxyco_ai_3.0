@@ -177,7 +177,7 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-gray-900">Neptune Assistant</h3>
+            <h3 className="font-semibold text-sm text-gray-900">Neptune</h3>
             <p className="text-xs text-purple-600">Creative AI helper</p>
           </div>
         </div>

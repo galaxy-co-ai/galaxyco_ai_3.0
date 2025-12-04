@@ -44,6 +44,7 @@ import {
   Mail,
   PenLine,
   MessageSquare,
+  BookOpen,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -458,27 +459,39 @@ export default function KnowledgeBaseDashboard({
       {/* Header Section */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 space-y-4">
         {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Library</h1>
-              <p className="text-muted-foreground text-base mt-1">
-                Organize, search, and access your documents and knowledge.
-              </p>
-            </div>
-            <Button
-              variant={showNeptune ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowNeptune(!showNeptune)}
-              className="gap-2 shrink-0"
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-3">
+            <BookOpen 
+              className="w-7 h-7"
+              style={{
+                stroke: 'url(#icon-gradient-kb)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-kb" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 
+              className="text-2xl uppercase"
+              style={{ 
+                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+                fontWeight: 700,
+                letterSpacing: '0.25em',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
+              }}
             >
-              <Sparkles className="h-4 w-4" />
-              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
-            </Button>
+              Library
+            </h1>
           </div>
 
-          {/* Stats Bar - Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Stats Bar */}
+          <div className="flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
               <FileText className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
               <span className="font-semibold">{stats.totalItems}</span>
@@ -497,8 +510,8 @@ export default function KnowledgeBaseDashboard({
           </div>
         </div>
 
-        {/* Floating Tab Bar */}
-        <div className="flex justify-center overflow-x-auto pb-2 -mb-2">
+        {/* Tab Bar with Ask Neptune Button */}
+        <div className="mt-14 relative flex items-center justify-center overflow-x-auto pb-2 -mb-2">
           <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
             {tabs.map((tab) => (
               <button
@@ -511,14 +524,14 @@ export default function KnowledgeBaseDashboard({
                   }
                 }}
                 className={cn(
-                  "relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
+                  "relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
                   activeTab === tab.id
                     ? `${tab.activeColor} shadow-sm`
                     : 'text-gray-600 hover:bg-gray-100'
                 )}
                 aria-label={`Switch to ${tab.label} tab`}
               >
-                <tab.icon className="h-3.5 w-3.5" />
+                <tab.icon className="h-4 w-4" />
                 <span>{tab.label}</span>
                 {tab.badge && tab.badge !== "0" && (
                   <Badge
@@ -532,6 +545,16 @@ export default function KnowledgeBaseDashboard({
                 )}
               </button>
             ))}
+          </div>
+          <div className="absolute right-0">
+            <Button
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Neptune
+            </Button>
           </div>
         </div>
       </div>
@@ -1021,7 +1044,7 @@ export default function KnowledgeBaseDashboard({
               transition={{ duration: 0.2 }}
               className="flex flex-col shrink-0 relative z-40"
             >
-              <Card className="flex flex-col h-full rounded-2xl shadow-lg border-0 bg-card overflow-hidden">
+              <Card className="flex flex-col h-full rounded-l-2xl shadow-lg border-0 border-r-0 bg-card overflow-hidden">
                 <NeptuneAssistPanel
                   conversationId={null}
                   conversation={null}

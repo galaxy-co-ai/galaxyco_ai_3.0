@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { OrganizationSwitcher, useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   Palette,
@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 // Main navigation items
@@ -44,7 +43,7 @@ const mainNavItems = [
 const secondaryNavItems = [
   { icon: Rocket, label: "Launchpad", href: "/launchpad", id: "launchpad" },
   { icon: Sparkles, label: "Neptune", href: "/assistant", id: "assistant" },
-  { icon: Plug, label: "Connected Apps", href: "/connected-apps", id: "connected-apps" },
+  { icon: Plug, label: "Connectors", href: "/connected-apps", id: "connected-apps" },
   { icon: Settings, label: "Settings", href: "/settings", id: "settings" },
 ];
 
@@ -77,46 +76,18 @@ export function Sidebar({ className, user }: SidebarProps) {
     return pathname.startsWith(href);
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const userInitials = user?.initials || (user?.name ? getInitials(user.name) : "JD");
-
   return (
     <aside
       className={cn(
-        "flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
+        "flex flex-col bg-sidebar/95 backdrop-blur-md border-r border-white/40 transition-all duration-300",
+        "rounded-r-2xl mt-4 mb-4 mr-4 shadow-[4px_0_24px_-4px_rgba(0,0,0,0.1)] self-stretch",
         isCollapsed ? "w-14" : "w-52",
         className
       )}
       aria-label="Main navigation"
     >
-      {/* Header */}
-      <div className={cn(
-        "flex items-center border-b border-sidebar-border px-3 py-3",
-        isCollapsed ? "flex-col gap-2" : "justify-between"
-      )}>
-        <Link 
-          href="/" 
-          className={cn(
-            "flex items-center gap-2 rounded-lg transition-colors hover:opacity-80",
-            isCollapsed && "justify-center"
-          )}
-          aria-label="Go to landing page"
-        >
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25">
-            <Rocket className="h-4.5 w-4.5 text-white" />
-          </div>
-          {!isCollapsed && (
-            <h2 className="text-sm font-bold tracking-[0.25em] text-sidebar-foreground uppercase">Galaxy</h2>
-          )}
-        </Link>
+      {/* Collapse Toggle */}
+      <div className="flex items-center justify-end px-3 py-3 border-b border-sidebar-border">
         <Button
           variant="ghost"
           size="icon"
@@ -151,13 +122,13 @@ export function Sidebar({ className, user }: SidebarProps) {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full h-9 rounded-lg transition-colors",
+                  "w-full h-9 rounded-lg transition-all duration-200",
                   "flex items-center gap-2.5",
                   isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
                   active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-                  "font-normal relative"
+                    ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                  "font-normal"
                 )}
                 aria-label={isCollapsed ? item.label : undefined}
                 aria-current={active ? "page" : undefined}
@@ -165,9 +136,6 @@ export function Sidebar({ className, user }: SidebarProps) {
                 <Icon className="h-4 w-4 flex-shrink-0" />
                 {!isCollapsed && (
                   <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
-                )}
-                {active && !isCollapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-sidebar-primary rounded-r-full" />
                 )}
               </Button>
             </Link>
@@ -195,13 +163,13 @@ export function Sidebar({ className, user }: SidebarProps) {
                 <Button
                   variant="ghost"
                   className={cn(
-                    "w-full h-9 rounded-lg transition-colors",
+                    "w-full h-9 rounded-lg transition-all duration-200",
                     "flex items-center gap-2.5",
                     isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
                     active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-                    "font-normal relative"
+                      ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                    "font-normal"
                   )}
                   aria-label={isCollapsed ? item.label : undefined}
                   aria-current={active ? "page" : undefined}
@@ -209,9 +177,6 @@ export function Sidebar({ className, user }: SidebarProps) {
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   {!isCollapsed && (
                     <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
-                  )}
-                  {active && !isCollapsed && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-sidebar-primary rounded-r-full" />
                   )}
                 </Button>
               </Link>
@@ -223,7 +188,7 @@ export function Sidebar({ className, user }: SidebarProps) {
       {/* Mission Control (Admin Only) */}
       {isSystemAdmin && (
         <>
-          <Separator />
+          <Separator className="mt-auto" />
           <div className="px-2 py-3">
             {!isCollapsed && (
               <div className="px-2 mb-2">
@@ -236,13 +201,13 @@ export function Sidebar({ className, user }: SidebarProps) {
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full h-9 rounded-lg transition-colors",
+                  "w-full h-9 rounded-lg transition-all duration-200",
                   "flex items-center gap-2.5",
                   isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
                   isActive("/admin")
-                    ? "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-                  "font-normal relative"
+                    ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-indigo-600"
+                    : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                  "font-normal"
                 )}
                 aria-label={isCollapsed ? "Mission Control" : undefined}
                 aria-current={isActive("/admin") ? "page" : undefined}
@@ -251,68 +216,8 @@ export function Sidebar({ className, user }: SidebarProps) {
                 {!isCollapsed && (
                   <span className="text-sm font-medium whitespace-nowrap">Mission Control</span>
                 )}
-                {isActive("/admin") && !isCollapsed && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-500 rounded-r-full" />
-                )}
               </Button>
             </Link>
-          </div>
-        </>
-      )}
-
-      {/* Organization Switcher */}
-      <Separator />
-      <div className={cn("p-3", isCollapsed && "flex justify-center")}>
-        <OrganizationSwitcher
-          hidePersonal={false}
-          afterCreateOrganizationUrl="/dashboard"
-          afterLeaveOrganizationUrl="/dashboard"
-          afterSelectOrganizationUrl="/dashboard"
-          afterSelectPersonalUrl="/dashboard"
-          appearance={{
-            elements: {
-              rootBox: cn(
-                "w-full",
-                isCollapsed && "w-auto"
-              ),
-              organizationSwitcherTrigger: cn(
-                "w-full rounded-lg border border-sidebar-border bg-sidebar hover:bg-sidebar-accent/50 transition-colors",
-                isCollapsed ? "p-1.5 justify-center" : "p-2 justify-start gap-2"
-              ),
-              organizationPreviewMainIdentifier: "text-sm font-medium text-sidebar-foreground",
-              organizationPreviewSecondaryIdentifier: "text-xs text-muted-foreground",
-              organizationSwitcherTriggerIcon: "text-muted-foreground",
-            },
-          }}
-        />
-      </div>
-
-      {/* User Profile */}
-      {user && (
-        <>
-          <Separator />
-          <div className="p-3">
-            <div
-              className={cn(
-                "flex items-center gap-2.5",
-                isCollapsed && "justify-center"
-              )}
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-              {!isCollapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
-                    {user.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                </div>
-              )}
-            </div>
           </div>
         </>
       )}

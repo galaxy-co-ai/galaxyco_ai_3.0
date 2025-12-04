@@ -8,6 +8,13 @@
  */
 
 import { useState } from 'react';
+import { Space_Grotesk } from 'next/font/google';
+
+const spaceGrotesk = Space_Grotesk({
+  weight: '700',
+  subsets: ['latin'],
+  variable: '--font-space-grotesk-dashboard',
+});
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -30,6 +37,7 @@ import {
   GraduationCap,
   FolderOpen,
   Megaphone,
+  Rocket,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -60,88 +68,101 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
   ];
 
   return (
-    <div className="h-full bg-background overflow-y-auto flex">
-      {/* Main Content */}
-      <div className="flex-1">
-        {/* All content in one continuous container */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 space-y-4">
-          {/* Header with Ask Neptune button */}
-          <div className="relative">
-            <div className="text-center space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight">
-                {greeting}, {user.name}!
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                {isFirstTime 
-                  ? "Welcome to GalaxyCo. Let's get you your first win."
-                  : "Let's help you get your next win quickly."
-                }
-              </p>
+    <div className="flex h-full flex-col bg-background">
+      {/* Header */}
+      <div className="border-b bg-background px-6 py-4">
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-3">
+            <Rocket 
+              className="w-7 h-7"
+              style={{
+                stroke: 'url(#icon-gradient-dashboard)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-dashboard" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 
+              className={`text-2xl uppercase ${spaceGrotesk.className}`}
+              style={{ 
+                letterSpacing: '0.25em',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
+                fontWeight: 700
+              }}
+            >
+              Dashboard
+            </h1>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="flex flex-wrap items-center gap-3">
+              <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
+                <Bot className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+                <span className="font-semibold">{stats.activeAgents}</span>
+                <span className="ml-1 text-purple-600/70 font-normal">Agents</span>
+              </Badge>
+              <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+                <Users className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+                <span className="font-semibold">{stats.crmContacts}</span>
+                <span className="ml-1 text-blue-600/70 font-normal">Contacts</span>
+              </Badge>
+              <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+                <Plug className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+                <span className="font-semibold">{stats.financeConnections}</span>
+                <span className="ml-1 text-emerald-600/70 font-normal">Connected</span>
+              </Badge>
             </div>
+          </div>
+
+          {/* Tab Bar with Ask Neptune Button */}
+          <div className="mt-14 relative flex items-center justify-center overflow-x-auto pb-2 -mb-2">
+            <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    activeTab === tab.id
+                      ? `${tab.activeColor} shadow-sm`
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  aria-label={`Switch to ${tab.label} tab`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                  {tab.badge && (
+                    <Badge 
+                      className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : 'bg-amber-500 text-white'} text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
+                    >
+                      {tab.badge}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="absolute right-0">
             <Button
-              variant={showNeptune ? "default" : "outline"}
               size="sm"
               onClick={() => setShowNeptune(!showNeptune)}
-              className="gap-2 absolute right-0 top-0"
+              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
             >
               <Sparkles className="h-4 w-4" />
-              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
+              Neptune
             </Button>
           </div>
-
-          {/* Stats Bar - Compact Inline Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-            <Badge className="px-2.5 py-1 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors text-xs">
-              <Bot className="h-3 w-3 mr-1 text-purple-600" />
-              <span className="font-semibold">{stats.activeAgents}</span>
-              <span className="ml-1 text-purple-600/70 font-normal">Agents</span>
-            </Badge>
-            <Badge className="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors text-xs">
-              <Users className="h-3 w-3 mr-1 text-blue-600" />
-              <span className="font-semibold">{stats.crmContacts}</span>
-              <span className="ml-1 text-blue-600/70 font-normal">Contacts</span>
-            </Badge>
-            <Badge className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors text-xs">
-              <Plug className="h-3 w-3 mr-1 text-emerald-600" />
-              <span className="font-semibold">{stats.financeConnections}</span>
-              <span className="ml-1 text-emerald-600/70 font-normal">Connected</span>
-            </Badge>
-            <Badge className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors text-xs">
-              <Sparkles className="h-3 w-3 mr-1 text-amber-600" />
-              <span className="font-semibold">{stats.hoursSaved}h</span>
-              <span className="ml-1 text-amber-600/70 font-normal">Saved</span>
-            </Badge>
-          </div>
-
-          {/* Floating Tab Bar */}
-          <div className="flex justify-center overflow-x-auto">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
-                  activeTab === tab.id
-                    ? `${tab.activeColor} shadow-sm`
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                aria-label={`Switch to ${tab.label} tab`}
-              >
-                <tab.icon className="h-3.5 w-3.5" />
-                <span>{tab.label}</span>
-                {tab.badge && (
-                  <Badge 
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : 'bg-amber-500 text-white'} text-xs px-1.5 py-0 h-4 min-w-[18px]`}
-                  >
-                    {tab.badge}
-                  </Badge>
-                )}
-              </button>
-            ))}
-          </div>
         </div>
+      </div>
 
-          {/* Tab Content */}
+      {/* Tab Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className={`transition-all duration-200 ${showNeptune ? 'mr-[380px]' : ''}`}>
             <AnimatePresence mode="wait">
               <motion.div
@@ -174,7 +195,7 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="fixed right-4 top-[265px] bottom-4 w-[360px] z-40"
           >
-            <Card className="flex flex-col h-full rounded-2xl shadow-lg border bg-card overflow-hidden">
+            <Card className="flex flex-col h-full rounded-l-2xl shadow-lg border border-r-0 bg-card overflow-hidden">
               <NeptuneAssistPanel
                 conversationId={null}
                 conversation={null}

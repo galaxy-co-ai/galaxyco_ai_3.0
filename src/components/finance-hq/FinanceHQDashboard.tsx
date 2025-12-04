@@ -391,7 +391,7 @@ function FinanceEmptyState() {
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">
         <Button asChild>
-          <a href="/connected-apps" aria-label="Go to connected apps page to connect finance tools">
+          <a href="/connected-apps" aria-label="Go to connectors page to connect finance tools">
             <Plug className="h-4 w-4 mr-2" aria-hidden="true" />
             Connect Integrations
           </a>
@@ -497,17 +497,39 @@ function FinanceHeader({
   onAction?: (action: FinanceAction) => void;
 }) {
   return (
-    <header className="space-y-3">
+    <header className="space-y-3 pt-4">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         {/* Left: Title */}
         <div className="sm:flex-1">
-          <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
-            Finance HQ
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Your unified financial command center
-          </p>
+          <div className="flex items-center gap-3">
+            <DollarSign 
+              className="w-7 h-7"
+              style={{
+                stroke: 'url(#icon-gradient-fin)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-fin" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 
+              className="text-2xl uppercase"
+              style={{ 
+                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+                fontWeight: 700,
+                letterSpacing: '0.25em',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
+              }}
+            >
+              Finance HQ
+            </h1>
+          </div>
         </div>
         {/* Center: Date Picker */}
         <div className="flex items-center justify-center gap-2">

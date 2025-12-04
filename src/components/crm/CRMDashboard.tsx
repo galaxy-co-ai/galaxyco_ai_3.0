@@ -130,7 +130,7 @@ interface CRMDashboardProps {
   };
 }
 
-type TabType = 'leads' | 'organizations' | 'contacts' | 'deals' | 'insights' | 'automations';
+type TabType = 'leads' | 'organizations' | 'contacts' | 'deals' | 'insights';
 
 export default function CRMDashboard({
   initialLeads,
@@ -493,11 +493,10 @@ export default function CRMDashboard({
   // Tab configuration
   const tabs = [
     { id: 'leads' as TabType, label: 'Leads', icon: Users, badge: stats.totalLeads.toString(), badgeColor: 'bg-blue-500', activeColor: 'bg-blue-100 text-blue-700' },
-    { id: 'organizations' as TabType, label: 'Organizations', icon: Building2, badge: stats.totalOrgs.toString(), badgeColor: 'bg-purple-500', activeColor: 'bg-purple-100 text-purple-700' },
+    { id: 'organizations' as TabType, label: 'Companies', icon: Building2, badge: stats.totalOrgs.toString(), badgeColor: 'bg-purple-500', activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'contacts' as TabType, label: 'Contacts', icon: Mail, activeColor: 'bg-cyan-100 text-cyan-700' },
     { id: 'deals' as TabType, label: 'Deals', icon: Target, activeColor: 'bg-green-100 text-green-700' },
     { id: 'insights' as TabType, label: 'Insights', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
-    { id: 'automations' as TabType, label: 'Automations', icon: Zap, activeColor: 'bg-orange-100 text-orange-700' },
   ];
 
   // Quick actions for CRM
@@ -660,75 +659,92 @@ Be helpful, proactive, and use CRM tools when needed.`;
       {/* Header Section - Matching Dashboard */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4 w-full">
         {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">CRM</h1>
-              <p className="text-muted-foreground text-base mt-1">
-                Manage your leads, organizations, and customer relationships.
-              </p>
-            </div>
-            <Button
-              variant={showNeptune ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowNeptune(!showNeptune)}
-              className="gap-2 shrink-0"
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-3">
+            <Users 
+              className="w-7 h-7"
+              style={{
+                stroke: 'url(#icon-gradient-crm)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-crm" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 
+              className="text-2xl uppercase"
+              style={{ 
+                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+                fontWeight: 700,
+                letterSpacing: '0.25em',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
+              }}
             >
-              <Sparkles className="h-4 w-4" />
-              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
-            </Button>
+              CRM
+            </h1>
           </div>
 
-          {/* Stats Bar - Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Stats Bar */}
+          <div className="flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
               <Users className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
               <span className="font-semibold">{stats.totalLeads}</span>
               <span className="ml-1 text-blue-600/70 font-normal">Leads</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors">
-              <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-red-600" />
-              <span className="font-semibold">{stats.hotLeads}</span>
-              <span className="ml-1 text-red-600/70 font-normal">Hot Leads</span>
-            </Badge>
             <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-              <Building2 className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
-              <span className="font-semibold">{stats.totalOrgs}</span>
-              <span className="ml-1 text-purple-600/70 font-normal">Organizations</span>
+              <Target className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+              <span className="font-semibold">{deals.length}</span>
+              <span className="ml-1 text-purple-600/70 font-normal">Deals</span>
             </Badge>
             <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-              <ArrowUpRight className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+              <DollarSign className="h-3.5 w-3.5 mr-1.5 text-green-600" />
               <span className="font-semibold">{formatCurrency(stats.totalValue)}</span>
               <span className="ml-1 text-green-600/70 font-normal">Pipeline</span>
             </Badge>
           </div>
         </div>
 
-        {/* Floating Tab Bar - Matching Dashboard */}
-        <div className="flex justify-center overflow-x-auto pb-2 -mb-2">
+        {/* Tab Bar with Ask Neptune Button */}
+        <div className="mt-14 relative flex items-center justify-center overflow-x-auto pb-2 -mb-2">
           <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                   activeTab === tab.id
                     ? `${tab.activeColor} shadow-sm`
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 aria-label={`Switch to ${tab.label} tab`}
               >
-                <tab.icon className="h-3.5 w-3.5" />
+                <tab.icon className="h-4 w-4" />
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <Badge 
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0 h-4 min-w-[18px]`}
+                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
                   >
                     {tab.badge}
                   </Badge>
                 )}
               </button>
             ))}
+          </div>
+          <div className="absolute right-0">
+            <Button
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Neptune
+            </Button>
           </div>
         </div>
       </div>
@@ -1439,9 +1455,6 @@ Be helpful, proactive, and use CRM tools when needed.`;
           )}
 
           {/* AUTOMATIONS TAB */}
-          {activeTab === 'automations' && (
-            <AutomationsTab />
-          )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -1456,7 +1469,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
               transition={{ duration: 0.2 }}
               className="flex flex-col shrink-0 relative z-40"
             >
-              <Card className="flex flex-col h-[calc(100vh-316px)] min-h-[464px] rounded-2xl shadow-lg border-0 bg-card overflow-hidden mb-6">
+              <Card className="flex flex-col h-[calc(100vh-316px)] min-h-[464px] rounded-l-2xl shadow-lg border-0 border-r-0 bg-card overflow-hidden mb-6">
                 <NeptuneAssistPanel
                   conversationId={null}
                   conversation={null}

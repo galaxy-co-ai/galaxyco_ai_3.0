@@ -60,34 +60,40 @@ export default function CreatorDashboard() {
     <div className="h-full bg-gray-50/50 overflow-hidden flex flex-col">
       {/* Header Section */}
       <div className="max-w-7xl mx-auto w-full px-6 py-4 space-y-4">
-        {/* Header with title and Neptune button */}
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Creator</h1>
-              <p className="text-muted-foreground text-base mt-1">
-                AI-powered content and asset creation studio
-              </p>
-            </div>
-
-            {/* Ask Neptune Button */}
-            <Button
-              variant={showNeptune ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowNeptune(!showNeptune)}
-              className={cn(
-                "gap-2 transition-all shrink-0",
-                showNeptune && "bg-purple-600 hover:bg-purple-700"
-              )}
-              aria-label={showNeptune ? "Hide Neptune assistant" : "Show Neptune assistant"}
+        {/* Header */}
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-3">
+            <Palette 
+              className="w-7 h-7"
+              style={{
+                stroke: 'url(#icon-gradient-creator)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-creator" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 
+              className="text-2xl uppercase"
+              style={{ 
+                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+                fontWeight: 700,
+                letterSpacing: '0.25em',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
+              }}
             >
-              <Sparkles className="h-4 w-4" />
-              {showNeptune ? "Hide" : "Ask"} Neptune
-            </Button>
+              Creator
+            </h1>
           </div>
 
-          {/* Stats Bar - Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Stats Bar */}
+          <div className="flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-colors">
               <FileText className="h-3.5 w-3.5 mr-1.5 text-violet-600" />
               <span className="font-semibold">{stats.totalCreations}</span>
@@ -112,15 +118,15 @@ export default function CreatorDashboard() {
           </div>
         </div>
 
-        {/* Floating Tab Bar */}
-        <div className="flex justify-center">
+        {/* Tab Bar with Ask Neptune Button */}
+        <div className="mt-14 relative flex items-center justify-center">
           <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "relative px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
+                  "relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
                   activeTab === tab.id
                     ? `${tab.activeColor} shadow-sm`
                     : "text-gray-600 hover:bg-gray-100"
@@ -132,6 +138,16 @@ export default function CreatorDashboard() {
                 <span>{tab.label}</span>
               </button>
             ))}
+          </div>
+          <div className="absolute right-0">
+            <Button
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Neptune
+            </Button>
           </div>
         </div>
       </div>
@@ -167,7 +183,7 @@ export default function CreatorDashboard() {
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="flex flex-col min-w-[320px] relative z-40"
             >
-              <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+              <Card className="flex flex-col h-full rounded-l-2xl shadow-sm border border-r-0 bg-card overflow-hidden">
                 <CreatorNeptunePanel activeTab={activeTab} />
               </Card>
             </motion.div>

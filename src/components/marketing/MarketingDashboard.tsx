@@ -110,7 +110,7 @@ interface MarketingDashboardProps {
   };
 }
 
-type TabType = 'campaigns' | 'channels' | 'analytics' | 'audiences' | 'automations';
+type TabType = 'campaigns' | 'channels' | 'analytics';
 
 interface ChatMessage {
   id: string;
@@ -339,8 +339,6 @@ export default function MarketingDashboard({
     { id: 'campaigns' as TabType, label: 'Campaigns', icon: Megaphone, badge: stats.activeCampaigns.toString(), badgeColor: 'bg-pink-500', activeColor: 'bg-pink-100 text-pink-700' },
     { id: 'channels' as TabType, label: 'Channels', icon: Share2, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3, activeColor: 'bg-indigo-100 text-indigo-700' },
-    { id: 'audiences' as TabType, label: 'Audiences', icon: Users, activeColor: 'bg-cyan-100 text-cyan-700' },
-    { id: 'automations' as TabType, label: 'Automations', icon: Zap, activeColor: 'bg-orange-100 text-orange-700' },
   ];
 
   // Marketing Asset Templates
@@ -1005,36 +1003,43 @@ Be creative, engaging, and write content that resonates!`;
       {/* Header Section - Matching CRM */}
       <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
         {/* Header */}
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Marketing</h1>
-              <p className="text-muted-foreground text-base mt-1">
-                Manage campaigns, content, channels, and marketing performance.
-              </p>
-            </div>
-            <Button
-              variant={showNeptune ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowNeptune(!showNeptune)}
-              className="gap-2 shrink-0"
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-3">
+            <Megaphone 
+              className="w-7 h-7"
+              style={{
+                stroke: 'url(#icon-gradient-mkt)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-mkt" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h1 
+              className="text-2xl uppercase"
+              style={{ 
+                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+                fontWeight: 700,
+                letterSpacing: '0.25em',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
+              }}
             >
-              <Sparkles className="h-4 w-4" />
-              {showNeptune ? "Hide Neptune" : "Ask Neptune"}
-            </Button>
+              Marketing
+            </h1>
           </div>
 
-          {/* Stats Bar - Centered */}
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          {/* Stats Bar */}
+          <div className="flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100 transition-colors">
               <Megaphone className="h-3.5 w-3.5 mr-1.5 text-pink-600" />
               <span className="font-semibold">{stats.activeCampaigns}</span>
               <span className="ml-1 text-pink-600/70 font-normal">Active Campaigns</span>
-            </Badge>
-            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-              <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-              <span className="font-semibold">{formatCurrency(stats.totalBudget)}</span>
-              <span className="ml-1 text-blue-600/70 font-normal">Budget</span>
             </Badge>
             <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
               <BarChart3 className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
@@ -1049,31 +1054,41 @@ Be creative, engaging, and write content that resonates!`;
           </div>
         </div>
 
-        {/* Floating Tab Bar - Matching CRM */}
-        <div className="flex justify-center">
+        {/* Tab Bar with Ask Neptune Button */}
+        <div className="mt-14 relative flex items-center justify-center">
           <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                   activeTab === tab.id
                     ? `${tab.activeColor} shadow-sm`
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
                 aria-label={`Switch to ${tab.label} tab`}
               >
-                <tab.icon className="h-3.5 w-3.5" />
+                <tab.icon className="h-4 w-4" />
                 <span>{tab.label}</span>
                 {tab.badge && (
                   <Badge 
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0 h-4 min-w-[18px]`}
+                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
                   >
                     {tab.badge}
                   </Badge>
                 )}
               </button>
             ))}
+          </div>
+          <div className="absolute right-0">
+            <Button
+              size="sm"
+              onClick={() => setShowNeptune(!showNeptune)}
+              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Neptune
+            </Button>
           </div>
         </div>
       </div>
@@ -2656,259 +2671,6 @@ Be creative, engaging, and write content that resonates!`;
               </Card>
             )}
 
-            {/* AUDIENCES TAB */}
-            {activeTab === 'audiences' && (
-              <Card className="p-8 shadow-lg border-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Left: Audience Types List */}
-                  <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                    {/* Header */}
-                    <div className="px-6 py-4 border-b bg-gradient-to-r from-cyan-50 to-cyan-100/50 flex-shrink-0">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-md">
-                            <Users className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-[15px] text-gray-900">Audience Segments</h3>
-                            <p className="text-[13px] text-cyan-600 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
-                              8 segments
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Search */}
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search audiences..."
-                          value={audienceSearchQuery}
-                          onChange={(e) => setAudienceSearchQuery(e.target.value)}
-                          className="pl-9 h-9 text-sm bg-white dark:bg-card"
-                          aria-label="Search audiences"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Audience Types List */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      {[
-                        { id: 'high-value', name: 'High-Value Customers', count: 1240, icon: TrendingUp, color: 'bg-emerald-500' },
-                        { id: 'new-leads', name: 'New Leads', count: 3420, icon: UserPlus, color: 'bg-blue-500' },
-                        { id: 'engaged', name: 'Engaged Users', count: 5680, icon: Sparkles, color: 'bg-purple-500' },
-                        { id: 'inactive', name: 'Inactive Users', count: 2100, icon: Clock, color: 'bg-amber-500' },
-                        { id: 'trial', name: 'Trial Users', count: 890, icon: Target, color: 'bg-cyan-500' },
-                        { id: 'churned', name: 'Churned Customers', count: 1560, icon: TrendingDown, color: 'bg-red-500' },
-                        { id: 'vip', name: 'VIP Customers', count: 320, icon: Users, color: 'bg-indigo-500' },
-                        { id: 'prospects', name: 'Hot Prospects', count: 1250, icon: Zap, color: 'bg-orange-500' },
-                      ]
-                        .filter((audience) =>
-                          audienceSearchQuery === '' ||
-                          audience.name.toLowerCase().includes(audienceSearchQuery.toLowerCase())
-                        )
-                        .map((audience) => (
-                          <div
-                            key={audience.id}
-                            onClick={() => setSelectedAudience(audience.id)}
-                            className={`p-4 rounded-lg border transition-all cursor-pointer ${
-                              selectedAudience === audience.id
-                                ? 'border-cyan-300 bg-cyan-50/30 shadow-sm'
-                                : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-full ${audience.color} flex-shrink-0`}>
-                                <audience.icon className="h-4 w-4 text-white" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-gray-900">{audience.name}</h4>
-                                <p className="text-xs text-gray-500 mt-0.5">{audience.count.toLocaleString()} members</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-
-                  {/* Right: Engagement Behavior Breakdown */}
-                  <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                    {selectedAudience ? (
-                      <>
-                        {/* Header */}
-                        <div className="px-6 py-4 border-b bg-gradient-to-r from-cyan-50 to-cyan-100/50 flex-shrink-0">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-                              <Users className="h-5 w-5" aria-hidden="true" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-sm text-gray-900">
-                                {[
-                                  { id: 'high-value', name: 'High-Value Customers' },
-                                  { id: 'new-leads', name: 'New Leads' },
-                                  { id: 'engaged', name: 'Engaged Users' },
-                                  { id: 'inactive', name: 'Inactive Users' },
-                                  { id: 'trial', name: 'Trial Users' },
-                                  { id: 'churned', name: 'Churned Customers' },
-                                  { id: 'vip', name: 'VIP Customers' },
-                                  { id: 'prospects', name: 'Hot Prospects' },
-                                ].find((a) => a.id === selectedAudience)?.name || 'Audience'}
-                              </h3>
-                              <p className="text-xs text-cyan-600">Engagement Behavior Breakdown</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Engagement Metrics */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-                          {/* Inline Stats Row */}
-                          <div className="flex items-center justify-between text-sm border-b border-gray-100 pb-4">
-                            <div className="flex items-center gap-1.5">
-                              <Mail className="h-3.5 w-3.5 text-blue-500" aria-hidden="true" />
-                              <span className="text-gray-500">Open</span>
-                              <span className="font-medium text-gray-800">
-                                {selectedAudience === 'high-value' ? '68%' :
-                                 selectedAudience === 'new-leads' ? '45%' :
-                                 selectedAudience === 'engaged' ? '72%' :
-                                 selectedAudience === 'inactive' ? '12%' :
-                                 selectedAudience === 'trial' ? '58%' :
-                                 selectedAudience === 'churned' ? '8%' :
-                                 selectedAudience === 'vip' ? '85%' : '52%'}
-                              </span>
-                            </div>
-                            <span className="text-gray-300">•</span>
-                            <div className="flex items-center gap-1.5">
-                              <Target className="h-3.5 w-3.5 text-purple-500" aria-hidden="true" />
-                              <span className="text-gray-500">CTR</span>
-                              <span className="font-medium text-gray-800">
-                                {selectedAudience === 'high-value' ? '24%' :
-                                 selectedAudience === 'new-leads' ? '18%' :
-                                 selectedAudience === 'engaged' ? '31%' :
-                                 selectedAudience === 'inactive' ? '3%' :
-                                 selectedAudience === 'trial' ? '22%' :
-                                 selectedAudience === 'churned' ? '2%' :
-                                 selectedAudience === 'vip' ? '42%' : '19%'}
-                              </span>
-                            </div>
-                            <span className="text-gray-300">•</span>
-                            <div className="flex items-center gap-1.5">
-                              <TrendingUp className="h-3.5 w-3.5 text-green-500" aria-hidden="true" />
-                              <span className="text-gray-500">Conv</span>
-                              <span className="font-medium text-gray-800">
-                                {selectedAudience === 'high-value' ? '15%' :
-                                 selectedAudience === 'new-leads' ? '8%' :
-                                 selectedAudience === 'engaged' ? '12%' :
-                                 selectedAudience === 'inactive' ? '1%' :
-                                 selectedAudience === 'trial' ? '28%' :
-                                 selectedAudience === 'churned' ? '0.5%' :
-                                 selectedAudience === 'vip' ? '22%' : '14%'}
-                              </span>
-                            </div>
-                            <span className="text-gray-300">•</span>
-                            <div className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5 text-indigo-500" aria-hidden="true" />
-                              <span className="text-gray-500">Avg</span>
-                              <span className="font-medium text-gray-800">
-                                {selectedAudience === 'high-value' ? '4.2m' :
-                                 selectedAudience === 'new-leads' ? '2.8m' :
-                                 selectedAudience === 'engaged' ? '5.1m' :
-                                 selectedAudience === 'inactive' ? '0.5m' :
-                                 selectedAudience === 'trial' ? '6.3m' :
-                                 selectedAudience === 'churned' ? '0.2m' :
-                                 selectedAudience === 'vip' ? '7.8m' : '3.5m'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Behavior Patterns - Compact */}
-                          <div>
-                            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                              <Sparkles className="h-4 w-4 text-cyan-500" aria-hidden="true" />
-                              Behavior Patterns
-                            </h4>
-                            <div className="space-y-2">
-                              {getAudienceBehaviorData(selectedAudience).map((behavior, index) => (
-                                <div 
-                                  key={index} 
-                                  className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-slate-50/70 hover:bg-slate-100/70 transition-colors"
-                                >
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-800">{behavior.label}</p>
-                                    <p className="text-xs text-gray-500 truncate">{behavior.description}</p>
-                                  </div>
-                                  <div className="flex items-center gap-2 ml-3">
-                                    <span className="text-sm font-medium text-gray-700">{behavior.value}</span>
-                                    {behavior.percentage !== undefined && (
-                                      <div className="w-12 bg-gray-200 rounded-full h-1.5">
-                                        <div
-                                          className={`h-1.5 rounded-full transition-all ${
-                                            behavior.percentage >= 50 ? 'bg-green-500' :
-                                            behavior.percentage >= 25 ? 'bg-amber-500' : 'bg-slate-400'
-                                          }`}
-                                          style={{ width: `${Math.min(behavior.percentage, 100)}%` }}
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Channel Engagement - Compact */}
-                          <div>
-                            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                              <Share2 className="h-4 w-4 text-cyan-500" aria-hidden="true" />
-                              Channel Engagement
-                            </h4>
-                            <div className="space-y-2">
-                              {getChannelEngagementData(selectedAudience).map((channel, index) => (
-                                <div key={index} className="flex items-center gap-3 py-2">
-                                  <div className="flex items-center gap-2 w-24">
-                                    {channel.icon === 'mail' && <Mail className="h-3.5 w-3.5 text-blue-500" aria-hidden="true" />}
-                                    {channel.icon === 'social' && <Share2 className="h-3.5 w-3.5 text-purple-500" aria-hidden="true" />}
-                                    {channel.icon === 'ads' && <Target className="h-3.5 w-3.5 text-orange-500" aria-hidden="true" />}
-                                    <span className="text-sm text-gray-600">{channel.name}</span>
-                                  </div>
-                                  <div className="flex-1 bg-gray-100 rounded-full h-2">
-                                    <div
-                                      className={`h-2 rounded-full transition-all ${
-                                        channel.icon === 'mail' ? 'bg-blue-500' :
-                                        channel.icon === 'social' ? 'bg-purple-500' : 'bg-orange-500'
-                                      }`}
-                                      style={{ width: `${channel.engagement}%` }}
-                                    />
-                                  </div>
-                                  <span className="text-sm font-medium text-gray-700 w-10 text-right">{channel.engagement}%</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="flex-1 flex items-center justify-center p-8">
-                        <div className="text-center max-w-sm">
-                          <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                            <Users className="h-8 w-8 text-slate-400" />
-                          </div>
-                          <h3 className="text-base font-semibold text-gray-900 mb-2">Select an audience</h3>
-                          <p className="text-sm text-gray-500">
-                            Choose an audience segment from the list to view engagement behavior breakdowns and insights.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* AUTOMATIONS TAB */}
-            {activeTab === 'automations' && (
-              <MarketingAutomationsTab />
-            )}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -2924,7 +2686,7 @@ Be creative, engaging, and write content that resonates!`;
               transition={{ duration: 0.2 }}
               className="flex flex-col relative z-40"
             >
-              <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
+              <Card className="flex flex-col h-full rounded-l-2xl shadow-sm border border-r-0 bg-card overflow-hidden">
                 <NeptuneAssistPanel
                   conversationId={null}
                   conversation={null}

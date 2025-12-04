@@ -325,10 +325,35 @@ export function GalaxyIntegrations() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Connected Apps</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Connect your favorite tools to supercharge your workflow</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4">
+        <div className="flex items-center gap-3">
+          <Plug 
+            className="w-7 h-7"
+            style={{
+              stroke: 'url(#icon-gradient-int)',
+              strokeWidth: 2,
+              filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+            }}
+          />
+          <svg width="0" height="0" className="absolute">
+            <defs>
+              <linearGradient id="icon-gradient-int" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#8b5cf6" />
+                <stop offset="100%" stopColor="#3b82f6" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <h1 
+            className="text-2xl uppercase"
+            style={{ 
+              fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
+              fontWeight: 700,
+              letterSpacing: '0.25em',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
+            }}
+          >
+            Connectors
+          </h1>
         </div>
         <div className="flex items-center gap-3">
           <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200">

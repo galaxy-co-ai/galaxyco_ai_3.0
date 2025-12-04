@@ -132,12 +132,7 @@ export default function NeptuneAssistPanel({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />
-            <div>
-              <h3 className="font-semibold">Neptune Assistant</h3>
-              <p className="text-xs text-muted-foreground">
-                {conversation ? "Ready to help" : "Select a conversation"}
-              </p>
-            </div>
+            <h3 className="font-semibold">Neptune</h3>
           </div>
           <Button variant="ghost" size="icon" className="h-7 w-7">
             <RefreshCw className="h-3.5 w-3.5" />
@@ -192,8 +187,8 @@ export default function NeptuneAssistPanel({
       </div>
 
       {/* Input */}
-      <div className="border-t p-4">
-        <div className="flex gap-2">
+      <div className="border-t p-4 shrink-0">
+        <div className="flex gap-2 items-center">
           <input
             type="text"
             value={input}
@@ -205,14 +200,15 @@ export default function NeptuneAssistPanel({
               }
             }}
             placeholder="Ask Neptune..."
-            className="flex-1 rounded-md border bg-background px-3 py-2 text-sm"
+            className="flex-1 rounded-md border bg-background px-3 py-2 text-sm min-w-0"
             disabled={isLoading || !conversation}
           />
           <Button
             onClick={handleSend}
             disabled={!input.trim() || isLoading || !conversation}
             size="icon"
-            className="h-9 w-9"
+            className="h-9 w-9 shrink-0"
+            aria-label="Send message"
           >
             <Send className="h-4 w-4" />
           </Button>

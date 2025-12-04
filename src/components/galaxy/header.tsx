@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Search, Command } from "lucide-react";
+import Link from "next/link";
+import { Bell, Search, Command, Rocket } from "lucide-react";
+import { OrganizationSwitcher } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,8 +56,20 @@ export function Header({
       )}
       {...props}
     >
-      <div className="container flex h-16 items-center gap-4 px-4">
-        {/* Title Section */}
+      <div className="flex h-16 items-center gap-4 px-4 w-full">
+        {/* Logo and Branding (Left) */}
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 rounded-lg transition-colors hover:opacity-80 flex-shrink-0"
+          aria-label="Go to landing page"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25">
+            <Rocket className="h-4.5 w-4.5 text-white" />
+          </div>
+          <h2 className="text-sm font-bold tracking-[0.25em] text-foreground uppercase">Galaxy</h2>
+        </Link>
+
+        {/* Title Section (if provided) */}
         {(title || description) && (
           <div className="flex-1 min-w-0">
             {title && (
@@ -67,7 +81,7 @@ export function Header({
           </div>
         )}
 
-        {/* Search */}
+        {/* Search (Center) */}
         {showSearch && (
           <div className="flex-1 max-w-md mx-auto">
             {searchOpen ? (
@@ -101,9 +115,37 @@ export function Header({
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
+        {/* Actions and User Controls (Right) */}
+        <div className="flex items-center gap-3 flex-shrink-0">
           {actions}
+          
+          {/* Organization Switcher */}
+          <OrganizationSwitcher
+            hidePersonal={false}
+            afterCreateOrganizationUrl="/dashboard"
+            afterLeaveOrganizationUrl="/dashboard"
+            afterSelectOrganizationUrl="/dashboard"
+            afterSelectPersonalUrl="/dashboard"
+            appearance={{
+              elements: {
+                rootBox: "w-auto",
+                organizationSwitcherTrigger: "rounded-lg border border-border bg-background hover:bg-accent transition-colors px-3 py-1.5",
+                organizationPreviewMainIdentifier: "text-sm font-medium text-foreground",
+                organizationPreviewSecondaryIdentifier: "text-xs text-muted-foreground",
+                organizationSwitcherTriggerIcon: "text-muted-foreground",
+              },
+            }}
+          />
+
+          {/* User Avatar */}
+          {user && (
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.avatar} alt={user.name} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+          )}
         </div>
       </div>
     </header>

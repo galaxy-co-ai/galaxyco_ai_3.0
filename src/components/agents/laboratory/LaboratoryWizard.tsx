@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -26,11 +26,13 @@ const STEPS = [
 interface LaboratoryWizardProps {
   onComplete?: (agentId: string) => void;
   onCancel?: () => void;
+  neptuneOpen?: boolean;
 }
 
 export default function LaboratoryWizard({
   onComplete,
   onCancel,
+  neptuneOpen = false,
 }: LaboratoryWizardProps) {
   const [step, setStep] = useState(1);
   const [config, setConfig] = useState<AgentConfig>(DEFAULT_AGENT_CONFIG);
@@ -139,27 +141,23 @@ export default function LaboratoryWizard({
       {/* Left Panel - Configurator */}
       <div className="flex-1 flex flex-col p-6 min-h-0">
         {/* Header with Step Indicator */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col items-center gap-3 mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Agent Laboratory
-              </h2>
-              <p className="text-sm text-gray-500">
-                {step === 1 && "Choose a template or start from scratch"}
-                {step === 2 && "Customize your agent's behavior"}
-                {step === 3 && "Review and activate"}
-              </p>
-            </div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Build Your Agent
+            </h2>
           </div>
           <StepIndicatorCompact steps={STEPS} currentStep={step} />
         </div>
 
-        {/* Step Content - Step 1 needs overflow-visible for badges, Steps 2-3 need scrolling */}
-        <div className={cn("flex-1 min-h-0", step === 1 ? "overflow-visible" : "overflow-hidden")}>
+        {/* Step Content - Step 1 needs scrolling in compact mode, overflow-visible in grid mode */}
+        <div className={cn(
+          "flex-1 min-h-0", 
+          step === 1 ? (neptuneOpen ? "overflow-y-auto" : "overflow-visible") : "overflow-hidden"
+        )}>
           <AnimatePresence mode="wait">
             {step === 1 && (
               <motion.div
@@ -168,9 +166,9 @@ export default function LaboratoryWizard({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.2 }}
-                className="h-full overflow-visible"
+                className={cn("h-full", neptuneOpen ? "overflow-visible" : "overflow-visible")}
               >
-                <ChooseBaseStep onSelect={handleSelectTemplate} />
+                <ChooseBaseStep onSelect={handleSelectTemplate} neptuneOpen={neptuneOpen} />
               </motion.div>
             )}
             {step === 2 && (
@@ -210,29 +208,34 @@ export default function LaboratoryWizard({
 
         {/* Footer Navigation */}
         <div className="flex items-center justify-between pt-4 border-t">
-          <Button
-            variant="ghost"
-            onClick={step === 1 ? onCancel : handleBack}
-            className="text-gray-600"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {step === 1 ? "Cancel" : "Back"}
-          </Button>
+          {step > 1 ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBack}
+              className="text-gray-600 hover:-translate-y-px active:scale-[0.95] transition-all duration-150"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          ) : (
+            <div />
+          )}
 
           {step < 3 ? (
             <Button
               onClick={handleNext}
               disabled={!canProceed}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
+              className="bg-violet-600 hover:bg-violet-600 text-white hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-md transition-all duration-150"
             >
-              Continue
+              Next
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
             <Button
               onClick={handleCreate}
               disabled={isCreating || !config.name.trim()}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-600 text-white hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-md transition-all duration-150"
             >
               {isCreating ? (
                 <>
@@ -256,7 +259,14 @@ export default function LaboratoryWizard({
 
       {/* Right Panel - Live Preview */}
       <div className="w-80 border-l bg-gray-50/50 p-6 flex flex-col">
-        <div className="text-sm font-medium text-gray-500 mb-4">Live Preview</div>
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
+            <Eye className="h-5 w-5 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Live Preview
+          </h2>
+        </div>
         <AgentPreviewCard config={config} template={selectedTemplate} />
       </div>
     </div>

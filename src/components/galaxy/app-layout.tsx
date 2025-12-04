@@ -29,16 +29,16 @@ export function AppLayout({
   ...props
 }: AppLayoutProps) {
   return (
-    <div className={cn("flex h-screen overflow-hidden relative", className)} {...props}>
-      {/* Sidebar */}
-      {showSidebar && <Sidebar user={user} />}
+    <div className={cn("flex flex-col h-screen overflow-hidden relative", className)} {...props}>
+      {/* Full-width Header */}
+      {headerProps && <Header {...headerProps} user={user} />}
 
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header */}
-        {headerProps && <Header {...headerProps} user={user} />}
+      {/* Content Area with Floating Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Floating Sidebar */}
+        {showSidebar && <Sidebar user={user} />}
 
-        {/* Page Content */}
+        {/* Main Content */}
         <main className="flex-1 overflow-y-auto bg-background">
           {children}
         </main>

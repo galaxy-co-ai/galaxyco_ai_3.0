@@ -50,7 +50,7 @@ function getFeatureArea(pathname: string): string {
   if (pathname.startsWith('/launchpad')) return 'Launchpad';
   if (pathname.startsWith('/settings')) return 'Settings';
   if (pathname.startsWith('/assistant')) return 'Neptune';
-  if (pathname.startsWith('/connected-apps')) return 'Connected Apps';
+  if (pathname.startsWith('/connected-apps')) return 'Connectors';
   return 'General';
 }
 

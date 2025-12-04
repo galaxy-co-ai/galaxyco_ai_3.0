@@ -107,7 +107,7 @@ export function NeptuneDocumentSidebar({
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-medium text-foreground">Neptune Assistant</h3>
+            <h3 className="text-sm font-medium text-foreground">Neptune</h3>
             <p className="text-[10px] text-muted-foreground">AI-powered document help</p>
           </div>
         </div>
