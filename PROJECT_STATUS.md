@@ -12,7 +12,7 @@
 | **Date** | December 4, 2025 |
 | **Build Status** | ✅ Passing |
 | **Deployment** | Vercel Production |
-| **Latest Commit** | Project cleanup, Finance OAuth UI, Logger improvements |
+| **Latest Commit** | fix(ui): Feedback button z-index for Neptune panels |
 
 ---
 
@@ -54,6 +54,32 @@
 ---
 
 ## Recent Changes
+
+### December 4, 2025 (Session 10)
+
+#### UI Fix: Feedback Button Z-Index
+
+- **Fixed Floating Feedback Button Overlap** - Feedback button was covering Neptune chat send button
+  - Problem: When Neptune AI assistant panel was open, the floating feedback button (bottom-right) would overlap the chat input/send button area
+  - Solution: Implemented proper z-index layering
+  - **Changes Made**:
+    - `FeedbackButton.tsx`: Changed z-index from `z-50` to `z-30`
+    - All Neptune panel containers: Added `relative z-40` to ensure they appear above feedback button
+  - **Files Updated**:
+    - `src/components/shared/FeedbackButton.tsx`
+    - `src/components/dashboard-v2/DashboardV2Client.tsx` (already had z-40)
+    - `src/components/conversations/ConversationsDashboard.tsx` (2 panels)
+    - `src/components/crm/CRMDashboard.tsx`
+    - `src/components/marketing/MarketingDashboard.tsx`
+    - `src/components/creator/CreatorDashboard.tsx`
+    - `src/components/knowledge-base/KnowledgeBaseDashboard.tsx`
+    - `src/components/agents/MyAgentsDashboard.tsx` (2 panels)
+  - **Z-Index Hierarchy**:
+    - `z-40`: Neptune panels (on top when open)
+    - `z-30`: Feedback button (visible when Neptune closed, hidden behind when open)
+  - **Impact**: Users can now access Neptune chat input without feedback button obstruction
+
+---
 
 ### December 4, 2025 (Session 9)
 

@@ -125,11 +125,11 @@ export function FeedbackButton() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - z-30 so it stays behind Neptune panel (z-40) */}
       <Button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 h-12 w-12 rounded-full shadow-lg",
+          "fixed bottom-6 right-6 z-30 h-12 w-12 rounded-full shadow-lg",
           "bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700",
           "transition-all hover:scale-110",
           isOpen && "scale-0 opacity-0"
@@ -140,9 +140,9 @@ export function FeedbackButton() {
         <MessageSquarePlus className="h-5 w-5" />
       </Button>
 
-      {/* Feedback Panel */}
+      {/* Feedback Panel - z-30 so it stays behind Neptune panel (z-40) */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-80 sm:w-96 animate-in slide-in-from-bottom-4 fade-in-0">
+        <div className="fixed bottom-6 right-6 z-30 w-80 sm:w-96 animate-in slide-in-from-bottom-4 fade-in-0">
           <Card className="shadow-2xl border-2">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">

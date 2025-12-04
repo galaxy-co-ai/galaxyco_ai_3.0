@@ -1019,7 +1019,7 @@ export default function KnowledgeBaseDashboard({
               animate={{ width: '30%', opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex flex-col shrink-0"
+              className="flex flex-col shrink-0 relative z-40"
             >
               <Card className="flex flex-col h-full rounded-2xl shadow-lg border-0 bg-card overflow-hidden">
                 <NeptuneAssistPanel

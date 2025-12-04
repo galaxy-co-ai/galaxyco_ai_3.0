@@ -165,7 +165,7 @@ export default function CreatorDashboard() {
               animate={{ width: "30%", opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="flex flex-col min-w-[320px]"
+              className="flex flex-col min-w-[320px] relative z-40"
             >
               <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
                 <CreatorNeptunePanel activeTab={activeTab} />

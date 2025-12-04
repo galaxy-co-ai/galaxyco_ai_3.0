@@ -335,7 +335,7 @@ export default function MyAgentsDashboard({
                   animate={{ width: '28%', opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col"
+                  className="flex flex-col relative z-40"
                 >
                   <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
                     <NeptuneAssistPanel
@@ -398,7 +398,7 @@ export default function MyAgentsDashboard({
                   animate={{ width: '28%', opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col"
+                  className="flex flex-col relative z-40"
                 >
                   <Card className="flex flex-col h-full rounded-2xl shadow-sm border bg-card overflow-hidden">
                     <NeptuneAssistPanel
