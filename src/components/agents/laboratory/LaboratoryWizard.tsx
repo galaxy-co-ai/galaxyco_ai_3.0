@@ -257,8 +257,9 @@ export default function LaboratoryWizard({
         </div>
       </div>
 
-      {/* Right Panel - Live Preview */}
-      <div className="w-80 border-l bg-gray-50/50 p-6 flex flex-col">
+      {/* Right Panel - Live Preview (Desktop Only, Hidden when Neptune is open) */}
+      {!neptuneOpen && (
+        <div className="hidden lg:flex lg:w-80 border-l bg-gray-50/50 p-6 flex-col">
         <div className="flex items-center justify-center gap-3 mb-6">
           <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
             <Eye className="h-5 w-5 text-white" />
@@ -269,6 +270,7 @@ export default function LaboratoryWizard({
         </div>
         <AgentPreviewCard config={config} template={selectedTemplate} />
       </div>
+      )}
     </div>
   );
 }

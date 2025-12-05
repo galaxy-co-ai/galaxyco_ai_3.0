@@ -12,7 +12,7 @@
 | **Date** | December 4, 2025 |
 | **Build Status** | ✅ Passing |
 | **Deployment** | Vercel Production |
-| **Latest Commit** | fix(ui): Feedback button z-index for Neptune panels |
+| **Latest Commit** | feat(ui): iOS-style tooltips and responsive Laboratory fixes |
 
 ---
 
@@ -54,6 +54,54 @@
 ---
 
 ## Recent Changes
+
+### December 4, 2025 (Session 13)
+
+#### iOS-Style Tooltips & Laboratory Responsive Fixes
+
+- **Sidebar Tooltips for Collapsed State**
+  - Added premium iOS-style tooltips when sidebar is collapsed
+  - Frosted glass effect: `bg-white/95 backdrop-blur-xl`
+  - Subtle border: `border-gray-200/60` for refined separation
+  - Premium shadow: `shadow-[0_8px_30px_rgba(0,0,0,0.12)]`
+  - Positioned with `side="right" align="center"` for perfect vertical alignment
+  - Instant appearance with `delayDuration={0}`
+  - Covers all navigation items: Main, Secondary, Mission Control, and toggle button
+  - **Impact**: Users get clear labels on hover without cluttering the collapsed UI
+
+- **Sidebar Text Size Reduction**
+  - Reduced navigation text from `text-sm font-medium` to `text-xs font-normal`
+  - Matches the refined typography of dropdown menus
+  - Less bulky, more modern appearance
+  - **Impact**: Cleaner, more spacious sidebar that aligns with premium iOS aesthetic
+
+- **Laboratory Live Preview - Responsive Visibility**
+  - Hidden on tablets/mobile (<1024px) to prevent overcrowding
+  - Hidden when Neptune chat panel is open (all screen sizes)
+  - Visible only on desktop (≥1024px) when Neptune is closed
+  - **Impact**: No more competing side panels, cleaner mobile experience
+
+- **Neptune Panel Structure Fix (My Agents/Laboratory)**
+  - Fixed padding issue causing Neptune card to get cut off at screen edge
+  - Standardized main content area to use `p-6` on all sides (was missing right padding)
+  - Neptune panel now matches structure from Conversations, CRM, Marketing pages:
+    - `rounded-l-2xl` (left corners only)
+    - `border-r-0` (no right border)
+    - Proper `gap-6` spacing from main content
+  - **Impact**: Consistent Neptune panel behavior across all pages
+
+- **Bug Fix: Missing Import**
+  - Added `DollarSign` import to `FinanceHQDashboard.tsx`
+  - Was breaking TypeScript build
+  - **Impact**: Build passing successfully
+
+#### Files Changed
+- `src/components/galaxy/sidebar.tsx` - Tooltips and text size
+- `src/components/agents/MyAgentsDashboard.tsx` - Neptune panel structure fix
+- `src/components/agents/laboratory/LaboratoryWizard.tsx` - Live Preview responsive visibility
+- `src/components/finance-hq/FinanceHQDashboard.tsx` - DollarSign import
+
+---
 
 ### December 4, 2025 (Session 12)
 

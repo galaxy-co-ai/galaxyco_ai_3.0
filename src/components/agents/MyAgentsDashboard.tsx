@@ -316,12 +316,7 @@ export default function MyAgentsDashboard({
       </div>
 
       {/* Main Content Area */}
-      <div className={cn(
-        "flex flex-1 overflow-hidden gap-6",
-        showNeptune && activeTab === "laboratory" 
-          ? "pl-6 pt-6 pb-6" 
-          : "p-6"
-      )}>
+      <div className="flex flex-1 overflow-hidden gap-6 p-6">
         {activeTab === "laboratory" ? (
           // Laboratory tab with optional Neptune
           <>

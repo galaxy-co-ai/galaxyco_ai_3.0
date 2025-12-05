@@ -21,6 +21,7 @@ import {
   Plug,
   TrendingUp,
   FlaskConical,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";

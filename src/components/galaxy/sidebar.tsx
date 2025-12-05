@@ -25,6 +25,12 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 // Main navigation items
 const mainNavItems = [
@@ -108,41 +114,54 @@ export function Sidebar({ className, user }: SidebarProps) {
       aria-label="Main navigation"
     >
       {/* Collapse Toggle */}
-      <div className="flex items-center justify-end px-3 py-3 border-b border-sidebar-border">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => {
-            setIsManuallyControlled(true);
-            setIsCollapsed(!isCollapsed);
-          }}
-          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {isCollapsed ? (
-            <PanelLeftOpen className="h-4 w-4" />
-          ) : (
-            <PanelLeftClose className="h-4 w-4" />
-          )}
-        </Button>
-      </div>
+      <TooltipProvider delayDuration={0}>
+        <div className="flex items-center justify-end px-3 py-3 border-b border-sidebar-border">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => {
+                  setIsManuallyControlled(true);
+                  setIsCollapsed(!isCollapsed);
+                }}
+                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {isCollapsed ? (
+                  <PanelLeftOpen className="h-4 w-4" />
+                ) : (
+                  <PanelLeftClose className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="right"
+              align="center"
+              className="bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-gray-900 font-medium px-3 py-1.5 rounded-lg"
+            >
+              {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
 
       {/* Main Navigation */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-        {!isCollapsed && (
-          <div className="px-2 mb-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Main
-            </p>
-          </div>
-        )}
+      <TooltipProvider delayDuration={0}>
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
+          {!isCollapsed && (
+            <div className="px-2 mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Main
+              </p>
+            </div>
+          )}
 
-        {mainNavItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
+          {mainNavItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
 
-          return (
-            <Link key={item.id} href={item.href}>
+            const button = (
               <Button
                 variant="ghost"
                 className={cn(
@@ -157,33 +176,54 @@ export function Sidebar({ className, user }: SidebarProps) {
                 aria-label={isCollapsed ? item.label : undefined}
                 aria-current={active ? "page" : undefined}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
+                <Icon className="h-4 w-4 shrink-0" />
                 {!isCollapsed && (
-                  <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
+                  <span className="text-xs font-normal whitespace-nowrap">{item.label}</span>
                 )}
               </Button>
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Secondary Navigation */}
-      <div className="px-2 py-3 border-t border-sidebar-border">
-        {!isCollapsed && (
-          <div className="px-2 mb-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Secondary
-            </p>
-          </div>
-        )}
-
-        <div className="space-y-0.5">
-          {secondaryNavItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
+            );
 
             return (
               <Link key={item.id} href={item.href}>
+                {isCollapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {button}
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      align="center"
+                      className="bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-gray-900 font-medium px-3 py-1.5 rounded-lg"
+                    >
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  button
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </TooltipProvider>
+
+      {/* Secondary Navigation */}
+      <TooltipProvider delayDuration={0}>
+        <div className="px-2 py-3 border-t border-sidebar-border">
+          {!isCollapsed && (
+            <div className="px-2 mb-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Secondary
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-0.5">
+            {secondaryNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+
+              const button = (
                 <Button
                   variant="ghost"
                   className={cn(
@@ -198,51 +238,101 @@ export function Sidebar({ className, user }: SidebarProps) {
                   aria-label={isCollapsed ? item.label : undefined}
                   aria-current={active ? "page" : undefined}
                 >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <Icon className="h-4 w-4 shrink-0" />
                   {!isCollapsed && (
-                    <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
+                    <span className="text-xs font-normal whitespace-nowrap">{item.label}</span>
                   )}
                 </Button>
-              </Link>
-            );
-          })}
+              );
+
+              return (
+                <Link key={item.id} href={item.href}>
+                  {isCollapsed ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {button}
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="right"
+                        align="center"
+                        className="bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-gray-900 font-medium px-3 py-1.5 rounded-lg"
+                      >
+                        {item.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    button
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
 
       {/* Mission Control (Admin Only) */}
       {isSystemAdmin && (
         <>
           <Separator className="mt-auto" />
-          <div className="px-2 py-3">
-            {!isCollapsed && (
-              <div className="px-2 mb-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Admin
-                </p>
-              </div>
-            )}
-            <Link href="/admin">
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full h-9 rounded-lg transition-all duration-200",
-                  "flex items-center gap-2.5",
-                  isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
-                  isActive("/admin")
-                    ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-indigo-600"
-                    : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
-                  "font-normal"
+          <TooltipProvider delayDuration={0}>
+            <div className="px-2 py-3">
+              {!isCollapsed && (
+                <div className="px-2 mb-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Admin
+                  </p>
+                </div>
+              )}
+              <Link href="/admin">
+                {isCollapsed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full h-9 rounded-lg transition-all duration-200",
+                          "flex items-center gap-2.5",
+                          "justify-center px-0",
+                          isActive("/admin")
+                            ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-indigo-600"
+                            : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                          "font-normal"
+                        )}
+                        aria-label="Mission Control"
+                        aria-current={isActive("/admin") ? "page" : undefined}
+                      >
+                        <Gauge className="h-4 w-4 shrink-0" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="right"
+                      align="center"
+                      className="bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-gray-900 font-medium px-3 py-1.5 rounded-lg"
+                    >
+                      Mission Control
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full h-9 rounded-lg transition-all duration-200",
+                      "flex items-center gap-2.5",
+                      "justify-start px-2.5",
+                      isActive("/admin")
+                        ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-indigo-600"
+                        : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                      "font-normal"
+                    )}
+                    aria-current={isActive("/admin") ? "page" : undefined}
+                  >
+                    <Gauge className="h-4 w-4 shrink-0" />
+                    <span className="text-xs font-normal whitespace-nowrap">Mission Control</span>
+                  </Button>
                 )}
-                aria-label={isCollapsed ? "Mission Control" : undefined}
-                aria-current={isActive("/admin") ? "page" : undefined}
-              >
-                <Gauge className="h-4 w-4 flex-shrink-0" />
-                {!isCollapsed && (
-                  <span className="text-sm font-medium whitespace-nowrap">Mission Control</span>
-                )}
-              </Button>
-            </Link>
-          </div>
+              </Link>
+            </div>
+          </TooltipProvider>
         </>
       )}
     </aside>
