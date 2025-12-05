@@ -36,6 +36,9 @@ import {
   Paperclip,
   X,
   ImageIcon,
+  Presentation,
+  ExternalLink,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -49,6 +52,13 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  metadata?: {
+    functionCalls?: Array<{
+      name: string;
+      args: unknown;
+      result: { data?: unknown };
+    }>;
+  };
 }
 
 interface Attachment {
@@ -795,6 +805,67 @@ export default function AssistantPage() {
                         )}
                       >
                         <p className="whitespace-pre-wrap">{message.content}</p>
+                        
+                        {/* Gamma Document Display */}
+                        {message.metadata?.functionCalls?.some(fc => fc.name === 'create_professional_document') && (() => {
+                          const gammaCall = message.metadata.functionCalls.find(fc => fc.name === 'create_professional_document');
+                          const gammaData = gammaCall?.result?.data as { title?: string; contentType?: string; cards?: number; style?: string; editUrl?: string; pdfUrl?: string; pptxUrl?: string } | undefined;
+                          
+                          if (!gammaData) return null;
+                          
+                          return (
+                            <div className="mt-3 p-4 rounded-lg border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="p-2 rounded-lg bg-purple-100">
+                                  <Presentation className="h-5 w-5 text-purple-600" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="text-sm font-semibold text-purple-900 truncate">
+                                      {gammaData.title}
+                                    </h4>
+                                    <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
+                                      Gamma.app
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-purple-600">
+                                    {gammaData.contentType && typeof gammaData.contentType === 'string' ? gammaData.contentType.charAt(0).toUpperCase() + gammaData.contentType.slice(1) : 'Document'} • {gammaData.cards} slides • {gammaData.style} style
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2">
+                                {gammaData.editUrl && (
+                                  <Button size="sm" variant="outline" className="text-xs h-8" asChild>
+                                    <a href={gammaData.editUrl} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="h-3 w-3 mr-1.5" />
+                                      Edit in Gamma
+                                    </a>
+                                  </Button>
+                                )}
+                                
+                                {gammaData.pdfUrl && (
+                                  <Button size="sm" variant="outline" className="text-xs h-8" asChild>
+                                    <a href={gammaData.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                      <Download className="h-3 w-3 mr-1.5" />
+                                      Download PDF
+                                    </a>
+                                  </Button>
+                                )}
+                                
+                                {gammaData.pptxUrl && (
+                                  <Button size="sm" variant="outline" className="text-xs h-8" asChild>
+                                    <a href={gammaData.pptxUrl} target="_blank" rel="noopener noreferrer">
+                                      <Download className="h-3 w-3 mr-1.5" />
+                                      Download PPTX
+                                    </a>
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                        
                         <p className={cn(
                           "text-[10px] mt-2",
                           message.role === "user" ? "text-indigo-200" : "text-gray-400"
