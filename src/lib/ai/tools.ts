@@ -22,6 +22,7 @@ import {
 import { eq, and, desc, gte, lte, like, or, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import type { ChatCompletionTool } from 'openai/resources/chat/completions';
+import { generateWithGamma, pollGammaGeneration, isGammaConfigured } from '@/lib/gamma';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -522,6 +523,37 @@ export const aiTools: ChatCompletionTool[] = [
           },
         },
         required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_professional_document',
+      description: 'Generate a polished, professional presentation, document, or webpage using Gamma.app. Use this when user wants a HIGH-QUALITY, DESIGNED presentation/pitch deck/proposal/newsletter. Better than plain text documents. Creates beautifully designed content.',
+      parameters: {
+        type: 'object',
+        properties: {
+          prompt: {
+            type: 'string',
+            description: 'Detailed description of what to create. Include topic, key points, audience, purpose, and any specific requirements.',
+          },
+          contentType: {
+            type: 'string',
+            enum: ['presentation', 'document', 'webpage', 'social'],
+            description: 'Type of content: presentation (slides/pitch deck), document (report/proposal), webpage (landing page), social (social media post)',
+          },
+          style: {
+            type: 'string',
+            enum: ['minimal', 'professional', 'creative', 'bold'],
+            description: 'Visual style/theme. Default: professional',
+          },
+          title: {
+            type: 'string',
+            description: 'Title for the document',
+          },
+        },
+        required: ['prompt', 'contentType'],
       },
     },
   },
@@ -2041,6 +2073,66 @@ A: [Detailed answer]`,
     }
   },
 
+  async create_professional_document(args, context): Promise<ToolResult> {
+    try {
+      if (!isGammaConfigured()) {
+        return {
+          success: false,
+          message: 'Gamma.app is not configured. Please add GAMMA_API_KEY to environment variables.',
+          error: 'GAMMA_API_KEY missing',
+        };
+      }
+
+      logger.info('Generating professional document with Gamma', {
+        contentType: args.contentType,
+        style: args.style,
+        workspaceId: context.workspaceId,
+      });
+
+      const result = await generateWithGamma({
+        prompt: args.prompt as string,
+        contentType: args.contentType as 'presentation' | 'document' | 'webpage' | 'social',
+        style: (args.style as 'minimal' | 'professional' | 'creative' | 'bold') || 'professional',
+      });
+
+      // Poll for completion if processing
+      if (result.status === 'processing') {
+        logger.debug('Gamma document processing, polling for completion');
+        const completed = await pollGammaGeneration(result.id);
+        Object.assign(result, completed);
+      }
+
+      logger.info('Gamma document created successfully', {
+        documentId: result.id,
+        title: result.title,
+        cards: result.cards.length,
+      });
+
+      return {
+        success: true,
+        message: `✨ Created professional ${args.contentType}: "${result.title}"\n\n📝 ${result.cards.length} slides/sections\n🔗 Edit: ${result.editUrl}`,
+        data: {
+          id: result.id,
+          title: result.title,
+          contentType: args.contentType,
+          editUrl: result.editUrl,
+          embedUrl: result.embedUrl,
+          pdfUrl: result.exportFormats?.pdf,
+          pptxUrl: result.exportFormats?.pptx,
+          cards: result.cards.length,
+          style: args.style || 'professional',
+        },
+      };
+    } catch (error) {
+      logger.error('Gamma document creation failed', error);
+      return {
+        success: false,
+        message: 'Failed to create professional document. The Gamma API may be temporarily unavailable.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
   async list_collections(args, context): Promise<ToolResult> {
     try {
       const collections = await db.query.knowledgeCollections.findMany({
@@ -3174,8 +3266,8 @@ export const toolsByCategory = {
   tasks: ['create_task'],
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
-  content: ['draft_email', 'send_email', 'generate_document'],
-  knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections'],
+  content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document'],
+  knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document'],
   marketing: ['create_campaign', 'get_campaign_stats'],
   deals: ['create_deal', 'update_deal', 'get_deals_closing_soon'],
   finance: ['get_finance_summary', 'get_overdue_invoices', 'send_invoice_reminder', 'generate_cash_flow_forecast', 'compare_financial_periods', 'get_finance_integrations'],
