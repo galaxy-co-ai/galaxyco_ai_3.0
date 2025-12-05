@@ -13,6 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Search,
   Plus,
@@ -48,6 +55,7 @@ import {
   Twitter,
   Linkedin,
   Instagram,
+  ChevronDown,
   Facebook,
   Youtube,
   Briefcase,
@@ -1035,7 +1043,7 @@ Be creative, engaging, and write content that resonates!`;
           </div>
 
           {/* Stats Bar */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="hidden lg:flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100 transition-colors">
               <Megaphone className="h-3.5 w-3.5 mr-1.5 text-pink-600" />
               <span className="font-semibold">{stats.activeCampaigns}</span>
@@ -1085,9 +1093,10 @@ Be creative, engaging, and write content that resonates!`;
               size="sm"
               onClick={() => setShowNeptune(!showNeptune)}
               className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+              aria-label="Toggle Neptune AI assistant"
             >
               <Sparkles className="h-4 w-4" />
-              Neptune
+              <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>
         </div>
@@ -1113,34 +1122,40 @@ Be creative, engaging, and write content that resonates!`;
                   <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     {/* Header */}
                     <div className="px-6 py-4 border-b bg-gradient-to-r from-pink-50 to-pink-100/50 flex-shrink-0">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-md">
-                            <Megaphone className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h2 className="font-semibold text-gray-900">Campaign Templates</h2>
-                            <p className="text-xs text-gray-500">{campaignTemplates.length} campaign types</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-md">
+                          <Megaphone className="h-4 w-4" />
                         </div>
+                        <h2 className="text-sm font-semibold text-gray-900">Campaign Templates</h2>
                       </div>
                       
                       {/* Category Filter */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {campaignCategories.map((category) => (
-                          <button
-                            key={category}
-                            onClick={() => setCampaignCategoryFilter(category)}
-                            className={`px-2.5 py-1 text-xs rounded-full transition-all ${
-                              campaignCategoryFilter === category
-                                ? 'bg-pink-500 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                            }`}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="bg-white hover:bg-gray-50 text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-md active:scale-[0.98] border border-gray-200 transition-all duration-150 gap-2 h-9 px-3"
                           >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
+                            <span className="text-sm font-medium">
+                              {campaignCategoryFilter === 'All' ? 'Template Types' : campaignCategoryFilter}
+                            </span>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-48 bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg rounded-xl p-1">
+                          <DropdownMenuRadioGroup value={campaignCategoryFilter} onValueChange={setCampaignCategoryFilter}>
+                            {campaignCategories.map((category) => (
+                              <DropdownMenuRadioItem 
+                                key={category} 
+                                value={category}
+                                className="cursor-pointer rounded-lg text-sm py-2 pr-3 pl-8 transition-all duration-200 hover:bg-gray-100 hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)] data-[state=checked]:bg-pink-100 data-[state=checked]:text-pink-700 data-[state=checked]:shadow-sm"
+                              >
+                                {category}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
 
                     {/* Template List */}
@@ -1378,34 +1393,40 @@ Be creative, engaging, and write content that resonates!`;
                   <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     {/* Header */}
                     <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
-                            <FileText className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h2 className="font-semibold text-gray-900">Content Templates</h2>
-                            <p className="text-xs text-gray-500">{contentTemplates.length} templates available</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
+                          <FileText className="h-4 w-4" />
                         </div>
+                        <h2 className="text-sm font-semibold text-gray-900">Content Templates</h2>
                       </div>
                       
                       {/* Category Filter */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {contentCategories.map((category) => (
-                          <button
-                            key={category}
-                            onClick={() => setContentCategoryFilter(category)}
-                            className={`px-2.5 py-1 text-xs rounded-full transition-all ${
-                              contentCategoryFilter === category
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                            }`}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="bg-white hover:bg-gray-50 text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-md active:scale-[0.98] border border-gray-200 transition-all duration-150 gap-2 h-9 px-3"
                           >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
+                            <span className="text-sm font-medium">
+                              {contentCategoryFilter === 'All' ? 'Template Types' : contentCategoryFilter}
+                            </span>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-48 bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg rounded-xl p-1">
+                          <DropdownMenuRadioGroup value={contentCategoryFilter} onValueChange={setContentCategoryFilter}>
+                            {contentCategories.map((category) => (
+                              <DropdownMenuRadioItem 
+                                key={category} 
+                                value={category}
+                                className="cursor-pointer rounded-lg text-sm py-2 pr-3 pl-8 transition-all duration-200 hover:bg-gray-100 hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)] data-[state=checked]:bg-blue-100 data-[state=checked]:text-blue-700 data-[state=checked]:shadow-sm"
+                              >
+                                {category}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
 
                     {/* Template List */}
@@ -1641,34 +1662,40 @@ Be creative, engaging, and write content that resonates!`;
                   <div className="flex flex-col h-[600px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     {/* Header */}
                     <div className="px-6 py-4 border-b bg-gradient-to-r from-emerald-50 to-emerald-100/50 flex-shrink-0">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-md">
-                            <Palette className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h2 className="font-semibold text-gray-900">Asset Templates</h2>
-                            <p className="text-xs text-gray-500">{assetTemplates.length} templates available</p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-md">
+                          <Palette className="h-4 w-4" />
                         </div>
+                        <h2 className="text-sm font-semibold text-gray-900">Asset Templates</h2>
                       </div>
                       
                       {/* Category Filter */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {assetCategories.map((category) => (
-                          <button
-                            key={category}
-                            onClick={() => setAssetCategoryFilter(category)}
-                            className={`px-2.5 py-1 text-xs rounded-full transition-all ${
-                              assetCategoryFilter === category
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                            }`}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="bg-white hover:bg-gray-50 text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-md active:scale-[0.98] border border-gray-200 transition-all duration-150 gap-2 h-9 px-3"
                           >
-                            {category}
-                          </button>
-                        ))}
-                      </div>
+                            <span className="text-sm font-medium">
+                              {assetCategoryFilter === 'All' ? 'Template Types' : assetCategoryFilter}
+                            </span>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-48 bg-white/95 backdrop-blur-lg border border-gray-200 shadow-lg rounded-xl p-1">
+                          <DropdownMenuRadioGroup value={assetCategoryFilter} onValueChange={setAssetCategoryFilter}>
+                            {assetCategories.map((category) => (
+                              <DropdownMenuRadioItem 
+                                key={category} 
+                                value={category}
+                                className="cursor-pointer rounded-lg text-sm py-2 pr-3 pl-8 transition-all duration-200 hover:bg-gray-100 hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)] data-[state=checked]:bg-emerald-100 data-[state=checked]:text-emerald-700 data-[state=checked]:shadow-sm"
+                              >
+                                {category}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
 
                     {/* Template List */}
@@ -1911,16 +1938,16 @@ Be creative, engaging, and write content that resonates!`;
                     <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-md">
-                            <Share2 className="h-5 w-5" />
+                          <div className="p-2 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-md">
+                            <Share2 className="h-4 w-4" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-[15px] text-gray-900">Channels</h3>
-                            <p className="text-[13px] text-purple-600 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
-                              {filteredChannels.length} channels
-                            </p>
-                          </div>
+                          <h3 className="text-sm font-semibold text-gray-900">Channels</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-purple-600 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
+                            {filteredChannels.length} channels
+                          </p>
                         </div>
                         <Button
                           size="icon"
@@ -2367,16 +2394,16 @@ Be creative, engaging, and write content that resonates!`;
                     <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-indigo-100/50 flex-shrink-0">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md">
-                            <BarChart3 className="h-5 w-5" />
+                          <div className="p-2 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md">
+                            <BarChart3 className="h-4 w-4" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-[15px] text-gray-900">Campaigns</h3>
-                            <p className="text-[13px] text-indigo-600 flex items-center gap-1">
-                              <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
-                              {filteredAnalyticsCampaigns.length} campaigns
-                            </p>
-                          </div>
+                          <h3 className="text-sm font-semibold text-gray-900">Campaigns</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-indigo-600 flex items-center gap-1">
+                            <span className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+                            {filteredAnalyticsCampaigns.length} campaigns
+                          </p>
                         </div>
                       </div>
 

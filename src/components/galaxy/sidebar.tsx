@@ -60,7 +60,28 @@ interface SidebarProps {
 export function Sidebar({ className, user }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [isManuallyControlled, setIsManuallyControlled] = React.useState(false);
   const { user: clerkUser } = useUser();
+  
+  // Auto-collapse sidebar on smaller screens
+  React.useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      // Auto-collapse below lg breakpoint (1024px) if not manually controlled
+      if (width < 1024 && !isManuallyControlled) {
+        setIsCollapsed(true);
+      } else if (width >= 1024 && !isManuallyControlled) {
+        setIsCollapsed(false);
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    // Listen for resize events
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isManuallyControlled]);
   
   // Check if user is system admin
   const isSystemAdmin = React.useMemo(() => {
@@ -92,7 +113,10 @@ export function Sidebar({ className, user }: SidebarProps) {
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => {
+            setIsManuallyControlled(true);
+            setIsCollapsed(!isCollapsed);
+          }}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {isCollapsed ? (

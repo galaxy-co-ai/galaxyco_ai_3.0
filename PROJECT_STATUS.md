@@ -55,6 +55,82 @@
 
 ## Recent Changes
 
+### December 4, 2025 (Session 12)
+
+#### Responsive Design & UI Polish - Mobile-First Refinements
+
+- **Responsive Sidebar Auto-Collapse**
+  - Sidebar automatically collapses below 1024px (lg breakpoint)
+  - Prevents Neptune button overlap with tab bar on smaller screens
+  - Manual override toggle preserves user preference
+  - Smooth 300ms transition for natural animations
+  - **Impact**: Better mobile/tablet experience, no UI overlap issues
+
+- **Neptune Button Responsive Behavior**
+  - Shows full "Neptune" text on desktop (≥768px)
+  - Shows icon-only on tablet/mobile (<768px)
+  - Added accessibility label for screen readers
+  - Prevents tab bar overlap before button collapses
+  - **Impact**: Clean mobile interface without cramped buttons
+
+- **Stat Badges Responsive Visibility**
+  - Hidden on mobile/tablet (<1024px) across all dashboard pages
+  - Visible only on laptop/desktop (≥1024px)
+  - Applied to: Dashboard, My Agents, Creator, Library, CRM, Conversations, Marketing
+  - **Impact**: Cleaner, less cluttered mobile interface with better breathing room
+
+- **Marketing Page Filter Dropdowns**
+  - Replaced horizontal filter badges with iOS-inspired dropdowns
+  - Template Types dropdown for Campaigns, Content, and Assets
+  - Features:
+    - Clean white button with subtle shadow and hover lift
+    - ChevronDown icon for clear affordance
+    - Frosted glass backdrop blur effect
+    - Radio selection with color-coded checked states
+    - Hover states match sidebar navigation (gray background)
+    - Active states match tab bar design
+  - Button shows "Template Types" when "All" is selected, otherwise shows category
+  - **Impact**: Saves space, no more wrapping issues, matches premium iOS aesthetic
+
+- **Card Title Standardization**
+  - Updated all card titles across CRM and Marketing pages
+  - Smaller icons: `h-4 w-4` (was `h-5 w-5`)
+  - Smaller icon padding: `p-2` (was `p-2.5`)  
+  - Smaller text: `text-sm` (was `text-[15px]`)
+  - Cleaner layout with title and dropdown on separate rows
+  - Info text moved to right side for better balance
+  - **Impact**: Consistent card header design across all pages
+
+- **Type System Improvements**
+  - Unified ChannelType across Conversations components
+  - Added support for 'text', 'support', and 'team' channels
+  - Updated ConversationList, ChannelEmptyState, ConversationThread, MessageComposer
+  - Removed deprecated channel types (whatsapp, sms, live_chat)
+  - **Impact**: Type-safe channel handling across entire Conversations feature
+
+- **Global CSS Enhancement**
+  - Added `.branded-page-title` class with `!important` declarations
+  - Ensures Space Grotesk font consistency across page titles
+  - Fixes potential CSS specificity issues
+  - **Impact**: More reliable font rendering for branded titles
+
+#### Files Changed
+- `src/components/galaxy/sidebar.tsx` - Auto-collapse functionality
+- `src/components/agents/MyAgentsDashboard.tsx` - Neptune responsive, stat badges hidden
+- `src/components/dashboard-v2/DashboardV2Client.tsx` - Neptune responsive, stat badges hidden
+- `src/components/creator/CreatorDashboard.tsx` - Neptune responsive, stat badges hidden
+- `src/components/knowledge-base/KnowledgeBaseDashboard.tsx` - Neptune responsive, stat badges hidden
+- `src/components/crm/CRMDashboard.tsx` - Neptune responsive, stat badges hidden, smaller card titles
+- `src/components/conversations/ConversationsDashboard.tsx` - Neptune responsive, stat badges hidden
+- `src/components/marketing/MarketingDashboard.tsx` - Dropdown filters, smaller card titles, stat badges hidden
+- `src/components/conversations/ChannelEmptyState.tsx` - Unified ChannelType
+- `src/components/conversations/ConversationList.tsx` - Unified ChannelType
+- `src/components/conversations/ConversationThread.tsx` - Updated channel types
+- `src/components/conversations/MessageComposer.tsx` - Updated channel types
+- `src/app/globals.css` - Added branded-page-title class
+
+---
+
 ### December 4, 2025 (Session 11)
 
 #### Premium UI Redesign - Branded Page Titles & Consistent Design System

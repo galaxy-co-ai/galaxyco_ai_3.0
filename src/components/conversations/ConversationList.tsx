@@ -7,8 +7,7 @@ import { cn } from "@/lib/utils";
 import { Mail, MessageSquare, Phone, MessageCircle, Globe } from "lucide-react";
 import type { Conversation } from "./ConversationsDashboard";
 import ChannelEmptyState from "./ChannelEmptyState";
-
-type ChannelType = 'all' | 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat';
+import type { ChannelType } from "./ChannelTabs";
 
 interface ConversationListProps {
   conversations: Conversation[];
@@ -20,26 +19,30 @@ interface ConversationListProps {
 const channelIcons = {
   email: Mail,
   sms: MessageSquare,
+  text: MessageSquare,
   call: Phone,
   whatsapp: MessageCircle,
   social: Globe,
   live_chat: MessageCircle,
+  support: MessageCircle,
 };
 
 const channelColors = {
   email: "bg-blue-100 text-blue-700",
   sms: "bg-green-100 text-green-700",
+  text: "bg-green-100 text-green-700",
   call: "bg-purple-100 text-purple-700",
   whatsapp: "bg-emerald-100 text-emerald-700",
   social: "bg-pink-100 text-pink-700",
   live_chat: "bg-orange-100 text-orange-700",
+  support: "bg-orange-100 text-orange-700",
 };
 
 export default function ConversationList({
   conversations,
   selectedId,
   onSelect,
-  activeChannel = 'all',
+  activeChannel = 'team',
 }: ConversationListProps) {
   if (conversations.length === 0) {
     return <ChannelEmptyState channel={activeChannel} />;

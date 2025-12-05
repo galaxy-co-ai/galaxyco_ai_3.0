@@ -221,6 +221,13 @@
     @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight;
   }
 
+  /* Force Space Grotesk for branded page titles */
+  .branded-page-title {
+    font-family: 'Space Grotesk', var(--font-space-grotesk), system-ui, -apple-system, sans-serif !important;
+    letter-spacing: 0.25em !important;
+    font-weight: 700 !important;
+  }
+
   h2 {
     @apply text-2xl sm:text-3xl font-semibold tracking-tight leading-tight;
   }

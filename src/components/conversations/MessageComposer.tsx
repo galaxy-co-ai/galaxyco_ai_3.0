@@ -9,7 +9,7 @@ import { logger } from "@/lib/logger";
 
 interface MessageComposerProps {
   conversationId: string;
-  channel: 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat';
+  channel: 'email' | 'text' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat' | 'support';
 }
 
 export default function MessageComposer({

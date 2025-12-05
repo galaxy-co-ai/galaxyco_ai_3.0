@@ -8,13 +8,6 @@
  */
 
 import { useState } from 'react';
-import { Space_Grotesk } from 'next/font/google';
-
-const spaceGrotesk = Space_Grotesk({
-  weight: '700',
-  subsets: ['latin'],
-  variable: '--font-space-grotesk-dashboard',
-});
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -90,11 +83,9 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
               </defs>
             </svg>
             <h1 
-              className={`text-2xl uppercase ${spaceGrotesk.className}`}
+              className="branded-page-title text-2xl uppercase"
               style={{ 
-                letterSpacing: '0.25em',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)',
-                fontWeight: 700
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
               }}
             >
               Dashboard
@@ -102,7 +93,7 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
           </div>
 
           {/* Stats Bar */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="hidden lg:flex flex-wrap items-center gap-3">
               <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
                 <Bot className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
                 <span className="font-semibold">{stats.activeAgents}</span>
@@ -152,9 +143,10 @@ export default function DashboardV2Client({ initialData }: DashboardV2ClientProp
               size="sm"
               onClick={() => setShowNeptune(!showNeptune)}
               className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+              aria-label="Toggle Neptune AI assistant"
             >
               <Sparkles className="h-4 w-4" />
-              Neptune
+              <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>
         </div>

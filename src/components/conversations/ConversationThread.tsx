@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 
 interface ConversationThreadProps {
   conversationId: string;
-  channel: 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat';
+  channel: 'email' | 'text' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat' | 'support';
 }
 
 interface Message {

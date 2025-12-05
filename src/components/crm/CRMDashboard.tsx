@@ -691,7 +691,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
           </div>
 
           {/* Stats Bar */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="hidden lg:flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
               <Users className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
               <span className="font-semibold">{stats.totalLeads}</span>
@@ -741,9 +741,10 @@ Be helpful, proactive, and use CRM tools when needed.`;
               size="sm"
               onClick={() => setShowNeptune(!showNeptune)}
               className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+              aria-label="Toggle Neptune AI assistant"
             >
               <Sparkles className="h-4 w-4" />
-              Neptune
+              <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>
         </div>
@@ -771,16 +772,16 @@ Be helpful, proactive, and use CRM tools when needed.`;
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
-                          <Users className="h-5 w-5" />
+                        <div className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-md">
+                          <Users className="h-4 w-4" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-[15px] text-gray-900">Leads</h3>
-                          <p className="text-[13px] text-blue-600 flex items-center gap-1">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                            {filteredLeads.length} leads
-                          </p>
-                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900">Leads</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-blue-600 flex items-center gap-1">
+                          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                          {filteredLeads.length} leads
+                        </p>
                       </div>
                       <Button
                         size="icon"
@@ -1009,16 +1010,16 @@ Be helpful, proactive, and use CRM tools when needed.`;
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-md">
-                          <Building2 className="h-5 w-5" />
+                        <div className="p-2 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-md">
+                          <Building2 className="h-4 w-4" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-[15px] text-gray-900">Organizations</h3>
-                          <p className="text-[13px] text-purple-600 flex items-center gap-1">
-                            <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
-                            {filteredOrganizations.length} organizations
-                          </p>
-                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900">Organizations</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-purple-600 flex items-center gap-1">
+                          <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span>
+                          {filteredOrganizations.length} organizations
+                        </p>
                       </div>
                       <Button
                         size="icon"
@@ -1203,16 +1204,16 @@ Be helpful, proactive, and use CRM tools when needed.`;
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-cyan-50 to-cyan-100/50 flex-shrink-0">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-md">
-                          <Mail className="h-5 w-5" />
+                        <div className="p-2 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-md">
+                          <Mail className="h-4 w-4" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-[15px] text-gray-900">Contacts</h3>
-                          <p className="text-[13px] text-cyan-600 flex items-center gap-1">
-                            <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
-                            {filteredContacts.length} contacts
-                          </p>
-                        </div>
+                        <h3 className="text-sm font-semibold text-gray-900">Contacts</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-cyan-600 flex items-center gap-1">
+                          <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></span>
+                          {filteredContacts.length} contacts
+                        </p>
                       </div>
                       <Button
                         size="icon"

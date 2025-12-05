@@ -269,7 +269,7 @@ export default function MyAgentsDashboard({
           </div>
           
           {/* Stats Bar */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="hidden lg:flex flex-wrap items-center gap-3">
             <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
               <Activity className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
               <span className="font-semibold">{stats.activeAgents}</span>
@@ -306,9 +306,10 @@ export default function MyAgentsDashboard({
               size="sm"
               onClick={() => setShowNeptune(!showNeptune)}
               className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
+              aria-label="Toggle Neptune AI assistant"
             >
               <Sparkles className="h-4 w-4" />
-              Neptune
+              <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>
         </div>

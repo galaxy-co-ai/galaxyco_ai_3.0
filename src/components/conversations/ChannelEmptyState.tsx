@@ -12,9 +12,9 @@ import {
   Inbox,
   Sparkles,
   Settings,
+  Users,
 } from "lucide-react";
-
-type ChannelType = 'all' | 'email' | 'sms' | 'call' | 'whatsapp' | 'social' | 'live_chat';
+import type { ChannelType } from "./ChannelTabs";
 
 interface ChannelEmptyStateProps {
   channel: ChannelType;
@@ -31,16 +31,16 @@ const channelConfig: Record<ChannelType, {
   setupLink?: string;
   setupLinkText?: string;
 }> = {
-  all: {
-    icon: Inbox,
-    title: "Your inbox is empty",
-    description: "Connect a channel to start receiving and sending messages from one unified hub.",
-    color: "text-gray-600",
-    bgColor: "bg-gray-100",
+  team: {
+    icon: Users,
+    title: "Team Chat is empty",
+    description: "Start conversations with your team members.",
+    color: "text-indigo-600",
+    bgColor: "bg-indigo-100",
     setupSteps: [
-      "Connect your first channel below",
-      "Incoming messages will appear here",
-      "Reply to customers from any channel",
+      "Invite team members",
+      "Start conversations",
+      "Collaborate in real-time",
     ],
   },
   email: {
@@ -57,9 +57,9 @@ const channelConfig: Record<ChannelType, {
     setupLink: "/settings",
     setupLinkText: "Configure Email",
   },
-  sms: {
+  text: {
     icon: MessageSquare,
-    title: "SMS not connected",
+    title: "Text not connected",
     description: "Connect Twilio to send and receive text messages with your customers.",
     color: "text-green-600",
     bgColor: "bg-green-50",
@@ -85,20 +85,6 @@ const channelConfig: Record<ChannelType, {
     setupLink: "https://console.twilio.com",
     setupLinkText: "Open Twilio Console",
   },
-  whatsapp: {
-    icon: MessageCircle,
-    title: "WhatsApp not connected",
-    description: "Connect WhatsApp Business to chat with customers on their favorite app.",
-    color: "text-emerald-600",
-    bgColor: "bg-emerald-50",
-    setupSteps: [
-      "Apply for WhatsApp Business API",
-      "Connect via Twilio or Meta",
-      "Get your templates approved",
-    ],
-    setupLink: "https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn",
-    setupLinkText: "Set Up WhatsApp",
-  },
   social: {
     icon: Globe,
     title: "Social DMs coming soon",
@@ -111,14 +97,14 @@ const channelConfig: Record<ChannelType, {
       "Add Twitter/X integration",
     ],
   },
-  live_chat: {
+  support: {
     icon: MessageCircle,
-    title: "Live chat coming soon",
-    description: "Embed a chat widget on your website to talk to visitors in real-time.",
+    title: "Support coming soon",
+    description: "Embed a support widget on your website to help visitors in real-time.",
     color: "text-orange-600",
     bgColor: "bg-orange-50",
     setupSteps: [
-      "Add chat widget to your site",
+      "Add support widget to your site",
       "Customize appearance",
       "Set up auto-responses",
     ],
@@ -128,7 +114,7 @@ const channelConfig: Record<ChannelType, {
 export default function ChannelEmptyState({ channel, onStartConversation }: ChannelEmptyStateProps) {
   const config = channelConfig[channel];
   const Icon = config.icon;
-  const isComingSoon = channel === 'social' || channel === 'live_chat';
+  const isComingSoon = channel === 'social' || channel === 'support';
 
   return (
     <div className="flex h-full items-center justify-center p-6">
@@ -169,8 +155,8 @@ export default function ChannelEmptyState({ channel, onStartConversation }: Chan
             <Button
               asChild
               className={`w-full ${channel === 'email' ? 'bg-blue-600 hover:bg-blue-700' : 
-                channel === 'sms' || channel === 'call' ? 'bg-purple-600 hover:bg-purple-700' : 
-                channel === 'whatsapp' ? 'bg-emerald-600 hover:bg-emerald-700' : ''}`}
+                channel === 'text' || channel === 'call' ? 'bg-purple-600 hover:bg-purple-700' : 
+                ''}`}
             >
               <a href={config.setupLink} target={config.setupLink.startsWith('http') ? '_blank' : '_self'} rel="noopener noreferrer">
                 {config.setupLinkText}
@@ -187,7 +173,7 @@ export default function ChannelEmptyState({ channel, onStartConversation }: Chan
             </Button>
           )}
 
-          {channel === 'all' && (
+          {channel === 'team' && (
             <Button variant="outline" asChild className="w-full">
               <a href="/settings">
                 <Settings className="mr-2 h-4 w-4" />
@@ -198,7 +184,7 @@ export default function ChannelEmptyState({ channel, onStartConversation }: Chan
         </div>
 
         {/* Help Text */}
-        {!isComingSoon && channel !== 'all' && (
+        {!isComingSoon && channel !== 'team' && (
           <p className="text-xs text-muted-foreground mt-5">
             Need help? Check our{" "}
             <a href="/docs" className="text-primary hover:underline">
