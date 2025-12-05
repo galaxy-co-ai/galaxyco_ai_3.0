@@ -146,11 +146,16 @@ Deployment:   ████████████████████ 100% 
 
 ## 🎯 Key Features
 
-### 🤖 AI Assistant
-- Multi-provider support (OpenAI, Anthropic, Google)
-- Conversational chat interface
-- Context-aware responses
-- Streaming support
+### 🤖 Neptune AI Assistant (Enhanced)
+- Multi-provider support (OpenAI GPT-4o, Anthropic, Google)
+- **File upload support** - Send documents, images, PDFs for analysis
+- **Vision capabilities** - Analyze screenshots, extract text from images
+- **Professional document creation** - Gamma.app integration for presentations and proposals
+- **Image generation** - DALL-E 3 for logos, graphics, marketing visuals
+- **Document processing** - Auto-extract text from PDFs and Word documents
+- Context-aware responses with workspace data
+- Streaming support for real-time responses
+- Available on all dashboard pages + dedicated `/assistant` page
 
 ### 📚 Knowledge Base
 - Document upload & processing
