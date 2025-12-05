@@ -23,6 +23,7 @@ import { eq, and, desc, gte, lte, like, or, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import type { ChatCompletionTool } from 'openai/resources/chat/completions';
 import { generateWithGamma, pollGammaGeneration, isGammaConfigured } from '@/lib/gamma';
+import { generateImage, isDalleConfigured } from '@/lib/dalle';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -565,6 +566,38 @@ export const aiTools: ChatCompletionTool[] = [
       parameters: {
         type: 'object',
         properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_image',
+      description: 'Generate an AI image using DALL-E 3. Use this when user asks to CREATE, DESIGN, or GENERATE any visual content like logos, graphics, illustrations, photos, artwork, social media images, marketing materials, icons, banners, or any other images. Produces high-quality, realistic images.',
+      parameters: {
+        type: 'object',
+        properties: {
+          prompt: {
+            type: 'string',
+            description: 'Detailed description of the image to generate. Be VERY specific about style, colors, composition, mood, lighting, perspective, and subject details. More detail = better results.',
+          },
+          size: {
+            type: 'string',
+            enum: ['1024x1024', '1792x1024', '1024x1792'],
+            description: 'Image dimensions: 1024x1024 (square), 1792x1024 (landscape/wide), 1024x1792 (portrait/tall)',
+          },
+          quality: {
+            type: 'string',
+            enum: ['standard', 'hd'],
+            description: 'Image quality: standard (faster, cheaper) or hd (higher detail, more expensive)',
+          },
+          style: {
+            type: 'string',
+            enum: ['vivid', 'natural'],
+            description: 'Visual style: vivid (dramatic, creative, hyper-real) or natural (realistic, photographic)',
+          },
+        },
+        required: ['prompt'],
       },
     },
   },
@@ -2133,6 +2166,79 @@ A: [Detailed answer]`,
     }
   },
 
+  async generate_image(args, context): Promise<ToolResult> {
+    try {
+      if (!isDalleConfigured()) {
+        return {
+          success: false,
+          message: 'DALL-E is not configured. Please add OPENAI_API_KEY to environment variables.',
+          error: 'OPENAI_API_KEY missing',
+        };
+      }
+
+      logger.info('Generating image with DALL-E 3', {
+        promptLength: (args.prompt as string).length,
+        size: args.size,
+        quality: args.quality,
+        style: args.style,
+        workspaceId: context.workspaceId,
+      });
+
+      const result = await generateImage({
+        prompt: args.prompt as string,
+        size: args.size as '1024x1024' | '1792x1024' | '1024x1792' | undefined,
+        quality: args.quality as 'standard' | 'hd' | undefined,
+        style: args.style as 'vivid' | 'natural' | undefined,
+      });
+
+      logger.info('DALL-E image generated successfully', {
+        imageUrl: result.url,
+        size: result.size,
+        quality: result.quality,
+      });
+
+      return {
+        success: true,
+        message: `🎨 Generated image: ${result.revisedPrompt.substring(0, 100)}...`,
+        data: {
+          imageUrl: result.url,
+          prompt: args.prompt,
+          revisedPrompt: result.revisedPrompt,
+          size: result.size,
+          quality: result.quality,
+          style: args.style || 'vivid',
+        },
+      };
+    } catch (error) {
+      logger.error('DALL-E image generation failed', error);
+      
+      // Handle specific errors
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes('content_policy')) {
+        return {
+          success: false,
+          message: 'Image generation failed: Content policy violation. Please try a different prompt.',
+          error: 'content_policy_violation',
+        };
+      }
+      
+      if (errorMessage.includes('rate_limit')) {
+        return {
+          success: false,
+          message: 'Rate limit exceeded. Please try again in a moment.',
+          error: 'rate_limit',
+        };
+      }
+
+      return {
+        success: false,
+        message: 'Failed to generate image. Please try again with a different prompt.',
+        error: errorMessage,
+      };
+    }
+  },
+
   async list_collections(args, context): Promise<ToolResult> {
     try {
       const collections = await db.query.knowledgeCollections.findMany({
@@ -3266,9 +3372,9 @@ export const toolsByCategory = {
   tasks: ['create_task'],
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
-  content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document'],
+  content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image'],
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document'],
-  marketing: ['create_campaign', 'get_campaign_stats'],
+  marketing: ['create_campaign', 'get_campaign_stats', 'generate_image'],
   deals: ['create_deal', 'update_deal', 'get_deals_closing_soon'],
   finance: ['get_finance_summary', 'get_overdue_invoices', 'send_invoice_reminder', 'generate_cash_flow_forecast', 'compare_financial_periods', 'get_finance_integrations'],
 };

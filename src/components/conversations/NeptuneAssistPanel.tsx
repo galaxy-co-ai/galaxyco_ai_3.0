@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Send, RefreshCw, Lightbulb, FileText, Heart, Calendar, CheckSquare, Mail, Paperclip, X, ImageIcon, Loader2, Presentation, ExternalLink, Download } from "lucide-react";
+import { Sparkles, Send, RefreshCw, Lightbulb, FileText, Heart, Calendar, CheckSquare, Mail, Paperclip, X, ImageIcon, Loader2, Presentation, ExternalLink, Download, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import QuickActions from "./QuickActions";
@@ -309,6 +309,66 @@ export default function NeptuneAssistPanel({
                             </a>
                           </Button>
                         )}
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                {/* DALL-E Generated Image Display */}
+                {msg.metadata?.functionCalls?.some(fc => fc.name === 'generate_image') && (() => {
+                  const imageCall = msg.metadata.functionCalls.find(fc => fc.name === 'generate_image');
+                  const imageData = imageCall?.result?.data as { imageUrl?: string; revisedPrompt?: string; size?: string; quality?: string; style?: string } | undefined;
+                  
+                  if (!imageData?.imageUrl) return null;
+                  
+                  return (
+                    <div className="mt-3 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
+                      {/* Image Preview */}
+                      <div className="relative group">
+                        <img 
+                          src={imageData.imageUrl}
+                          alt={imageData.revisedPrompt || "Generated image"}
+                          className="w-full h-auto max-h-96 object-contain bg-white"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                      </div>
+                      
+                      {/* Image Info & Actions */}
+                      <div className="p-4 bg-white/80 backdrop-blur-sm">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="p-2 rounded-lg bg-blue-100">
+                            <ImageIcon className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                                DALL-E 3
+                              </Badge>
+                              <span className="text-xs text-blue-600">
+                                {imageData.size} • {imageData.quality || 'standard'} • {imageData.style || 'vivid'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 line-clamp-2">
+                              {imageData.revisedPrompt}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" variant="outline" className="text-xs h-8" asChild>
+                            <a href={imageData.imageUrl} target="_blank" rel="noopener noreferrer">
+                              <Eye className="h-3 w-3 mr-1.5" />
+                              View Full Size
+                            </a>
+                          </Button>
+                          
+                          <Button size="sm" variant="outline" className="text-xs h-8" asChild>
+                            <a href={imageData.imageUrl} download={`dalle-${Date.now()}.png`}>
+                              <Download className="h-3 w-3 mr-1.5" />
+                              Download
+                            </a>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   );
