@@ -16,6 +16,10 @@ import {
   Wand2,
   Copy,
   CheckCircle2,
+  Paperclip,
+  X,
+  ImageIcon,
+  FileText,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -28,6 +32,14 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+}
+
+interface Attachment {
+  type: 'image' | 'document' | 'file';
+  url: string;
+  name: string;
+  size: number;
+  mimeType: string;
 }
 
 // Quick actions based on context
@@ -68,16 +80,84 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/assistant/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error('Upload failed');
+
+        const data = await res.json();
+        setPendingAttachments(prev => [...prev, data.attachment]);
+        toast.success(`${file.name} uploaded`);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to upload file");
+      }
+    }
+
+    setIsUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+
+    if (imageItem) {
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/assistant/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error('Upload failed');
+
+        const data = await res.json();
+        setPendingAttachments(prev => [...prev, data.attachment]);
+        toast.success("Image pasted");
+      } catch (error) {
+        toast.error("Failed to upload pasted image");
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   // Handle sending message
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() && pendingAttachments.length === 0) return;
+    if (isLoading) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -88,6 +168,7 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setPendingAttachments([]);
     setIsLoading(true);
 
     try {
@@ -97,6 +178,7 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: input.trim(),
+          attachments: pendingAttachments,
           context: {
             workspace: "Creator",
             feature: "content-creation",
@@ -270,10 +352,53 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
 
       {/* Input */}
       <div className="px-4 py-3 border-t bg-white">
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.json,.zip,.rar,.gz"
+          onChange={handleFileSelect}
+          className="hidden"
+          aria-label="Upload file"
+        />
+        
+        {pendingAttachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {pendingAttachments.map((att, i) => (
+              <div key={i} className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm">
+                {att.type === 'image' ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                <span className="truncate max-w-[150px]">{att.name}</span>
+                <button
+                  onClick={() => setPendingAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                  className="ml-1 hover:text-destructive"
+                  aria-label="Remove attachment"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="h-9 w-9 shrink-0"
+            aria-label="Attach file"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Paperclip className="h-4 w-4" />
+            )}
+          </Button>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onPaste={handlePaste}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && !isLoading) {
                 e.preventDefault();
@@ -287,7 +412,7 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
           />
           <Button
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
+            disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading}
             size="icon"
             className="rounded-full bg-purple-600 hover:bg-purple-700 h-9 w-9"
             aria-label="Send message"

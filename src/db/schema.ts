@@ -1134,6 +1134,15 @@ export const aiMessages = pgTable(
     role: text('role').notNull(), // 'user' | 'assistant' | 'system'
     content: text('content').notNull(),
 
+    // File attachments
+    attachments: jsonb('attachments').$type<Array<{
+      type: 'image' | 'document' | 'file';
+      url: string;
+      name: string;
+      size: number;
+      mimeType: string;
+    }>>(),
+
     // Metadata - for RAG, function calls, etc
     metadata: jsonb('metadata')
       .$type<{

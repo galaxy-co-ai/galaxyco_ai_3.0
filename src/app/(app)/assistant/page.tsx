@@ -33,6 +33,9 @@ import {
   Trash2,
   AlertCircle,
   RefreshCw,
+  Paperclip,
+  X,
+  ImageIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -46,6 +49,14 @@ interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+}
+
+interface Attachment {
+  type: 'image' | 'document' | 'file';
+  url: string;
+  name: string;
+  size: number;
+  mimeType: string;
 }
 
 interface Conversation {
@@ -81,7 +92,10 @@ export default function AssistantPage() {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch conversations from API
   const { 
@@ -207,8 +221,73 @@ export default function AssistantPage() {
     scrollToBottom();
   }, [messages]);
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/assistant/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error('Upload failed');
+
+        const data = await res.json();
+        setPendingAttachments(prev => [...prev, data.attachment]);
+        toast.success(`${file.name} uploaded`);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to upload file");
+      }
+    }
+
+    setIsUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+
+    if (imageItem) {
+      e.preventDefault();
+      const file = imageItem.getAsFile();
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await fetch('/api/assistant/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) throw new Error('Upload failed');
+
+        const data = await res.json();
+        setPendingAttachments(prev => [...prev, data.attachment]);
+        toast.success("Image pasted");
+      } catch (error) {
+        toast.error("Failed to upload pasted image");
+      } finally {
+        setIsUploading(false);
+      }
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() && pendingAttachments.length === 0) return;
+    if (isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -220,6 +299,7 @@ export default function AssistantPage() {
     setMessages(prev => [...prev, userMessage]);
     const messageText = inputValue;
     setInputValue("");
+    setPendingAttachments([]);
     setIsLoading(true);
 
     try {
@@ -229,6 +309,7 @@ export default function AssistantPage() {
         body: JSON.stringify({
           message: messageText,
           conversationId: currentConversationId,
+          attachments: pendingAttachments,
           context: {
             feature: selectedCapability,
           },
@@ -748,10 +829,53 @@ export default function AssistantPage() {
 
             {/* Input Area */}
             <div className="p-4 border-t bg-white flex-shrink-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.json,.zip,.rar,.gz"
+                onChange={handleFileSelect}
+                className="hidden"
+                aria-label="Upload file"
+              />
+              
+              {pendingAttachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {pendingAttachments.map((att, i) => (
+                    <div key={i} className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm">
+                      {att.type === 'image' ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                      <span className="truncate max-w-[150px]">{att.name}</span>
+                      <button
+                        onClick={() => setPendingAttachments(prev => prev.filter((_, idx) => idx !== i))}
+                        className="ml-1 hover:text-destructive"
+                        aria-label="Remove attachment"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="h-11 w-11 shrink-0"
+                  aria-label="Attach file"
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Paperclip className="h-5 w-5" />
+                  )}
+                </Button>
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
+                  onPaste={handlePaste}
                   onKeyDown={handleKeyPress}
                   placeholder={`Ask about ${selectedCapabilityData.title.toLowerCase()}...`}
                   className="flex-1 h-11 bg-slate-50 border-slate-200 focus:border-indigo-300 focus:ring-indigo-200"
@@ -760,7 +884,7 @@ export default function AssistantPage() {
                 />
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={(!inputValue.trim() && pendingAttachments.length === 0) || isLoading}
                   className="h-11 px-4 bg-indigo-600 hover:bg-indigo-700 text-white"
                   aria-label="Send message"
                 >
