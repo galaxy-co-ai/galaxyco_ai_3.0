@@ -14,6 +14,7 @@ import { aiTools, executeTool, getToolsForCapability, type ToolContext } from '@
 import { gatherAIContext, getQuickContext } from '@/lib/ai/context';
 import { generateSystemPrompt } from '@/lib/ai/system-prompt';
 import { trackFrequentQuestion, analyzeConversationForLearning, updateUserPreferencesFromInsights } from '@/lib/ai/memory';
+import { processDocuments } from '@/lib/document-processing';
 
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
 
@@ -203,13 +204,32 @@ export async function POST(request: Request) {
       mimeType: string;
     }> | undefined;
 
+    // Process document attachments to extract text
+    let documentContext = '';
+    if (attachments && attachments.length > 0) {
+      try {
+        documentContext = await processDocuments(attachments);
+        logger.debug('Document text extracted', {
+          documentsProcessed: attachments.filter(a => a.type === 'document').length,
+          textLength: documentContext.length,
+        });
+      } catch (error) {
+        logger.error('Document processing error (non-blocking)', error);
+      }
+    }
+
+    // Combine user message with document context
+    const fullMessage = documentContext 
+      ? `${message}\n\n--- Attached Documents ---\n${documentContext}`
+      : message;
+
     // Save user message with attachments
     const [userMessage] = await db
       .insert(aiMessages)
       .values({
         conversationId: conversation.id,
         role: 'user',
-        content: message,
+        content: fullMessage,
         attachments: attachments,
       })
       .returning();
