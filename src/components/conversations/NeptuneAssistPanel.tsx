@@ -453,7 +453,7 @@ export default function NeptuneAssistPanel({
           />
           <Button
             onClick={handleSend}
-            disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading || !conversation}
+            disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading}
             size="icon"
             className="h-9 w-9 shrink-0"
             aria-label="Send message"
