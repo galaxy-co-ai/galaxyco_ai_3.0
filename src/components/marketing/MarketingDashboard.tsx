@@ -586,7 +586,7 @@ export default function MarketingDashboard({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (campaign) =>
+        (campaign: Campaign) =>
           campaign.name.toLowerCase().includes(query)
       );
     }
@@ -624,7 +624,7 @@ export default function MarketingDashboard({
     if (analyticsSearchQuery) {
       const query = analyticsSearchQuery.toLowerCase();
       filtered = filtered.filter(
-        (campaign) =>
+        (campaign: Campaign) =>
           campaign.name.toLowerCase().includes(query)
       );
     }
@@ -2531,7 +2531,7 @@ Be creative, engaging, and write content that resonates!`;
                     {/* Campaigns List */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                       {filteredAnalyticsCampaigns.length > 0 ? (
-                        filteredAnalyticsCampaigns.map((campaign) => (
+                        filteredAnalyticsCampaigns.map((campaign: Campaign) => (
                           <div
                             key={campaign.id}
                             onClick={() => setSelectedAnalyticsCampaign(campaign)}
