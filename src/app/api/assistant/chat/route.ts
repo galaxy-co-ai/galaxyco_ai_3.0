@@ -250,15 +250,15 @@ export async function POST(request: Request) {
         role: 'system',
         content: systemPrompt,
       },
-      ...history.slice(-15).map((msg) => {
+      ...history.slice(-15).map((msg): ChatCompletionMessageParam => {
         // Check if message has image attachments
         const attachments = msg.attachments as Array<{type: string; url: string}> | undefined;
         const imageAttachments = attachments?.filter(att => att.type === 'image') || [];
         
         if (imageAttachments.length > 0 && msg.role === 'user') {
-          // Format with vision support
+          // Format with vision support - only user messages can have images
           return {
-            role: msg.role as 'user' | 'assistant',
+            role: 'user',
             content: [
               { type: 'text' as const, text: msg.content },
               ...imageAttachments.map(img => ({
