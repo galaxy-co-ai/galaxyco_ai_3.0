@@ -105,7 +105,16 @@ function buildCapabilitiesSection(): string {
 **🤖 AI Agents & Automation**
 - List and manage AI agents
 - Help configure workflows
-- Explain automation capabilities`;
+- Explain automation capabilities
+
+**👁️ Vision & Image Analysis**
+- Analyze screenshots and images
+- Extract text from screenshots or documents
+- Identify objects, people, or scenes
+- Analyze charts, graphs, or data visualizations
+- Provide feedback on design or composition
+- Answer questions about image content
+- Debug errors from screenshots`;
 }
 
 function buildContextSection(context: AIContextData): string {

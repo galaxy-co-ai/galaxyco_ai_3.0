@@ -194,13 +194,23 @@ export async function POST(request: Request) {
       logger.debug('[AI Chat] Created new conversation', { conversationId: newConv.id });
     }
 
-    // Save user message
+    // Parse attachments from request
+    const attachments = body.attachments as Array<{
+      type: 'image' | 'document' | 'file';
+      url: string;
+      name: string;
+      size: number;
+      mimeType: string;
+    }> | undefined;
+
+    // Save user message with attachments
     const [userMessage] = await db
       .insert(aiMessages)
       .values({
         conversationId: conversation.id,
         role: 'user',
         content: message,
+        attachments: attachments,
       })
       .returning();
 
@@ -214,16 +224,37 @@ export async function POST(request: Request) {
       limit: 20,
     });
 
-    // Build messages array for OpenAI
+    // Build messages array for OpenAI with vision support
     const messages: ChatCompletionMessageParam[] = [
       {
         role: 'system',
         content: systemPrompt,
       },
-      ...history.slice(-15).map((msg) => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content,
-      })),
+      ...history.slice(-15).map((msg) => {
+        // Check if message has image attachments
+        const attachments = msg.attachments as Array<{type: string; url: string}> | undefined;
+        const imageAttachments = attachments?.filter(att => att.type === 'image') || [];
+        
+        if (imageAttachments.length > 0 && msg.role === 'user') {
+          // Format with vision support
+          return {
+            role: msg.role as 'user' | 'assistant',
+            content: [
+              { type: 'text' as const, text: msg.content },
+              ...imageAttachments.map(img => ({
+                type: 'image_url' as const,
+                image_url: { url: img.url },
+              })),
+            ],
+          };
+        }
+        
+        // Regular text message
+        return {
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+        };
+      }),
     ];
 
     // Select tools based on feature context
@@ -252,7 +283,7 @@ export async function POST(request: Request) {
     try {
       // First API call
       let completion = await openai.chat.completions.create({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o',
         messages,
         tools: tools.length > 0 ? tools : undefined,
         tool_choice: tools.length > 0 ? 'auto' : undefined,
@@ -300,7 +331,7 @@ export async function POST(request: Request) {
 
         // Call OpenAI again with tool results
         completion = await openai.chat.completions.create({
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-4o',
           messages,
           tools: tools.length > 0 ? tools : undefined,
           tool_choice: tools.length > 0 ? 'auto' : undefined,
