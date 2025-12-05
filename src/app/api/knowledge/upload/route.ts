@@ -13,9 +13,9 @@ import { createErrorResponse } from '@/lib/api-error-handler';
 // Helper to extract text from PDF files
 async function extractPdfText(buffer: Buffer): Promise<string> {
   try {
-    // Dynamic import for pdf-parse
-    // Using require-style for compatibility with pdf-parse's module system
-    const pdfParse = require('pdf-parse') as (buffer: Buffer) => Promise<{ text: string }>;
+    // Dynamic import for pdf-parse (CommonJS module)
+    const pdfParseModule = await import('pdf-parse');
+    const pdfParse = (pdfParseModule as any).default ?? (pdfParseModule as any);
     const data = await pdfParse(buffer);
     return data.text || '';
   } catch (error) {

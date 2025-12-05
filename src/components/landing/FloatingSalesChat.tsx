@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -354,12 +355,12 @@ export function FloatingSalesChat() {
             {/* Footer */}
             <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
               <span className="text-[10px] text-gray-400">Powered by GalaxyCo AI</span>
-              <a
+              <Link
                 href="/sign-up"
                 className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-0.5"
               >
                 Start free trial <ArrowRight className="h-3 w-3" />
-              </a>
+              </Link>
             </div>
           </motion.div>
         )}

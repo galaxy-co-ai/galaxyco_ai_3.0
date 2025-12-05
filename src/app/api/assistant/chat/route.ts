@@ -298,7 +298,7 @@ export async function POST(request: Request) {
     });
 
     let assistantMessage: string;
-    let toolCallsMade: string[] = [];
+    const toolCallsMade: string[] = [];
 
     try {
       // First API call

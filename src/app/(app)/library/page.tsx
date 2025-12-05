@@ -12,6 +12,28 @@ export const metadata: Metadata = {
 };
 
 export default async function LibraryPage() {
+  let initialCollections: Array<{
+    id: string;
+    name: string;
+    description: string;
+    itemCount: number;
+    color?: string;
+    icon?: string;
+  }> = [];
+
+  let initialItems: Array<{
+    id: string;
+    name: string;
+    type: string;
+    project: string;
+    createdBy: string;
+    createdAt: string;
+    size: string;
+    description: string;
+    content?: string;
+    url?: string;
+  }> = [];
+
   try {
     const { workspaceId } = await getCurrentWorkspace();
 
@@ -30,43 +52,42 @@ export default async function LibraryPage() {
       }),
     ]);
 
-    return (
-      <ErrorBoundary>
-        <KnowledgeBaseDashboard
-          initialCollections={collections.map((col) => ({
-          id: col.id,
-          name: col.name,
-          description: col.description || '',
-          itemCount: col.itemCount,
-          color: col.color || undefined,
-          icon: col.icon || undefined,
-        }))}
-        initialItems={items.map((item) => {
-          const collection = item.collection as { name?: string } | null;
-          return {
-            id: item.id,
-            name: item.title,
-            type: item.type.toUpperCase(),
-            project: collection?.name || 'Uncategorized',
-            createdBy: 'User',
-            createdAt: formatRelativeTime(item.createdAt),
-            size: item.fileSize ? formatFileSize(item.fileSize) : 'N/A',
-            description: item.summary || item.content?.substring(0, 100) || '',
-            content: item.content || undefined,
-            url: item.sourceUrl || undefined,
-          };
-        })}
-        />
-      </ErrorBoundary>
-    );
+    initialCollections = collections.map((col) => ({
+      id: col.id,
+      name: col.name,
+      description: col.description || '',
+      itemCount: col.itemCount,
+      color: col.color || undefined,
+      icon: col.icon || undefined,
+    }));
+
+    initialItems = items.map((item) => {
+      const collection = item.collection as { name?: string } | null;
+      return {
+        id: item.id,
+        name: item.title,
+        type: item.type.toUpperCase(),
+        project: collection?.name || 'Uncategorized',
+        createdBy: 'User',
+        createdAt: formatRelativeTime(item.createdAt),
+        size: item.fileSize ? formatFileSize(item.fileSize) : 'N/A',
+        description: item.summary || item.content?.substring(0, 100) || '',
+        content: item.content || undefined,
+        url: item.sourceUrl || undefined,
+      };
+    });
   } catch (error) {
-    // Return empty data on error - component will handle gracefully
-    return (
-      <ErrorBoundary>
-        <KnowledgeBaseDashboard initialCollections={[]} initialItems={[]} />
-      </ErrorBoundary>
-    );
+    // On error, fall back to empty state; ErrorBoundary + dashboard will handle UI.
   }
+
+  return (
+    <ErrorBoundary>
+      <KnowledgeBaseDashboard
+        initialCollections={initialCollections}
+        initialItems={initialItems}
+      />
+    </ErrorBoundary>
+  );
 }
 
 function formatRelativeTime(date: Date): string {

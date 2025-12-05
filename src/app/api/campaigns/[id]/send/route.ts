@@ -103,7 +103,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     if (targetAudience === 'all_leads' || targetAudience === 'new_leads' || targetAudience === 'qualified_leads') {
       // Get prospects based on audience type
-      let prospectConditions = [
+      const prospectConditions = [
         eq(prospects.workspaceId, workspaceId),
         ne(prospects.email, ''), // Has email
       ];

@@ -13,7 +13,7 @@ let pdfParse: any = null;
 async function getPdfParse() {
   if (!pdfParse) {
     try {
-      // @ts-ignore
+      // @ts-expect-error -- pdf-parse is a CommonJS module without a typed default export
       pdfParse = (await import('pdf-parse')).default;
     } catch (error) {
       logger.error('Failed to load pdf-parse', error);

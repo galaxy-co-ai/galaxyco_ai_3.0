@@ -138,15 +138,14 @@
   };
 
   XMLHttpRequest.prototype.send = function(...args) {
-    const xhr = this;
-    const monitor = xhr._testMonitor;
+    const monitor = this._testMonitor;
     
-    xhr.addEventListener('load', function() {
+    this.addEventListener('load', () => {
       const requestData = {
         method: monitor.method,
         url: monitor.url,
-        status: xhr.status,
-        statusText: xhr.statusText,
+        status: this.status,
+        statusText: this.statusText,
         duration: Date.now() - monitor.startTime
       };
 
@@ -158,7 +157,7 @@
       }
     });
 
-    xhr.addEventListener('error', function() {
+    this.addEventListener('error', () => {
       const requestData = {
         method: monitor.method,
         url: monitor.url,

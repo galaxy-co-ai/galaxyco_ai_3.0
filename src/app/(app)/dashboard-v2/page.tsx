@@ -26,28 +26,24 @@ export const metadata: Metadata = {
  * component for interactivity and real-time updates.
  */
 export default async function DashboardV2Page() {
+  // Always render the same JSX tree; just vary the data we pass in.
+  let initialData = getEmptyDashboardData();
+
   try {
     // Get authenticated workspace
     const { workspaceId } = await getCurrentWorkspace();
 
     // Fetch dashboard data
-    const data = await getDashboardData(workspaceId);
-
-    return (
-      <ErrorBoundary>
-        <DashboardV2Client initialData={data} />
-      </ErrorBoundary>
-    );
-
+    initialData = await getDashboardData(workspaceId);
   } catch (error) {
     // Log error but don't expose details to user
     logger.error('Dashboard v2 page error', { error });
-
-    // Return component with empty data (graceful degradation)
-    return (
-      <ErrorBoundary>
-        <DashboardV2Client initialData={getEmptyDashboardData()} />
-      </ErrorBoundary>
-    );
+    // initialData already set to empty state fallback
   }
+
+  return (
+    <ErrorBoundary>
+      <DashboardV2Client initialData={initialData} />
+    </ErrorBoundary>
+  );
 }

@@ -1517,11 +1517,11 @@ demo@galaxyco.ai`;
                                         </span>
                                       </div>
                                     </div>
-                                    <Progress 
+                                      <Progress 
                                       value={(qual.count / selectedCampaign.leadStats!.total) * 100} 
                                       className="h-1.5"
                                       style={{ 
-                                        // @ts-ignore
+                                        // @ts-expect-error -- CSS custom property not in type definition
                                         '--progress-background': qual.color 
                                       }}
                                     />
