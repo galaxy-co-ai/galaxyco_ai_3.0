@@ -4,9 +4,24 @@
  * Extracts text from PDFs, Word documents, and other file formats
  */
 
-import { PDFParse } from 'pdf-parse';
 import mammoth from 'mammoth';
 import { logger } from '@/lib/logger';
+
+// Dynamically import pdf-parse only when needed to avoid server-side issues
+let pdfParse: any = null;
+
+async function getPdfParse() {
+  if (!pdfParse) {
+    try {
+      // @ts-ignore
+      pdfParse = (await import('pdf-parse')).default;
+    } catch (error) {
+      logger.error('Failed to load pdf-parse', error);
+      throw new Error('PDF parsing not available');
+    }
+  }
+  return pdfParse;
+}
 
 export interface ProcessedDocument {
   text: string;
@@ -27,16 +42,18 @@ export async function extractTextFromPDF(fileUrl: string, fileName: string): Pro
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Parse PDF using pdf-parse v2 API
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
+    // Get pdf-parse dynamically
+    const parse = await getPdfParse();
+    
+    // Parse PDF using pdf-parse v1 API (default export, simple function)
+    const data = await parse(buffer);
 
-    const text = result.text;
+    const text = data.text;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
 
     logger.info('PDF text extracted', {
       fileName,
-      pages: result.pages?.length || 0,
+      pages: data.numpages || 0,
       wordCount,
       textLength: text.length,
     });
@@ -44,12 +61,18 @@ export async function extractTextFromPDF(fileUrl: string, fileName: string): Pro
     return {
       text,
       fileName,
-      pageCount: result.pages?.length || 0,
+      pageCount: data.numpages || 0,
       wordCount,
     };
   } catch (error) {
     logger.error('PDF text extraction failed', { fileName, error });
-    throw new Error(`Failed to extract text from PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    // Return empty result instead of throwing to allow Neptune to continue
+    return {
+      text: `[Could not extract text from ${fileName}. PDF parsing temporarily unavailable.]`,
+      fileName,
+      pageCount: 0,
+      wordCount: 0,
+    };
   }
 }
 

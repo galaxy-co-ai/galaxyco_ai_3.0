@@ -2,6 +2,16 @@
 
 **Intelligent automation platform combining AI agents, CRM, workflows, and knowledge management.**
 
+**Who this repo is for**
+
+- Teams who want a self-hosted, AI-native business suite they can run and extend.
+- Developers looking for a reference architecture for multi-agent, multi-tenant SaaS.
+
+**How to use this repo**
+
+- Clone the repo, configure environment variables, and run it locally (`npm run dev`).
+- Use the execution and deployment guides to deploy to Vercel as a full production app.
+
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)](https://tailwindcss.com)
@@ -373,6 +383,51 @@ See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 
 ---
 
+## 🔐 Security & Secrets Handling
+
+This repo is designed so that **no secrets are ever committed to git**.
+
+### Where to put real secrets
+
+- Use `.env.local` for local development (already in `.gitignore`).
+- Use your hosting provider's **Environment Variables** UI (e.g. Vercel) for preview/production.
+- Never hard-code API keys, tokens, or passwords directly in code or docs.
+
+### What's safe to commit
+
+- `.env.example` – contains **placeholder values only** and documents all required/optional variables.
+- Markdown docs and audit reports – show **variable names and example formats**, not real credentials.
+- Public identifiers that are OK to share:
+  - OAuth client IDs
+  - Public keys (e.g. `NEXT_PUBLIC_*`)
+  - Non-sensitive IDs that are also visible in your app/URLs
+
+### What must stay secret
+
+Treat these as **private credentials**:
+
+- Database URLs and passwords (`DATABASE_URL`)
+- API keys for AI providers (OpenAI, Anthropic, Google AI, Gamma)
+- Infrastructure tokens (Upstash, Vercel Blob, Trigger.dev, Twilio Auth, Pusher secret, Resend, etc.)
+- Any bearer tokens, JWT signing secrets, or webhook signing secrets
+
+### Before making the repo public
+
+1. Confirm no env or key files are tracked:
+   ```bash
+   git ls-files '*env*' '*secret*' '*token*' '*.pem'
+   ```
+2. Run a secret scan (optional but recommended):
+   ```bash
+   npx --yes gitleaks-secret-scanner --diff-mode history
+   ```
+3. Copy `.env.example` → `.env.local` and fill in your own keys (do not commit `.env.local`).
+4. Rotate any keys that have ever appeared in docs or code comments (e.g. old Trigger.dev dev secrets).
+
+If you ever accidentally commit a secret, **rotate the key immediately**, then we can clean it from git history if needed.
+
+---
+
 ## 🧪 Testing
 
 ```bash
@@ -443,7 +498,7 @@ This project follows:
 
 ## 📝 License
 
-Private project - All rights reserved
+Proprietary codebase – all rights reserved. Contact GalaxyCo.ai if you are interested in licensing or collaboration.
 
 ---
 

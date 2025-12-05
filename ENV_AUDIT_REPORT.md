@@ -100,16 +100,15 @@ The following variables are **not required** but available if needed:
 
 ### ⚠️ Minor Issue: Trigger.dev Configuration
 
-**Current:**
+**Current (example only - do NOT commit real keys):**
 ```env
-Trigger_API_KEY=tr_dev_3WV6ja7TMAEqqjcL350w
+Trigger_API_KEY=tr_dev_your_trigger_dev_secret_here
 ```
 
-**Should be:**
+**Correct configuration (set this in .env.local or your hosting env):**
 ```env
-TRIGGER_SECRET_KEY=tr_dev_3WV6ja7TMAEqqjcL350w
+TRIGGER_SECRET_KEY=tr_dev_your_trigger_dev_secret_here
 ```
-
 **Impact:** Background jobs may not work until this is corrected.
 
 **Fix:**

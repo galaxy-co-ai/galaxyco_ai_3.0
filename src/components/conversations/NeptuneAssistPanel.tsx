@@ -147,10 +147,10 @@ export default function NeptuneAssistPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: input,
+          conversationId: conversationId || undefined, // Send at top level, undefined if null
           attachments: pendingAttachments,
           context: {
             type: 'conversation',
-            conversationId,
             conversationData: conversation,
           },
         }),

@@ -230,7 +230,7 @@ export async function POST(request: Request) {
         conversationId: conversation.id,
         role: 'user',
         content: fullMessage,
-        attachments: attachments,
+        attachments: attachments && attachments.length > 0 ? attachments : null,
       })
       .returning();
 
