@@ -45,8 +45,12 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       n: 1,
     });
 
-    const imageUrl = response.data[0]?.url;
-    const revisedPrompt = response.data[0]?.revised_prompt || params.prompt;
+    if (!response.data || !response.data[0]) {
+      throw new Error('No image data returned from DALL-E');
+    }
+
+    const imageUrl = response.data[0].url;
+    const revisedPrompt = response.data[0].revised_prompt || params.prompt;
 
     if (!imageUrl) {
       throw new Error('No image URL returned from DALL-E');

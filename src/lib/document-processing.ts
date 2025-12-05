@@ -4,7 +4,7 @@
  * Extracts text from PDFs, Word documents, and other file formats
  */
 
-import * as PDFParser from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 import mammoth from 'mammoth';
 import { logger } from '@/lib/logger';
 
@@ -27,15 +27,16 @@ export async function extractTextFromPDF(fileUrl: string, fileName: string): Pro
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Parse PDF
-    const data = await PDFParser(buffer);
+    // Parse PDF using pdf-parse v2 API
+    const parser = new PDFParse({ data: buffer });
+    const result = await parser.getText();
 
-    const text = data.text;
+    const text = result.text;
     const wordCount = text.split(/\s+/).filter(Boolean).length;
 
     logger.info('PDF text extracted', {
       fileName,
-      pages: data.numpages,
+      pages: result.pages?.length || 0,
       wordCount,
       textLength: text.length,
     });
@@ -43,7 +44,7 @@ export async function extractTextFromPDF(fileUrl: string, fileName: string): Pro
     return {
       text,
       fileName,
-      pageCount: data.numpages,
+      pageCount: result.pages?.length || 0,
       wordCount,
     };
   } catch (error) {
