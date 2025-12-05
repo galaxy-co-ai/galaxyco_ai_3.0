@@ -4,7 +4,7 @@
  * Extracts text from PDFs, Word documents, and other file formats
  */
 
-import PDFParser from 'pdf-parse';
+import * as PDFParser from 'pdf-parse';
 import mammoth from 'mammoth';
 import { logger } from '@/lib/logger';
 
