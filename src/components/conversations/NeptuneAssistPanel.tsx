@@ -156,20 +156,25 @@ export default function NeptuneAssistPanel({
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to get response');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
 
       const data = await response.json();
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response || "I'm here to help!",
+        content: data.message?.content || data.response || "I'm here to help!",
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       logger.error("Neptune chat error", error);
-      toast.error("Failed to get response from Neptune");
+      const errorMsg = error instanceof Error ? error.message : "Failed to get response from Neptune";
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }

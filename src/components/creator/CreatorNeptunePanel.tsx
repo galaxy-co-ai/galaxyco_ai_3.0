@@ -201,7 +201,9 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
       let assistantContent = "";
 
       if (!response.ok) {
-        throw new Error("Failed to get response");
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -221,17 +223,18 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       logger.error("Neptune chat error", error);
+      const errorMsg = error instanceof Error ? error.message : "Connection issue. Please try again.";
       
       // Fallback response
       const fallbackMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "I apologize, but I'm having trouble connecting right now. In the meantime, try selecting a content category from the Create tab, or let me know what type of content you'd like to create!",
+        content: `I apologize, but I'm having trouble connecting right now. Error: ${errorMsg}`,
         timestamp: new Date(),
       };
       
       setMessages((prev) => [...prev, fallbackMessage]);
-      toast.error("Connection issue. Please try again.");
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
