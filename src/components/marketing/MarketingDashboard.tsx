@@ -67,6 +67,10 @@ import { toast } from "sonner";
 import MarketingAutomationsTab from "./MarketingAutomationsTab";
 import { logger } from "@/lib/logger";
 import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
+import useSWR from 'swr';
+
+// Fetcher function for SWR
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface Campaign {
   id: string;
@@ -211,6 +215,110 @@ export default function MarketingDashboard({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [assetChatMessages]);
+
+  // SWR for real-time campaign data
+  const { data: campaignsData, mutate: mutateCampaigns } = useSWR(
+    '/api/campaigns',
+    fetcher,
+    { 
+      refreshInterval: 30000, // Refresh every 30 seconds
+      fallbackData: { campaigns: initialCampaigns }
+    }
+  );
+
+  const currentCampaigns = campaignsData?.campaigns || initialCampaigns;
+
+  // Campaign API Handlers
+  const handleCreateCampaign = async (campaignData: {
+    name: string;
+    type: 'email' | 'drip' | 'newsletter' | 'promotion';
+    subject: string;
+    body: string;
+    targetAudience: string;
+    scheduledFor?: string;
+  }) => {
+    try {
+      const response = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(campaignData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create campaign');
+      }
+
+      const data = await response.json();
+      toast.success('Campaign created successfully!');
+      await mutateCampaigns();
+      return data;
+    } catch (error) {
+      logger.error('Campaign creation error', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create campaign');
+      throw error;
+    }
+  };
+
+  const handleUpdateCampaign = async (campaignId: string, updates: Partial<typeof campaignData>) => {
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update campaign');
+      }
+
+      toast.success('Campaign updated successfully!');
+      await mutateCampaigns();
+    } catch (error) {
+      logger.error('Campaign update error', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update campaign');
+    }
+  };
+
+  const handleDeleteCampaign = async (campaignId: string) => {
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to delete campaign');
+      }
+
+      toast.success('Campaign deleted successfully!');
+      await mutateCampaigns();
+    } catch (error) {
+      logger.error('Campaign delete error', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete campaign');
+    }
+  };
+
+  const handleSendCampaign = async (campaignId: string) => {
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}/send`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send campaign');
+      }
+
+      const data = await response.json();
+      toast.success(`Campaign queued! Sending to ${data.recipientCount} recipients.`);
+      await mutateCampaigns();
+    } catch (error) {
+      logger.error('Campaign send error', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to send campaign');
+    }
+  };
 
   const formatCurrency = (cents: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -474,7 +582,7 @@ export default function MarketingDashboard({
   const [contentSearchQuery, setContentSearchQuery] = useState("");
 
   const filteredCampaigns = useMemo(() => {
-    let filtered = initialCampaigns;
+    let filtered = currentCampaigns;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -483,7 +591,7 @@ export default function MarketingDashboard({
       );
     }
     return filtered;
-  }, [initialCampaigns, searchQuery]);
+  }, [currentCampaigns, searchQuery]);
 
   const filteredContent = useMemo(() => {
     let filtered = initialContent;
@@ -512,7 +620,7 @@ export default function MarketingDashboard({
   }, [initialChannels, channelSearchQuery]);
 
   const filteredAnalyticsCampaigns = useMemo(() => {
-    let filtered = initialCampaigns;
+    let filtered = currentCampaigns;
     if (analyticsSearchQuery) {
       const query = analyticsSearchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -521,7 +629,7 @@ export default function MarketingDashboard({
       );
     }
     return filtered;
-  }, [initialCampaigns, analyticsSearchQuery]);
+  }, [currentCampaigns, analyticsSearchQuery]);
 
   const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [isLoadingContentChat, setIsLoadingContentChat] = useState(false);
