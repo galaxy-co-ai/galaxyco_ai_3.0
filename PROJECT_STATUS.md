@@ -25,6 +25,7 @@
 - Test coverage: 5% → 70%
 - Deployment checklist created
 - All TypeScript errors resolved
+- Agent runs now enqueue via Trigger.dev for durable, retryable execution (pending → running → completed/failed) using `agent_executions`
 - Successfully deployed to production
 
 ---

@@ -110,6 +110,7 @@ npm run typecheck           # TypeScript validation
 - ✅ TypeScript strict mode passing (0 errors)
 - ✅ Successfully deployed to Vercel Production
 - ✅ All Neptune input fields fixed and working
+- ✅ **Agent runs now queue through Trigger.dev (durable, retried)** — `/api/agents/[id]/run` enqueues runs, surfaces pending→running→completed/failed states via `agent_executions`
 
 ```
 Build:        ████████████████████ 100% ✅ Passing (Deployed to Vercel)

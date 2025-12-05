@@ -129,8 +129,10 @@ export const executeAgentTask = task({
     workspaceId: string;
     inputs?: Record<string, unknown>;
     triggeredBy?: string;
+    executionId?: string;
+    testMode?: boolean;
   }) => {
-    const { agentId, workspaceId, inputs = {}, triggeredBy = "system" } = payload;
+    const { agentId, workspaceId, inputs = {}, executionId, testMode = false } = payload;
 
     // Get the agent
     const agent = await db.query.agents.findFirst({
@@ -141,25 +143,41 @@ export const executeAgentTask = task({
       return { success: false, error: "Agent not found" };
     }
 
-    if (agent.status !== "active") {
+    if (!testMode && agent.status !== "active") {
       return { success: false, error: `Agent is not active (status: ${agent.status})` };
     }
 
-    // Create execution record
-    const [execution] = await db
-      .insert(agentExecutions)
-      .values({
-        workspaceId,
-        agentId,
-        status: "running",
-        input: inputs,
-        triggeredBy,
-        startedAt: new Date(),
-      })
-      .returning();
+    // Resolve triggeredBy user (fallback to agent creator)
+    const triggeredByUserId = payload.triggeredBy || agent.createdBy;
+
+    // Use existing execution if provided, otherwise create one
+    let executionIdToUse = executionId;
+    if (executionIdToUse) {
+      await db
+        .update(agentExecutions)
+        .set({
+          status: "running",
+          input: inputs,
+          startedAt: new Date(),
+        })
+        .where(eq(agentExecutions.id, executionIdToUse));
+    } else {
+      const [execution] = await db
+        .insert(agentExecutions)
+        .values({
+          workspaceId,
+          agentId,
+          status: "running",
+          input: inputs,
+          triggeredBy: triggeredByUserId,
+          startedAt: new Date(),
+        })
+        .returning();
+      executionIdToUse = execution.id;
+    }
 
     logger.info("Agent execution started", {
-      executionId: execution.id,
+      executionId: executionIdToUse,
       agentId,
       agentName: agent.name,
       workspaceId,
@@ -174,16 +192,16 @@ export const executeAgentTask = task({
       }
 
       // Get agent creator for tool context
-      const creator = agent.createdBy
+      const creator = triggeredByUserId
         ? await db.query.users.findFirst({
-            where: eq(users.id, agent.createdBy),
+            where: eq(users.id, triggeredByUserId),
           })
         : null;
 
       // Build tool context
       const toolContext: ToolContext = {
         workspaceId,
-        userId: triggeredBy !== "system" ? triggeredBy : (creator?.clerkUserId || "system"),
+        userId: creator?.clerkUserId || creator?.id || agent.createdBy,
         userEmail: creator?.email || "agent@galaxyco.ai",
         userName: agent.name,
       };
@@ -240,7 +258,7 @@ export const executeAgentTask = task({
           const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
 
           logger.info("Agent executing tool", {
-            executionId: execution.id,
+            executionId: executionIdToUse,
             tool: toolName,
             args: toolArgs,
           });
@@ -291,20 +309,22 @@ export const executeAgentTask = task({
           completedAt: new Date(),
           durationMs,
         })
-        .where(eq(agentExecutions.id, execution.id));
+        .where(eq(agentExecutions.id, executionIdToUse));
 
       // Update agent stats
-      await db
-        .update(agents)
-        .set({
-          executionCount: (agent.executionCount || 0) + 1,
-          lastExecutedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(agents.id, agentId));
+      if (!testMode) {
+        await db
+          .update(agents)
+          .set({
+            executionCount: (agent.executionCount || 0) + 1,
+            lastExecutedAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(agents.id, agentId));
+      }
 
       logger.info("Agent execution completed", {
-        executionId: execution.id,
+        executionId: executionIdToUse,
         agentId,
         durationMs,
         toolsUsed: toolResults.length,
@@ -312,7 +332,7 @@ export const executeAgentTask = task({
 
       return {
         success: true,
-        executionId: execution.id,
+        executionId: executionIdToUse,
         results,
       };
     } catch (error) {
@@ -328,10 +348,10 @@ export const executeAgentTask = task({
           completedAt: new Date(),
           durationMs,
         })
-        .where(eq(agentExecutions.id, execution.id));
+        .where(eq(agentExecutions.id, executionIdToUse));
 
       logger.error("Agent execution failed", {
-        executionId: execution.id,
+        executionId: executionIdToUse,
         agentId,
         error: errorMessage,
         durationMs,
@@ -339,7 +359,7 @@ export const executeAgentTask = task({
 
       return {
         success: false,
-        executionId: execution.id,
+        executionId: executionIdToUse,
         error: errorMessage,
       };
     }
