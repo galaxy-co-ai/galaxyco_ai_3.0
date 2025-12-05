@@ -448,7 +448,8 @@ export default function NeptuneAssistPanel({
             }}
             placeholder="Ask Neptune..."
             className="flex-1 rounded-md border bg-background px-3 py-2 text-sm min-w-0"
-            disabled={isLoading || !conversation}
+            disabled={isLoading}
+            aria-label="Message Neptune"
           />
           <Button
             onClick={handleSend}
