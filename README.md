@@ -105,6 +105,12 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 📚 **Neptune RAG with Knowledge Base** - Grounded answers with document citations:
+  - Neptune searches your uploaded documents to answer questions
+  - Responses include citations: "According to [Document Title]..."
+  - Automatic RAG - Neptune knows when to search based on question type
+  - New RAG module with semantic search and citation formatting
+  - Enhanced search_knowledge tool returns context for AI consumption
 - ⚡ **Neptune Streaming Responses** - Real-time token streaming for instant feedback:
   - First token appears in under 500ms - no more waiting for full response
   - Tool calls work seamlessly during streaming (execute and continue)

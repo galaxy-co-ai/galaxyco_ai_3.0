@@ -35,27 +35,27 @@
 
 ## Phase 2: RAG with Knowledge Base
 
-**Status:** [ ] Not Started
+**Status:** [x] COMPLETE ✅
 
 **Goal:** Neptune can search user's uploaded documents to give grounded answers.
 
-### Files to Create/Modify
-- `src/lib/ai/rag.ts` - New RAG retrieval module
-- `src/lib/vector.ts` - Already exists, enhance for RAG queries
-- `src/lib/ai/tools.ts` - Add `search_knowledge_base` tool
-- `src/lib/ai/context.ts` - Add knowledge context to AI context
+### Files Created/Modified
+- `src/lib/ai/rag.ts` - New RAG module with searchKnowledgeBase, shouldUseRAG, formatCitations
+- `src/lib/ai/tools.ts` - Enhanced search_knowledge tool to use RAG module with citations
+- `src/lib/ai/system-prompt.ts` - Added instructions for Neptune to use RAG proactively
 
-### Implementation Steps
-1. Create `searchKnowledgeBase(query, workspaceId, limit)` function
-2. Use existing Pinecone/Upstash Vector for similarity search
-3. Add tool that Neptune calls automatically when questions need document lookup
-4. Inject top 3-5 relevant chunks into context
-5. Add citation support ("According to [Document Name]...")
+### Implementation Completed
+1. ✅ Created `searchKnowledgeBase(query, workspaceId, options)` function with full RAG capabilities
+2. ✅ Uses existing Upstash Vector for similarity search with keyword fallback
+3. ✅ Updated search_knowledge tool to return contextText and citations for AI
+4. ✅ Neptune automatically searches documents when questions might need lookup
+5. ✅ Citation support: "According to [Document Title]..." with numbered references
 
 ### Success Criteria
-- [ ] Neptune finds relevant documents automatically
-- [ ] Answers cite sources when using RAG
-- [ ] Works with existing knowledge base uploads
+- [x] Neptune finds relevant documents automatically
+- [x] Answers cite sources when using RAG
+- [x] Works with existing knowledge base uploads
+- [x] Keyword fallback when vector search unavailable
 
 ---
 
@@ -177,7 +177,7 @@
 | Phase | Completed | Date | Notes |
 |-------|-----------|------|-------|
 | Phase 1 | [x] ✅ | December 6, 2025 | Streaming with tool support, SSE, visual cursor indicator |
-| Phase 2 | [ ] | - | - |
+| Phase 2 | [x] ✅ | December 6, 2025 | RAG module, enhanced search_knowledge with citations |
 | Phase 3 | [ ] | - | - |
 | Phase 4 | [ ] | - | - |
 | Phase 5 | [ ] | - | - |

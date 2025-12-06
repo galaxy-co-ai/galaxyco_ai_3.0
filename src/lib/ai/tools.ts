@@ -2330,100 +2330,57 @@ const toolImplementations: Record<string, ToolFunction> = {
       const type = args.type as string | undefined;
       const limit = (args.limit as number) || 5;
 
-      // Import vector search function
-      const { searchKnowledge, isVectorConfigured } = await import('@/lib/vector');
+      // Use the RAG module for enhanced search with citations
+      const { searchKnowledgeBase, formatCitations } = await import('@/lib/ai/rag');
 
-      // Try semantic vector search first if configured
-      if (isVectorConfigured() && query.trim().length > 0) {
-        try {
-          const vectorResults = await searchKnowledge(
-            context.workspaceId,
-            query,
-            { topK: limit, minScore: 0.5, type }
-          );
-
-          if (vectorResults.results.length > 0) {
-            // Fetch full document details for matched items
-            const itemIds = vectorResults.results.map((r) => r.itemId);
-            const documents = await db.query.knowledgeItems.findMany({
-              where: and(
-                eq(knowledgeItems.workspaceId, context.workspaceId),
-                sql`${knowledgeItems.id} IN (${sql.join(itemIds.map(id => sql`${id}`), sql`, `)})`
-              ),
-            });
-
-            // Map results with vector scores and relevant content
-            const enrichedResults = vectorResults.results.map((vr) => {
-              const doc = documents.find((d) => d.id === vr.itemId);
-              return {
-                id: vr.itemId,
-                title: vr.title,
-                type: doc?.type || 'document',
-                summary: doc?.summary || '',
-                relevantContent: vr.chunk, // The most relevant chunk for RAG
-                relevanceScore: Math.round(vr.score * 100) + '%',
-                updatedAt: doc?.updatedAt,
-              };
-            });
-
-            logger.info('AI search_knowledge (vector)', { 
-              query: query.slice(0, 50), 
-              resultsCount: enrichedResults.length 
-            });
-
-            return {
-              success: true,
-              message: `Found ${enrichedResults.length} relevant document(s) using semantic search`,
-              data: {
-                documents: enrichedResults,
-                searchType: 'semantic',
-              },
-            };
-          }
-        } catch (vectorError) {
-          logger.warn('Vector search failed, falling back to SQL search', { 
-            error: vectorError instanceof Error ? vectorError.message : 'Unknown error' 
-          });
-          // Fall through to SQL-based search
-        }
-      }
-
-      // Fallback: SQL-based keyword search
-      const conditions = [eq(knowledgeItems.workspaceId, context.workspaceId)];
-
-      if (type) {
-        conditions.push(eq(knowledgeItems.type, type as 'document' | 'url' | 'image' | 'text'));
-      }
-
-      if (query) {
-        conditions.push(
-          or(
-            like(knowledgeItems.title, `%${query}%`),
-            like(knowledgeItems.summary, `%${query}%`),
-            like(knowledgeItems.content, `%${query}%`)
-          )!
-        );
-      }
-
-      const results = await db.query.knowledgeItems.findMany({
-        where: and(...conditions),
-        orderBy: [desc(knowledgeItems.updatedAt)],
-        limit,
+      const ragResults = await searchKnowledgeBase(query, context.workspaceId, {
+        topK: limit,
+        minScore: 0.5,
+        documentType: type,
       });
 
+      if (ragResults.hasResults) {
+        // Format documents with citations for RAG
+        const documents = ragResults.results.map((r, idx) => ({
+          id: r.itemId,
+          title: r.title,
+          type: r.documentType,
+          collection: r.collectionName,
+          relevantContent: r.relevantChunk, // The most relevant chunk for RAG
+          relevanceScore: Math.round(r.score * 100) + '%',
+          sourceUrl: r.sourceUrl,
+          citation: `[${idx + 1}]`, // Citation marker
+        }));
+
+        // Build a helpful message with citations
+        const citationList = formatCitations(ragResults.citations);
+        const searchType = ragResults.results[0]?.score > 0.5 ? 'semantic' : 'keyword';
+
+        logger.info('AI search_knowledge (RAG)', { 
+          query: query.slice(0, 50), 
+          resultsCount: documents.length,
+          searchType,
+        });
+
+        return {
+          success: true,
+          message: `Found ${documents.length} relevant document(s). When answering, cite sources like "According to [1] Document Title..."`,
+          data: {
+            documents,
+            searchType,
+            contextForAI: ragResults.contextText, // Inject this into the prompt
+            citations: citationList,
+          },
+        };
+      }
+
+      // No results found
       return {
         success: true,
-        message: `Found ${results.length} document(s) matching "${query}"`,
+        message: `No documents found matching "${query}". The user may need to upload relevant documents first.`,
         data: {
-          documents: results.map((doc) => ({
-            id: doc.id,
-            title: doc.title,
-            type: doc.type,
-            summary: doc.summary,
-            relevantContent: doc.content?.slice(0, 500), // Include snippet for RAG
-            updatedAt: doc.updatedAt,
-          })),
-          searchType: 'keyword',
+          documents: [],
+          searchType: 'none',
         },
       };
     } catch (error) {

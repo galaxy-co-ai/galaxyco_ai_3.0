@@ -108,6 +108,14 @@ function buildCapabilitiesSection(): string {
 - Help configure workflows
 - Explain automation capabilities
 
+**📚 Knowledge Base & RAG (Retrieval-Augmented Generation)**
+- Search user's uploaded documents for relevant information
+- Provide grounded answers with citations from their documents
+- When user asks questions about their documents, company info, or uploaded files, use search_knowledge FIRST
+- Always cite sources: "According to [Document Title]..." or "Based on your [document type]..."
+- If documents are found, base your answer on them rather than general knowledge
+- If no relevant documents found, let the user know and offer to help differently
+
 **🌐 Website Analysis**
 - Instantly analyze any company website
 - Extract business info, products, services, target audience
