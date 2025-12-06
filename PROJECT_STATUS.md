@@ -36,12 +36,12 @@
 |-------|-------|
 | **Date** | December 6, 2025 |
 | **Build Status** | ✅ Passing (Verified - Local & Vercel) |
-| **Latest Commit** | Dashboard Refinements & CRM Enhancements - Icon updates, branded headers, roadmap fixes, delete functionality |
+| **Latest Commit** | Library Document Actions - Three dots menu with view/download/delete functionality |
 | **Environment Status** | ✅ ALL SYSTEMS OPERATIONAL (19/19 services) |
 | **Overall Completion** | 100% Production-Ready + Enhanced AI + Proactive Intelligence |
 | **Test Coverage** | 70% (API routes, components, E2E) |
 | **Deployment Status** | ✅ Deployed to Vercel Production |
-| **Latest Update** | Dashboard title updated, icons changed (planet/compass), branded headers added, roadmap loading fixed, CRM delete functionality, dynamic badge counts |
+| **Latest Update** | Library document actions dropdown menu (view/download/delete), delete API endpoint with vector cleanup |
 
 ---
 
@@ -83,6 +83,41 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Library Document Actions Enhancement ✅
+
+#### Library Page - Document Management Dropdown Menu
+- **Three Dots Menu** - Added dropdown menu to all document views:
+  - List view: Dropdown menu with View, Download, Delete options
+  - Grid view: Dropdown menu with View, Download, Delete options
+  - Favorites tab: Dropdown menu with View, Download, Delete options
+  - Recent tab: Dropdown menu with View, Download, Delete options
+- **View Action** - Opens document in viewer dialog (reuses existing functionality)
+- **Download Action** - Downloads document using `item.url` if available:
+  - Only shows download option when URL exists
+  - Triggers browser download with proper filename
+  - Toast notification for success/error feedback
+- **Delete Action** - Removes document from database:
+  - New API endpoint: `/api/knowledge/[id]/route.ts` (DELETE method)
+  - Deletes from vector database if configured (non-critical, logs warning on failure)
+  - Optimistic UI updates for instant feedback
+  - Automatically refreshes document list after deletion
+  - Clears selection if deleted document was selected
+- **UI/UX Improvements**:
+  - Dropdown menu appears on hover (matching existing star button pattern)
+  - Red styling for delete option with focus states
+  - Proper event handling to prevent nested button issues
+  - Accessible with keyboard navigation and ARIA labels
+- **Technical Implementation**:
+  - Added `DropdownMenu` component imports from `@/components/ui/dropdown-menu`
+  - Added `Trash2` icon import for delete action
+  - Created handlers: `handleViewDocument`, `handleDownloadDocument`, `handleDeleteDocument`
+  - Proper error handling with toast notifications
+  - SWR cache invalidation for real-time updates
+
+#### Files Modified
+- `src/components/knowledge-base/KnowledgeBaseDashboard.tsx` - Added dropdown menus to all views
+- `src/app/api/knowledge/[id]/route.ts` - NEW: DELETE endpoint for document deletion
 
 ### December 6, 2025 - Dashboard Refinements & CRM Enhancements ✅
 

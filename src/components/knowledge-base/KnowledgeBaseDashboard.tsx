@@ -15,6 +15,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Search,
   FileText,
   Folder,
@@ -40,6 +47,7 @@ import {
   List,
   StarOff,
   MoreHorizontal,
+  Trash2,
   Upload,
   Mail,
   PenLine,
@@ -413,6 +421,69 @@ export default function KnowledgeBaseDashboard({
   const handleDocumentClick = (item: KnowledgeItem) => {
     setViewingDocument(item);
     setShowDocumentDialog(true);
+  };
+
+  // Handle view document
+  const handleViewDocument = (item: KnowledgeItem, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setViewingDocument(item);
+    setShowDocumentDialog(true);
+  };
+
+  // Handle download document
+  const handleDownloadDocument = async (item: KnowledgeItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!item.url) {
+      toast.error('Document URL not available');
+      return;
+    }
+
+    try {
+      // Open in new tab for download
+      const link = document.createElement('a');
+      link.href = item.url;
+      link.download = item.name || 'document';
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Download started');
+    } catch (error) {
+      logger.error('Failed to download document', { error, itemId: item.id });
+      toast.error('Failed to download document');
+    }
+  };
+
+  // Handle delete document
+  const handleDeleteDocument = async (item: KnowledgeItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      const response = await fetch(`/api/knowledge/${item.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete document');
+      }
+
+      // Optimistically remove from list
+      await mutateKnowledge();
+      
+      // Clear selection if this was the selected item
+      if (selectedItem?.id === item.id) {
+        setSelectedItem(null);
+      }
+
+      toast.success('Document deleted');
+    } catch (error) {
+      logger.error('Failed to delete document', { error, itemId: item.id });
+      toast.error(error instanceof Error ? error.message : 'Failed to delete document');
+    }
   };
 
   // Create new collection
@@ -814,13 +885,41 @@ export default function KnowledgeBaseDashboard({
                                         <StarOff className="h-4 w-4 text-gray-400" />
                                       )}
                                     </button>
-                                    <button
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                                      aria-label="More options"
-                                    >
-                                      <MoreHorizontal className="h-4 w-4 text-gray-400" />
-                                    </button>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <button
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                          aria-label="More options"
+                                        >
+                                          <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                                        </button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuItem
+                                          onClick={(e) => handleViewDocument(item, e)}
+                                        >
+                                          <Eye className="h-4 w-4 mr-2" />
+                                          View
+                                        </DropdownMenuItem>
+                                        {item.url && (
+                                          <DropdownMenuItem
+                                            onClick={(e) => handleDownloadDocument(item, e)}
+                                          >
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Download
+                                          </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={(e) => handleDeleteDocument(item, e)}
+                                          className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
                                   </div>
                                 </motion.div>
                               );
@@ -844,20 +943,57 @@ export default function KnowledgeBaseDashboard({
                                     <div className={cn("p-2 rounded-lg", getTypeColorClass(item.type))}>
                                       <TypeIcon className="h-4 w-4" />
                                     </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleStar(item.id);
-                                      }}
-                                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                                      aria-label={isStarred ? "Remove from favorites" : "Add to favorites"}
-                                    >
-                                      {isStarred ? (
-                                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                                      ) : (
-                                        <StarOff className="h-4 w-4 text-gray-400 hover:text-amber-500" />
-                                      )}
-                                    </button>
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleStar(item.id);
+                                        }}
+                                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                        aria-label={isStarred ? "Remove from favorites" : "Add to favorites"}
+                                      >
+                                        {isStarred ? (
+                                          <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                        ) : (
+                                          <StarOff className="h-4 w-4 text-gray-400" />
+                                        )}
+                                      </button>
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <button
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                            aria-label="More options"
+                                          >
+                                            <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                                          </button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-48">
+                                          <DropdownMenuItem
+                                            onClick={(e) => handleViewDocument(item, e)}
+                                          >
+                                            <Eye className="h-4 w-4 mr-2" />
+                                            View
+                                          </DropdownMenuItem>
+                                          {item.url && (
+                                            <DropdownMenuItem
+                                              onClick={(e) => handleDownloadDocument(item, e)}
+                                            >
+                                              <Download className="h-4 w-4 mr-2" />
+                                              Download
+                                            </DropdownMenuItem>
+                                          )}
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem
+                                            onClick={(e) => handleDeleteDocument(item, e)}
+                                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                          >
+                                            <Trash2 className="h-4 w-4 mr-2" />
+                                            Delete
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
                                   </div>
                                   <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-2">
                                     {item.name}
@@ -933,16 +1069,53 @@ export default function KnowledgeBaseDashboard({
                                   <span className="text-xs text-gray-500">{item.project}</span>
                                 </div>
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleStar(item.id);
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
-                                aria-label="Remove from favorites"
-                              >
-                                <X className="h-4 w-4 text-gray-400" />
-                              </button>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleStar(item.id);
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                  aria-label="Remove from favorites"
+                                >
+                                  <X className="h-4 w-4 text-gray-400" />
+                                </button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                      aria-label="More options"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem
+                                      onClick={(e) => handleViewDocument(item, e)}
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View
+                                    </DropdownMenuItem>
+                                    {item.url && (
+                                      <DropdownMenuItem
+                                        onClick={(e) => handleDownloadDocument(item, e)}
+                                      >
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Download
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={(e) => handleDeleteDocument(item, e)}
+                                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </motion.div>
                           );
                         })}
@@ -1009,20 +1182,57 @@ export default function KnowledgeBaseDashboard({
                                   <span className="text-xs text-gray-500">{item.project}</span>
                                 </div>
                               </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleStar(item.id);
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
-                                aria-label={isStarred ? "Remove from favorites" : "Add to favorites"}
-                              >
-                                {isStarred ? (
-                                  <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                                ) : (
-                                  <StarOff className="h-4 w-4 text-gray-400" />
-                                )}
-                              </button>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleStar(item.id);
+                                  }}
+                                  className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                  aria-label={isStarred ? "Remove from favorites" : "Add to favorites"}
+                                >
+                                  {isStarred ? (
+                                    <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                                  ) : (
+                                    <StarOff className="h-4 w-4 text-gray-400" />
+                                  )}
+                                </button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                                      aria-label="More options"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem
+                                      onClick={(e) => handleViewDocument(item, e)}
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View
+                                    </DropdownMenuItem>
+                                    {item.url && (
+                                      <DropdownMenuItem
+                                        onClick={(e) => handleDownloadDocument(item, e)}
+                                      >
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Download
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={(e) => handleDeleteDocument(item, e)}
+                                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </motion.div>
                           );
                         })}

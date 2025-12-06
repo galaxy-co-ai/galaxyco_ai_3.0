@@ -105,6 +105,12 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 📚 **Library Document Actions** - Enhanced document management:
+  - Three dots menu on all documents (list, grid, favorites, recent views)
+  - View, Download, and Delete options in dropdown menu
+  - Delete API endpoint with vector database cleanup
+  - Optimistic UI updates for instant feedback
+  - Works across all Library tabs and view modes
 - 🎨 **Dashboard Refinements** - Enhanced dashboard experience:
   - Dashboard title updated from "NEPTUNE" to "DASHBOARD"
   - Icon updates: Planet icon for dashboard, Compass icon for roadmap
