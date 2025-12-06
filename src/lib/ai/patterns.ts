@@ -6,8 +6,8 @@
  */
 
 import { db } from '@/lib/db';
-import { prospects, tasks, calendarEvents, campaigns, aiMessages } from '@/db/schema';
-import { eq, and, gte, lte, desc } from 'drizzle-orm';
+import { prospects, tasks, calendarEvents, campaigns, aiMessages, aiConversations } from '@/db/schema';
+import { eq, and, gte, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
 
@@ -137,14 +137,22 @@ export async function analyzeUserPatterns(
     }
 
     // Use AI to identify additional patterns from conversation history
-    const conversations = await db.query.aiMessages.findMany({
+    // Note: aiMessages doesn't have workspaceId directly, fetch via conversations
+    const userConversations = await db.query.aiConversations.findMany({
       where: and(
-        eq(aiMessages.workspaceId, workspaceId),
-        gte(aiMessages.createdAt, cutoffDate)
+        eq(aiConversations.workspaceId, workspaceId),
+        gte(aiConversations.createdAt, cutoffDate)
       ),
-      orderBy: [desc(aiMessages.createdAt)],
-      limit: 100,
+      with: {
+        messages: {
+          orderBy: [desc(aiMessages.createdAt)],
+          limit: 10,
+        },
+      },
+      limit: 10,
     });
+    
+    const conversations = userConversations.flatMap(c => c.messages || []).slice(0, 100);
 
     if (conversations.length >= 20) {
       const conversationText = conversations

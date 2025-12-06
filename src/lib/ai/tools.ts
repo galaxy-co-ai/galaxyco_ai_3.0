@@ -4424,10 +4424,11 @@ Looking forward to your response!`;
       // Create draft task for follow-up
       await db.insert(tasks).values({
         workspaceId: context.workspaceId,
+        createdBy: context.userId,
         title: `Follow up: ${lead.name} - Qualification`,
         description: 'Follow up on BANT qualification questions',
         dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days
-        status: 'pending',
+        status: 'todo',
         priority: 'medium',
         assignedTo: context.userId,
       });
@@ -4536,8 +4537,7 @@ Looking forward to your response!`;
         description: `Product demonstration for ${lead.company || lead.name}`,
         startTime: demoDate,
         endTime: new Date(demoDate.getTime() + duration * 60 * 1000),
-        type: 'meeting',
-        attendees: lead.email ? [{ email: lead.email, name: lead.name }] : [],
+        attendees: lead.email ? [{ email: lead.email, name: lead.name, status: 'pending' }] : [],
         createdBy: context.userId,
       }).returning();
 
@@ -4588,23 +4588,24 @@ Looking forward to your response!`;
         ? [2, 5, 10, 20, 45] // Gentler for nurture
         : [3, 7, 14, 30, 60]; // Default custom
 
-      const tasks = [];
+      const taskValues = [];
       for (let i = 0; i < spacing.length; i++) {
         const dueDate = new Date(startDate);
         dueDate.setDate(dueDate.getDate() + spacing[i]);
         
-        tasks.push({
+        taskValues.push({
           workspaceId: context.workspaceId,
+          createdBy: context.userId,
           title: `Follow-up ${i + 1}: ${lead.name}`,
           description: `Follow-up task for ${lead.company || lead.name} - Day ${spacing[i]}`,
           dueDate,
-          status: 'pending' as const,
+          status: 'todo' as const,
           priority: i === 0 ? 'high' as const : 'medium' as const,
           assignedTo: context.userId,
         });
       }
 
-      await db.insert(tasks).values(tasks);
+      await db.insert(tasks).values(taskValues);
 
       return {
         success: true,
@@ -4649,12 +4650,13 @@ Looking forward to your response!`;
 
       // Generate test variations if not provided
       let testVariations = variations;
+      const campaignSubject = campaign.content?.subject || campaign.name;
       if (testVariations.length === 0) {
         if (testType === 'subject') {
           testVariations = [
-            `${campaign.subject} - Quick question`,
-            `${campaign.subject} - Exclusive offer`,
-            `Re: ${campaign.subject}`,
+            `${campaignSubject} - Quick question`,
+            `${campaignSubject} - Exclusive offer`,
+            `Re: ${campaignSubject}`,
           ];
         } else if (testType === 'cta') {
           testVariations = ['Get Started', 'Learn More', 'Try Now'];
@@ -4857,7 +4859,7 @@ Looking forward to your response!`;
       const allTasks = await db.query.tasks.findMany({
         where: and(
           eq(tasks.workspaceId, context.workspaceId),
-          eq(tasks.status, 'pending')
+          eq(tasks.status, 'todo')
         ),
       });
 

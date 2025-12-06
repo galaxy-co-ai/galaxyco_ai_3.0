@@ -208,7 +208,7 @@ export async function analyzeOperations(workspaceId: string): Promise<Insight[]>
     const allTasks = await db.query.tasks.findMany({
       where: and(
         eq(tasks.workspaceId, workspaceId),
-        eq(tasks.status, 'pending')
+        eq(tasks.status, 'todo')
       ),
     });
 
@@ -295,7 +295,7 @@ export async function analyzeFinance(workspaceId: string): Promise<Insight[]> {
     });
 
     if (overdueInvoices.length > 0) {
-      const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+      const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
       insights.push({
         type: 'alert',
         priority: 9,

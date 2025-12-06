@@ -70,7 +70,7 @@ export async function getRecentActivity(
         eq(contacts.workspaceId, workspaceId),
         gte(contacts.createdAt, cutoffDate)
       ),
-      columns: { id: true, name: true, createdAt: true },
+      columns: { id: true, firstName: true, lastName: true, createdAt: true },
       orderBy: [contacts.createdAt],
       limit: 5,
     });
@@ -101,7 +101,7 @@ export async function getRecentActivity(
       })),
       recentContacts: recentContacts.map(c => ({
         id: c.id,
-        name: c.name || 'Unnamed Contact',
+        name: [c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unnamed Contact',
         createdAt: c.createdAt,
       })),
     };

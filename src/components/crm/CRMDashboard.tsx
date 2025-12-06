@@ -491,11 +491,6 @@ export default function CRMDashboard({
 
       // Optimistically remove from list
       setOrganizations(prev => prev.filter(org => org.id !== orgId));
-      
-      // Clear selection if this was the selected organization
-      if (selectedOrganization === orgId) {
-        setSelectedOrganization(null);
-      }
 
       // Refresh server data after a delay
       setTimeout(async () => {
