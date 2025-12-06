@@ -18,6 +18,7 @@ import {
   aiConversations,
   aiMessages,
   users,
+  workspaceIntelligence,
 } from '@/db/schema';
 import { eq, and, desc, gte, lte, count, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -157,6 +158,18 @@ export interface MarketingContext {
   totalCampaigns: number;
 }
 
+export interface WebsiteContext {
+  companyName: string | null;
+  companyDescription: string | null;
+  products: Array<{ name: string; description: string }>;
+  services: Array<{ name: string; description: string }>;
+  targetAudience: string | null;
+  valuePropositions: string[];
+  brandVoice: string | null;
+  websiteUrl: string | null;
+  hasAnalysis: boolean;
+}
+
 export interface AIContextData {
   user: UserContext;
   preferences: UserPreferencesContext;
@@ -167,6 +180,7 @@ export interface AIContextData {
   conversationHistory: ConversationHistoryContext;
   finance?: FinanceContext;
   marketing?: MarketingContext;
+  website?: WebsiteContext;
   currentTime: string;
   currentDate: string;
   dayOfWeek: string;
@@ -226,7 +240,7 @@ async function getUserPreferencesContext(
           communicationStyle: 'balanced',
           topicsOfInterest: [],
           frequentQuestions: [],
-          defaultModel: 'gpt-4-turbo-preview',
+          defaultModel: 'gpt-4o',
           enableRag: true,
           enableProactiveInsights: true,
         })
@@ -238,7 +252,7 @@ async function getUserPreferencesContext(
       communicationStyle: prefs.communicationStyle || 'balanced',
       topicsOfInterest: prefs.topicsOfInterest || [],
       frequentQuestions: prefs.frequentQuestions || [],
-      defaultModel: prefs.defaultModel || 'gpt-4-turbo-preview',
+      defaultModel: prefs.defaultModel || 'gpt-4o',
       enableRag: prefs.enableRag,
       enableProactiveInsights: prefs.enableProactiveInsights,
     };
@@ -248,7 +262,7 @@ async function getUserPreferencesContext(
       communicationStyle: 'balanced',
       topicsOfInterest: [],
       frequentQuestions: [],
-      defaultModel: 'gpt-4-turbo-preview',
+      defaultModel: 'gpt-4o',
       enableRag: true,
       enableProactiveInsights: true,
     };
@@ -677,6 +691,56 @@ async function getFinanceContext(workspaceId: string): Promise<FinanceContext> {
 // ============================================================================
 
 /**
+ * Get website context from workspace intelligence
+ */
+async function getWebsiteContext(workspaceId: string): Promise<WebsiteContext> {
+  try {
+    const intelligence = await db.query.workspaceIntelligence.findFirst({
+      where: eq(workspaceIntelligence.workspaceId, workspaceId),
+    });
+
+    if (!intelligence || !intelligence.websiteUrl) {
+      return {
+        companyName: null,
+        companyDescription: null,
+        products: [],
+        services: [],
+        targetAudience: null,
+        valuePropositions: [],
+        brandVoice: null,
+        websiteUrl: null,
+        hasAnalysis: false,
+      };
+    }
+
+    return {
+      companyName: intelligence.companyName || null,
+      companyDescription: intelligence.companyDescription || null,
+      products: (intelligence.products as Array<{ name: string; description: string }>) || [],
+      services: (intelligence.services as Array<{ name: string; description: string }>) || [],
+      targetAudience: intelligence.targetAudience || null,
+      valuePropositions: intelligence.valuePropositions || [],
+      brandVoice: intelligence.brandVoice || null,
+      websiteUrl: intelligence.websiteUrl,
+      hasAnalysis: !!intelligence.websiteAnalyzedAt,
+    };
+  } catch (error) {
+    logger.error('Failed to gather website context', error);
+    return {
+      companyName: null,
+      companyDescription: null,
+      products: [],
+      services: [],
+      targetAudience: null,
+      valuePropositions: [],
+      brandVoice: null,
+      websiteUrl: null,
+      hasAnalysis: false,
+    };
+  }
+}
+
+/**
  * Gather comprehensive AI context for the current user and workspace
  */
 export async function gatherAIContext(
@@ -691,7 +755,7 @@ export async function gatherAIContext(
     }
 
     // Gather all contexts in parallel for performance
-    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing] = await Promise.all([
+    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing, website] = await Promise.all([
       getUserPreferencesContext(workspaceId, user.id),
       getCRMContext(workspaceId),
       getCalendarContext(workspaceId),
@@ -700,6 +764,7 @@ export async function gatherAIContext(
       getConversationHistoryContext(workspaceId, user.id),
       getFinanceContext(workspaceId),
       getMarketingContext(workspaceId),
+      getWebsiteContext(workspaceId),
     ]);
 
     const now = new Date();
@@ -715,6 +780,7 @@ export async function gatherAIContext(
       conversationHistory,
       finance,
       marketing,
+      website,
       currentTime: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       currentDate: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       dayOfWeek: days[now.getDay()],

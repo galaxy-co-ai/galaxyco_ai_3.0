@@ -271,11 +271,11 @@ export async function POST(request: Request) {
     // Track frequent question (async, non-blocking)
     trackFrequentQuestion(workspaceId, userRecord.id, message).catch(() => {});
 
-    // Get conversation history for context
+    // Get conversation history for context (increased for complex conversations)
     const history = await db.query.aiMessages.findMany({
       where: eq(aiMessages.conversationId, conversation.id),
       orderBy: [asc(aiMessages.createdAt)],
-      limit: 20,
+      limit: 30, // Increased from 20 for better context retention
     });
 
     // Build messages array for OpenAI with vision support
@@ -284,7 +284,7 @@ export async function POST(request: Request) {
         role: 'system',
         content: systemPrompt,
       },
-      ...history.slice(-15).map((msg): ChatCompletionMessageParam => {
+      ...history.slice(-25).map((msg): ChatCompletionMessageParam => { // Increased from 15 for better context
         // Check if message has image attachments
         const attachments = msg.attachments as Array<{type: string; url: string}> | undefined;
         const imageAttachments = attachments?.filter(att => att.type === 'image') || [];
@@ -341,8 +341,8 @@ export async function POST(request: Request) {
         messages,
         tools: tools.length > 0 ? tools : undefined,
         tool_choice: tools.length > 0 ? 'auto' : undefined,
-        temperature: 0.8,
-        max_tokens: 300,
+        temperature: 0.5,      // Balanced: accurate but not robotic
+        max_tokens: 1500,      // Adequate for detailed responses + tool explanations
         frequency_penalty: 0.3,
         presence_penalty: 0.2,
       });
@@ -405,13 +405,22 @@ export async function POST(request: Request) {
           messages,
           tools: tools.length > 0 ? tools : undefined,
           tool_choice: tools.length > 0 ? 'auto' : undefined,
-          temperature: 0.8,
-          max_tokens: 300,
+          temperature: 0.5,      // Balanced: accurate but not robotic
+          max_tokens: 1500,      // Adequate for detailed responses + tool explanations
           frequency_penalty: 0.3,
           presence_penalty: 0.2,
         });
 
         responseMessage = completion.choices[0]?.message;
+      }
+
+      // Warn if max iterations reached (might indicate complex task or loop)
+      if (iterations >= maxIterations && responseMessage?.tool_calls) {
+        logger.warn('[AI Chat] Max tool iterations reached', {
+          maxIterations,
+          toolCallsMade: toolCallsMade.map(tc => tc.name),
+          conversationId: conversation.id,
+        });
       }
 
       assistantMessage = responseMessage?.content || 

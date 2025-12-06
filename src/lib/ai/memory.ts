@@ -61,7 +61,7 @@ export async function analyzeConversationForLearning(
     // Use AI to extract insights
     const openai = getOpenAI();
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
@@ -371,7 +371,7 @@ export async function summarizeConversation(
 
     const openai = getOpenAI();
     const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o',
       messages: [
         {
           role: 'system',
