@@ -136,9 +136,9 @@ export default function NeptuneAssistPanel({
       }
     };
 
-    window.addEventListener('neptune-prompt', handleNeptunePrompt as EventListener);
+    window.addEventListener('neptune-prompt', handleNeptunePrompt as unknown as EventListener);
     return () => {
-      window.removeEventListener('neptune-prompt', handleNeptunePrompt as EventListener);
+      window.removeEventListener('neptune-prompt', handleNeptunePrompt as unknown as EventListener);
     };
   }, [conversationId, conversation, variant, feature]);
 
