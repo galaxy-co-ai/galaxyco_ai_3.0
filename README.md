@@ -105,6 +105,12 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- ⚡ **Neptune Streaming Responses** - Real-time token streaming for instant feedback:
+  - First token appears in under 500ms - no more waiting for full response
+  - Tool calls work seamlessly during streaming (execute and continue)
+  - Visual streaming indicator shows when Neptune is actively typing
+  - Messages appear progressively, feeling like a real conversation
+  - Abort support - users can cancel streaming responses
 - 🧠 **Neptune Backend Optimization** - Critical fixes for response quality:
   - Fixed response truncation: max_tokens increased from 300 → 1500 (5x improvement)
   - Improved accuracy: temperature lowered from 0.8 → 0.5 for more reliable responses

@@ -35,6 +35,7 @@ export interface NeptuneMessage {
       result: { data?: unknown };
     }>;
   };
+  isStreaming?: boolean;
 }
 
 export interface Attachment {
@@ -51,6 +52,7 @@ interface NeptuneContextValue {
   messages: NeptuneMessage[];
   isLoading: boolean;
   isInitialized: boolean;
+  isStreaming: boolean;
 
   // Actions
   sendMessage: (
@@ -69,6 +71,65 @@ interface NeptuneContextValue {
 const NeptuneContext = createContext<NeptuneContextValue | null>(null);
 
 // ============================================================================
+// STREAMING HELPERS
+// ============================================================================
+
+interface StreamEvent {
+  content?: string;
+  conversationId?: string;
+  messageId?: string;
+  error?: string;
+  done?: boolean;
+  toolExecution?: boolean;
+  tools?: string[];
+  toolResults?: Array<{ name: string; success: boolean }>;
+  metadata?: NeptuneMessage["metadata"];
+}
+
+async function* parseSSEStream(
+  response: Response
+): AsyncGenerator<StreamEvent> {
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error("No response body");
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // Process complete SSE events
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6).trim();
+
+          if (data === "[DONE]") {
+            return;
+          }
+
+          try {
+            const event = JSON.parse(data) as StreamEvent;
+            yield event;
+          } catch {
+            // Skip malformed JSON
+            logger.warn("[Neptune Stream] Failed to parse event", { data });
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+// ============================================================================
 // PROVIDER
 // ============================================================================
 
@@ -78,8 +139,10 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<NeptuneMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const initRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Initialize Neptune - load or create conversation
   useEffect(() => {
@@ -174,10 +237,16 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
     initializeNeptune();
   }, []);
 
-  // Send message to Neptune
+  // Send message to Neptune with streaming
   const sendMessage = useCallback(
     async (message: string, attachments?: Attachment[], feature?: string) => {
       if (!message.trim() && (!attachments || attachments.length === 0)) return;
+
+      // Cancel any existing stream
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
 
       // Add user message immediately (optimistic)
       const userMessage: NeptuneMessage = {
@@ -188,8 +257,19 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         attachments,
       };
 
-      setMessages((prev) => [...prev, userMessage]);
+      // Create placeholder for assistant message
+      const assistantMessageId = `assistant-${Date.now()}`;
+      const assistantMessage: NeptuneMessage = {
+        id: assistantMessageId,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+
+      setMessages((prev) => [...prev, userMessage, assistantMessage]);
       setIsLoading(true);
+      setIsStreaming(true);
 
       try {
         const response = await fetch("/api/assistant/chat", {
@@ -205,37 +285,110 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
             },
             feature,
           }),
+          signal: abortControllerRef.current.signal,
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error || `HTTP ${response.status}: ${response.statusText}`
-          );
+          // Try to get error from response
+          const errorText = await response.text();
+          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.error || errorMessage;
+          } catch {
+            // Not JSON, use status text
+          }
+          throw new Error(errorMessage);
         }
 
-        const data = await response.json();
+        // Process streaming response
+        let streamedContent = "";
+        let newConversationId: string | null = null;
+        let finalMetadata: NeptuneMessage["metadata"] | undefined;
+        let finalMessageId: string | undefined;
 
-        // Update conversation ID if this was a new conversation
-        if (data.conversationId && data.conversationId !== conversationId) {
-          setConversationId(data.conversationId);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(STORAGE_KEY, data.conversationId);
+        for await (const event of parseSSEStream(response)) {
+          // Handle errors
+          if (event.error) {
+            throw new Error(event.error);
+          }
+
+          // Update conversation ID if provided
+          if (event.conversationId && event.conversationId !== conversationId) {
+            newConversationId = event.conversationId;
+          }
+
+          // Stream content
+          if (event.content) {
+            streamedContent += event.content;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? { ...msg, content: streamedContent }
+                  : msg
+              )
+            );
+          }
+
+          // Handle tool execution notification
+          if (event.toolExecution && event.tools) {
+            logger.debug("[Neptune] Tool execution", { tools: event.tools });
+          }
+
+          // Handle tool results
+          if (event.toolResults) {
+            logger.debug("[Neptune] Tool results", {
+              results: event.toolResults,
+            });
+          }
+
+          // Handle completion
+          if (event.done) {
+            finalMetadata = event.metadata;
+            finalMessageId = event.messageId;
           }
         }
 
-        // Add assistant response
-        const assistantMessage: NeptuneMessage = {
-          id: data.message?.id || `assistant-${Date.now()}`,
-          role: "assistant",
-          content:
-            data.message?.content || data.response || "I'm here to help!",
-          timestamp: new Date(data.message?.createdAt || Date.now()),
-          metadata: data.message?.metadata,
-        };
+        // Update conversation ID if changed
+        if (newConversationId) {
+          setConversationId(newConversationId);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(STORAGE_KEY, newConversationId);
+          }
+        }
 
-        setMessages((prev) => [...prev, assistantMessage]);
+        // Finalize assistant message
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? {
+                  ...msg,
+                  id: finalMessageId || assistantMessageId,
+                  content: streamedContent || "I'm here to help!",
+                  isStreaming: false,
+                  metadata: finalMetadata,
+                }
+              : msg
+          )
+        );
       } catch (error) {
+        // Handle abort (user initiated)
+        if (error instanceof Error && error.name === "AbortError") {
+          logger.debug("[Neptune] Stream aborted by user");
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? {
+                    ...msg,
+                    content: msg.content || "Message cancelled.",
+                    isStreaming: false,
+                  }
+                : msg
+            )
+          );
+          return;
+        }
+
         logger.error("[Neptune] Send message failed", error);
         const errorMsg =
           error instanceof Error
@@ -243,19 +396,23 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
             : "Failed to get response from Neptune";
         toast.error(errorMsg);
 
-        // Add error message
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `error-${Date.now()}`,
-            role: "assistant",
-            content:
-              "I encountered an issue. Please try again or rephrase your question.",
-            timestamp: new Date(),
-          },
-        ]);
+        // Update assistant message with error
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? {
+                  ...msg,
+                  content:
+                    "I encountered an issue. Please try again or rephrase your question.",
+                  isStreaming: false,
+                }
+              : msg
+          )
+        );
       } finally {
         setIsLoading(false);
+        setIsStreaming(false);
+        abortControllerRef.current = null;
       }
     },
     [conversationId]
@@ -264,6 +421,11 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   // Clear conversation and start fresh
   const clearConversation = useCallback(async () => {
     try {
+      // Cancel any existing stream
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
       // Remove from localStorage
       if (typeof window !== "undefined") {
         localStorage.removeItem(STORAGE_KEY);
@@ -337,6 +499,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         messages,
         isLoading,
         isInitialized,
+        isStreaming,
         sendMessage,
         clearConversation,
         refreshMessages,
@@ -357,6 +520,7 @@ const defaultNeptuneContext: NeptuneContextValue = {
   messages: [],
   isLoading: false,
   isInitialized: false,
+  isStreaming: false,
   sendMessage: async () => {},
   clearConversation: async () => {},
   refreshMessages: async () => {},

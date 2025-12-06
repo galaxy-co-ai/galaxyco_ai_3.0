@@ -62,6 +62,7 @@ export default function NeptuneAssistPanel({
     messages,
     isLoading,
     isInitialized,
+    isStreaming,
     sendMessage,
     clearConversation,
   } = useNeptune();
@@ -394,7 +395,15 @@ export default function NeptuneAssistPanel({
                   )}
 
                   {msg.content && (
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {msg.content}
+                      {msg.isStreaming && (
+                        <span className="inline-block w-2 h-4 ml-0.5 bg-current animate-pulse" />
+                      )}
+                    </p>
+                  )}
+                  {!msg.content && msg.isStreaming && (
+                    <span className="inline-block w-2 h-4 bg-muted-foreground animate-pulse" />
                   )}
 
                   {/* Gamma Document Display */}
@@ -605,7 +614,7 @@ export default function NeptuneAssistPanel({
                 </div>
               </div>
             ))}
-            {isLoading && (
+            {isLoading && !isStreaming && (
               <div className="flex justify-start">
                 <div className="rounded-lg bg-muted p-3">
                   <div className="flex items-center gap-2">
