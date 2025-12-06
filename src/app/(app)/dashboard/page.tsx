@@ -5,6 +5,8 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { getDashboardData, getEmptyDashboardData } from '@/lib/dashboard-v2';
 import { logger } from '@/lib/logger';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Dashboard | GalaxyCo.ai',
   description: 'Your personalized AI command center - guided, intelligent, and always helpful',

@@ -6,6 +6,8 @@ import CRMDashboard from "@/components/crm/CRMDashboard";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
+export const dynamic = "force-dynamic";
+
 export default async function CRMPage() {
   try {
     const { workspaceId } = await getCurrentWorkspace();

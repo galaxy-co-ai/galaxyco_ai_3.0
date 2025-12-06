@@ -26,6 +26,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Analytics | Mission Control',
   description: 'Platform analytics and engagement metrics',

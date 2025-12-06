@@ -19,6 +19,8 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Mission Control | GalaxyCo.ai',
   description: 'Admin dashboard for GalaxyCo.ai platform management',

@@ -3,6 +3,8 @@ import { db } from '@/lib/db';
 import { blogCategories } from '@/db/schema';
 import { PostEditorClient } from '@/components/admin/PostEditorClient';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'New Post | Content Studio',
   description: 'Create a new Launchpad blog post',

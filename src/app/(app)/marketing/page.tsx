@@ -7,6 +7,8 @@ import { eq, desc, and, count, sum } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Marketing | GalaxyCo.ai',
   description: 'AI-powered marketing automation and campaign management',

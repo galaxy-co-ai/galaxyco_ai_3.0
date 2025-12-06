@@ -6,6 +6,8 @@ import { MyAgentsDashboard } from "@/components/agents";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
+export const dynamic = "force-dynamic";
+
 export default async function MyAgentsPage() {
   try {
     const { workspaceId } = await getCurrentWorkspace();

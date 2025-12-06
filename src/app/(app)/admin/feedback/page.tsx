@@ -18,6 +18,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Feedback Hub | Mission Control',
   description: 'Platform feedback and user suggestions',

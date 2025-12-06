@@ -20,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { formatDistanceToNow } from 'date-fns';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Content Studio | Mission Control',
   description: 'Manage Launchpad blog posts and content',

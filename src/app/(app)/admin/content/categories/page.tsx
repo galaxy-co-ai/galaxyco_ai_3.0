@@ -4,6 +4,8 @@ import { blogCategories, blogPosts } from '@/db/schema';
 import { eq, count } from 'drizzle-orm';
 import { CategoriesClient } from '@/components/admin/CategoriesClient';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Categories | Content Studio',
   description: 'Manage blog categories',
