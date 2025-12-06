@@ -7,7 +7,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { aiMessageFeedback, aiMessages } from '@/db/schema';
+import { aiMessageFeedback, aiMessages, aiConversations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { updateCommunicationStyle } from '@/lib/ai/memory';
@@ -37,13 +37,21 @@ export async function POST(request: Request) {
 
     const { messageId, feedbackType, comment, communicationStyle } = validationResult.data;
 
-    // Verify message exists and belongs to user
+    // Verify message exists and belongs to user's workspace (via conversation)
     const message = await db.query.aiMessages.findFirst({
-      where: and(
-        eq(aiMessages.id, messageId),
-        eq(aiMessages.workspaceId, workspaceId)
-      ),
+      where: eq(aiMessages.id, messageId),
+      with: {
+        conversation: true,
+      },
     });
+
+    // Check if conversation belongs to user's workspace
+    if (message && message.conversation && message.conversation.workspaceId !== workspaceId) {
+      return NextResponse.json(
+        { error: 'Message not found' },
+        { status: 404 }
+      );
+    }
 
     if (!message) {
       return NextResponse.json(
