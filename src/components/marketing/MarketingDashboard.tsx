@@ -65,6 +65,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import MarketingAutomationsTab from "./MarketingAutomationsTab";
+import CampaignCreateTab from "./CampaignCreateTab";
 import { logger } from "@/lib/logger";
 import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 import useSWR from 'swr';
@@ -122,7 +123,7 @@ interface MarketingDashboardProps {
   };
 }
 
-type TabType = 'campaigns' | 'channels' | 'analytics';
+type TabType = 'create' | 'campaigns' | 'channels' | 'analytics';
 
 interface ChatMessage {
   id: string;
@@ -137,7 +138,7 @@ export default function MarketingDashboard({
   initialChannels,
   stats,
 }: MarketingDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('campaigns');
+  const [activeTab, setActiveTab] = useState<TabType>('create');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNeptune, setShowNeptune] = useState(false);
   const [showCampaignChat, setShowCampaignChat] = useState(false);
@@ -452,6 +453,7 @@ export default function MarketingDashboard({
 
   // Tab configuration - Content and Assets moved to Creator page
   const tabs = [
+    { id: 'create' as TabType, label: 'Create', icon: Plus, activeColor: 'bg-emerald-100 text-emerald-700' },
     { id: 'campaigns' as TabType, label: 'Campaigns', icon: Megaphone, badge: stats.activeCampaigns.toString(), badgeColor: 'bg-pink-500', activeColor: 'bg-pink-100 text-pink-700' },
     { id: 'channels' as TabType, label: 'Channels', icon: Share2, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3, activeColor: 'bg-indigo-100 text-indigo-700' },
@@ -1222,6 +1224,11 @@ Be creative, engaging, and write content that resonates!`;
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
+            {/* CREATE TAB - Neptune-Guided Campaign Builder */}
+            {activeTab === 'create' && (
+              <CampaignCreateTab onCampaignCreated={() => setActiveTab('campaigns')} />
+            )}
+
             {/* CAMPAIGNS TAB - Template-based with Neptune */}
             {activeTab === 'campaigns' && (
               <Card className="p-8 shadow-lg border-0">

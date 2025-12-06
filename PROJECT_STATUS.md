@@ -20,7 +20,15 @@
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Recent Achievement:** Unified Neptune Experience (December 6, 2025)
+**Recent Achievement:** Marketing Create Tab - Neptune-Guided Campaign Builder (December 6, 2025)
+- **New "Create" Tab** - First tab on Marketing page with Neptune-guided campaign creation
+- **Dynamic Roadmap** - Neptune builds custom roadmap based on campaign type (email, social, ads, content)
+- **2/3 + 1/3 Layout** - Neptune chat (left) + Campaign Roadmap card (right), matching Dashboard v2 design
+- **Real-time Updates** - Roadmap items check off automatically as Neptune collects information
+- **Confidence-Building UX** - Natural, forward-moving conversation style that builds user confidence
+- **New AI Tools** - `update_campaign_roadmap` and `launch_campaign` tools for guided creation flow
+
+**Previous Achievement:** Unified Neptune Experience (December 6, 2025)
 - **Unified Conversations** - Neptune maintains context across all pages (Dashboard, CRM, Marketing, etc.)
 - **Smart File Organization** - Neptune analyzes uploads and organizes into appropriate Library collections
 - **File Upload Previews** - Images show as thumbnails, documents as clickable pills in chat
@@ -35,12 +43,12 @@
 |-------|-------|
 | **Date** | December 6, 2025 |
 | **Build Status** | ✅ Passing (Verified - Local & Vercel) |
-| **Latest Commit** | Unified Neptune conversations + Smart file organization |
+| **Latest Commit** | Marketing Create Tab - Neptune-guided campaign builder |
 | **Environment Status** | ✅ ALL SYSTEMS OPERATIONAL (19/19 services) |
 | **Overall Completion** | 100% Production-Ready + Enhanced AI + Proactive Intelligence |
 | **Test Coverage** | 70% (API routes, components, E2E) |
 | **Deployment Status** | ✅ Deployed to Vercel Production |
-| **Latest Update** | Neptune maintains conversation context across all pages; intelligently organizes uploaded files into Library collections |
+| **Latest Update** | Marketing Create Tab with Neptune-guided campaign builder and dynamic roadmap |
 
 ---
 
@@ -82,6 +90,58 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Marketing Create Tab: Neptune-Guided Campaign Builder ✅
+
+#### Neptune-Guided Campaign Creation Experience
+Added a new "Create" tab as the default first tab on the Marketing page, providing a guided campaign creation experience powered by Neptune AI.
+
+**Features:**
+- **2/3 + 1/3 Layout** - Matches Dashboard v2 design with Neptune chat (left) and Campaign Roadmap card (right)
+- **Dynamic Roadmap Building** - Neptune discovers campaign type and builds a custom roadmap:
+  - Email campaigns: Campaign Name, Subject Line, Email Body, Target Audience, Schedule
+  - Social campaigns: Campaign Name, Platform(s), Content, Images/Media, Schedule
+  - Ads campaigns: Campaign Name, Creative Copy, Budget, Targeting, Schedule
+  - Content campaigns: Campaign Name, Content Type, Topic, Target Audience, Publish Date
+- **Real-time Progress Tracking** - Roadmap items check off automatically as Neptune collects information
+- **Confidence-Building UX** - Natural, forward-moving conversation style:
+  - "Email campaign - love it. I'll set up a quick roadmap for us..."
+  - "First up - what should we call this campaign?"
+  - "Looking good! Ready to launch this?"
+- **Launch Integration** - When all items complete, campaign is created and moved to Campaigns tab
+
+**Technical Implementation:**
+- **New Components:**
+  - `src/components/marketing/CampaignCreateTab.tsx` - Main tab component with layout
+  - `src/components/marketing/CampaignRoadmapCard.tsx` - Dynamic roadmap display with progress bar
+- **New AI Tools:**
+  - `update_campaign_roadmap` - Builds and updates roadmap items (add, complete, replace actions)
+  - `launch_campaign` - Creates campaign when user confirms ready
+- **System Prompt Enhancement:**
+  - Added `marketing-create` context mode with campaign builder instructions
+  - Neptune knows to discover campaign type, build roadmap, guide through steps
+- **Event System:**
+  - Custom events (`campaign-roadmap-update`, `campaign-launch`) for real-time UI updates
+  - CampaignCreateTab watches Neptune messages for tool results and dispatches events
+
+**Files Added:**
+- `src/components/marketing/CampaignCreateTab.tsx`
+- `src/components/marketing/CampaignRoadmapCard.tsx`
+
+**Files Modified:**
+- `src/components/marketing/MarketingDashboard.tsx` - Added Create tab, set as default
+- `src/lib/ai/system-prompt.ts` - Added marketing-create context mode
+- `src/lib/ai/tools.ts` - Added update_campaign_roadmap and launch_campaign tools
+- `src/app/api/assistant/chat/route.ts` - Enhanced to store tool results in message metadata
+
+**User Experience:**
+1. User lands on Marketing page → Sees "Create" tab (default)
+2. Neptune greets: "Hey! What kind of campaign are you thinking about?"
+3. User responds → Neptune builds custom roadmap
+4. Neptune guides through each item → Items check off as completed
+5. When ready → Neptune creates campaign and moves to Campaigns tab
+
+---
 
 ### December 6, 2025 - Unified Neptune Conversation System ✅
 

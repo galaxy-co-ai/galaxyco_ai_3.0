@@ -202,6 +202,7 @@ Deployment:   ████████████████████ 100% 
 - ✅ Mission Control Admin Dashboard
 - ✅ My Agents page with Laboratory (agent creation wizard)
 - ✅ **Marketing campaigns fully wired to APIs** ← NEW
+- ✅ **Marketing Create Tab** - Neptune-guided campaign builder with dynamic roadmap ← NEW
 - ✅ All pages responsive (mobile-first)
 - ✅ **Test coverage: 70%** (API routes, components, E2E) ← NEW
 - ✅ **Production deployment ready** ← NEW
@@ -379,6 +380,13 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - AI-powered lead scoring
 - Automated insights generation
 - Interaction tracking
+
+### 📢 Marketing
+- **Neptune-Guided Campaign Builder** - Create campaigns through natural conversation
+- **Dynamic Roadmap** - Custom checklist built by Neptune based on campaign type
+- **Campaign Management** - Full CRUD operations with real-time updates
+- **Performance Analytics** - Track opens, clicks, conversions, ROI
+- **Multi-Channel Support** - Email, social media, paid ads, content campaigns
 
 ### 🎨 Workflow Studio
 - Visual workflow builder

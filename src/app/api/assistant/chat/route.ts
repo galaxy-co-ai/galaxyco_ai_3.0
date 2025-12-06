@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 // AI Module imports
-import { aiTools, executeTool, getToolsForCapability, type ToolContext } from '@/lib/ai/tools';
+import { aiTools, executeTool, getToolsForCapability, type ToolContext, type ToolResult } from '@/lib/ai/tools';
 import { gatherAIContext, getQuickContext } from '@/lib/ai/context';
 import { generateSystemPrompt } from '@/lib/ai/system-prompt';
 import { trackFrequentQuestion, analyzeConversationForLearning, updateUserPreferencesFromInsights } from '@/lib/ai/memory';
@@ -332,7 +332,7 @@ export async function POST(request: Request) {
     });
 
     let assistantMessage: string;
-    const toolCallsMade: string[] = [];
+    const toolCallsMade: Array<{ name: string; result: ToolResult }> = [];
 
     try {
       // First API call
@@ -366,8 +366,22 @@ export async function POST(request: Request) {
           toolContext
         );
 
-        // Track which tools were called
-        toolCallsMade.push(...toolResults.map(r => r.name));
+        // Track which tools were called with full results
+        toolCallsMade.push(...toolResults.map(r => {
+          let parsedResult: ToolResult;
+          try {
+            parsedResult = JSON.parse(r.result) as ToolResult;
+          } catch {
+            parsedResult = {
+              success: false,
+              message: 'Failed to parse tool result',
+            };
+          }
+          return {
+            name: r.name,
+            result: parsedResult,
+          };
+        }));
 
         // Add assistant message with tool calls
         messages.push({
@@ -424,10 +438,10 @@ export async function POST(request: Request) {
         content: assistantMessage,
         metadata: toolCallsMade.length > 0 
           ? { 
-              functionCalls: toolCallsMade.map(name => ({ 
-                name, 
+              functionCalls: toolCallsMade.map(toolCall => ({ 
+                name: toolCall.name, 
                 args: {}, 
-                result: {} 
+                result: toolCall.result 
               }))
             }
           : undefined,
@@ -470,10 +484,11 @@ export async function POST(request: Request) {
         role: 'assistant',
         content: assistantMessage,
         createdAt: aiMessage.createdAt,
+        metadata: aiMessage.metadata,
       },
       context: {
         userName: toolContext.userName,
-        toolsExecuted: toolCallsMade,
+        toolsExecuted: toolCallsMade.map(tc => typeof tc === 'string' ? tc : tc.name),
       },
     });
   } catch (error) {

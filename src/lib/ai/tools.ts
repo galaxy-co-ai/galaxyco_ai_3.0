@@ -703,6 +703,82 @@ export const aiTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'update_campaign_roadmap',
+      description: 'Update the campaign creation roadmap. Use this to add roadmap items or mark them as completed when building a campaign with the user.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: {
+            type: 'string',
+            enum: ['add', 'complete', 'replace'],
+            description: 'Action to take: "replace" to build initial roadmap, "add" to add items, "complete" to mark items done',
+          },
+          items: {
+            type: 'array',
+            description: 'Array of roadmap items to add or update',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', description: 'Unique identifier for the roadmap item' },
+                title: { type: 'string', description: 'Title of the roadmap item' },
+                description: { type: 'string', description: 'Optional description' },
+                value: { type: 'string', description: 'Captured value when completing an item' },
+              },
+              required: ['id', 'title'],
+            },
+          },
+        },
+        required: ['action', 'items'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'launch_campaign',
+      description: 'Launch/create the campaign when all roadmap items are complete and user confirms. This creates the campaign and moves it to the Campaigns tab.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Campaign name',
+          },
+          type: {
+            type: 'string',
+            enum: ['email', 'social', 'ads', 'content', 'drip', 'newsletter', 'promotion'],
+            description: 'Campaign type',
+          },
+          content: {
+            type: 'object',
+            description: 'Campaign content (subject, body, images, links)',
+            properties: {
+              subject: { type: 'string' },
+              body: { type: 'string' },
+              images: { type: 'array', items: { type: 'string' } },
+              links: { type: 'array', items: { type: 'object' } },
+            },
+          },
+          targetAudience: {
+            type: 'object',
+            description: 'Target audience configuration',
+          },
+          scheduledFor: {
+            type: 'string',
+            description: 'ISO date string for when to schedule the campaign',
+          },
+          budget: {
+            type: 'number',
+            description: 'Campaign budget in dollars',
+          },
+        },
+        required: ['name', 'type'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'send_email',
       description: 'Send an email to a contact or lead. Use this when the user wants to actually send (not just draft) an email.',
       parameters: {
@@ -3098,6 +3174,96 @@ A: [Detailed answer]`,
     }
   },
 
+  async update_campaign_roadmap(args, context): Promise<ToolResult> {
+    try {
+      const action = args.action as 'add' | 'complete' | 'replace';
+      const items = args.items as Array<{ id: string; title: string; description?: string; value?: string }>;
+      
+      let message = '';
+      if (action === 'replace') {
+        message = `Built roadmap with ${items.length} item(s)`;
+      } else if (action === 'add') {
+        message = `Added ${items.length} item(s) to roadmap`;
+      } else if (action === 'complete') {
+        const completedItems = items.filter(item => item.title);
+        message = `Completed: ${completedItems.map(item => item.title).join(', ')}`;
+      }
+
+      return {
+        success: true,
+        message,
+        data: {
+          action,
+          items,
+          // Flag for client-side to dispatch event
+          dispatchEvent: 'campaign-roadmap-update',
+        },
+      };
+    } catch (error) {
+      logger.error('AI update_campaign_roadmap failed', error);
+      return {
+        success: false,
+        message: 'Failed to update roadmap',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async launch_campaign(args, context): Promise<ToolResult> {
+    try {
+      // Create the campaign in the database
+      const [campaign] = await db
+        .insert(campaigns)
+        .values({
+          workspaceId: context.workspaceId,
+          name: args.name as string,
+          type: (args.type as string) || 'email',
+          status: 'draft',
+          content: args.content as {
+            subject?: string;
+            body?: string;
+            images?: string[];
+            links?: Array<{ url: string; label: string }>;
+          } || {},
+          targetAudience: args.targetAudience as Record<string, unknown> || {},
+          scheduledFor: args.scheduledFor ? new Date(args.scheduledFor as string) : null,
+          budget: args.budget ? Math.round((args.budget as number) * 100) : null, // Convert to cents
+          createdBy: context.userId,
+        })
+        .returning();
+
+      logger.info('AI launched campaign', { campaignId: campaign.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Campaign "${campaign.name}" created successfully! It's now in your Campaigns tab.`,
+        data: {
+          id: campaign.id,
+          name: campaign.name,
+          type: campaign.type,
+          status: campaign.status,
+          // Flag for client-side to dispatch event
+          dispatchEvent: 'campaign-launch',
+          campaignData: {
+            name: campaign.name,
+            type: campaign.type,
+            content: campaign.content,
+            targetAudience: campaign.targetAudience,
+            scheduledFor: campaign.scheduledFor?.toISOString(),
+            budget: campaign.budget ? campaign.budget / 100 : undefined,
+          },
+        },
+      };
+    } catch (error) {
+      logger.error('AI launch_campaign failed', error);
+      return {
+        success: false,
+        message: 'Failed to create campaign',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
   async get_campaign_stats(args, context): Promise<ToolResult> {
     try {
       const campaignId = args.campaignId as string | undefined;
@@ -5349,6 +5515,8 @@ export const toolsByCategory = {
   marketing: [
     'create_campaign',
     'get_campaign_stats',
+    'update_campaign_roadmap',
+    'launch_campaign',
     'generate_image',
     'generate_marketing_copy',
     'analyze_brand_message',
