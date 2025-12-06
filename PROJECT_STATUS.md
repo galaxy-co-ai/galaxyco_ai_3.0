@@ -20,7 +20,15 @@
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Recent Achievement:** Marketing Create Tab - Neptune-Guided Campaign Builder (December 6, 2025)
+**Recent Achievement:** Dynamic Dashboard Roadmap (December 6, 2025)
+- **Personalized Roadmaps** - Neptune builds custom roadmaps based on user's goals
+- **Conversation-Driven** - Tell Neptune what you want to accomplish, watch the roadmap appear
+- **Real-time Updates** - Items check off as Neptune helps complete each step
+- **Multiple Goal Types** - Sales Pipeline, CRM Setup, Marketing, Agent Creation, Finance Setup, Document Organization
+- **New AI Tool** - `update_dashboard_roadmap` for dynamic roadmap management
+- **Action-Oriented** - Neptune executes tasks (creates leads, contacts, etc.) and checks them off
+
+**Previous Achievement:** Marketing Create Tab - Neptune-Guided Campaign Builder (December 6, 2025)
 - **New "Create" Tab** - First tab on Marketing page with Neptune-guided campaign creation
 - **Dynamic Roadmap** - Neptune builds custom roadmap based on campaign type (email, social, ads, content)
 - **2/3 + 1/3 Layout** - Neptune chat (left) + Campaign Roadmap card (right), matching Dashboard v2 design
@@ -43,12 +51,12 @@
 |-------|-------|
 | **Date** | December 6, 2025 |
 | **Build Status** | ✅ Passing (Verified - Local & Vercel) |
-| **Latest Commit** | Marketing Create Tab - Neptune-guided campaign builder |
+| **Latest Commit** | Dynamic Dashboard Roadmap - Neptune builds personalized roadmaps |
 | **Environment Status** | ✅ ALL SYSTEMS OPERATIONAL (19/19 services) |
 | **Overall Completion** | 100% Production-Ready + Enhanced AI + Proactive Intelligence |
 | **Test Coverage** | 70% (API routes, components, E2E) |
 | **Deployment Status** | ✅ Deployed to Vercel Production |
-| **Latest Update** | Marketing Create Tab with Neptune-guided campaign builder and dynamic roadmap |
+| **Latest Update** | Dashboard roadmap dynamically built by Neptune based on user conversation |
 
 ---
 
@@ -90,6 +98,48 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Dynamic Dashboard Roadmap ✅
+
+#### Neptune-Built Personalized Roadmaps
+Transformed the Dashboard roadmap from a static checklist to a dynamic, conversation-driven experience. Neptune now builds personalized roadmaps based on what users want to accomplish.
+
+**How It Works:**
+1. User opens Dashboard → Neptune asks: "Hey! What would you like to accomplish today?"
+2. User responds with goal → Neptune builds a custom roadmap in real-time
+3. Neptune guides through each item → Items check off as tasks complete
+4. User ends with a completed roadmap and accomplished goals
+
+**Supported Goal Types:**
+- **Sales Pipeline**: Add first lead, Set up pipeline stages, Create follow-up sequence, Schedule first outreach
+- **CRM Setup**: Add contacts, Create organizations, Set up lead scoring, Import existing data
+- **Marketing**: Define target audience, Create first campaign, Set up email templates, Schedule content
+- **Agent Creation**: Choose agent type, Configure capabilities, Test agent, Activate agent
+- **Document Organization**: Upload key documents, Create collections, Set up search, Share with team
+- **Finance Setup**: Connect QuickBooks/Stripe, Review invoices, Set up payment reminders
+
+**Technical Implementation:**
+- **New AI Tool**: `update_dashboard_roadmap` with actions: replace, add, complete
+- **Rewritten `RoadmapCard.tsx`**: Now accepts dynamic items via props
+- **Updated `DashboardV2Client.tsx`**: Manages roadmap state and listens for custom events
+- **Enhanced System Prompt**: Complete 'dashboard' context mode for roadmap-building behavior
+- **Event System**: `dashboard-roadmap-update` events for real-time UI updates
+
+**Files Added/Modified:**
+- `src/lib/ai/tools.ts` - Added `update_dashboard_roadmap` tool definition and handler
+- `src/components/dashboard-v2/RoadmapCard.tsx` - Complete rewrite for dynamic items
+- `src/components/dashboard-v2/DashboardV2Client.tsx` - State management and event handling
+- `src/lib/ai/system-prompt.ts` - New 'dashboard' context mode with roadmap instructions
+- `src/contexts/neptune-context.tsx` - Made `useNeptune` hook SSR-safe
+
+**User Experience:**
+- Roadmap starts empty with placeholder: "Tell Neptune what you'd like to accomplish"
+- Neptune asks about goals and builds roadmap dynamically
+- Progress bar and completion percentage update in real-time
+- Items show captured values (e.g., "Add first lead: John Smith @ Acme Corp")
+- Celebration message when all items complete
+
+---
 
 ### December 6, 2025 - Marketing Create Tab: Neptune-Guided Campaign Builder ✅
 

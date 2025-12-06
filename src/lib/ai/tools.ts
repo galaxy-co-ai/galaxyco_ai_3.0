@@ -779,6 +779,38 @@ export const aiTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'update_dashboard_roadmap',
+      description: 'Update the dashboard roadmap dynamically. Use this to build a personalized roadmap based on user goals, or mark items as completed. The roadmap appears on the right side of the dashboard.',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: {
+            type: 'string',
+            enum: ['add', 'complete', 'replace'],
+            description: 'Action to take: "replace" to build initial roadmap from scratch, "add" to add items, "complete" to mark items done',
+          },
+          items: {
+            type: 'array',
+            description: 'Array of roadmap items to add or update',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', description: 'Unique identifier for the roadmap item (e.g., "setup-crm", "create-agent")' },
+                title: { type: 'string', description: 'Short title of the roadmap item' },
+                description: { type: 'string', description: 'Brief description of what this step involves' },
+                value: { type: 'string', description: 'Captured value when completing an item (e.g., "Added 5 contacts")' },
+              },
+              required: ['id', 'title'],
+            },
+          },
+        },
+        required: ['action', 'items'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'send_email',
       description: 'Send an email to a contact or lead. Use this when the user wants to actually send (not just draft) an email.',
       parameters: {
@@ -3264,6 +3296,43 @@ A: [Detailed answer]`,
     }
   },
 
+  async update_dashboard_roadmap(args, context): Promise<ToolResult> {
+    try {
+      const action = args.action as 'add' | 'complete' | 'replace';
+      const items = args.items as Array<{ id: string; title: string; description?: string; value?: string }>;
+
+      let message = '';
+      if (action === 'replace') {
+        message = `Built roadmap with ${items.length} item(s)`;
+      } else if (action === 'add') {
+        message = `Added ${items.length} item(s) to roadmap`;
+      } else if (action === 'complete') {
+        const completedItems = items.filter(item => item.title);
+        message = `Completed: ${completedItems.map(item => item.title).join(', ')}`;
+      }
+
+      logger.info('AI update_dashboard_roadmap', { action, itemCount: items.length, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message,
+        data: {
+          action,
+          items,
+          // Flag for client-side to dispatch event
+          dispatchEvent: 'dashboard-roadmap-update',
+        },
+      };
+    } catch (error) {
+      logger.error('AI update_dashboard_roadmap failed', error);
+      return {
+        success: false,
+        message: 'Failed to update roadmap',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
   async get_campaign_stats(args, context): Promise<ToolResult> {
     try {
       const campaignId = args.campaignId as string | undefined;
@@ -5512,6 +5581,7 @@ export const toolsByCategory = {
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
   content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents', 'save_upload_to_library'],
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library'],
+  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge'],
   marketing: [
     'create_campaign',
     'get_campaign_stats',
@@ -5561,6 +5631,9 @@ export function getToolsForCapability(capability: string): ChatCompletionTool[] 
       break;
     case 'marketing':
       toolNames.push(...toolsByCategory.marketing, ...toolsByCategory.content, ...toolsByCategory.crm);
+      break;
+    case 'dashboard':
+      toolNames.push(...toolsByCategory.dashboard, ...toolsByCategory.crm, ...toolsByCategory.tasks, ...toolsByCategory.calendar, ...toolsByCategory.agents);
       break;
     default:
       // Return all tools

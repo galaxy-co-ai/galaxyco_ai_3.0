@@ -83,10 +83,10 @@ npm run typecheck           # TypeScript validation
 
 **Last Updated:** December 6, 2025  
 **Build Status:** ✅ Clean build - Next.js 16.0.7 (patched)  
-**Latest Commit:** Unified Neptune conversation system + Smart file organization  
+**Latest Commit:** Dynamic Dashboard Roadmap - Neptune builds personalized roadmaps  
 **Test Coverage:** 70% (API routes, components, E2E)  
 **Deployment:** ✅ Live on Vercel Production  
-**Latest Enhancement:** Neptune now maintains conversation history across all pages and intelligently organizes uploaded files into your Library
+**Latest Enhancement:** Dashboard roadmap is now dynamically built by Neptune based on your conversation - tell Neptune what you want to accomplish and watch your personalized roadmap appear!
 
 ### Verified & Operational
 - ✅ All 19 critical environment variables verified
@@ -105,6 +105,12 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🎯 **Dynamic Dashboard Roadmap** - Neptune now builds personalized roadmaps based on your goals:
+  - Tell Neptune what you want to accomplish: "I want to set up my sales pipeline"
+  - Neptune dynamically builds a custom roadmap: Add first lead, Set up stages, Create follow-ups
+  - Items check off in real-time as Neptune helps you complete each step
+  - New `update_dashboard_roadmap` AI tool for roadmap management
+  - Supports multiple goal types: Sales Pipeline, CRM Setup, Marketing, Agent Creation, Finance Setup
 - 🔗 **Unified Neptune Conversations** - Neptune now maintains context across ALL pages:
   - Single conversation persists when navigating Dashboard → CRM → Marketing → etc.
   - Message history loads from database on app start

@@ -351,11 +351,23 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
 // HOOK
 // ============================================================================
 
+// Default values for when hook is used outside provider (SSR/static generation)
+const defaultNeptuneContext: NeptuneContextValue = {
+  conversationId: null,
+  messages: [],
+  isLoading: false,
+  isInitialized: false,
+  sendMessage: async () => {},
+  clearConversation: async () => {},
+  refreshMessages: async () => {},
+};
+
 export function useNeptune() {
   const context = useContext(NeptuneContext);
 
+  // Return default values if outside provider (prevents SSR errors)
   if (!context) {
-    throw new Error("useNeptune must be used within a NeptuneProvider");
+    return defaultNeptuneContext;
   }
 
   return context;

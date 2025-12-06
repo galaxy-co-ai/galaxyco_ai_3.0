@@ -139,9 +139,9 @@ export default function CampaignCreateTab({ onCampaignCreated }: CampaignCreateT
       }
     };
 
-    window.addEventListener('campaign-launch', handleCampaignLaunch as EventListener);
+    window.addEventListener('campaign-launch', handleCampaignLaunch as unknown as EventListener);
     return () => {
-      window.removeEventListener('campaign-launch', handleCampaignLaunch as EventListener);
+      window.removeEventListener('campaign-launch', handleCampaignLaunch as unknown as EventListener);
     };
   }, [onCampaignCreated]);
 
