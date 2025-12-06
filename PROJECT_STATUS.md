@@ -20,7 +20,15 @@
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Recent Achievement:** Twitter/X Social Media Integration (December 6, 2025)
+**Recent Achievement:** Instant Website Analysis (December 6, 2025)
+- **Immediate Analysis** - Neptune analyzes websites instantly when you share a URL (no more waiting)
+- **Serverless-Compatible Crawler** - Uses fetch + cheerio instead of Playwright (works on Vercel)
+- **Jina AI Reader Fallback** - Handles JavaScript-heavy sites that standard fetch can't parse
+- **Personalized Insights** - Extracts company info, products, services, target audience
+- **Actionable Recommendations** - Neptune suggests specific growth actions for your business
+- **Smart URL Handling** - Auto-adds https:// if missing, validates URLs gracefully
+
+**Previous Achievement:** Twitter/X Social Media Integration (December 6, 2025)
 - **Social Media Posting** - Users can connect Twitter and post directly from Neptune
 - **OAuth 2.0 Integration** - Secure Twitter connection with PKCE flow
 - **Scheduled Posting** - Schedule tweets for future publication
@@ -65,12 +73,12 @@
 |-------|-------|
 | **Date** | December 6, 2025 |
 | **Build Status** | ✅ Passing (Verified - Local & Vercel) |
-| **Latest Commit** | Dynamic Dashboard Roadmap - Neptune builds personalized roadmaps |
+| **Latest Commit** | Instant Website Analysis - Neptune analyzes URLs immediately |
 | **Environment Status** | ✅ ALL SYSTEMS OPERATIONAL (19/19 services) |
 | **Overall Completion** | 100% Production-Ready + Enhanced AI + Proactive Intelligence |
 | **Test Coverage** | 70% (API routes, components, E2E) |
 | **Deployment Status** | ✅ Deployed to Vercel Production |
-| **Latest Update** | Dashboard roadmap dynamically built by Neptune based on user conversation |
+| **Latest Update** | Neptune now instantly analyzes websites when users share URLs - no more waiting |
 
 ---
 
@@ -112,6 +120,55 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Instant Website Analysis ✅
+
+#### Neptune Now Analyzes Websites Immediately
+Fixed a major UX issue where Neptune would ask for confirmation and then fail silently when users shared website URLs. Now Neptune analyzes websites instantly and provides actionable insights.
+
+**Problem Solved:**
+- Previously, Neptune used Playwright (headless browser) which doesn't work in serverless environments
+- The analysis ran as a background Trigger.dev job that often failed silently
+- Users got "There's an issue confirming the website analysis" errors
+
+**Solution:**
+- **New Lightweight Crawler** (`src/lib/website-crawler-lite.ts`):
+  - Uses fetch + cheerio (no browser required, works on Vercel)
+  - Jina AI Reader fallback for JavaScript-rendered sites
+  - Auto-adds https:// if missing from URLs
+  - Graceful error handling with helpful fallback messages
+
+- **Updated Website Analyzer** (`src/lib/ai/website-analyzer.ts`):
+  - New `analyzeWebsiteQuick()` function for instant results
+  - New `analyzeWebsiteFull()` function for deeper analysis
+  - GPT-4o extracts company info, products, services, target audience
+  - Returns personalized growth recommendations
+
+- **Updated Neptune AI Tool**:
+  - Synchronous analysis - no more background jobs
+  - Immediate, actionable insights returned to user
+  - Graceful fallback if site can't be crawled
+
+- **Updated System Prompt**:
+  - Neptune now immediately analyzes URLs without asking permission
+  - Provides specific next steps tailored to the business
+
+**Files Added:**
+- `src/lib/website-crawler-lite.ts` - Serverless-compatible website crawler
+
+**Files Modified:**
+- `src/lib/ai/website-analyzer.ts` - Added quick analysis functions
+- `src/lib/ai/tools.ts` - Updated analyze_company_website tool
+- `src/lib/ai/system-prompt.ts` - Added immediate analysis behavior
+
+**Dependencies Added:**
+- `cheerio@1.0.0` - HTML parsing library
+
+**User Experience:**
+Before: "Would you like me to analyze your website?" → *[fails silently]*
+After: *[Immediately analyzes]* → "I see you're a SaaS company. Here's how to grow..."
+
+---
 
 ### December 6, 2025 - Twitter/X Social Media Integration ✅
 

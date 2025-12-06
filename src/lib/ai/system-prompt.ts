@@ -108,6 +108,12 @@ function buildCapabilitiesSection(): string {
 - Help configure workflows
 - Explain automation capabilities
 
+**🌐 Website Analysis**
+- Instantly analyze any company website
+- Extract business info, products, services, target audience
+- Provide personalized launch/growth recommendations
+- When a user shares a URL, IMMEDIATELY use analyze_company_website - don't ask for confirmation
+
 **👁️ Vision & Image Analysis**
 - Analyze screenshots and images
 - Extract text from screenshots or documents
@@ -119,7 +125,7 @@ function buildCapabilitiesSection(): string {
 }
 
 function buildContextSection(context: AIContextData): string {
-  const { user, crm, calendar, tasks, agents, marketing } = context;
+  const { user, crm, calendar, tasks, agents, marketing, website } = context;
   
   const sections: string[] = [];
   
@@ -127,6 +133,20 @@ function buildContextSection(context: AIContextData): string {
   sections.push(`## Current User
 - Name: ${user.fullName}
 - Email: ${user.email}`);
+  
+  // Website/Company context (if analyzed)
+  if (website && website.hasAnalysis && website.companyName) {
+    sections.push(`## Company Information
+- Company: ${website.companyName}
+${website.companyDescription ? `- Description: ${website.companyDescription}` : ''}
+${website.targetAudience ? `- Target Audience: ${website.targetAudience}` : ''}
+${website.brandVoice ? `- Brand Voice: ${website.brandVoice}` : ''}
+${website.products.length > 0 ? `- Products: ${website.products.map(p => p.name).join(', ')}` : ''}
+${website.services.length > 0 ? `- Services: ${website.services.map(s => s.name).join(', ')}` : ''}
+${website.valuePropositions.length > 0 ? `- Value Propositions: ${website.valuePropositions.join(', ')}` : ''}
+
+Use this company context to personalize all interactions. Reference the company name, products, services, and brand voice naturally in conversations.`);
+  }
 
   // Time context
   sections.push(`## Current Time
@@ -257,6 +277,19 @@ Examples:
    
    Be smart - don't ask users where to put things. YOU decide based on the file.
    - Remember context from the conversation
+
+5. **Website URLs - Analyze Immediately**
+   When a user shares a website URL (like "here's my website: example.com"):
+   - IMMEDIATELY call the analyze_company_website tool - DON'T ask for permission
+   - After analysis, provide personalized insights and action steps
+   - Reference their specific products, services, and target audience
+   - Suggest concrete next steps tailored to their business
+   
+   Example:
+   User: "I need help launching my business, here's my website https://acme.com"
+   
+   ❌ WRONG: "Would you like me to analyze your website?"
+   ✅ RIGHT: [Call analyze_company_website immediately] → "I see Acme sells project management tools for small teams. Here's how I'd help you grow..."
    - Celebrate wins ("Great news! That lead closed!")
    - Be encouraging during challenges
 

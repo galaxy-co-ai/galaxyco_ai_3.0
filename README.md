@@ -105,6 +105,13 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🌐 **Instant Website Analysis** - Neptune now analyzes websites immediately when you share a URL:
+  - No more "please wait 1-2 minutes" - analysis happens instantly
+  - Uses lightweight fetch + cheerio crawler (works in serverless)
+  - Jina AI Reader fallback for JavaScript-heavy sites
+  - Provides personalized business insights and growth recommendations
+  - Automatically extracts company info, products, services, and target audience
+  - Neptune suggests specific next actions tailored to your business
 - 🐦 **Twitter/X Integration** - Social media posting directly from Neptune:
   - Connect Twitter account via OAuth 2.0 (PKCE flow)
   - Post tweets immediately or schedule for later

@@ -1758,6 +1758,53 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_company_website',
+      description: 'Analyze a company website IMMEDIATELY to understand the business and provide personalized launch/growth recommendations. Returns instant insights about the company, their offerings, target audience, and suggested next actions. Use this when a user shares their website URL.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: {
+            type: 'string',
+            description: 'The website URL to analyze (must start with http:// or https://)',
+          },
+          detailed: {
+            type: 'boolean',
+            description: 'If true, performs a deeper analysis crawling more pages (takes longer). Default is false for quick analysis.',
+          },
+        },
+        required: ['url'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'post_to_social_media',
+      description: 'Post content to a connected social media account. Requires a connected account for the platform. Currently supports Twitter/X.',
+      parameters: {
+        type: 'object',
+        properties: {
+          platform: {
+            type: 'string',
+            enum: ['twitter'],
+            description: 'Social media platform to post to',
+          },
+          content: {
+            type: 'string',
+            description: 'The content to post (for Twitter: max 280 characters)',
+          },
+          scheduleFor: {
+            type: 'string',
+            description: 'Optional ISO date string to schedule the post for later (e.g., "2025-12-07T10:00:00Z")',
+          },
+        },
+        required: ['platform', 'content'],
+      },
+    },
+  },
 ];
 
 // ============================================================================
@@ -5533,6 +5580,238 @@ Looking forward to your response!`;
       };
     }
   },
+  // Website Analysis Tool - Now synchronous with immediate results!
+  async analyze_company_website(args, context): Promise<ToolResult> {
+    try {
+      const url = args.url as string;
+      const detailed = args.detailed as boolean || false;
+
+      // Validate URL
+      if (!url) {
+        return {
+          success: false,
+          message: 'Please provide a website URL to analyze.',
+          error: 'Missing URL',
+        };
+      }
+
+      // Normalize URL - add https:// if missing
+      let normalizedUrl = url.trim();
+      if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+        normalizedUrl = 'https://' + normalizedUrl;
+      }
+
+      // Validate URL format
+      try {
+        new URL(normalizedUrl);
+      } catch {
+        return {
+          success: false,
+          message: 'That doesn\'t look like a valid website URL. Please check and try again.',
+          error: 'Invalid URL format',
+        };
+      }
+
+      // Import the analyzer
+      const { analyzeWebsiteQuick, analyzeWebsiteFull } = await import('@/lib/ai/website-analyzer');
+
+      if (detailed) {
+        // Full analysis with database storage
+        const analysis = await analyzeWebsiteFull(normalizedUrl, {
+          maxPages: 20,
+          saveToDb: true,
+          workspaceId: context.workspaceId,
+        });
+
+        if (!analysis) {
+          return {
+            success: false,
+            message: `I couldn't access ${normalizedUrl}. The site might be blocking automated requests, or there could be a connection issue. Can you share some details about your business instead?`,
+            error: 'Website analysis failed',
+          };
+        }
+
+        return {
+          success: true,
+          message: `I've analyzed ${analysis.companyName}'s website in detail!`,
+          data: {
+            companyName: analysis.companyName,
+            description: analysis.companyDescription,
+            products: analysis.products.slice(0, 5),
+            services: analysis.services.slice(0, 5),
+            targetAudience: analysis.targetAudience,
+            valuePropositions: analysis.valuePropositions.slice(0, 5),
+            brandVoice: analysis.brandVoice,
+            websiteUrl: normalizedUrl,
+            analysisType: 'detailed',
+          },
+        };
+      } else {
+        // Quick analysis for immediate response
+        const insights = await analyzeWebsiteQuick(normalizedUrl, { maxPages: 5 });
+
+        if (!insights) {
+          return {
+            success: false,
+            message: `I couldn't access ${normalizedUrl}. The site might be blocking automated requests, require login, or have technical issues. No worries though - tell me about your business and I can still help you!`,
+            error: 'Website analysis failed',
+            data: {
+              suggestion: 'Tell me: What does your business do? Who are your customers? What are you trying to achieve?',
+            },
+          };
+        }
+
+        // Also save to database in the background (don't await)
+        analyzeWebsiteFull(normalizedUrl, {
+          maxPages: 15,
+          saveToDb: true,
+          workspaceId: context.workspaceId,
+        }).catch(() => {
+          // Silent fail for background save
+        });
+
+        return {
+          success: true,
+          message: `Got it! I've analyzed ${insights.companyName}'s website.`,
+          data: {
+            companyName: insights.companyName,
+            description: insights.description,
+            keyOfferings: insights.keyOfferings,
+            targetAudience: insights.targetAudience,
+            suggestedActions: insights.suggestedActions,
+            websiteUrl: normalizedUrl,
+            analysisType: 'quick',
+          },
+        };
+      }
+    } catch (error) {
+      logger.error('AI analyze_company_website failed', error);
+      return {
+        success: false,
+        message: 'I ran into an issue analyzing that website. Can you tell me about your business instead? What do you do and who are your customers?',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+  // Social Media Posting Tool
+  async post_to_social_media(args, context): Promise<ToolResult> {
+    try {
+      const platform = args.platform as string;
+      const content = args.content as string;
+      const scheduleFor = args.scheduleFor as string | undefined;
+
+      // Validate platform
+      if (platform !== 'twitter') {
+        return {
+          success: false,
+          message: `Platform "${platform}" is not yet supported. Currently only Twitter is supported.`,
+          error: 'Unsupported platform',
+        };
+      }
+
+      // Check if Twitter is connected
+      const { getTwitterIntegration } = await import('@/lib/social/twitter');
+      const twitterIntegration = await getTwitterIntegration(context.workspaceId);
+
+      if (!twitterIntegration) {
+        return {
+          success: false,
+          message: 'Twitter account not connected. Please connect your Twitter account in Connected Apps first.',
+          error: 'Twitter not connected',
+        };
+      }
+
+      // Validate content length for Twitter
+      if (content.length > 280) {
+        return {
+          success: false,
+          message: `Tweet exceeds 280 character limit (${content.length} characters). Please shorten it.`,
+          error: 'Content too long',
+        };
+      }
+
+      // If scheduled, save to database for background job
+      if (scheduleFor) {
+        const scheduledDate = new Date(scheduleFor);
+        if (scheduledDate <= new Date()) {
+          return {
+            success: false,
+            message: 'Scheduled time must be in the future.',
+            error: 'Invalid schedule time',
+          };
+        }
+
+        // Save scheduled post
+        const { socialMediaPosts } = await import('@/db/schema');
+        const [post] = await db
+          .insert(socialMediaPosts)
+          .values({
+            workspaceId: context.workspaceId,
+            integrationId: twitterIntegration.id,
+            userId: context.userId,
+            platform: 'twitter',
+            content,
+            status: 'scheduled',
+            scheduledFor: scheduledDate,
+          })
+          .returning();
+
+        return {
+          success: true,
+          message: `Scheduled tweet for ${scheduledDate.toLocaleString()}. It will be posted automatically.`,
+          data: {
+            postId: post.id,
+            platform: 'twitter',
+            scheduledFor: scheduledDate,
+            status: 'scheduled',
+          },
+        };
+      }
+
+      // Post immediately
+      const { postTweet } = await import('@/lib/social/twitter');
+      const result = await postTweet(twitterIntegration.id, content);
+
+      if (!result.success) {
+        return {
+          success: false,
+          message: `Failed to post to Twitter: ${result.error}`,
+          error: result.error,
+        };
+      }
+
+      // Save post to database
+      const { socialMediaPosts } = await import('@/db/schema');
+      await db.insert(socialMediaPosts).values({
+        workspaceId: context.workspaceId,
+        integrationId: twitterIntegration.id,
+        userId: context.userId,
+        platform: 'twitter',
+        content,
+        status: 'posted',
+        postedAt: new Date(),
+        externalPostId: result.tweetId,
+      });
+
+      return {
+        success: true,
+        message: `Posted to Twitter! ${result.url ? `View it here: ${result.url}` : ''}`,
+        data: {
+          platform: 'twitter',
+          tweetId: result.tweetId,
+          url: result.url,
+          status: 'posted',
+        },
+      };
+    } catch (error) {
+      logger.error('AI post_to_social_media failed', error);
+      return {
+        success: false,
+        message: 'Failed to post to social media. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -5581,7 +5860,7 @@ export const toolsByCategory = {
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
   content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents', 'save_upload_to_library'],
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library'],
-  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge'],
+  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media'],
   marketing: [
     'create_campaign',
     'get_campaign_stats',
@@ -5595,6 +5874,7 @@ export const toolsByCategory = {
     'optimize_campaign',
     'segment_audience',
     'schedule_social_posts',
+    'post_to_social_media',
     'analyze_competitor',
     'analyze_lead_for_campaign',
     'suggest_next_marketing_action',
