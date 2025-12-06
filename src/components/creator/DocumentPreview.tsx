@@ -107,7 +107,7 @@ export default function DocumentPreview({
     checkGammaStatus();
   }, [docType.id]);
 
-  // Simulate document generation on mount
+  // Generate document on mount using real AI
   useEffect(() => {
     generateDocument();
   }, []);
@@ -116,31 +116,80 @@ export default function DocumentPreview({
     setIsGenerating(true);
     setGenerationProgress(0);
 
-    // Simulate generation progress
+    // Progress animation
     const progressInterval = setInterval(() => {
       setGenerationProgress((prev) => {
         if (prev >= 90) {
           clearInterval(progressInterval);
           return 90;
         }
-        return prev + Math.random() * 15;
+        return prev + Math.random() * 10;
       });
-    }, 300);
+    }, 500);
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2500));
+    try {
+      // Call real AI generation API
+      const response = await fetch('/api/creator/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          docTypeId: docType.id,
+          docTypeName: docType.name,
+          answers,
+        }),
+      });
 
-    clearInterval(progressInterval);
-    setGenerationProgress(100);
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
 
-    // Generate mock document based on type
-    const generatedDoc = generateMockDocument(docType, answers);
-    setDocument(generatedDoc);
-    setIsGenerating(false);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Generation failed');
+      }
 
-    toast.success("Document generated!", {
-      description: "Review and edit your content below",
-    });
+      const data = await response.json();
+      
+      // Transform API response to local document format
+      const generatedDoc: GeneratedDocument = {
+        id: data.document.id,
+        title: data.document.title,
+        type: data.document.type,
+        sections: data.document.sections.map((s: { id: string; type: string; content: string }) => ({
+          ...s,
+          editable: true,
+        })),
+        createdAt: new Date(data.document.createdAt),
+        metadata: data.document.metadata || answers,
+      };
+
+      setDocument(generatedDoc);
+      setIsGenerating(false);
+
+      toast.success("Document generated!", {
+        description: "Review and edit your content below",
+      });
+    } catch (error) {
+      clearInterval(progressInterval);
+      setIsGenerating(false);
+      
+      toast.error("Generation failed", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+      
+      // Fallback to a basic document structure
+      const fallbackDoc: GeneratedDocument = {
+        id: `doc-${Date.now()}`,
+        title: `New ${docType.name}`,
+        type: docType.id,
+        sections: [
+          { id: 'title', type: 'title', content: `New ${docType.name}`, editable: true },
+          { id: 'intro', type: 'paragraph', content: 'Your content will appear here. Please try generating again.', editable: true },
+        ],
+        createdAt: new Date(),
+        metadata: answers,
+      };
+      setDocument(fallbackDoc);
+    }
   };
 
   // Generate polished document with Gamma
@@ -282,20 +331,53 @@ export default function DocumentPreview({
     setAiEditPrompt("");
   };
 
-  // Save to collections
+  // Save to collections - calls real API
   const handleSave = async () => {
     if (!document) return;
 
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     
-    onSaveToCollections(document);
-    setIsSaving(false);
-    setShowSaveDialog(false);
-    
-    toast.success("Saved to Collections!", {
-      description: `"${document.title}" has been organized`,
-    });
+    try {
+      const response = await fetch('/api/creator/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: document.title,
+          type: document.type,
+          content: { sections: document.sections },
+          metadata: document.metadata,
+          starred: false,
+          gammaUrl: gammaResult?.editUrl || null,
+          gammaEditUrl: gammaResult?.editUrl || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save');
+      }
+
+      const data = await response.json();
+      
+      // Update local document with saved ID
+      const savedDocument = {
+        ...document,
+        id: data.item.id,
+      };
+      
+      onSaveToCollections(savedDocument);
+      setIsSaving(false);
+      setShowSaveDialog(false);
+      
+      toast.success("Saved to Collections!", {
+        description: `"${document.title}" has been saved`,
+      });
+    } catch (error) {
+      setIsSaving(false);
+      toast.error("Failed to save", {
+        description: error instanceof Error ? error.message : "Please try again",
+      });
+    }
   };
 
   // Copy to clipboard
@@ -760,125 +842,9 @@ export default function DocumentPreview({
   );
 }
 
-// ============================================
-// MOCK DOCUMENT GENERATION
-// ============================================
-
-function generateMockDocument(
-  docType: DocumentTypeConfig,
-  answers: Record<string, string>
-): GeneratedDocument {
-  const sections: DocumentSection[] = [];
-
-  // Generate title based on answers
-  const title = generateTitle(docType, answers);
-  sections.push({
-    id: "title",
-    type: "title",
-    content: title,
-    editable: true,
-  });
-
-  // Generate content based on document type
-  switch (docType.id) {
-    case "newsletter":
-      sections.push(
-        { id: "intro", type: "paragraph", content: `Dear valued subscribers,\n\n${answers.headline || "We're excited to share some updates with you!"} Here's what's new this week.`, editable: true },
-        { id: "heading1", type: "heading", content: "Featured Updates", editable: true },
-        { id: "content1", type: "paragraph", content: "We've been working hard to bring you the best experience possible. Our team has been focused on delivering value and innovation.", editable: true },
-        { id: "heading2", type: "heading", content: "What's Coming Next", editable: true },
-        { id: "content2", type: "paragraph", content: "Stay tuned for more exciting announcements. We have some great things in the pipeline that we can't wait to share.", editable: true },
-        { id: "cta", type: "cta", content: answers.cta || "Click here to learn more →", editable: true }
-      );
-      break;
-
-    case "blog":
-      sections.push(
-        { id: "intro", type: "paragraph", content: `${answers.topic || "In this article"}, we'll explore everything you need to know. Whether you're a beginner or an expert, there's something here for everyone.`, editable: true },
-        { id: "heading1", type: "heading", content: "Understanding the Basics", editable: true },
-        { id: "content1", type: "paragraph", content: "Let's start with the fundamentals. Understanding the core concepts will help you build a strong foundation for more advanced topics.", editable: true },
-        { id: "heading2", type: "heading", content: "Key Strategies", editable: true },
-        { id: "list1", type: "list", content: "Research thoroughly before starting\nImplement best practices consistently\nMeasure and iterate based on results\nStay updated with industry trends", editable: true },
-        { id: "heading3", type: "heading", content: "Conclusion", editable: true },
-        { id: "conclusion", type: "paragraph", content: "By following these guidelines, you'll be well on your way to success. Remember, consistency and continuous learning are key.", editable: true }
-      );
-      break;
-
-    case "social":
-      const platform = answers.platform || "LinkedIn";
-      sections.push(
-        { id: "hook", type: "paragraph", content: `🚀 ${answers.topic || "Big announcement!"}\n\nWe're thrilled to share some exciting news with our community.`, editable: true },
-        { id: "body", type: "paragraph", content: "Here's what this means for you:\n\n✅ Better experience\n✅ More value\n✅ Exciting opportunities", editable: true },
-        { id: "cta", type: "cta", content: answers.cta === "Engage (like, comment)" ? "What do you think? Drop a comment below! 👇" : "Learn more → [link in bio]", editable: true },
-        { id: "hashtags", type: "paragraph", content: answers.hashtags || "#Innovation #Growth #Business", editable: true }
-      );
-      break;
-
-    case "proposal":
-      sections.push(
-        { id: "intro", type: "paragraph", content: `Dear ${answers.clientName || "Client"},\n\nThank you for considering us for your ${answers.projectScope || "project"}. We're excited about the opportunity to work together.`, editable: true },
-        { id: "heading1", type: "heading", content: "Project Overview", editable: true },
-        { id: "scope", type: "paragraph", content: `We propose to deliver ${answers.projectScope || "a comprehensive solution"} that meets your specific needs and exceeds your expectations.`, editable: true },
-        { id: "heading2", type: "heading", content: "Deliverables", editable: true },
-        { id: "deliverables", type: "paragraph", content: answers.deliverables || "Complete project deliverables as discussed", editable: true },
-        { id: "heading3", type: "heading", content: "Investment & Timeline", editable: true },
-        { id: "investment", type: "paragraph", content: `Investment: ${answers.budget || "To be discussed"}\nTimeline: ${answers.timeline || "To be determined"}`, editable: true },
-        { id: "heading4", type: "heading", content: "Why Choose Us", editable: true },
-        { id: "usp", type: "paragraph", content: answers.usp || "Our unique approach and expertise ensure exceptional results.", editable: true }
-      );
-      break;
-
-    default:
-      // Generic document structure
-      sections.push(
-        { id: "intro", type: "paragraph", content: `${answers.purpose || "This document provides"} comprehensive information for ${answers.audience || "our stakeholders"}.`, editable: true },
-        { id: "heading1", type: "heading", content: "Overview", editable: true },
-        { id: "content1", type: "paragraph", content: "This section covers the key points and objectives outlined for this document.", editable: true },
-        { id: "heading2", type: "heading", content: "Details", editable: true },
-        { id: "content2", type: "paragraph", content: answers.sections || "Detailed information and analysis.", editable: true },
-        { id: "heading3", type: "heading", content: "Conclusion", editable: true },
-        { id: "conclusion", type: "paragraph", content: "In summary, we've covered the essential aspects of this topic. For any questions, please don't hesitate to reach out.", editable: true }
-      );
-  }
-
-  return {
-    id: `doc-${Date.now()}`,
-    title,
-    type: docType.id,
-    sections,
-    createdAt: new Date(),
-    metadata: answers,
-  };
-}
-
-function generateTitle(
-  docType: DocumentTypeConfig,
-  answers: Record<string, string>
-): string {
-  switch (docType.id) {
-    case "newsletter":
-      return answers.headline || `${answers.purpose || "Weekly"} Newsletter`;
-    case "blog":
-      return answers.topic || "Untitled Blog Post";
-    case "social":
-      return `${answers.platform || "Social"} Post: ${answers.topic?.slice(0, 30) || "Update"}`;
-    case "proposal":
-      return `Proposal for ${answers.clientName || "Client"}`;
-    case "document":
-      return answers.purpose?.slice(0, 50) || "New Document";
-    case "presentation":
-      return `${answers.purpose || "Presentation"}: ${answers.keyMessage?.slice(0, 30) || ""}`;
-    case "brand-kit":
-      return `${answers.brandName || "Brand"} Brand Guidelines`;
-    case "image":
-      return `${answers.imageType || "Image"} - ${answers.textOverlay?.slice(0, 30) || "Design"}`;
-    default:
-      return `New ${docType.name}`;
-  }
-}
-
+// Note: Document generation now uses the real AI API at /api/creator/generate
+// This mock function is kept for the inline AI edit feature until a dedicated API is built
 function applyMockAiEdit(content: string, prompt: string): string {
-  // Mock AI edit - in real implementation, call AI API
   const lowerPrompt = prompt.toLowerCase();
   
   if (lowerPrompt.includes("shorter") || lowerPrompt.includes("concise")) {
@@ -894,6 +860,5 @@ function applyMockAiEdit(content: string, prompt: string): string {
     return "🚀 " + content + " 🎉";
   }
   
-  // Default: just acknowledge the edit was made
   return content + " [Updated based on your feedback]";
 }

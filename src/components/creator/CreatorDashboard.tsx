@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import useSWR from "swr";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Palette,
   Sparkles,
   FolderOpen,
   LayoutTemplate,
   FileText,
-  Image as ImageIcon,
   PenTool,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,16 +46,39 @@ const tabs = [
   },
 ];
 
-// Mock stats - these would come from API in production
-const stats = {
-  totalCreations: 24,
-  collections: 6,
-  templates: 0, // Coming soon
+// SWR fetcher with error handling
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    // Return null on error - the component will use default values
+    return null;
+  }
+  return res.json();
 };
+
+// Stats response type
+interface StatsResponse {
+  stats: {
+    totalCreations: number;
+    collections: number;
+    templates: number;
+    starred: number;
+    byType: Record<string, number>;
+  };
+}
 
 export default function CreatorDashboard() {
   const [activeTab, setActiveTab] = useState<CreatorTabType>("create");
   const [showNeptune, setShowNeptune] = useState(false);
+
+  // Fetch stats from API
+  const { data: statsData, isLoading: statsLoading } = useSWR<StatsResponse>(
+    '/api/creator/stats',
+    fetcher,
+    { refreshInterval: 30000 } // Refresh every 30 seconds
+  );
+
+  const stats = statsData?.stats || { totalCreations: 0, collections: 0, templates: 0 };
 
   return (
     <div className="h-full bg-gray-50/50 overflow-hidden flex flex-col">
@@ -94,27 +118,37 @@ export default function CreatorDashboard() {
 
           {/* Stats Bar */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
-            <Badge className="px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-colors">
-              <FileText className="h-3.5 w-3.5 mr-1.5 text-violet-600" />
-              <span className="font-semibold">{stats.totalCreations}</span>
-              <span className="ml-1 text-violet-600/70 font-normal">
-                Creations
-              </span>
-            </Badge>
-            <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
-              <FolderOpen className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
-              <span className="font-semibold">{stats.collections}</span>
-              <span className="ml-1 text-emerald-600/70 font-normal">
-                Collections
-              </span>
-            </Badge>
-            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-              <LayoutTemplate className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-              <span className="font-semibold">{stats.templates}</span>
-              <span className="ml-1 text-blue-600/70 font-normal">
-                Templates
-              </span>
-            </Badge>
+            {statsLoading ? (
+              <>
+                <Skeleton className="h-8 w-28 rounded-full" />
+                <Skeleton className="h-8 w-28 rounded-full" />
+                <Skeleton className="h-8 w-28 rounded-full" />
+              </>
+            ) : (
+              <>
+                <Badge className="px-3 py-1.5 bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-colors">
+                  <FileText className="h-3.5 w-3.5 mr-1.5 text-violet-600" />
+                  <span className="font-semibold">{stats.totalCreations}</span>
+                  <span className="ml-1 text-violet-600/70 font-normal">
+                    Creations
+                  </span>
+                </Badge>
+                <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
+                  <FolderOpen className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+                  <span className="font-semibold">{stats.collections}</span>
+                  <span className="ml-1 text-emerald-600/70 font-normal">
+                    Collections
+                  </span>
+                </Badge>
+                <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
+                  <LayoutTemplate className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+                  <span className="font-semibold">{stats.templates}</span>
+                  <span className="ml-1 text-blue-600/70 font-normal">
+                    Templates
+                  </span>
+                </Badge>
+              </>
+            )}
           </div>
         </div>
 

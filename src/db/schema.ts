@@ -2860,6 +2860,146 @@ export const blogUserPreferences = pgTable(
 );
 
 // ============================================================================
+// CREATOR - CONTENT CREATION
+// ============================================================================
+
+// Creator items (documents, newsletters, social posts, etc.)
+export const creatorItems = pgTable(
+  'creator_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    
+    title: text('title').notNull(),
+    type: text('type').notNull(), // newsletter, blog, social, proposal, document, presentation, brand-kit, image
+    
+    // Document content structure
+    content: jsonb('content')
+      .$type<{
+        sections: Array<{
+          id: string;
+          type: 'title' | 'heading' | 'paragraph' | 'list' | 'cta';
+          content: string;
+          editable: boolean;
+        }>;
+      }>()
+      .notNull(),
+    
+    // Metadata from guided session
+    metadata: jsonb('metadata')
+      .$type<Record<string, string>>()
+      .default({}),
+    
+    starred: boolean('starred').notNull().default(false),
+    
+    // Gamma.app integration
+    gammaUrl: text('gamma_url'), // if polished with Gamma
+    gammaEditUrl: text('gamma_edit_url'),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('creator_items_workspace_idx').on(table.workspaceId),
+    index('creator_items_user_idx').on(table.userId),
+    index('creator_items_type_idx').on(table.type),
+    index('creator_items_starred_idx').on(table.starred),
+    index('creator_items_created_at_idx').on(table.createdAt),
+  ]
+);
+
+// User-defined collections
+export const creatorCollections = pgTable(
+  'creator_collections',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    name: text('name').notNull(),
+    description: text('description'),
+    color: text('color'), // CSS color value
+    
+    isAuto: boolean('is_auto').notNull().default(false), // auto-organized by type
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('creator_collections_workspace_idx').on(table.workspaceId),
+    index('creator_collections_name_idx').on(table.name),
+  ]
+);
+
+// Many-to-many: items in collections
+export const creatorItemCollections = pgTable(
+  'creator_item_collections',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => creatorItems.id, { onDelete: 'cascade' }),
+    collectionId: uuid('collection_id')
+      .notNull()
+      .references(() => creatorCollections.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('creator_item_collections_item_idx').on(table.itemId),
+    index('creator_item_collections_collection_idx').on(table.collectionId),
+    uniqueIndex('creator_item_collections_unique_idx').on(table.itemId, table.collectionId),
+  ]
+);
+
+// Templates library
+export const creatorTemplates = pgTable(
+  'creator_templates',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    name: text('name').notNull(),
+    description: text('description'),
+    type: text('type').notNull(), // newsletter, blog, social, proposal, etc.
+    category: text('category'), // email, social, brand, etc.
+    
+    // Template structure
+    content: jsonb('content')
+      .$type<{
+        sections: Array<{
+          id: string;
+          type: 'title' | 'heading' | 'paragraph' | 'list' | 'cta';
+          content: string;
+          editable: boolean;
+        }>;
+        variables?: Record<string, string>; // Placeholder variables
+      }>()
+      .notNull(),
+    
+    thumbnail: text('thumbnail'), // URL to preview image
+    
+    isPremium: boolean('is_premium').notNull().default(false),
+    usageCount: integer('usage_count').notNull().default(0),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('creator_templates_type_idx').on(table.type),
+    index('creator_templates_category_idx').on(table.category),
+    index('creator_templates_premium_idx').on(table.isPremium),
+  ]
+);
+
+// ============================================================================
 // LAUNCHPAD - RELATIONS
 // ============================================================================
 
@@ -2904,6 +3044,41 @@ export const blogCollectionsRelations = relations(blogCollections, ({ one, many 
     references: [users.id],
   }),
   collectionPosts: many(blogCollectionPosts),
+}));
+
+// ============================================================================
+// CREATOR - RELATIONS
+// ============================================================================
+
+export const creatorItemsRelations = relations(creatorItems, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [creatorItems.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [creatorItems.userId],
+    references: [users.id],
+  }),
+  itemCollections: many(creatorItemCollections),
+}));
+
+export const creatorCollectionsRelations = relations(creatorCollections, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [creatorCollections.workspaceId],
+    references: [workspaces.id],
+  }),
+  itemCollections: many(creatorItemCollections),
+}));
+
+export const creatorItemCollectionsRelations = relations(creatorItemCollections, ({ one }) => ({
+  item: one(creatorItems, {
+    fields: [creatorItemCollections.itemId],
+    references: [creatorItems.id],
+  }),
+  collection: one(creatorCollections, {
+    fields: [creatorItemCollections.collectionId],
+    references: [creatorCollections.id],
+  }),
 }));
 
 export const blogCollectionPostsRelations = relations(blogCollectionPosts, ({ one }) => ({
@@ -4098,6 +4273,19 @@ export type NewBlogReaction = typeof blogReactions.$inferInsert;
 
 export type BlogUserPreferences = typeof blogUserPreferences.$inferSelect;
 export type NewBlogUserPreferences = typeof blogUserPreferences.$inferInsert;
+
+// Creator Types
+export type CreatorItem = typeof creatorItems.$inferSelect;
+export type NewCreatorItem = typeof creatorItems.$inferInsert;
+
+export type CreatorCollection = typeof creatorCollections.$inferSelect;
+export type NewCreatorCollection = typeof creatorCollections.$inferInsert;
+
+export type CreatorItemCollection = typeof creatorItemCollections.$inferSelect;
+export type NewCreatorItemCollection = typeof creatorItemCollections.$inferInsert;
+
+export type CreatorTemplate = typeof creatorTemplates.$inferSelect;
+export type NewCreatorTemplate = typeof creatorTemplates.$inferInsert;
 
 // Launchpad Enum Types
 export type BlogPostStatus = (typeof blogPostStatusEnum.enumValues)[number];

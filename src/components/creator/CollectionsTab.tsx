@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import useSWR, { mutate } from "swr";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -16,146 +18,123 @@ import {
 import {
   FolderOpen,
   Search,
-  Plus,
   FileText,
   Image as ImageIcon,
   Mail,
   PenLine,
   MessageSquare,
   MoreHorizontal,
-  ChevronRight,
   Clock,
-  Tag,
   Sparkles,
-  Filter,
   Grid3X3,
   List,
   Star,
   StarOff,
   Folder,
   FolderPlus,
-  X,
   Loader2,
+  Trash2,
+  Briefcase,
+  Presentation,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-// Mock collection data - would come from API
+// SWR fetcher with error handling
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const error = new Error('Failed to fetch data');
+    throw error;
+  }
+  return res.json();
+};
+
+// API response types
+interface CollectionItem {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  icon: string;
+  isAuto: boolean;
+  itemCount: number;
+  type: string | null;
+  createdAt: string | null;
+}
+
 interface CreatedItem {
   id: string;
   title: string;
-  type: "document" | "image" | "newsletter" | "blog" | "social" | "other";
-  collection: string;
-  tags: string[];
-  createdAt: Date;
+  type: string;
+  content: unknown;
+  metadata: Record<string, string>;
   starred: boolean;
-  preview?: string;
+  gammaUrl: string | null;
+  collectionIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
 }
 
-interface Collection {
-  id: string;
-  name: string;
-  itemCount: number;
-  icon: typeof FolderOpen;
-  color: string;
-  isAuto: boolean;
+interface CollectionsResponse {
+  collections: CollectionItem[];
 }
 
-// Mock collections
-const mockCollections: Collection[] = [
-  { id: "all", name: "All Creations", itemCount: 24, icon: Grid3X3, color: "text-gray-600", isAuto: false },
-  { id: "documents", name: "Documents", itemCount: 8, icon: FileText, color: "text-blue-600", isAuto: true },
-  { id: "images", name: "Images", itemCount: 6, icon: ImageIcon, color: "text-pink-600", isAuto: true },
-  { id: "newsletters", name: "Newsletters", itemCount: 4, icon: Mail, color: "text-amber-600", isAuto: true },
-  { id: "blogs", name: "Blog Posts", itemCount: 3, icon: PenLine, color: "text-emerald-600", isAuto: true },
-  { id: "social", name: "Social Posts", itemCount: 3, icon: MessageSquare, color: "text-cyan-600", isAuto: true },
-];
+interface ItemsResponse {
+  items: CreatedItem[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}
 
-// Mock created items
-const mockItems: CreatedItem[] = [
-  {
-    id: "1",
-    title: "Q4 Product Launch Email",
-    type: "newsletter",
-    collection: "newsletters",
-    tags: ["product", "launch", "Q4"],
-    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
-    starred: true,
-    preview: "Introducing our latest innovation...",
-  },
-  {
-    id: "2",
-    title: "2024 Annual Report Draft",
-    type: "document",
-    collection: "documents",
-    tags: ["annual", "report", "2024"],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    starred: false,
-    preview: "Executive Summary: This year marked...",
-  },
-  {
-    id: "3",
-    title: "Feature Announcement Banner",
-    type: "image",
-    collection: "images",
-    tags: ["banner", "feature", "marketing"],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-    starred: true,
-  },
-  {
-    id: "4",
-    title: "LinkedIn Thought Leadership Post",
-    type: "social",
-    collection: "social",
-    tags: ["linkedin", "thought-leadership"],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    starred: false,
-    preview: "The future of AI in business...",
-  },
-  {
-    id: "5",
-    title: "How-To Guide: Getting Started",
-    type: "blog",
-    collection: "blogs",
-    tags: ["how-to", "onboarding", "guide"],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-    starred: false,
-    preview: "Welcome to our comprehensive guide...",
-  },
-  {
-    id: "6",
-    title: "Weekly Digest Template",
-    type: "newsletter",
-    collection: "newsletters",
-    tags: ["template", "digest", "weekly"],
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-    starred: true,
-    preview: "This week's highlights include...",
-  },
-];
-
-// Type icon mapping
-const typeIcons: Record<string, typeof FileText> = {
-  document: FileText,
-  image: ImageIcon,
-  newsletter: Mail,
-  blog: PenLine,
-  social: MessageSquare,
-  other: FileText,
+// Icon mapping
+const iconMap: Record<string, React.ElementType> = {
+  Grid3X3: Grid3X3,
+  FileText: FileText,
+  Image: ImageIcon,
+  Mail: Mail,
+  PenLine: PenLine,
+  MessageSquare: MessageSquare,
+  Folder: Folder,
+  FolderOpen: FolderOpen,
+  Briefcase: Briefcase,
+  Presentation: Presentation,
 };
 
+// Type colors
 const typeColors: Record<string, string> = {
   document: "bg-blue-100 text-blue-600",
   image: "bg-pink-100 text-pink-600",
   newsletter: "bg-amber-100 text-amber-600",
   blog: "bg-emerald-100 text-emerald-600",
   social: "bg-cyan-100 text-cyan-600",
+  proposal: "bg-purple-100 text-purple-600",
+  presentation: "bg-indigo-100 text-indigo-600",
+  "brand-kit": "bg-rose-100 text-rose-600",
   other: "bg-gray-100 text-gray-600",
 };
 
+// Type icons
+const typeIcons: Record<string, React.ElementType> = {
+  document: FileText,
+  image: ImageIcon,
+  newsletter: Mail,
+  blog: PenLine,
+  social: MessageSquare,
+  proposal: Briefcase,
+  presentation: Presentation,
+  "brand-kit": Folder,
+  other: FileText,
+};
+
 // Format relative time
-function formatRelativeTime(date: Date): string {
+function formatRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -172,32 +151,120 @@ export default function CollectionsTab() {
   const [selectedCollection, setSelectedCollection] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
-  const [items, setItems] = useState(mockItems);
-  const [collections, setCollections] = useState(mockCollections);
   
   // New Collection Dialog State
   const [showNewCollectionDialog, setShowNewCollectionDialog] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [isCreatingCollection, setIsCreatingCollection] = useState(false);
 
-  // Filter items based on collection and search
-  const filteredItems = items.filter((item) => {
-    const matchesCollection =
-      selectedCollection === "all" || item.collection === selectedCollection;
-    const matchesSearch =
-      !searchQuery ||
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCollection && matchesSearch;
-  });
+  // Fetch collections
+  const { data: collectionsData, isLoading: collectionsLoading, error: collectionsError } = useSWR<CollectionsResponse>(
+    '/api/creator/collections',
+    fetcher
+  );
+
+  // Build items URL based on selected collection
+  const itemsUrl = useMemo(() => {
+    if (selectedCollection === 'all') {
+      return '/api/creator/items';
+    }
+    
+    // Check if collections data is loaded
+    const collections = collectionsData?.collections;
+    const selectedColl = collections?.find(c => c.id === selectedCollection);
+    
+    // Auto collections filter by type
+    if (selectedColl?.type) {
+      return `/api/creator/items?type=${selectedColl.type}`;
+    }
+    
+    // User collections filter by collectionId
+    if (selectedCollection.startsWith('auto-')) {
+      // This is an auto collection, filter by type
+      const type = selectedCollection.replace('auto-', '');
+      return `/api/creator/items?type=${type}`;
+    }
+    
+    return `/api/creator/items?collectionId=${selectedCollection}`;
+  }, [selectedCollection, collectionsData]);
+
+  // Fetch items
+  const { data: itemsData, isLoading: itemsLoading } = useSWR<ItemsResponse>(
+    itemsUrl,
+    fetcher
+  );
+
+  const collections = collectionsData?.collections || [];
+  const items = itemsData?.items || [];
+
+  // Show error state if API fails (e.g., tables don't exist yet)
+  if (collectionsError) {
+    return (
+      <Card className="h-full rounded-2xl shadow-sm border bg-card overflow-hidden flex items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-4 mx-auto">
+            <FolderOpen className="h-8 w-8 text-red-500" />
+          </div>
+          <h3 className="font-semibold text-gray-900 mb-2">Database Setup Required</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            The Creator tables need to be created. Run the following command to set up the database:
+          </p>
+          <code className="block text-sm text-blue-700 bg-blue-50 rounded-lg p-3 font-mono mb-4">
+            npm run db:push
+          </code>
+          <p className="text-xs text-gray-400">
+            Then restart your development server.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  // Filter items by search query (client-side for responsiveness)
+  const filteredItems = useMemo(() => {
+    if (!searchQuery) return items;
+    const query = searchQuery.toLowerCase();
+    return items.filter(item =>
+      item.title.toLowerCase().includes(query) ||
+      Object.values(item.metadata || {}).some(v => v.toLowerCase().includes(query))
+    );
+  }, [items, searchQuery]);
 
   // Toggle star
-  const toggleStar = (itemId: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, starred: !item.starred } : item
-      )
-    );
+  const toggleStar = async (itemId: string, currentStarred: boolean) => {
+    try {
+      const response = await fetch(`/api/creator/items/${itemId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ starred: !currentStarred }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update');
+
+      // Revalidate items
+      mutate(itemsUrl);
+      mutate('/api/creator/stats');
+    } catch {
+      toast.error('Failed to update item');
+    }
+  };
+
+  // Delete item
+  const deleteItem = async (itemId: string) => {
+    try {
+      const response = await fetch(`/api/creator/items/${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete');
+
+      toast.success('Item deleted');
+      mutate(itemsUrl);
+      mutate('/api/creator/collections');
+      mutate('/api/creator/stats');
+    } catch {
+      toast.error('Failed to delete item');
+    }
   };
 
   // Create new collection
@@ -209,38 +276,34 @@ export default function CollectionsTab() {
 
     setIsCreatingCollection(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const response = await fetch('/api/creator/collections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCollectionName.trim() }),
+      });
 
-      const newCollection: Collection = {
-        id: `custom-${Date.now()}`,
-        name: newCollectionName.trim(),
-        itemCount: 0,
-        icon: Folder,
-        color: "text-gray-600",
-        isAuto: false,
-      };
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create collection');
+      }
 
-      setCollections((prev) => [...prev, newCollection]);
-      setSelectedCollection(newCollection.id);
+      const data = await response.json();
+      
+      // Revalidate collections
+      mutate('/api/creator/collections');
+      mutate('/api/creator/stats');
+      
+      setSelectedCollection(data.collection.id);
       setShowNewCollectionDialog(false);
       setNewCollectionName("");
       
-      toast.success(`Collection "${newCollection.name}" created!`, {
-        description: "Start adding items to your new collection",
-      });
+      toast.success(`Collection "${data.collection.name}" created!`);
     } catch (error) {
-      toast.error("Failed to create collection", {
-        description: "Please try again",
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to create collection');
     } finally {
       setIsCreatingCollection(false);
     }
   };
-
-  const selectedCollectionData = collections.find(
-    (c) => c.id === selectedCollection
-  );
 
   return (
     <Card className="h-full rounded-2xl shadow-sm border bg-card overflow-hidden flex flex-col">
@@ -259,7 +322,6 @@ export default function CollectionsTab() {
             </div>
           </div>
           
-          {/* Auto-organize badge */}
           <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
             <Sparkles className="h-3 w-3 mr-1" />
             Auto-organized
@@ -271,34 +333,43 @@ export default function CollectionsTab() {
       <div className="flex flex-1 overflow-hidden">
         {/* Collections Sidebar */}
         <div className="w-56 border-r bg-gray-50/50 p-4 overflow-y-auto">
-          <div className="space-y-1">
-            {collections.map((collection) => {
-              const isSelected = selectedCollection === collection.id;
-              return (
-                <button
-                  key={collection.id}
-                  onClick={() => setSelectedCollection(collection.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
-                    isSelected
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "text-gray-600 hover:bg-gray-100"
-                  )}
-                  aria-label={`View ${collection.name} collection`}
-                  aria-current={isSelected ? "page" : undefined}
-                >
-                  <collection.icon className={cn("h-4 w-4", isSelected ? "text-emerald-600" : collection.color)} />
-                  <span className="flex-1 text-left truncate">{collection.name}</span>
-                  <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-full",
-                    isSelected ? "bg-emerald-200 text-emerald-700" : "bg-gray-200 text-gray-500"
-                  )}>
-                    {collection.itemCount}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {collectionsLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map(i => (
+                <Skeleton key={i} className="h-9 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {collections.map((collection) => {
+                const isSelected = selectedCollection === collection.id;
+                const IconComponent = iconMap[collection.icon] || Folder;
+                return (
+                  <button
+                    key={collection.id}
+                    onClick={() => setSelectedCollection(collection.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all",
+                      isSelected
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "text-gray-600 hover:bg-gray-100"
+                    )}
+                    aria-label={`View ${collection.name} collection`}
+                    aria-current={isSelected ? "page" : undefined}
+                  >
+                    <IconComponent className={cn("h-4 w-4", isSelected ? "text-emerald-600" : collection.color)} />
+                    <span className="flex-1 text-left truncate">{collection.name}</span>
+                    <span className={cn(
+                      "text-xs px-1.5 py-0.5 rounded-full",
+                      isSelected ? "bg-emerald-200 text-emerald-700" : "bg-gray-200 text-gray-500"
+                    )}>
+                      {collection.itemCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* Create Collection Button */}
           <div className="mt-4 pt-4 border-t">
@@ -356,7 +427,13 @@ export default function CollectionsTab() {
 
           {/* Items */}
           <div className="flex-1 overflow-y-auto p-4">
-            {filteredItems.length === 0 ? (
+            {itemsLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map(i => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : filteredItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-12">
                 <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
                   <FolderOpen className="h-8 w-8 text-gray-400" />
@@ -369,7 +446,7 @@ export default function CollectionsTab() {
             ) : viewMode === "list" ? (
               <div className="space-y-2">
                 {filteredItems.map((item) => {
-                  const TypeIcon = typeIcons[item.type];
+                  const TypeIcon = typeIcons[item.type] || FileText;
                   return (
                     <motion.div
                       key={item.id}
@@ -378,7 +455,7 @@ export default function CollectionsTab() {
                       className="flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm hover:border-gray-300 transition-all group cursor-pointer"
                     >
                       {/* Type Icon */}
-                      <div className={cn("p-2 rounded-lg", typeColors[item.type])}>
+                      <div className={cn("p-2 rounded-lg", typeColors[item.type] || typeColors.other)}>
                         <TypeIcon className="h-4 w-4" />
                       </div>
 
@@ -398,22 +475,7 @@ export default function CollectionsTab() {
                             {formatRelativeTime(item.createdAt)}
                           </span>
                           <span className="text-gray-300">•</span>
-                          <div className="flex items-center gap-1">
-                            {item.tags.slice(0, 2).map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="outline"
-                                className="text-[10px] px-1.5 py-0 h-4 text-gray-500 border-gray-200"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                            {item.tags.length > 2 && (
-                              <span className="text-xs text-gray-400">
-                                +{item.tags.length - 2}
-                              </span>
-                            )}
-                          </div>
+                          <span className="text-xs text-gray-500">{item.type}</span>
                         </div>
                       </div>
 
@@ -422,7 +484,7 @@ export default function CollectionsTab() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleStar(item.id);
+                            toggleStar(item.id, item.starred);
                           }}
                           className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                           aria-label={item.starred ? "Remove from favorites" : "Add to favorites"}
@@ -434,10 +496,14 @@ export default function CollectionsTab() {
                           )}
                         </button>
                         <button
-                          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                          aria-label="More options"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteItem(item.id);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                          aria-label="Delete item"
                         >
-                          <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                          <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
                         </button>
                       </div>
                     </motion.div>
@@ -448,7 +514,7 @@ export default function CollectionsTab() {
               // Grid view
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {filteredItems.map((item) => {
-                  const TypeIcon = typeIcons[item.type];
+                  const TypeIcon = typeIcons[item.type] || FileText;
                   return (
                     <motion.div
                       key={item.id}
@@ -457,23 +523,33 @@ export default function CollectionsTab() {
                       className="p-4 rounded-xl border bg-white hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group"
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div className={cn("p-2 rounded-lg", typeColors[item.type])}>
+                        <div className={cn("p-2 rounded-lg", typeColors[item.type] || typeColors.other)}>
                           <TypeIcon className="h-4 w-4" />
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleStar(item.id);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          aria-label={item.starred ? "Remove from favorites" : "Add to favorites"}
-                        >
-                          {item.starred ? (
-                            <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-                          ) : (
-                            <StarOff className="h-4 w-4 text-gray-400 hover:text-amber-500" />
-                          )}
-                        </button>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleStar(item.id, item.starred);
+                            }}
+                            aria-label={item.starred ? "Remove from favorites" : "Add to favorites"}
+                          >
+                            {item.starred ? (
+                              <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                            ) : (
+                              <StarOff className="h-4 w-4 text-gray-400 hover:text-amber-500" />
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteItem(item.id);
+                            }}
+                            aria-label="Delete item"
+                          >
+                            <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
+                          </button>
+                        </div>
                       </div>
                       <h4 className="font-medium text-sm text-gray-900 line-clamp-2 mb-2">
                         {item.title}
