@@ -381,12 +381,80 @@ export async function getCurrentUser() {
     throw new Error('Unauthorized');
   }
 
-  const user = await db.query.users.findFirst({
+  let user = await db.query.users.findFirst({
     where: eq(users.clerkUserId, userId),
   });
 
   if (!user) {
-    throw new Error('User not found');
+    // User doesn't exist in database - auto-create from Clerk data
+    logger.info('User not found in database, auto-creating from Clerk', { userId });
+    
+    const clerkUser = await currentUser();
+    if (!clerkUser) {
+      throw new Error('User not found in Clerk');
+    }
+
+    const email = clerkUser.emailAddresses.find(
+      (e) => e.id === clerkUser.primaryEmailAddressId
+    )?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress;
+
+    if (!email) {
+      throw new Error('No email found for user');
+    }
+
+    // Create new user
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        clerkUserId: userId,
+        email,
+        firstName: clerkUser.firstName || null,
+        lastName: clerkUser.lastName || null,
+        avatarUrl: clerkUser.imageUrl || null,
+        createdAt: new Date(),
+      })
+      .returning();
+
+    // Create default workspace for new user
+    const workspaceName = clerkUser.firstName && clerkUser.lastName
+      ? `${clerkUser.firstName} ${clerkUser.lastName}'s Workspace`
+      : email.split('@')[0] + "'s Workspace";
+
+    const workspaceSlug = workspaceName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    // Check if workspace with this slug exists
+    let workspace = await db.query.workspaces.findFirst({
+      where: eq(workspaces.slug, workspaceSlug),
+    });
+
+    if (!workspace) {
+      [workspace] = await db
+        .insert(workspaces)
+        .values({
+          name: workspaceName,
+          slug: workspaceSlug,
+        })
+        .returning();
+    }
+
+    // Add user as owner of workspace
+    await db.insert(workspaceMembers).values({
+      userId: newUser.id,
+      workspaceId: workspace.id,
+      role: 'owner',
+      isActive: true,
+    });
+
+    logger.info('User auto-created successfully', { 
+      userId: newUser.id, 
+      email, 
+      workspaceId: workspace.id 
+    });
+
+    user = newUser;
   }
 
   return user;

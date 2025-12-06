@@ -84,6 +84,37 @@
 
 ## Recent Changes
 
+### December 6, 2025 - Database Setup & Neptune AI Fix ✅
+
+#### Database Error Resolution
+- **Fixed "User not found in database" error** - Neptune AI now works on first use
+  - Problem: Users authenticated with Clerk but not in local database, causing Neptune chat to fail with "database error"
+  - Root cause: Missing user sync between Clerk authentication and application database
+  - Solution implemented:
+    1. **Auto-user creation** - Modified `getCurrentUser()` in `src/lib/auth.ts` to automatically create user records from Clerk data when missing
+    2. **Database schema push** - Ran `npm run db:push` to create all required tables (`ai_messages`, `ai_conversations`, etc.)
+    3. **Workspace auto-creation** - New users get a default workspace created automatically
+  - **Impact**: Neptune AI works immediately after sign-in without manual database setup
+  - **Files Modified**:
+    - `src/lib/auth.ts` - Added auto-user creation logic with workspace setup
+    - `src/app/api/assistant/chat/route.ts` - Simplified to use auto-created user record
+  - **User Experience**:
+    - Sign in with Clerk → User record created automatically
+    - Click Neptune AI → Works immediately (no database errors)
+    - Default workspace created with user as owner
+  - **Commit**: Database error fix + auto-user creation
+
+#### Setup Documentation Updates
+- **Updated README.md** - Added database setup requirement and auto-creation notice
+- **Updated PROJECT_STATUS.md** - Documented database fix (this section)
+
+#### Important for Deployment
+- ⚠️ **REQUIRED**: Run `npm run db:push` before first deployment to create database tables
+- ✅ **Auto-creation**: Users are created automatically on first Clerk sign-in
+- ✅ **Fallback ready**: Clerk webhook (`/api/webhooks/clerk`) also creates users (when configured)
+
+---
+
 ### December 5, 2025 - Neptune AI Enhancement + UI Fixes (COMPLETE) ✅
 
 #### Bug Fix: Neptune Input Field Not Working

@@ -135,17 +135,8 @@ export async function POST(request: Request) {
       feature: context?.feature 
     });
 
-    // Get user's database record
-    const userRecord = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, clerkUserId),
-    });
-
-    if (!userRecord) {
-      return NextResponse.json(
-        { error: 'User not found in database' },
-        { status: 404 }
-      );
-    }
+    // Get user's database record (getCurrentUser already handles auto-creation)
+    const userRecord = currentUser;
 
     // Gather comprehensive AI context
     const aiContext = await gatherAIContext(workspaceId, clerkUserId);

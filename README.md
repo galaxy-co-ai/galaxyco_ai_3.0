@@ -59,7 +59,7 @@ This guide will walk you through:
 # First time setup
 cp .env.example .env.local   # Create environment file (add your keys!)
 npm install                  # Install dependencies
-npm run db:push             # Push database schema
+npm run db:push             # Push database schema (REQUIRED!)
 npm run db:seed             # Seed sample data
 
 # Development
@@ -71,6 +71,8 @@ npm run lint                # Check for errors
 npm run typecheck           # TypeScript validation
 ```
 
+**⚠️ Important:** Run `npm run db:push` before first use to create database tables. The app includes automatic user creation - when you sign in with Clerk for the first time, your user record and workspace will be created automatically.
+
 ---
 
 ## 📊 Project Status
@@ -81,10 +83,10 @@ npm run typecheck           # TypeScript validation
 
 **Last Updated:** December 6, 2025  
 **Build Status:** ✅ Clean build - Next.js 16.0.7 (patched)  
-**Latest Commit:** `3459518` - Proxy migration + security patch  
+**Latest Commit:** Database error fix + auto-user creation  
 **Test Coverage:** 70% (API routes, components, E2E)  
 **Deployment:** Ready for Vercel (security patch applied)  
-**Latest Enhancement:** Next.js security update + proxy migration (zero build warnings)
+**Latest Enhancement:** Database setup automation + Neptune AI fixes
 
 ### Verified & Operational
 - ✅ All 19 critical environment variables verified
