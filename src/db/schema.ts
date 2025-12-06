@@ -265,6 +265,120 @@ export const feedbackSentimentEnum = pgEnum('feedback_sentiment', [
   'very_positive',
 ]);
 
+// Campaign recipient tracking enums
+export const campaignRecipientStatusEnum = pgEnum('campaign_recipient_status', [
+  'pending',
+  'sent',
+  'delivered',
+  'opened',
+  'clicked',
+  'bounced',
+  'unsubscribed',
+  'complained',
+]);
+
+// CRM interaction tracking enums
+export const interactionTypeEnum = pgEnum('interaction_type', [
+  'call',
+  'email',
+  'meeting',
+  'note',
+  'task',
+  'sms',
+  'whatsapp',
+  'linkedin',
+  'other',
+]);
+
+export const interactionDirectionEnum = pgEnum('interaction_direction', [
+  'inbound',
+  'outbound',
+]);
+
+export const interactionOutcomeEnum = pgEnum('interaction_outcome', [
+  'successful',
+  'no_answer',
+  'voicemail',
+  'busy',
+  'cancelled',
+  'rescheduled',
+  'follow_up_needed',
+]);
+
+// Expense tracking enums
+export const expenseCategoryEnum = pgEnum('expense_category', [
+  'travel',
+  'meals',
+  'supplies',
+  'software',
+  'hardware',
+  'marketing',
+  'payroll',
+  'utilities',
+  'rent',
+  'insurance',
+  'professional_services',
+  'other',
+]);
+
+export const expenseStatusEnum = pgEnum('expense_status', [
+  'pending',
+  'approved',
+  'rejected',
+  'reimbursed',
+]);
+
+// Automation rule enums
+export const automationTriggerTypeEnum = pgEnum('automation_trigger_type', [
+  'lead_created',
+  'lead_stage_changed',
+  'deal_created',
+  'deal_stage_changed',
+  'contact_created',
+  'task_completed',
+  'email_opened',
+  'form_submitted',
+  'scheduled',
+  'webhook',
+]);
+
+export const automationActionTypeEnum = pgEnum('automation_action_type', [
+  'send_email',
+  'create_task',
+  'update_field',
+  'add_tag',
+  'remove_tag',
+  'assign_owner',
+  'create_deal',
+  'send_notification',
+  'webhook',
+  'wait',
+]);
+
+export const automationStatusEnum = pgEnum('automation_status', [
+  'active',
+  'paused',
+  'draft',
+  'archived',
+]);
+
+// Deal stage enum (separate from prospect stages for clearer pipeline)
+export const dealStageEnum = pgEnum('deal_stage', [
+  'qualification',
+  'discovery',
+  'proposal',
+  'negotiation',
+  'closed_won',
+  'closed_lost',
+]);
+
+export const dealPriorityEnum = pgEnum('deal_priority', [
+  'low',
+  'medium',
+  'high',
+  'critical',
+]);
+
 // ============================================================================
 // WORKSPACES (Tenant Boundary)
 // ============================================================================
@@ -1680,6 +1794,104 @@ export const contacts = pgTable(
 );
 
 // ============================================================================
+// CRM - INTERACTIONS (Call/Email/Meeting Logs)
+// ============================================================================
+
+export const crmInteractions = pgTable(
+  'crm_interactions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Interaction type and direction
+    type: interactionTypeEnum('type').notNull(),
+    direction: interactionDirectionEnum('direction').notNull().default('outbound'),
+    
+    // Subject/title for quick reference
+    subject: text('subject'),
+    
+    // Related entities (at least one should be set)
+    contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+    prospectId: uuid('prospect_id').references(() => prospects.id, { onDelete: 'set null' }),
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+    dealId: uuid('deal_id').references(() => deals.id, { onDelete: 'set null' }),
+
+    // Interaction details
+    notes: text('notes'),
+    summary: text('summary'), // AI-generated or manual summary
+    
+    // For calls
+    duration: integer('duration'), // In seconds
+    outcome: interactionOutcomeEnum('outcome'),
+    recordingUrl: text('recording_url'),
+    transcriptUrl: text('transcript_url'),
+    
+    // For emails
+    emailSubject: text('email_subject'),
+    emailBody: text('email_body'),
+    emailThreadId: text('email_thread_id'),
+    
+    // For meetings
+    meetingLocation: text('meeting_location'),
+    meetingLink: text('meeting_link'),
+    attendees: jsonb('attendees')
+      .$type<Array<{ email: string; name?: string; status?: 'accepted' | 'declined' | 'tentative' }>>()
+      .default([]),
+    
+    // Scheduling
+    scheduledAt: timestamp('scheduled_at'),
+    occurredAt: timestamp('occurred_at'),
+    completedAt: timestamp('completed_at'),
+
+    // Follow-up
+    followUpRequired: boolean('follow_up_required').default(false),
+    followUpDate: timestamp('follow_up_date'),
+    followUpNotes: text('follow_up_notes'),
+
+    // AI insights
+    sentiment: text('sentiment'), // 'positive', 'neutral', 'negative'
+    aiInsights: jsonb('ai_insights')
+      .$type<{
+        keyTopics?: string[];
+        actionItems?: string[];
+        nextSteps?: string[];
+        riskIndicators?: string[];
+      }>()
+      .default({}),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    assignedTo: uuid('assigned_to').references(() => users.id),
+
+    // Metadata
+    tags: text('tags').array().default([]),
+    attachments: jsonb('attachments')
+      .$type<Array<{ name: string; url: string; size: number; type: string }>>()
+      .default([]),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('crm_interaction_tenant_idx').on(table.workspaceId),
+    typeIdx: index('crm_interaction_type_idx').on(table.type),
+    contactIdx: index('crm_interaction_contact_idx').on(table.contactId),
+    prospectIdx: index('crm_interaction_prospect_idx').on(table.prospectId),
+    customerIdx: index('crm_interaction_customer_idx').on(table.customerId),
+    createdByIdx: index('crm_interaction_created_by_idx').on(table.createdBy),
+    occurredAtIdx: index('crm_interaction_occurred_at_idx').on(table.occurredAt),
+    followUpIdx: index('crm_interaction_follow_up_idx').on(table.followUpDate),
+  }),
+);
+
+// ============================================================================
 // CRM - TASKS
 // ============================================================================
 
@@ -1865,6 +2077,90 @@ export const invoices = pgTable(
 );
 
 // ============================================================================
+// BUSINESS - EXPENSES (Local Expense Tracking)
+// ============================================================================
+
+export const expenses = pgTable(
+  'expenses',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Basic info
+    description: text('description').notNull(),
+    category: expenseCategoryEnum('category').notNull(),
+    status: expenseStatusEnum('status').notNull().default('pending'),
+
+    // Financial details
+    amount: integer('amount').notNull(), // In cents
+    currency: text('currency').notNull().default('USD'),
+    taxAmount: integer('tax_amount').default(0), // In cents
+    
+    // Vendor/payee info
+    vendor: text('vendor'),
+    vendorId: uuid('vendor_id').references(() => customers.id, { onDelete: 'set null' }),
+
+    // Project/customer association
+    projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+
+    // Dates
+    expenseDate: timestamp('expense_date').notNull(),
+    dueDate: timestamp('due_date'),
+    paidDate: timestamp('paid_date'),
+
+    // Payment details
+    paymentMethod: text('payment_method'), // 'credit_card', 'bank_transfer', 'cash', 'check'
+    referenceNumber: text('reference_number'), // Check number, transaction ID, etc.
+
+    // Receipts and attachments
+    receiptUrl: text('receipt_url'),
+    attachments: jsonb('attachments')
+      .$type<Array<{ name: string; url: string; size: number; type: string }>>()
+      .default([]),
+
+    // External sync
+    externalId: text('external_id'), // QuickBooks, Stripe, etc.
+    externalSource: text('external_source'), // 'quickbooks', 'stripe', 'manual'
+
+    // Approval workflow
+    submittedBy: uuid('submitted_by')
+      .notNull()
+      .references(() => users.id),
+    approvedBy: uuid('approved_by').references(() => users.id),
+    approvedAt: timestamp('approved_at'),
+    rejectionReason: text('rejection_reason'),
+
+    // Reimbursement
+    isReimbursable: boolean('is_reimbursable').default(false),
+    reimbursedAt: timestamp('reimbursed_at'),
+    reimbursementAmount: integer('reimbursement_amount'), // In cents
+
+    // Metadata
+    tags: text('tags').array().default([]),
+    notes: text('notes'),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('expense_tenant_idx').on(table.workspaceId),
+    categoryIdx: index('expense_category_idx').on(table.category),
+    statusIdx: index('expense_status_idx').on(table.status),
+    vendorIdx: index('expense_vendor_idx').on(table.vendorId),
+    projectIdx: index('expense_project_idx').on(table.projectId),
+    expenseDateIdx: index('expense_date_idx').on(table.expenseDate),
+    submittedByIdx: index('expense_submitted_by_idx').on(table.submittedBy),
+    externalIdx: index('expense_external_idx').on(table.externalSource, table.externalId),
+  }),
+);
+
+// ============================================================================
 // BUSINESS - CAMPAIGNS
 // ============================================================================
 
@@ -1940,6 +2236,79 @@ export const campaigns = pgTable(
 );
 
 // ============================================================================
+// BUSINESS - CAMPAIGN RECIPIENTS (Individual Send Tracking)
+// ============================================================================
+
+export const campaignRecipients = pgTable(
+  'campaign_recipients',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Campaign reference
+    campaignId: uuid('campaign_id')
+      .notNull()
+      .references(() => campaigns.id, { onDelete: 'cascade' }),
+
+    // Recipient info (can be contact or prospect)
+    contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+    prospectId: uuid('prospect_id').references(() => prospects.id, { onDelete: 'set null' }),
+    email: text('email').notNull(),
+    firstName: text('first_name'),
+    lastName: text('last_name'),
+
+    // Delivery status
+    status: campaignRecipientStatusEnum('status').notNull().default('pending'),
+
+    // Tracking timestamps
+    sentAt: timestamp('sent_at'),
+    deliveredAt: timestamp('delivered_at'),
+    openedAt: timestamp('opened_at'),
+    clickedAt: timestamp('clicked_at'),
+    bouncedAt: timestamp('bounced_at'),
+    unsubscribedAt: timestamp('unsubscribed_at'),
+    complainedAt: timestamp('complained_at'),
+
+    // Engagement metrics
+    openCount: integer('open_count').default(0),
+    clickCount: integer('click_count').default(0),
+    
+    // Tracking data
+    clickedLinks: jsonb('clicked_links')
+      .$type<Array<{ url: string; clickedAt: string }>>()
+      .default([]),
+
+    // Email provider tracking IDs
+    externalMessageId: text('external_message_id'), // e.g., Resend message ID
+    
+    // Error info (for bounces/failures)
+    errorCode: text('error_code'),
+    errorMessage: text('error_message'),
+
+    // Metadata
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('campaign_recipient_tenant_idx').on(table.workspaceId),
+    campaignIdx: index('campaign_recipient_campaign_idx').on(table.campaignId),
+    contactIdx: index('campaign_recipient_contact_idx').on(table.contactId),
+    prospectIdx: index('campaign_recipient_prospect_idx').on(table.prospectId),
+    emailIdx: index('campaign_recipient_email_idx').on(table.email),
+    statusIdx: index('campaign_recipient_status_idx').on(table.status),
+    // Unique constraint: one recipient per email per campaign
+    uniqueRecipient: uniqueIndex('campaign_recipient_unique_idx').on(table.campaignId, table.email),
+  }),
+);
+
+// ============================================================================
 // BUSINESS - SEGMENTS
 // ============================================================================
 
@@ -1987,6 +2356,260 @@ export const segments = pgTable(
   (table) => ({
     tenantIdx: index('segment_tenant_idx').on(table.workspaceId),
     activeIdx: index('segment_active_idx').on(table.isActive),
+  }),
+);
+
+// ============================================================================
+// CRM - AUTOMATION RULES
+// ============================================================================
+
+export const automationRules = pgTable(
+  'automation_rules',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Basic info
+    name: text('name').notNull(),
+    description: text('description'),
+    status: automationStatusEnum('status').notNull().default('draft'),
+
+    // Trigger configuration
+    triggerType: automationTriggerTypeEnum('trigger_type').notNull(),
+    triggerConfig: jsonb('trigger_config')
+      .$type<{
+        // For stage changes
+        fromStage?: string;
+        toStage?: string;
+        // For scheduled triggers
+        schedule?: string; // Cron expression
+        // For webhook triggers
+        webhookUrl?: string;
+        // Common filters
+        filters?: Array<{
+          field: string;
+          operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
+          value: string | number | boolean;
+        }>;
+      }>()
+      .notNull()
+      .default({}),
+
+    // Actions to perform (executed in order)
+    actions: jsonb('actions')
+      .$type<Array<{
+        type: string; // One of automationActionTypeEnum values
+        config: {
+          // For send_email
+          templateId?: string;
+          emailSubject?: string;
+          emailBody?: string;
+          // For create_task
+          taskTitle?: string;
+          taskDescription?: string;
+          assignTo?: string;
+          dueIn?: number; // Days
+          // For update_field
+          field?: string;
+          value?: string | number | boolean;
+          // For add/remove_tag
+          tag?: string;
+          // For assign_owner
+          ownerId?: string;
+          // For wait
+          duration?: number; // Minutes
+          // For webhook
+          webhookUrl?: string;
+          webhookMethod?: 'GET' | 'POST' | 'PUT';
+          webhookHeaders?: Record<string, string>;
+          webhookPayload?: Record<string, unknown>;
+        };
+      }>>()
+      .notNull()
+      .default([]),
+
+    // Execution settings
+    isEnabled: boolean('is_enabled').notNull().default(true),
+    maxExecutionsPerDay: integer('max_executions_per_day').default(100),
+    cooldownMinutes: integer('cooldown_minutes').default(0), // Minutes between executions for same entity
+    
+    // Stats
+    executionCount: integer('execution_count').notNull().default(0),
+    lastExecutedAt: timestamp('last_executed_at'),
+    successCount: integer('success_count').notNull().default(0),
+    failureCount: integer('failure_count').notNull().default(0),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('automation_rule_tenant_idx').on(table.workspaceId),
+    statusIdx: index('automation_rule_status_idx').on(table.status),
+    triggerTypeIdx: index('automation_rule_trigger_type_idx').on(table.triggerType),
+    enabledIdx: index('automation_rule_enabled_idx').on(table.isEnabled),
+  }),
+);
+
+// ============================================================================
+// CRM - AUTOMATION EXECUTIONS (Audit Trail)
+// ============================================================================
+
+export const automationExecutions = pgTable(
+  'automation_executions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Automation reference
+    automationId: uuid('automation_id')
+      .notNull()
+      .references(() => automationRules.id, { onDelete: 'cascade' }),
+
+    // Entity that triggered the automation
+    entityType: text('entity_type').notNull(), // 'contact', 'prospect', 'deal', 'task'
+    entityId: uuid('entity_id').notNull(),
+
+    // Execution result
+    status: executionStatusEnum('status').notNull().default('pending'),
+    
+    // Action results
+    actionResults: jsonb('action_results')
+      .$type<Array<{
+        actionIndex: number;
+        status: 'success' | 'failed' | 'skipped';
+        result?: Record<string, unknown>;
+        error?: string;
+        executedAt: string;
+      }>>()
+      .default([]),
+
+    // Error info
+    error: text('error'),
+
+    // Timestamps
+    startedAt: timestamp('started_at').notNull().defaultNow(),
+    completedAt: timestamp('completed_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('automation_execution_tenant_idx').on(table.workspaceId),
+    automationIdx: index('automation_execution_automation_idx').on(table.automationId),
+    entityIdx: index('automation_execution_entity_idx').on(table.entityType, table.entityId),
+    statusIdx: index('automation_execution_status_idx').on(table.status),
+    startedAtIdx: index('automation_execution_started_at_idx').on(table.startedAt),
+  }),
+);
+
+// ============================================================================
+// CRM - DEALS (Sales Pipeline)
+// ============================================================================
+
+export const deals = pgTable(
+  'deals',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Basic info
+    title: text('title').notNull(),
+    description: text('description'),
+
+    // Pipeline stage
+    stage: dealStageEnum('stage').notNull().default('qualification'),
+    priority: dealPriorityEnum('priority').notNull().default('medium'),
+
+    // Financial
+    value: integer('value').notNull().default(0), // In cents
+    currency: text('currency').notNull().default('USD'),
+    probability: integer('probability').default(50), // 0-100 percentage
+
+    // Related entities
+    customerId: uuid('customer_id').references(() => customers.id, { onDelete: 'set null' }),
+    contactId: uuid('contact_id').references(() => contacts.id, { onDelete: 'set null' }),
+    prospectId: uuid('prospect_id').references(() => prospects.id, { onDelete: 'set null' }),
+
+    // Ownership
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id),
+    
+    // Team members (for collaborative deals)
+    teamMembers: jsonb('team_members')
+      .$type<Array<{ userId: string; role: string }>>()
+      .default([]),
+
+    // Dates
+    expectedCloseDate: timestamp('expected_close_date'),
+    actualCloseDate: timestamp('actual_close_date'),
+
+    // Win/Loss info
+    closedReason: text('closed_reason'), // 'budget', 'competition', 'timing', 'champion_left', etc.
+    competitorId: text('competitor_id'),
+    competitorName: text('competitor_name'),
+
+    // Products/services (line items)
+    lineItems: jsonb('line_items')
+      .$type<Array<{
+        name: string;
+        description?: string;
+        quantity: number;
+        unitPrice: number; // In cents
+        discount?: number; // Percentage
+        total: number; // In cents
+      }>>()
+      .default([]),
+
+    // AI insights
+    aiRiskScore: integer('ai_risk_score'), // 0-100
+    aiRiskFactors: jsonb('ai_risk_factors')
+      .$type<Array<{ factor: string; severity: 'low' | 'medium' | 'high' }>>()
+      .default([]),
+    aiNextBestAction: text('ai_next_best_action'),
+    aiWinProbability: integer('ai_win_probability'), // 0-100
+
+    // Activity tracking
+    lastActivityAt: timestamp('last_activity_at'),
+    nextFollowUpAt: timestamp('next_follow_up_at'),
+    daysSinceLastActivity: integer('days_since_last_activity').default(0),
+
+    // Metadata
+    source: text('source'), // 'website', 'referral', 'campaign', 'inbound', 'outbound'
+    tags: text('tags').array().default([]),
+    customFields: jsonb('custom_fields').$type<Record<string, unknown>>().default({}),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('deal_tenant_idx').on(table.workspaceId),
+    stageIdx: index('deal_stage_idx').on(table.stage),
+    ownerIdx: index('deal_owner_idx').on(table.ownerId),
+    customerIdx: index('deal_customer_idx').on(table.customerId),
+    contactIdx: index('deal_contact_idx').on(table.contactId),
+    prospectIdx: index('deal_prospect_idx').on(table.prospectId),
+    expectedCloseIdx: index('deal_expected_close_idx').on(table.expectedCloseDate),
+    valueIdx: index('deal_value_idx').on(table.value),
+    probabilityIdx: index('deal_probability_idx').on(table.probability),
+    lastActivityIdx: index('deal_last_activity_idx').on(table.lastActivityAt),
   }),
 );
 
@@ -2998,6 +3621,166 @@ export const creatorTemplates = pgTable(
     index('creator_templates_premium_idx').on(table.isPremium),
   ]
 );
+
+// ============================================================================
+// CAMPAIGN RECIPIENTS - RELATIONS
+// ============================================================================
+
+export const campaignRecipientsRelations = relations(campaignRecipients, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [campaignRecipients.workspaceId],
+    references: [workspaces.id],
+  }),
+  campaign: one(campaigns, {
+    fields: [campaignRecipients.campaignId],
+    references: [campaigns.id],
+  }),
+  contact: one(contacts, {
+    fields: [campaignRecipients.contactId],
+    references: [contacts.id],
+  }),
+  prospect: one(prospects, {
+    fields: [campaignRecipients.prospectId],
+    references: [prospects.id],
+  }),
+}));
+
+export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [campaigns.workspaceId],
+    references: [workspaces.id],
+  }),
+  createdByUser: one(users, {
+    fields: [campaigns.createdBy],
+    references: [users.id],
+  }),
+  segment: one(segments, {
+    fields: [campaigns.segmentId],
+    references: [segments.id],
+  }),
+  recipients: many(campaignRecipients),
+}));
+
+// ============================================================================
+// CRM INTERACTIONS - RELATIONS
+// ============================================================================
+
+export const crmInteractionsRelations = relations(crmInteractions, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [crmInteractions.workspaceId],
+    references: [workspaces.id],
+  }),
+  contact: one(contacts, {
+    fields: [crmInteractions.contactId],
+    references: [contacts.id],
+  }),
+  prospect: one(prospects, {
+    fields: [crmInteractions.prospectId],
+    references: [prospects.id],
+  }),
+  customer: one(customers, {
+    fields: [crmInteractions.customerId],
+    references: [customers.id],
+  }),
+  deal: one(deals, {
+    fields: [crmInteractions.dealId],
+    references: [deals.id],
+  }),
+  createdByUser: one(users, {
+    fields: [crmInteractions.createdBy],
+    references: [users.id],
+  }),
+  assignedToUser: one(users, {
+    fields: [crmInteractions.assignedTo],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// EXPENSES - RELATIONS
+// ============================================================================
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [expenses.workspaceId],
+    references: [workspaces.id],
+  }),
+  vendor: one(customers, {
+    fields: [expenses.vendorId],
+    references: [customers.id],
+  }),
+  project: one(projects, {
+    fields: [expenses.projectId],
+    references: [projects.id],
+  }),
+  customer: one(customers, {
+    fields: [expenses.customerId],
+    references: [customers.id],
+  }),
+  submittedByUser: one(users, {
+    fields: [expenses.submittedBy],
+    references: [users.id],
+  }),
+  approvedByUser: one(users, {
+    fields: [expenses.approvedBy],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// AUTOMATION RULES - RELATIONS
+// ============================================================================
+
+export const automationRulesRelations = relations(automationRules, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [automationRules.workspaceId],
+    references: [workspaces.id],
+  }),
+  createdByUser: one(users, {
+    fields: [automationRules.createdBy],
+    references: [users.id],
+  }),
+  executions: many(automationExecutions),
+}));
+
+export const automationExecutionsRelations = relations(automationExecutions, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [automationExecutions.workspaceId],
+    references: [workspaces.id],
+  }),
+  automation: one(automationRules, {
+    fields: [automationExecutions.automationId],
+    references: [automationRules.id],
+  }),
+}));
+
+// ============================================================================
+// DEALS - RELATIONS
+// ============================================================================
+
+export const dealsRelations = relations(deals, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [deals.workspaceId],
+    references: [workspaces.id],
+  }),
+  customer: one(customers, {
+    fields: [deals.customerId],
+    references: [customers.id],
+  }),
+  contact: one(contacts, {
+    fields: [deals.contactId],
+    references: [contacts.id],
+  }),
+  prospect: one(prospects, {
+    fields: [deals.prospectId],
+    references: [prospects.id],
+  }),
+  owner: one(users, {
+    fields: [deals.ownerId],
+    references: [users.id],
+  }),
+  interactions: many(crmInteractions),
+}));
 
 // ============================================================================
 // LAUNCHPAD - RELATIONS
