@@ -17,8 +17,8 @@ import { logger } from '@/lib/logger';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Dashboard | GalaxyCo.ai',
-  description: 'Your personalized AI command center - guided, intelligent, and always helpful',
+  title: 'Neptune AI | GalaxyCo.ai',
+  description: 'Your AI assistant is ready to help you build and grow your workspace. Start a conversation and let Neptune guide you.',
 };
 
 /**
@@ -30,13 +30,27 @@ export const metadata: Metadata = {
 export default async function DashboardV2Page() {
   // Always render the same JSX tree; just vary the data we pass in.
   let initialData = getEmptyDashboardData();
+  let userId = '';
+  let workspaceId = '';
+  let userName = 'there';
 
   try {
-    // Get authenticated workspace
-    const { workspaceId } = await getCurrentWorkspace();
+    // Get authenticated workspace and user
+    const { userId: authUserId, workspaceId: authWorkspaceId } = await getCurrentWorkspace();
+    userId = authUserId;
+    workspaceId = authWorkspaceId;
+
+    // Get user info for personalized greeting
+    const { getCurrentUser } = await import('@/lib/auth');
+    const user = await getCurrentUser();
+    if (user) {
+      userName = user.firstName || user.email?.split('@')[0] || 'there';
+    }
 
     // Fetch dashboard data
-    initialData = await getDashboardData(workspaceId);
+    if (workspaceId) {
+      initialData = await getDashboardData(workspaceId, userName);
+    }
   } catch (error) {
     // Log error but don't expose details to user
     logger.error('Dashboard v2 page error', { error });
@@ -45,7 +59,12 @@ export default async function DashboardV2Page() {
 
   return (
     <ErrorBoundary>
-      <DashboardV2Client initialData={initialData} />
+      <DashboardV2Client 
+        initialData={initialData} 
+        userId={userId}
+        workspaceId={workspaceId}
+        userName={userName}
+      />
     </ErrorBoundary>
   );
 }

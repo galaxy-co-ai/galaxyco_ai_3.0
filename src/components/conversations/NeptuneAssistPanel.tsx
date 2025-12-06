@@ -10,9 +10,23 @@ import { logger } from "@/lib/logger";
 import QuickActions from "./QuickActions";
 import type { Conversation } from "./ConversationsDashboard";
 
+// Wrapper component for fullscreen variant to add card styling
+function NeptuneCardWrapper({ children, isFullscreen }: { children: React.ReactNode; isFullscreen: boolean }) {
+  if (isFullscreen) {
+    return (
+      <Card className="h-full flex flex-col border shadow-sm">
+        {children}
+      </Card>
+    );
+  }
+  return <>{children}</>;
+}
+
 interface NeptuneAssistPanelProps {
   conversationId: string | null;
   conversation: Conversation | null;
+  variant?: 'default' | 'fullscreen';
+  feature?: string;
 }
 
 interface ChatMessage {
@@ -40,6 +54,8 @@ interface Attachment {
 export default function NeptuneAssistPanel({
   conversationId,
   conversation,
+  variant = 'default',
+  feature,
 }: NeptuneAssistPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -61,6 +77,70 @@ export default function NeptuneAssistPanel({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Listen for roadmap prompts (from RoadmapCard)
+  useEffect(() => {
+    const handleNeptunePrompt = async (event: CustomEvent<{ prompt: string }>) => {
+      if (event.detail.prompt) {
+        const promptText = event.detail.prompt;
+        
+        // Create user message
+        const userMessage: ChatMessage = {
+          id: Date.now().toString(),
+          role: 'user',
+          content: promptText,
+          timestamp: new Date(),
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setIsLoading(true);
+
+        try {
+          const response = await fetch('/api/assistant/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: promptText,
+              conversationId: conversationId || undefined,
+              attachments: [],
+              context: {
+                type: variant === 'fullscreen' ? 'dashboard' : 'conversation',
+                conversationData: conversation,
+              },
+              feature: feature || (variant === 'fullscreen' ? 'dashboard' : undefined),
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+            throw new Error(errorMessage);
+          }
+
+          const data = await response.json();
+          const assistantMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: data.message?.content || data.response || "I'm here to help!",
+            timestamp: new Date(),
+          };
+
+          setMessages(prev => [...prev, assistantMessage]);
+        } catch (error) {
+          logger.error("Neptune chat error", error);
+          const errorMsg = error instanceof Error ? error.message : "Failed to get response from Neptune";
+          toast.error(errorMsg);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    window.addEventListener('neptune-prompt', handleNeptunePrompt as EventListener);
+    return () => {
+      window.removeEventListener('neptune-prompt', handleNeptunePrompt as EventListener);
+    };
+  }, [conversationId, conversation, variant, feature]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -126,13 +206,14 @@ export default function NeptuneAssistPanel({
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() && pendingAttachments.length === 0) return;
+  const handleSend = async (messageOverride?: string) => {
+    const messageToSend = messageOverride || input;
+    if (!messageToSend.trim() && pendingAttachments.length === 0) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: messageToSend,
       timestamp: new Date(),
     };
 
@@ -146,13 +227,14 @@ export default function NeptuneAssistPanel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: input,
+          message: messageToSend,
           conversationId: conversationId || undefined, // Send at top level, undefined if null
           attachments: pendingAttachments,
           context: {
-            type: 'conversation',
+            type: isFullscreen ? 'dashboard' : 'conversation',
             conversationData: conversation,
           },
+          feature: feature || (isFullscreen ? 'dashboard' : undefined),
         }),
       });
 
@@ -214,23 +296,28 @@ export default function NeptuneAssistPanel({
     }
   };
 
-  return (
-    <div className="flex h-full flex-col bg-background">
-      {/* Header */}
-      <div className="border-b p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-500" />
-            <h3 className="font-semibold">Neptune</h3>
-          </div>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
+  const isFullscreen = variant === 'fullscreen';
 
-      {/* Quick Actions */}
-      {conversation && (
+  return (
+    <NeptuneCardWrapper isFullscreen={isFullscreen}>
+      <div className={`flex h-full w-full flex-col ${isFullscreen ? 'bg-card' : 'bg-background'}`}>
+      {/* Header - Only show in default variant */}
+      {!isFullscreen && (
+        <div className="border-b p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              <h3 className="font-semibold">Neptune</h3>
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7">
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions - Only show in default variant with conversation */}
+      {!isFullscreen && conversation && (
         <div className="border-b p-4">
           <QuickActions
             conversationId={conversationId}
@@ -241,7 +328,7 @@ export default function NeptuneAssistPanel({
       )}
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
+      <div className={`flex-1 overflow-y-auto ${isFullscreen ? 'p-6' : 'p-4'}`} ref={scrollRef}>
         <div className="space-y-4">
           {messages.map((msg) => (
             <div
@@ -396,7 +483,7 @@ export default function NeptuneAssistPanel({
       </div>
 
       {/* Input */}
-      <div className="border-t p-4 shrink-0">
+      <div className={`border-t ${isFullscreen ? 'p-6' : 'p-4'} shrink-0`}>
         <input
           ref={fileInputRef}
           type="file"
@@ -448,7 +535,7 @@ export default function NeptuneAssistPanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSend();
+                handleSend(undefined);
               }
             }}
             placeholder="Ask Neptune..."
@@ -457,7 +544,7 @@ export default function NeptuneAssistPanel({
             aria-label="Message Neptune"
           />
           <Button
-            onClick={handleSend}
+            onClick={() => handleSend(undefined)}
             disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading}
             size="icon"
             className="h-9 w-9 shrink-0"
@@ -467,6 +554,7 @@ export default function NeptuneAssistPanel({
           </Button>
         </div>
       </div>
-    </div>
+      </div>
+    </NeptuneCardWrapper>
   );
 }

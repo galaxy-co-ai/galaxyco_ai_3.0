@@ -20,13 +20,13 @@
 | **Database** | ✅ 50+ tables connected |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Recent Achievement:** Neptune AI Intelligence Enhancement (December 6, 2025)
-- Enhanced Neptune with marketing, sales, and branding expertise
-- 7 new marketing tools (copy generation, brand analysis, content calendars, campaign intelligence)
-- Natural, concise communication (2-3 sentences, conversational style)
-- Document creation mastery with proven templates
-- Proactive marketing insights and campaign optimization
-- Smart lead-to-campaign matching
+**Recent Achievement:** Dashboard Neptune-First Redesign (December 6, 2025)
+- **Neptune as Primary Interface** - Dashboard now opens directly to Neptune chat (no tabs)
+- **Workspace Roadmap Card** - Interactive checklist of setup tasks (right 1/3 of screen)
+- **Contextual Welcome** - Personalized greeting for new users with dismissible card
+- **Card-Based Design** - Neptune chat and roadmap displayed as matching cards with borders
+- **Roadmap Integration** - Click roadmap items to trigger Neptune prompts or navigate to pages
+- **New User Experience** - Welcome card only shows for users < 7 days old, dismissible with X button
 
 ---
 
@@ -64,7 +64,7 @@
 |------|-------|--------|
 | Landing | `/` | ✅ Static |
 | Dashboard | `/dashboard` | ✅ Dynamic |
-| Dashboard v2 | `/dashboard-v2` | ✅ Dynamic (User-first redesign) |
+| Dashboard v2 | `/dashboard-v2` | ✅ Dynamic (Neptune-first with roadmap) |
 | My Agents | `/activity` | ✅ Dynamic (with Laboratory) |
 | Creator | `/creator` | ✅ Dynamic |
 | Library | `/library` | ✅ Dynamic |
@@ -83,6 +83,67 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Dashboard Neptune-First Redesign ✅
+
+#### Dashboard Overhaul - Neptune as Primary Interface
+- **Removed Tab Navigation** - Dashboard now shows Neptune chat immediately on login (no Home/Pathways/Wins/Tools tabs)
+- **Neptune Chat Card** - Neptune chat interface wrapped in Card component with border, rounded corners, and shadow
+- **Workspace Roadmap Card** - New interactive checklist card (right 1/3 of screen) showing:
+  - Setup tasks (Create first agent, Add contacts, Upload documents, Connect integrations)
+  - Completion percentage with progress bar
+  - Click-to-action: Navigate to pages or trigger Neptune prompts
+  - Dynamic task status based on workspace health
+- **Contextual Welcome Card** - Personalized greeting for new users:
+  - Only shows for users < 7 days old
+  - Dismissible with X button in top-right corner
+  - Persists dismissal in localStorage
+  - Suggested prompts: "Help me create my first agent", "Show me what I can do", "Upload a document"
+- **Layout Structure** - 2/3 (Neptune) - 1/3 (Roadmap) split using CSS Grid:
+  - Responsive: Stacks vertically on mobile/tablet
+  - Grid layout: `grid-cols-1 lg:grid-cols-[2fr_1fr]`
+  - Proper overflow handling for scrollable content
+
+#### Technical Implementation
+- **New Components:**
+  - `src/components/dashboard-v2/NeptuneDashboardWelcome.tsx` - Welcome card with dismissal
+  - `src/components/dashboard-v2/RoadmapCard.tsx` - Workspace setup checklist
+  - `src/lib/user-activity.ts` - User/workspace activity detection utilities
+- **New API Routes:**
+  - `/api/dashboard/welcome` - Returns user status (new/returning) and activity data
+  - `/api/dashboard/roadmap` - Returns dynamic roadmap items based on workspace health
+- **Modified Components:**
+  - `src/components/dashboard-v2/DashboardV2Client.tsx` - Removed tabs, added Neptune + Roadmap layout
+  - `src/components/conversations/NeptuneAssistPanel.tsx` - Added Card wrapper for fullscreen variant
+  - `src/lib/ai/system-prompt.ts` - Added 'dashboard' context for onboarding-focused responses
+- **Custom Events:**
+  - `neptune-prompt` - Roadmap card dispatches prompts to Neptune chat
+  - `roadmap-refresh` - Triggers roadmap data refresh after workspace actions
+
+#### User Experience Improvements
+**Before:**
+- Dashboard showed tabs (Home, Pathways, Wins, Tools)
+- Neptune accessible via floating button
+- No clear onboarding path
+
+**After:**
+- Dashboard opens directly to Neptune chat
+- Roadmap card guides workspace setup
+- Welcome card provides context for new users
+- All cards have consistent styling (borders, shadows)
+
+**Files Modified:**
+- `src/components/dashboard-v2/DashboardV2Client.tsx` - Complete layout restructure
+- `src/components/dashboard-v2/NeptuneDashboardWelcome.tsx` - NEW: Welcome card component
+- `src/components/dashboard-v2/RoadmapCard.tsx` - NEW: Roadmap checklist component
+- `src/components/conversations/NeptuneAssistPanel.tsx` - Card wrapper for fullscreen
+- `src/lib/user-activity.ts` - NEW: Activity detection utilities
+- `src/app/api/dashboard/welcome/route.ts` - NEW: Welcome data API
+- `src/app/api/dashboard/roadmap/route.ts` - NEW: Roadmap data API
+- `src/lib/ai/system-prompt.ts` - Dashboard context for Neptune
+- `src/app/(app)/dashboard-v2/page.tsx` - Updated metadata and props
+
+---
 
 ### December 6, 2025 - Neptune AI Intelligence Enhancement ✅
 

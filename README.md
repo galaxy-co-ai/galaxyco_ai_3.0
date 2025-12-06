@@ -105,6 +105,7 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🎯 **Dashboard Redesign** - Neptune-first experience with workspace roadmap
 - 🔒 **Security Patch** - Next.js 16.0.7 (CVE-2025-66478 patched)
 - ✅ **Proxy Migration** - Migrated from deprecated middleware to proxy convention
 - ✅ **Clean Build** - Zero deprecation warnings, zero vulnerabilities blocked
@@ -295,11 +296,12 @@ Neptune has been transformed from a basic chat assistant into an enterprise-grad
 - Google, GitHub, Salesforce, HubSpot, Slack
 - Seamless data sync
 
-### 📊 Dashboard
-- Real-time metrics
-- AI agent monitoring
-- Activity feed
-- Quick actions
+### 📊 Dashboard (Neptune-First Experience)
+- **Neptune AI as Primary Interface** - Neptune chat is the default view on login
+- **Workspace Roadmap** - Interactive checklist of setup tasks (right sidebar)
+- **Contextual Welcome** - Personalized greeting for new users (dismissible)
+- **Card-Based Layout** - Neptune chat and roadmap displayed as matching cards
+- Real-time metrics and activity tracking
 
 ---
 
