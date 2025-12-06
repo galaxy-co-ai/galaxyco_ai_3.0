@@ -138,6 +138,25 @@ export interface FinanceContext {
   }>;
 }
 
+export interface MarketingContext {
+  activeCampaigns: Array<{
+    id: string;
+    name: string;
+    type: string;
+    status: string;
+    sentCount: number;
+    openCount: number;
+    clickCount: number;
+    conversionCount: number;
+  }>;
+  campaignStats: {
+    avgOpenRate: string;
+    avgClickRate: string;
+    topChannel: string;
+  };
+  totalCampaigns: number;
+}
+
 export interface AIContextData {
   user: UserContext;
   preferences: UserPreferencesContext;
@@ -147,6 +166,7 @@ export interface AIContextData {
   agents: AgentContext;
   conversationHistory: ConversationHistoryContext;
   finance?: FinanceContext;
+  marketing?: MarketingContext;
   currentTime: string;
   currentDate: string;
   dayOfWeek: string;
@@ -501,6 +521,80 @@ async function getConversationHistoryContext(
   }
 }
 
+/**
+ * Get marketing context (campaigns, performance metrics)
+ */
+async function getMarketingContext(workspaceId: string): Promise<MarketingContext> {
+  try {
+    // Get active campaigns
+    const activeCampaigns = await db.query.campaigns.findMany({
+      where: and(
+        eq(campaigns.workspaceId, workspaceId),
+        eq(campaigns.status, 'active')
+      ),
+      orderBy: [desc(campaigns.createdAt)],
+      limit: 5,
+    });
+
+    // Get all campaigns for stats calculation
+    const allCampaigns = await db.query.campaigns.findMany({
+      where: eq(campaigns.workspaceId, workspaceId),
+    });
+
+    // Calculate average open rate and click rate
+    let totalSent = 0;
+    let totalOpens = 0;
+    let totalClicks = 0;
+    const channelCounts: Record<string, number> = {};
+
+    allCampaigns.forEach((campaign) => {
+      totalSent += campaign.sentCount || 0;
+      totalOpens += campaign.openCount || 0;
+      totalClicks += campaign.clickCount || 0;
+      
+      const channel = campaign.type || 'unknown';
+      channelCounts[channel] = (channelCounts[channel] || 0) + 1;
+    });
+
+    const avgOpenRate = totalSent > 0 ? ((totalOpens / totalSent) * 100).toFixed(1) : '0';
+    const avgClickRate = totalSent > 0 ? ((totalClicks / totalSent) * 100).toFixed(1) : '0';
+    
+    // Find top channel
+    const topChannel = Object.entries(channelCounts)
+      .sort(([, a], [, b]) => b - a)[0]?.[0] || 'email';
+
+    return {
+      activeCampaigns: activeCampaigns.map((c) => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        status: c.status,
+        sentCount: c.sentCount || 0,
+        openCount: c.openCount || 0,
+        clickCount: c.clickCount || 0,
+        conversionCount: c.conversionCount || 0,
+      })),
+      campaignStats: {
+        avgOpenRate: `${avgOpenRate}%`,
+        avgClickRate: `${avgClickRate}%`,
+        topChannel,
+      },
+      totalCampaigns: allCampaigns.length,
+    };
+  } catch (error) {
+    logger.error('Failed to get marketing context', error);
+    return {
+      activeCampaigns: [],
+      campaignStats: {
+        avgOpenRate: '0%',
+        avgClickRate: '0%',
+        topChannel: 'email',
+      },
+      totalCampaigns: 0,
+    };
+  }
+}
+
 // ============================================================================
 // FINANCE CONTEXT GATHERING
 // ============================================================================
@@ -597,7 +691,7 @@ export async function gatherAIContext(
     }
 
     // Gather all contexts in parallel for performance
-    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance] = await Promise.all([
+    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing] = await Promise.all([
       getUserPreferencesContext(workspaceId, user.id),
       getCRMContext(workspaceId),
       getCalendarContext(workspaceId),
@@ -605,6 +699,7 @@ export async function gatherAIContext(
       getAgentContext(workspaceId),
       getConversationHistoryContext(workspaceId, user.id),
       getFinanceContext(workspaceId),
+      getMarketingContext(workspaceId),
     ]);
 
     const now = new Date();
@@ -619,6 +714,7 @@ export async function gatherAIContext(
       agents: agentCtx,
       conversationHistory,
       finance,
+      marketing,
       currentTime: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       currentDate: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       dayOfWeek: days[now.getDay()],

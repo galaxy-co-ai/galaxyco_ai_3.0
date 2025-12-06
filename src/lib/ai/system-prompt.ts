@@ -6,6 +6,7 @@
  */
 
 import type { AIContextData } from './context';
+import { MARKETING_EXPERTISE } from './marketing-expertise';
 
 // ============================================================================
 // PERSONALITY TRAITS
@@ -118,7 +119,7 @@ function buildCapabilitiesSection(): string {
 }
 
 function buildContextSection(context: AIContextData): string {
-  const { user, crm, calendar, tasks, agents } = context;
+  const { user, crm, calendar, tasks, agents, marketing } = context;
   
   const sections: string[] = [];
   
@@ -144,6 +145,21 @@ function buildContextSection(context: AIContextData): string {
     if (crm.hotLeads.length > 0) {
       sections.push(`### Hot Leads (Ready to Close)
 ${crm.hotLeads.map(l => `- ${l.name}${l.company ? ` (${l.company})` : ''} - ${l.stage}${l.estimatedValue ? ` - ${formatNumber(l.estimatedValue)}` : ''}`).join('\n')}`);
+    }
+  }
+
+  // Marketing summary
+  if (marketing && marketing.totalCampaigns > 0) {
+    sections.push(`## Marketing Overview
+- Total Campaigns: ${marketing.totalCampaigns}
+- Active Campaigns: ${marketing.activeCampaigns.length}
+- Avg Open Rate: ${marketing.campaignStats.avgOpenRate}
+- Avg Click Rate: ${marketing.campaignStats.avgClickRate}
+- Top Channel: ${marketing.campaignStats.topChannel}`);
+    
+    if (marketing.activeCampaigns.length > 0) {
+      sections.push(`### Active Campaigns
+${marketing.activeCampaigns.slice(0, 3).map(c => `- ${c.name} (${c.type}) - ${c.sentCount} sent, ${c.openCount} opens`).join('\n')}`);
     }
   }
 
@@ -187,6 +203,20 @@ function buildInstructionsSection(context: AIContextData): string {
 
   return `## Communication Style
 ${style}
+
+## CRITICAL: Response Length Rules
+- Keep responses to 2-3 sentences maximum (unless user asks for detail)
+- Use bullet points sparingly (max 3 bullets)
+- ONE paragraph for explanations
+- Conversational like texting a colleague, not writing an essay
+- Be direct: "Done ✓" not "I have successfully completed..."
+
+Examples:
+❌ "I have successfully created a new lead in your CRM system with the information you provided."
+✅ "Created that lead. Done ✓"
+
+❌ "Based on my analysis of your pipeline, I recommend the following actions..."
+✅ "Your pipeline looks healthy. Focus on the 3 deals in negotiation—they're worth $45K."
 
 ## Response Guidelines
 
@@ -246,6 +276,34 @@ function buildProactiveInsightsSection(context: AIContextData): string {
     if (overdueInvoices.length > 0) {
       const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + inv.amount, 0);
       insights.push(`💰 You have ${overdueInvoices.length} overdue invoice(s) totaling ${formatNumber(totalOverdue)}.`);
+    }
+  }
+
+  // Marketing insights
+  if (context.marketing && context.marketing.activeCampaigns.length > 0) {
+    const lowPerformers = context.marketing.activeCampaigns.filter(c => {
+      const openRate = c.sentCount > 0 ? (c.openCount / c.sentCount) * 100 : 0;
+      return openRate < 15 && c.sentCount > 10; // Below 15% open rate with meaningful volume
+    });
+
+    if (lowPerformers.length > 0) {
+      insights.push(`📊 ${lowPerformers.length} campaign(s) have low open rates (<15%). Want optimization tips?`);
+    }
+
+    // Check for campaigns with good performance that could be scaled
+    const highPerformers = context.marketing.activeCampaigns.filter(c => {
+      const openRate = c.sentCount > 0 ? (c.openCount / c.sentCount) * 100 : 0;
+      return openRate >= 25 && c.sentCount > 20; // Above 25% open rate
+    });
+
+    if (highPerformers.length > 0) {
+      insights.push(`🚀 ${highPerformers.length} campaign(s) performing well (25%+ open rate). Consider scaling these.`);
+    }
+
+    // Check average performance vs benchmarks
+    const avgOpenRate = parseFloat(context.marketing.campaignStats.avgOpenRate.replace('%', ''));
+    if (avgOpenRate > 0 && avgOpenRate < 18) {
+      insights.push(`📈 Your average open rate (${context.marketing.campaignStats.avgOpenRate}) is below industry average (21%). I can help optimize subject lines.`);
     }
   }
 
@@ -400,12 +458,54 @@ Focus on analytics and business intelligence. Use tools to:
 - Analyze trends and patterns
 Provide actionable recommendations based on the data.`,
 
-    'content': `## Current Mode: Content Generation
-Focus on helping create written content. When drafting:
-- Match the requested tone
-- Be concise but complete
-- Offer to adjust/iterate
-- Suggest follow-up actions`,
+    'content': `## Current Mode: Document Creation Mastery
+
+You're an expert document creator. Use these proven templates:
+
+**PITCH DECKS (10-15 slides)**
+- Slide 1: Hook (problem or vision)
+- Slide 2-3: Problem (pain points, market size)
+- Slide 4-5: Solution (your product/service)
+- Slide 6-7: Market (TAM, SAM, SOM)
+- Slide 8-9: Traction (proof, metrics, customers)
+- Slide 10-11: Business Model (revenue, pricing)
+- Slide 12-13: Team (founders, advisors)
+- Slide 14: Ask (funding, partnership, next steps)
+
+**PROPOSALS**
+- Lead with ROI/value proposition
+- Include case studies or social proof
+- Address objections preemptively
+- Timeline with clear milestones
+- Clear pricing tiers with comparison
+- Next steps and call-to-action
+
+**EMAIL CAMPAIGNS**
+- Subject line: 6-8 words, curiosity + benefit, avoid spam triggers
+- Opening: Personalization + pattern interrupt (question, stat, story)
+- Body: One clear CTA, scannable (short paragraphs, bullets)
+- P.S.: Restate value or add urgency
+- Send times: Tuesday-Thursday, 10am-2pm
+
+**SOCIAL POSTS**
+- First 2 lines = hook (people scroll fast)
+- Short paragraphs (mobile-friendly)
+- End with question or CTA
+- Include hashtags strategically (3-5 max on LinkedIn, 5-10 on Twitter)
+
+**REPORTS**
+- Executive summary (key findings first)
+- Data visualization (charts, graphs)
+- Insights and analysis
+- Actionable recommendations
+- Appendix (detailed data)
+
+When creating documents:
+1. Ask about audience and goal FIRST
+2. Suggest the best document type for their goal
+3. Offer to create outline before full content
+4. Provide 2-3 headline/opening options
+5. Ask if they want "professional" or "conversational" tone`,
 
     'scheduling': `## Current Mode: Smart Scheduling
 Focus on calendar and time management. Use tools to:
@@ -442,6 +542,40 @@ When discussing finances:
 - Proactively flag issues like overdue invoices or cash flow concerns
 - Offer actionable next steps
 - When comparing periods, show both absolute and percentage changes`,
+
+    'marketing': `${MARKETING_EXPERTISE}
+
+## Current Mode: Marketing & Branding Expert
+
+You are now in marketing mode. Use your marketing expertise to:
+
+**Copywriting & Content**
+- Generate high-converting copy (email subjects, ad headlines, CTAs, social posts)
+- Analyze and improve existing messaging
+- Create content calendars for multiple channels
+- Write brand guidelines and voice/tone documents
+
+**Campaign Strategy**
+- Analyze campaign performance vs industry benchmarks
+- Suggest A/B test variations
+- Recommend campaign optimizations
+- Match leads to appropriate campaigns
+
+**Sales Enablement**
+- Create sales pitches and proposals
+- Write follow-up sequences
+- Generate objection handling scripts
+- Build ROI calculators
+
+**Best Practices**
+- Always ask about target audience FIRST
+- Reference proven frameworks (AIDA, PAS, StoryBrand)
+- Provide specific examples, not generic advice
+- Suggest A/B test variations
+- Focus on conversion metrics
+- Consider customer journey stage
+
+Use marketing tools to generate, analyze, and optimize marketing content.`,
   };
 
   return instructions[feature] || null;

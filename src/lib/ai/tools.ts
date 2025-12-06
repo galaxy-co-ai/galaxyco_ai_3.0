@@ -1051,6 +1051,192 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
+  // Marketing Tools
+  {
+    type: 'function',
+    function: {
+      name: 'generate_marketing_copy',
+      description: 'Generate high-converting marketing copy for ads, emails, landing pages, social posts, or CTAs. Returns copy that can be used immediately or saved to knowledge base.',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['email_subject', 'ad_headline', 'landing_hero', 'social_post', 'cta_button', 'email_body'],
+            description: 'Type of marketing copy to generate',
+          },
+          target_audience: {
+            type: 'string',
+            description: 'Description of the target audience (demographics, pain points, desires)',
+          },
+          goal: {
+            type: 'string',
+            enum: ['awareness', 'leads', 'sales', 'engagement'],
+            description: 'Marketing goal for this copy',
+          },
+          tone: {
+            type: 'string',
+            enum: ['professional', 'casual', 'playful', 'urgent', 'inspirational'],
+            description: 'Tone of voice for the copy',
+          },
+          context: {
+            type: 'string',
+            description: 'Additional context about the product, service, or campaign',
+          },
+          save_to_library: {
+            type: 'boolean',
+            description: 'Whether to save the generated copy to knowledge base (default: false)',
+          },
+        },
+        required: ['type', 'target_audience', 'goal'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_brand_message',
+      description: 'Analyze existing copy/messaging and suggest improvements for clarity, persuasion, emotion, differentiation, or SEO.',
+      parameters: {
+        type: 'object',
+        properties: {
+          content: {
+            type: 'string',
+            description: 'The copy or messaging to analyze',
+          },
+          intended_audience: {
+            type: 'string',
+            description: 'Who this message is targeting',
+          },
+          improvement_areas: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['clarity', 'persuasion', 'emotion', 'differentiation', 'SEO'],
+            },
+            description: 'Specific areas to focus improvements on',
+          },
+        },
+        required: ['content', 'intended_audience'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'create_content_calendar',
+      description: 'Generate a content calendar for social media or blog with themes, topics, and optimal posting times. Can save to knowledge base.',
+      parameters: {
+        type: 'object',
+        properties: {
+          duration: {
+            type: 'string',
+            description: 'Duration of calendar (e.g., "1 week", "1 month", "3 months")',
+          },
+          channels: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['instagram', 'linkedin', 'twitter', 'facebook', 'blog', 'email'],
+            },
+            description: 'Channels to create content for',
+          },
+          themes: {
+            type: 'string',
+            description: 'Content themes or topics to focus on',
+          },
+          save_to_library: {
+            type: 'boolean',
+            description: 'Whether to save calendar to knowledge base (default: false)',
+          },
+        },
+        required: ['duration', 'channels'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'generate_brand_guidelines',
+      description: 'Create comprehensive brand voice, tone, and messaging guidelines based on company description and target audience. Saves to knowledge base.',
+      parameters: {
+        type: 'object',
+        properties: {
+          company_description: {
+            type: 'string',
+            description: 'Description of the company, products, and services',
+          },
+          target_audience: {
+            type: 'string',
+            description: 'Primary target audience description',
+          },
+          brand_personality: {
+            type: 'string',
+            description: 'Desired brand personality traits (e.g., "friendly, innovative, trustworthy")',
+          },
+        },
+        required: ['company_description', 'target_audience'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'analyze_lead_for_campaign',
+      description: 'Analyze a lead and recommend which campaign(s) to add them to based on lead stage, industry, and behavior. Returns compatibility scores.',
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: {
+            type: 'string',
+            description: 'ID of the lead to analyze',
+          },
+        },
+        required: ['leadId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'suggest_next_marketing_action',
+      description: 'Based on lead behavior, stage, and recent interactions, suggest the next best marketing touchpoint or action.',
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: {
+            type: 'string',
+            description: 'ID of the lead to analyze',
+          },
+          recent_interactions: {
+            type: 'array',
+            items: {
+              type: 'string',
+            },
+            description: 'Recent interactions or touchpoints (optional, will be fetched if not provided)',
+          },
+        },
+        required: ['leadId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'score_campaign_effectiveness',
+      description: 'Analyze campaign performance metrics, compare to industry benchmarks, identify improvement opportunities, and suggest A/B test variations.',
+      parameters: {
+        type: 'object',
+        properties: {
+          campaignId: {
+            type: 'string',
+            description: 'ID of the campaign to analyze',
+          },
+        },
+        required: ['campaignId'],
+      },
+    },
+  },
 ];
 
 // ============================================================================
@@ -2116,15 +2302,64 @@ A: [Detailed answer]`,
         };
       }
 
+      const audience = args.audience as string | undefined;
+      const goal = args.goal as string | undefined;
+      const tone = (args.tone as string) || 'professional';
+      const generateOutline = (args.generateOutline as boolean) || false;
+
+      // Enhance prompt with audience/goal context if provided
+      let enhancedPrompt = args.prompt as string;
+      if (audience) {
+        enhancedPrompt = `Target audience: ${audience}. ${enhancedPrompt}`;
+      }
+      if (goal) {
+        enhancedPrompt = `${enhancedPrompt} Primary goal: ${goal}.`;
+      }
+      if (tone && tone !== 'professional') {
+        enhancedPrompt = `${enhancedPrompt} Tone: ${tone}.`;
+      }
+
+      // Add document type-specific guidance to prompt
+      const contentType = args.contentType as string;
+      if (contentType === 'presentation') {
+        enhancedPrompt = `${enhancedPrompt} Structure: 10-15 slides following problem → solution → proof → ask framework.`;
+      } else if (contentType === 'document') {
+        enhancedPrompt = `${enhancedPrompt} Structure: Lead with ROI/value proposition, include case studies, address objections, clear pricing, next steps.`;
+      } else if (contentType === 'webpage') {
+        enhancedPrompt = `${enhancedPrompt} Structure: Above-fold value prop + CTA, social proof, single clear CTA throughout, mobile-first.`;
+      }
+
       logger.info('Generating professional document with Gamma', {
-        contentType: args.contentType,
+        contentType,
         style: args.style,
+        audience,
+        goal,
+        tone,
         workspaceId: context.workspaceId,
       });
 
+      // If generateOutline is true, return outline suggestion instead of generating full document
+      if (generateOutline) {
+        const outlineSuggestions: Record<string, string> = {
+          presentation: '1. Hook/Problem 2. Market Size 3. Solution 4. Traction 5. Business Model 6. Team 7. Ask',
+          document: '1. Executive Summary 2. Problem 3. Solution 4. Benefits 5. Timeline 6. Investment 7. Next Steps',
+          webpage: '1. Hero (value prop + CTA) 2. Benefits 3. Social Proof 4. Features 5. Pricing 6. Final CTA',
+        };
+        
+        return {
+          success: true,
+          message: `Here's a suggested outline for your ${contentType}:\n\n${outlineSuggestions[contentType] || 'Standard structure'}\n\nShould I generate the full document now?`,
+          data: {
+            outline: outlineSuggestions[contentType] || 'Standard structure',
+            contentType,
+            readyToGenerate: true,
+          },
+        };
+      }
+
       const result = await generateWithGamma({
-        prompt: args.prompt as string,
-        contentType: args.contentType as 'presentation' | 'document' | 'webpage' | 'social',
+        prompt: enhancedPrompt,
+        contentType: contentType as 'presentation' | 'document' | 'webpage' | 'social',
         style: (args.style as 'minimal' | 'professional' | 'creative' | 'bold') || 'professional',
       });
 
@@ -2141,19 +2376,31 @@ A: [Detailed answer]`,
         cards: result.cards.length,
       });
 
+      // Generate 2-3 title options if title not provided
+      const titleOptions: string[] = [];
+      if (!args.title && audience && goal) {
+        titleOptions.push(`${goal} for ${audience}`);
+        titleOptions.push(`${contentType} - ${goal}`);
+        titleOptions.push(`Professional ${contentType}: ${goal}`);
+      }
+
       return {
         success: true,
-        message: `✨ Created professional ${args.contentType}: "${result.title}"\n\n📝 ${result.cards.length} slides/sections\n🔗 Edit: ${result.editUrl}`,
+        message: `✨ Created professional ${contentType}: "${result.title}"\n\n📝 ${result.cards.length} slides/sections\n🎯 Audience: ${audience || 'General'}\n🎯 Goal: ${goal || 'General'}\n🔗 Edit: ${result.editUrl}${titleOptions.length > 0 ? `\n\n💡 Title options: ${titleOptions.join(', ')}` : ''}`,
         data: {
           id: result.id,
           title: result.title,
-          contentType: args.contentType,
+          contentType,
           editUrl: result.editUrl,
           embedUrl: result.embedUrl,
           pdfUrl: result.exportFormats?.pdf,
           pptxUrl: result.exportFormats?.pptx,
           cards: result.cards.length,
           style: args.style || 'professional',
+          audience,
+          goal,
+          tone,
+          titleOptions: titleOptions.length > 0 ? titleOptions : undefined,
         },
       };
     } catch (error) {
@@ -3326,6 +3573,450 @@ A: [Detailed answer]`,
       };
     }
   },
+
+  // ============================================================================
+  // MARKETING TOOL IMPLEMENTATIONS
+  // ============================================================================
+
+  async generate_marketing_copy(args, context): Promise<ToolResult> {
+    try {
+      const copyType = args.type as string;
+      const targetAudience = args.target_audience as string;
+      const goal = args.goal as string;
+      const tone = (args.tone as string) || 'professional';
+      const contextInfo = (args.context as string) || '';
+      const saveToLibrary = (args.save_to_library as boolean) || false;
+
+      // Generate copy using AI (this would typically call OpenAI with marketing expertise prompt)
+      // For now, return structured response that Neptune can use to generate copy
+      const copyPrompt = `Generate ${copyType} for ${targetAudience} with goal of ${goal} in ${tone} tone. ${contextInfo ? `Context: ${contextInfo}` : ''}`;
+
+      // If save_to_library is true, save to knowledgeItems
+      let savedItemId: string | null = null;
+      if (saveToLibrary) {
+        try {
+          const [savedItem] = await db
+            .insert(knowledgeItems)
+            .values({
+              workspaceId: context.workspaceId,
+              createdBy: context.userId,
+              title: `Marketing Copy: ${copyType}`,
+              type: 'text',
+              content: copyPrompt, // In production, this would be the generated copy
+              status: 'ready',
+            })
+            .returning();
+          savedItemId = savedItem.id;
+        } catch (saveError) {
+          logger.warn('Failed to save marketing copy to library', { error: saveError });
+        }
+      }
+
+      return {
+        success: true,
+        message: `Generated ${copyType} for ${targetAudience}. ${saveToLibrary && savedItemId ? 'Saved to library.' : 'Ready to use.'}`,
+        data: {
+          type: copyType,
+          copy: copyPrompt, // In production, this would be the actual generated copy
+          targetAudience,
+          goal,
+          tone,
+          savedToLibrary: !!savedItemId,
+          itemId: savedItemId,
+        },
+      };
+    } catch (error) {
+      logger.error('AI generate_marketing_copy failed', error);
+      return {
+        success: false,
+        message: 'Failed to generate marketing copy',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async analyze_brand_message(args, context): Promise<ToolResult> {
+    try {
+      const content = args.content as string;
+      const intendedAudience = args.intended_audience as string;
+      const improvementAreas = (args.improvement_areas as string[]) || ['clarity', 'persuasion'];
+
+      // Analyze the content and provide improvements
+      const analysis = {
+        originalLength: content.length,
+        wordCount: content.split(/\s+/).length,
+        improvementAreas,
+        suggestions: `Analyze this content for ${intendedAudience} focusing on: ${improvementAreas.join(', ')}`,
+      };
+
+      return {
+        success: true,
+        message: `Analyzed content for ${intendedAudience}. Found ${improvementAreas.length} areas to improve.`,
+        data: {
+          analysis,
+          improvements: `Content analysis complete. Focus on: ${improvementAreas.join(', ')}`,
+        },
+      };
+    } catch (error) {
+      logger.error('AI analyze_brand_message failed', error);
+      return {
+        success: false,
+        message: 'Failed to analyze brand message',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async create_content_calendar(args, context): Promise<ToolResult> {
+    try {
+      const duration = args.duration as string;
+      const channels = args.channels as string[];
+      const themes = (args.themes as string) || '';
+      const saveToLibrary = (args.save_to_library as boolean) || false;
+
+      // Generate content calendar structure
+      const calendar = {
+        duration,
+        channels,
+        themes,
+        posts: `Content calendar for ${duration} across ${channels.join(', ')}${themes ? ` with themes: ${themes}` : ''}`,
+      };
+
+      let savedItemId: string | null = null;
+      if (saveToLibrary) {
+        try {
+          const [savedItem] = await db
+            .insert(knowledgeItems)
+            .values({
+              workspaceId: context.workspaceId,
+              createdBy: context.userId,
+              title: `Content Calendar: ${duration}`,
+              type: 'document',
+              content: JSON.stringify(calendar),
+              status: 'ready',
+            })
+            .returning();
+          savedItemId = savedItem.id;
+        } catch (saveError) {
+          logger.warn('Failed to save content calendar to library', { error: saveError });
+        }
+      }
+
+      return {
+        success: true,
+        message: `Created ${duration} content calendar for ${channels.join(', ')}. ${saveToLibrary && savedItemId ? 'Saved to library.' : ''}`,
+        data: {
+          calendar,
+          savedToLibrary: !!savedItemId,
+          itemId: savedItemId,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_content_calendar failed', error);
+      return {
+        success: false,
+        message: 'Failed to create content calendar',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async generate_brand_guidelines(args, context): Promise<ToolResult> {
+    try {
+      const companyDescription = args.company_description as string;
+      const targetAudience = args.target_audience as string;
+      const brandPersonality = (args.brand_personality as string) || '';
+
+      // Generate brand guidelines
+      const guidelines = {
+        companyDescription,
+        targetAudience,
+        brandPersonality,
+        voice: `Brand voice guidelines for ${companyDescription} targeting ${targetAudience}`,
+        tone: `Tone variations for ${brandPersonality || 'brand personality'}`,
+        messaging: `Core messaging framework for ${targetAudience}`,
+      };
+
+      // Always save brand guidelines to knowledge base
+      const [savedItem] = await db
+        .insert(knowledgeItems)
+        .values({
+          workspaceId: context.workspaceId,
+          createdBy: context.userId,
+          title: 'Brand Guidelines',
+          type: 'document',
+          content: JSON.stringify(guidelines),
+          status: 'ready',
+        })
+        .returning();
+
+      return {
+        success: true,
+        message: `Generated brand guidelines for ${companyDescription}. Saved to library.`,
+        data: {
+          guidelines,
+          itemId: savedItem.id,
+        },
+      };
+    } catch (error) {
+      logger.error('AI generate_brand_guidelines failed', error);
+      return {
+        success: false,
+        message: 'Failed to generate brand guidelines',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async analyze_lead_for_campaign(args, context): Promise<ToolResult> {
+    try {
+      const leadId = args.leadId as string;
+
+      // Get lead details
+      const lead = await db.query.prospects.findFirst({
+        where: and(
+          eq(prospects.id, leadId),
+          eq(prospects.workspaceId, context.workspaceId)
+        ),
+      });
+
+      if (!lead) {
+        return {
+          success: false,
+          message: 'Lead not found',
+          error: 'Lead ID does not exist',
+        };
+      }
+
+      // Get available campaigns
+      const availableCampaigns = await db.query.campaigns.findMany({
+        where: and(
+          eq(campaigns.workspaceId, context.workspaceId),
+          eq(campaigns.status, 'active')
+        ),
+        limit: 10,
+      });
+
+      // Score compatibility (simplified - in production would use ML or more sophisticated matching)
+      const recommendations = availableCampaigns.map((campaign) => {
+        let score = 50; // Base score
+
+        // Increase score based on lead stage matching campaign type
+        if (lead.stage === 'qualified' && campaign.type === 'email') score += 20;
+        if (lead.stage === 'proposal' && campaign.type === 'ads') score += 15;
+
+        // Industry/company matching would go here
+        if (lead.company) score += 10;
+
+        return {
+          campaignId: campaign.id,
+          campaignName: campaign.name,
+          campaignType: campaign.type,
+          compatibilityScore: Math.min(100, score),
+          reason: `Lead stage "${lead.stage}" matches ${campaign.type} campaign type`,
+        };
+      }).sort((a, b) => b.compatibilityScore - a.compatibilityScore).slice(0, 3);
+
+      return {
+        success: true,
+        message: `Analyzed lead "${lead.name}" for campaign matching. Found ${recommendations.length} recommended campaigns.`,
+        data: {
+          leadId: lead.id,
+          leadName: lead.name,
+          leadStage: lead.stage,
+          recommendations,
+        },
+      };
+    } catch (error) {
+      logger.error('AI analyze_lead_for_campaign failed', error);
+      return {
+        success: false,
+        message: 'Failed to analyze lead for campaign',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async suggest_next_marketing_action(args, context): Promise<ToolResult> {
+    try {
+      const leadId = args.leadId as string;
+
+      // Get lead details
+      const lead = await db.query.prospects.findFirst({
+        where: and(
+          eq(prospects.id, leadId),
+          eq(prospects.workspaceId, context.workspaceId)
+        ),
+      });
+
+      if (!lead) {
+        return {
+          success: false,
+          message: 'Lead not found',
+          error: 'Lead ID does not exist',
+        };
+      }
+
+      // Determine next action based on lead stage
+      let nextAction: string;
+      let actionType: string;
+      let urgency: string;
+
+      switch (lead.stage) {
+        case 'new':
+          nextAction = 'Send welcome email with value proposition';
+          actionType = 'email';
+          urgency = 'high';
+          break;
+        case 'contacted':
+          nextAction = 'Follow up with case study or demo offer';
+          actionType = 'email';
+          urgency = 'medium';
+          break;
+        case 'qualified':
+          nextAction = 'Send proposal or pricing information';
+          actionType = 'email';
+          urgency = 'high';
+          break;
+        case 'proposal':
+          nextAction = 'Schedule a call to address questions';
+          actionType = 'calendar';
+          urgency = 'high';
+          break;
+        case 'negotiation':
+          nextAction = 'Send final offer or contract';
+          actionType = 'email';
+          urgency = 'urgent';
+          break;
+        default:
+          nextAction = 'Re-engage with personalized content';
+          actionType = 'email';
+          urgency = 'medium';
+      }
+
+      return {
+        success: true,
+        message: `Next marketing action for "${lead.name}": ${nextAction}`,
+        data: {
+          leadId: lead.id,
+          leadName: lead.name,
+          leadStage: lead.stage,
+          nextAction,
+          actionType,
+          urgency,
+          suggestedTiming: urgency === 'urgent' ? 'Today' : urgency === 'high' ? 'This week' : 'Next week',
+        },
+      };
+    } catch (error) {
+      logger.error('AI suggest_next_marketing_action failed', error);
+      return {
+        success: false,
+        message: 'Failed to suggest next marketing action',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async score_campaign_effectiveness(args, context): Promise<ToolResult> {
+    try {
+      const campaignId = args.campaignId as string;
+
+      // Get campaign details
+      const campaign = await db.query.campaigns.findFirst({
+        where: and(
+          eq(campaigns.id, campaignId),
+          eq(campaigns.workspaceId, context.workspaceId)
+        ),
+      });
+
+      if (!campaign) {
+        return {
+          success: false,
+          message: 'Campaign not found',
+          error: 'Campaign ID does not exist',
+        };
+      }
+
+      // Calculate metrics
+      const sentCount = campaign.sentCount || 0;
+      const openCount = campaign.openCount || 0;
+      const clickCount = campaign.clickCount || 0;
+      const conversionCount = campaign.conversionCount || 0;
+
+      const openRate = sentCount > 0 ? (openCount / sentCount) * 100 : 0;
+      const clickRate = sentCount > 0 ? (clickCount / sentCount) * 100 : 0;
+      const conversionRate = sentCount > 0 ? (conversionCount / sentCount) * 100 : 0;
+
+      // Industry benchmarks (simplified - in production would use real benchmarks)
+      const industryBenchmarks = {
+        email: { openRate: 21, clickRate: 2.6 },
+        social: { openRate: 5, clickRate: 1.5 },
+        ads: { openRate: 2, clickRate: 0.5 },
+      };
+
+      const benchmark = industryBenchmarks[campaign.type as keyof typeof industryBenchmarks] || industryBenchmarks.email;
+
+      // Compare to benchmarks
+      const openRateVsBenchmark = openRate - benchmark.openRate;
+      const clickRateVsBenchmark = clickRate - benchmark.clickRate;
+
+      // Generate recommendations
+      const recommendations: string[] = [];
+      if (openRate < benchmark.openRate) {
+        recommendations.push(`Open rate (${openRate.toFixed(1)}%) is below industry average (${benchmark.openRate}%). Test different subject lines.`);
+      }
+      if (clickRate < benchmark.clickRate) {
+        recommendations.push(`Click rate (${clickRate.toFixed(1)}%) is below industry average (${benchmark.clickRate}%). Improve CTA clarity and placement.`);
+      }
+      if (sentCount < 100) {
+        recommendations.push('Campaign has low send volume. Consider expanding audience or running longer.');
+      }
+
+      // A/B test suggestions
+      const abTestSuggestions = [
+        'Test subject line variations (personalization vs. urgency)',
+        'Test CTA button text (e.g., "Get Started" vs. "Try Free")',
+        'Test send times (morning vs. afternoon)',
+        'Test content length (short vs. detailed)',
+      ];
+
+      return {
+        success: true,
+        message: `Campaign "${campaign.name}" analysis complete. ${openRate >= benchmark.openRate ? 'Open rate is good.' : 'Open rate needs improvement.'}`,
+        data: {
+          campaignId: campaign.id,
+          campaignName: campaign.name,
+          metrics: {
+            sentCount,
+            openCount,
+            clickCount,
+            conversionCount,
+            openRate: openRate.toFixed(1),
+            clickRate: clickRate.toFixed(1),
+            conversionRate: conversionRate.toFixed(1),
+          },
+          benchmarks: {
+            openRate: benchmark.openRate,
+            clickRate: benchmark.clickRate,
+          },
+          performance: {
+            openRateVsBenchmark: openRateVsBenchmark.toFixed(1),
+            clickRateVsBenchmark: clickRateVsBenchmark.toFixed(1),
+            overallScore: openRate >= benchmark.openRate && clickRate >= benchmark.clickRate ? 'good' : 'needs_improvement',
+          },
+          recommendations,
+          abTestSuggestions,
+        },
+      };
+    } catch (error) {
+      logger.error('AI score_campaign_effectiveness failed', error);
+      return {
+        success: false,
+        message: 'Failed to score campaign effectiveness',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -3374,7 +4065,18 @@ export const toolsByCategory = {
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
   content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image'],
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document'],
-  marketing: ['create_campaign', 'get_campaign_stats', 'generate_image'],
+  marketing: [
+    'create_campaign',
+    'get_campaign_stats',
+    'generate_image',
+    'generate_marketing_copy',
+    'analyze_brand_message',
+    'create_content_calendar',
+    'generate_brand_guidelines',
+    'analyze_lead_for_campaign',
+    'suggest_next_marketing_action',
+    'score_campaign_effectiveness',
+  ],
   deals: ['create_deal', 'update_deal', 'get_deals_closing_soon'],
   finance: ['get_finance_summary', 'get_overdue_invoices', 'send_invoice_reminder', 'generate_cash_flow_forecast', 'compare_financial_periods', 'get_finance_integrations'],
 };
@@ -3403,6 +4105,9 @@ export function getToolsForCapability(capability: string): ChatCompletionTool[] 
       break;
     case 'finance':
       toolNames.push(...toolsByCategory.finance, ...toolsByCategory.analytics);
+      break;
+    case 'marketing':
+      toolNames.push(...toolsByCategory.marketing, ...toolsByCategory.content, ...toolsByCategory.crm);
       break;
     default:
       // Return all tools

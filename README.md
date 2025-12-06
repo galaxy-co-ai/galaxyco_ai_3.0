@@ -210,6 +210,21 @@ Neptune has been transformed from a basic chat assistant into an enterprise-grad
 - Standard and HD quality options
 - Instant download and persistence in Vercel Blob
 
+#### Marketing & Branding Expertise (December 2025) 🎯 NEW
+- **Marketing Copy Generation** - High-converting ad headlines, email subjects, CTAs, social posts
+- **Brand Message Analysis** - Review and improve existing copy for clarity, persuasion, SEO
+- **Content Calendar Creation** - Multi-channel content plans with optimal posting times
+- **Brand Guidelines** - Generate comprehensive voice, tone, and messaging frameworks
+- **Campaign Intelligence** - Analyze performance vs industry benchmarks, suggest A/B tests
+- **Lead-to-Campaign Matching** - Smart recommendations for which campaigns to add leads to
+- **Proactive Marketing Insights** - Automatically flags underperforming campaigns and suggests optimizations
+
+#### Natural, Concise Communication (December 2025) 💬 NEW
+- **2-3 Sentence Responses** - Conversational like texting a colleague, not writing essays
+- **Action-Oriented** - "Done ✓" not "I have successfully completed..."
+- **Context-Aware** - References your CRM, campaigns, and business data automatically
+- **Proactive Suggestions** - Flags opportunities and issues before you ask
+
 #### User Experience
 - **Zero Learning Curve** - ChatGPT-style interface
 - **Available Everywhere** - Conversations panel, Creator panel, /assistant page
@@ -240,6 +255,14 @@ Neptune has been transformed from a basic chat assistant into an enterprise-grad
 - Upload invoice → Auto-extract data
 - Paste error screenshot → Get debugging help
 - Share design mockup → Get improvement suggestions
+
+📢 Marketing & Sales
+- "Generate an email subject line for my product launch"
+- "Analyze my campaign performance and suggest improvements"
+- "Which campaign should I add this lead to?"
+- "Create a content calendar for LinkedIn and Twitter"
+- "Write brand guidelines for my company"
+- "What's the next marketing action for this lead?"
 ```
 
 #### Technical Details

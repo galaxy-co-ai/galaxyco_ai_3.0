@@ -298,8 +298,10 @@ export async function POST(request: Request) {
         messages,
         tools: tools.length > 0 ? tools : undefined,
         tool_choice: tools.length > 0 ? 'auto' : undefined,
-        temperature: 0.7,
-        max_tokens: 1000,
+        temperature: 0.8,
+        max_tokens: 300,
+        frequency_penalty: 0.3,
+        presence_penalty: 0.2,
       });
 
       let responseMessage = completion.choices[0]?.message;
@@ -346,8 +348,10 @@ export async function POST(request: Request) {
           messages,
           tools: tools.length > 0 ? tools : undefined,
           tool_choice: tools.length > 0 ? 'auto' : undefined,
-          temperature: 0.7,
-          max_tokens: 1000,
+          temperature: 0.8,
+          max_tokens: 300,
+          frequency_penalty: 0.3,
+          presence_penalty: 0.2,
         });
 
         responseMessage = completion.choices[0]?.message;
