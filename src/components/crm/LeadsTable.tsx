@@ -4,7 +4,7 @@ import { Lead } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sparkles, Mail, Phone, UserPlus, Target, ArrowRight } from "lucide-react";
+import { Sparkles, Mail, Phone, UserPlus, Target, ArrowRight, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LeadsTableProps {
@@ -12,6 +12,7 @@ interface LeadsTableProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onAddNew?: () => void;
+  onDelete?: (id: string) => void;
   formatDate: (date: Date | null) => string;
   formatCurrency: (cents: number) => string;
 }
@@ -21,6 +22,7 @@ export default function LeadsTable({
   selectedId,
   onSelect,
   onAddNew,
+  onDelete,
   formatDate,
   formatCurrency,
 }: LeadsTableProps) {
@@ -132,7 +134,7 @@ export default function LeadsTable({
                 )}
               </div>
 
-              <div className="flex items-center gap-3 mt-3">
+              <div className="flex items-center gap-3 mt-3 relative">
                 <Badge
                   variant="outline"
                   className={cn("text-xs capitalize", getStageColor(lead.stage))}
@@ -144,9 +146,28 @@ export default function LeadsTable({
                     {formatCurrency(lead.estimatedValue)}
                   </span>
                 )}
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {formatDate(lead.lastContactedAt)}
-                </span>
+                {onDelete && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onDelete(lead.id);
+                    }}
+                    className="ml-auto p-1.5 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onDelete(lead.id);
+                      }
+                    }}
+                    aria-label={`Delete ${lead.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </div>
+                )}
               </div>
             </div>
           </div>

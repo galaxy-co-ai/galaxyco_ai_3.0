@@ -105,6 +105,19 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🎨 **Dashboard Refinements** - Enhanced dashboard experience:
+  - Dashboard title updated from "NEPTUNE" to "DASHBOARD"
+  - Icon updates: Planet icon for dashboard, Compass icon for roadmap
+  - Branded headers added to Neptune and Roadmap cards (matching main header design)
+  - Roadmap loading fixes with timeout protection and fallback items
+  - Improved padding and spacing throughout dashboard
+- 🗑️ **CRM Delete Functionality** - Quick delete for CRM items:
+  - Trash icons on hover for leads, contacts, and organizations
+  - Immediate deletion with optimistic UI updates
+  - New API endpoint for organization deletion
+- 📊 **Dynamic Badge Counts** - Real-time updates for CRM tab badges:
+  - Badges automatically update when items are added/deleted
+  - Reflects actual database counts
 - 🚀 **Neptune AI Power Enhancement** - Transformed into proactive, autonomous, learning assistant:
   - 15+ new action-oriented tools (sales, marketing, operations, finance)
   - Learning-based autonomy system (starts cautious, becomes autonomous over time)
@@ -121,7 +134,7 @@ npm run typecheck           # TypeScript validation
 - ✅ Test coverage: 70% (API routes, components, E2E)
 - ✅ TypeScript strict mode passing (0 errors)
 - ✅ **Agent runs queue through Trigger.dev** — Durable, retried execution via `agent_executions`
-- ✅ **UI Improvements** - Roadmap badges with expandable dropdowns, agent delete on hover
+- ✅ **UI Improvements** - Roadmap badges with expandable dropdowns, agent delete on hover, Laboratory responsiveness fixes
 
 ```
 Build:        ████████████████████ 100% ✅ Passing (Deployed to Vercel)

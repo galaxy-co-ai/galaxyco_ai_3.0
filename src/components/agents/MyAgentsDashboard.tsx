@@ -352,11 +352,11 @@ export default function MyAgentsDashboard({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden gap-6 p-6">
+      <div className="flex flex-1 overflow-hidden gap-3 sm:gap-4 md:gap-6 p-3 sm:p-4 md:p-6">
         {activeTab === "laboratory" ? (
           // Laboratory tab with optional Neptune
           <>
-            <Card className="flex-1 rounded-2xl shadow-sm border bg-card overflow-visible transition-all">
+            <Card className="flex-1 rounded-2xl shadow-sm border bg-card overflow-hidden transition-all min-w-0">
               <AgentLaboratoryTab neptuneOpen={showNeptune} />
             </Card>
             

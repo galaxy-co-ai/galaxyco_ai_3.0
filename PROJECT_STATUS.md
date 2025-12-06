@@ -36,12 +36,12 @@
 |-------|-------|
 | **Date** | December 6, 2025 |
 | **Build Status** | ✅ Passing (Verified - Local & Vercel) |
-| **Latest Commit** | Neptune AI Power Enhancement - Proactive, Autonomous, Learning Assistant |
+| **Latest Commit** | Dashboard Refinements & CRM Enhancements - Icon updates, branded headers, roadmap fixes, delete functionality |
 | **Environment Status** | ✅ ALL SYSTEMS OPERATIONAL (19/19 services) |
 | **Overall Completion** | 100% Production-Ready + Enhanced AI + Proactive Intelligence |
 | **Test Coverage** | 70% (API routes, components, E2E) |
 | **Deployment Status** | ✅ Deployed to Vercel Production |
-| **Latest Update** | Neptune AI transformed into proactive, autonomous assistant with learning capabilities, 15+ new action tools, and enhanced UI |
+| **Latest Update** | Dashboard title updated, icons changed (planet/compass), branded headers added, roadmap loading fixed, CRM delete functionality, dynamic badge counts |
 
 ---
 
@@ -83,6 +83,47 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Dashboard Refinements & CRM Enhancements ✅
+
+#### Dashboard v2 Improvements
+- **Dashboard Title Update** - Changed header title from "NEPTUNE" to "DASHBOARD" for clarity
+- **Icon Updates** - Replaced icons with semantic choices:
+  - Dashboard header: Planet icon (Globe) instead of Sparkles
+  - Roadmap card: Compass icon instead of Sparkles
+- **Branded Headers** - Added consistent branded headers to both Neptune and Roadmap cards:
+  - Gradient icons with drop shadows
+  - Uppercase branded typography
+  - Matching design language with main dashboard header
+- **Roadmap Loading Fixes** - Comprehensive improvements to roadmap data loading:
+  - Added timeout protection (8-10 seconds) to prevent infinite loading
+  - Improved error handling with fallback to default roadmap items
+  - Enhanced logging for debugging
+  - Component lifecycle management to prevent memory leaks
+  - Default roadmap items shown when API fails (ensures users always see actionable items)
+- **Layout & Spacing** - Fixed padding and spacing issues:
+  - Consistent `px-6` padding throughout dashboard
+  - Added `pt-4` top padding to content grid for proper spacing from header
+  - Removed overflow clipping that was cutting off rounded corners
+
+#### CRM Enhancements
+- **Delete Functionality** - Added trash icons to CRM items for quick deletion:
+  - Trash icon appears on hover for leads, contacts, and organizations
+  - Immediate deletion (no confirmation toasts per user preference)
+  - Optimistic UI updates for instant feedback
+  - Proper event handling to prevent nested button issues
+- **Dynamic Badge Counts** - Tab badges now update automatically:
+  - Leads, Companies, Contacts, and Deals badges reflect actual database counts
+  - Uses `useMemo` to recalculate when items are added/deleted
+  - Real-time updates without page refresh
+- **API Endpoint** - Created `/api/crm/customers/[id]/route.ts` DELETE endpoint for organizations
+
+#### Laboratory Tab Responsiveness
+- **Improved Mobile Layout** - Fixed responsiveness issues in agent creation wizard:
+  - Better grid breakpoints (`md:grid-cols-2 xl:grid-cols-3`)
+  - Improved text wrapping and truncation
+  - Better container overflow handling
+  - Enhanced spacing for smaller screens
 
 ### December 6, 2025 - Neptune AI Power Enhancement & UI Improvements ✅
 

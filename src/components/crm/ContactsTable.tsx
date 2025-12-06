@@ -4,7 +4,7 @@ import { Contact } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, Building2, Users, UserPlus } from "lucide-react";
+import { Mail, Phone, Building2, Users, UserPlus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ContactsTableProps {
@@ -12,6 +12,7 @@ interface ContactsTableProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onAddNew?: () => void;
+  onDelete?: (id: string) => void;
 }
 
 export default function ContactsTable({
@@ -19,6 +20,7 @@ export default function ContactsTable({
   selectedId,
   onSelect,
   onAddNew,
+  onDelete,
 }: ContactsTableProps) {
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase().slice(0, 2);
@@ -99,19 +101,43 @@ export default function ContactsTable({
                 )}
               </div>
 
-              {contact.tags && contact.tags.length > 0 && (
-                <div className="flex items-center gap-2 mt-3">
-                  {contact.tags.slice(0, 3).map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="outline"
-                      className="text-[9px] px-1.5 py-0 h-4 bg-slate-50 border-slate-200 text-slate-700"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center justify-between mt-3">
+                {contact.tags && contact.tags.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    {contact.tags.slice(0, 3).map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="outline"
+                        className="text-[9px] px-1.5 py-0 h-4 bg-slate-50 border-slate-200 text-slate-700"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {onDelete && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onDelete(contact.id);
+                    }}
+                    className="ml-auto p-1.5 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onDelete(contact.id);
+                      }
+                    }}
+                    aria-label={`Delete ${contact.firstName} ${contact.lastName}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </button>

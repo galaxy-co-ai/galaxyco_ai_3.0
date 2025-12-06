@@ -49,17 +49,29 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get workspace health
-    const workspaceHealth = await getWorkspaceHealth(finalWorkspaceId);
+    // Get workspace health (optional - don't fail if this errors)
+    let workspaceHealth;
+    try {
+      workspaceHealth = await getWorkspaceHealth(finalWorkspaceId);
+    } catch (error) {
+      logger.warn('Failed to get workspace health, continuing anyway', { error, workspaceId: finalWorkspaceId });
+    }
 
     // Build roadmap items based on workspace state
     const roadmapItems: RoadmapItem[] = [];
 
     // 1. Create your first agent
-    const [agentsCount] = await db
-      .select({ count: count() })
-      .from(agents)
-      .where(eq(agents.workspaceId, finalWorkspaceId));
+    let agentsCount;
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(agents)
+        .where(eq(agents.workspaceId, finalWorkspaceId));
+      agentsCount = result[0];
+    } catch (error) {
+      logger.error('Error counting agents', { error, workspaceId: finalWorkspaceId });
+      agentsCount = { count: 0 };
+    }
 
     roadmapItems.push({
       id: 'create-agent',
@@ -76,10 +88,17 @@ export async function GET(request: NextRequest) {
     });
 
     // 2. Add contacts to CRM
-    const [contactsCount] = await db
-      .select({ count: count() })
-      .from(contacts)
-      .where(eq(contacts.workspaceId, finalWorkspaceId));
+    let contactsCount;
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(contacts)
+        .where(eq(contacts.workspaceId, finalWorkspaceId));
+      contactsCount = result[0];
+    } catch (error) {
+      logger.error('Error counting contacts', { error, workspaceId: finalWorkspaceId });
+      contactsCount = { count: 0 };
+    }
 
     roadmapItems.push({
       id: 'add-contacts',
@@ -96,10 +115,17 @@ export async function GET(request: NextRequest) {
     });
 
     // 3. Upload documents to knowledge base
-    const [knowledgeCount] = await db
-      .select({ count: count() })
-      .from(knowledgeItems)
-      .where(eq(knowledgeItems.workspaceId, finalWorkspaceId));
+    let knowledgeCount;
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(knowledgeItems)
+        .where(eq(knowledgeItems.workspaceId, finalWorkspaceId));
+      knowledgeCount = result[0];
+    } catch (error) {
+      logger.error('Error counting knowledge items', { error, workspaceId: finalWorkspaceId });
+      knowledgeCount = { count: 0 };
+    }
 
     roadmapItems.push({
       id: 'upload-documents',
@@ -116,15 +142,22 @@ export async function GET(request: NextRequest) {
     });
 
     // 4. Connect integrations
-    const [integrationsCount] = await db
-      .select({ count: count() })
-      .from(integrations)
-      .where(
-        and(
-          eq(integrations.workspaceId, finalWorkspaceId),
-          eq(integrations.status, 'active')
-        )
-      );
+    let integrationsCount;
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(integrations)
+        .where(
+          and(
+            eq(integrations.workspaceId, finalWorkspaceId),
+            eq(integrations.status, 'active')
+          )
+        );
+      integrationsCount = result[0];
+    } catch (error) {
+      logger.error('Error counting integrations', { error, workspaceId: finalWorkspaceId });
+      integrationsCount = { count: 0 };
+    }
 
     roadmapItems.push({
       id: 'connect-integrations',
@@ -159,14 +192,24 @@ export async function GET(request: NextRequest) {
       (completedCount / roadmapItems.length) * 100
     );
 
+    logger.info('Roadmap API success', { 
+      itemCount: roadmapItems.length,
+      completionPercentage,
+      workspaceId: finalWorkspaceId 
+    });
+
     return NextResponse.json({
       items: roadmapItems,
       completionPercentage,
     });
   } catch (error) {
     logger.error('Error fetching roadmap data', { error });
+    console.error('[Roadmap API] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch roadmap data' },
+      { 
+        error: 'Failed to fetch roadmap data',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

@@ -8,11 +8,13 @@
  */
 
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { 
-  Sparkles, 
+  Globe, 
   Users, 
   Bot, 
   Plug,
+  Compass,
 } from 'lucide-react';
 import { DashboardV2Data } from '@/types/dashboard-v2';
 import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
@@ -40,17 +42,17 @@ export default function DashboardV2Client({
       <div className="border-b bg-background px-6 py-4">
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-3">
-            <Sparkles 
+            <Globe 
               className="w-7 h-7"
               style={{
-                stroke: 'url(#icon-gradient-neptune)',
+                stroke: 'url(#icon-gradient-dashboard)',
                 strokeWidth: 2,
                 filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
               }}
             />
             <svg width="0" height="0" className="absolute">
               <defs>
-                <linearGradient id="icon-gradient-neptune" x1="0%" y1="0%" x2="100%" y2="100%">
+                <linearGradient id="icon-gradient-dashboard" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" stopColor="#8b5cf6" />
                   <stop offset="100%" stopColor="#3b82f6" />
                 </linearGradient>
@@ -62,7 +64,7 @@ export default function DashboardV2Client({
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
               }}
             >
-              N E P T U N E
+              D A S H B O A R D
             </h1>
           </div>
 
@@ -101,7 +103,7 @@ export default function DashboardV2Client({
         )}
 
         {/* Content Split: 2/3 Neptune, 1/3 Roadmap */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 px-4 sm:px-6 pb-6">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 px-6 pt-4 pb-6">
           {/* Neptune Chat Interface - 2/3 width */}
           <div className="min-w-0 min-h-0 flex flex-col">
             <NeptuneAssistPanel
@@ -114,12 +116,42 @@ export default function DashboardV2Client({
 
           {/* Roadmap Card - 1/3 width */}
           <div className="min-w-0 min-h-0 overflow-hidden flex flex-col">
-            {workspaceId ? (
+            {workspaceId && workspaceId.trim() !== '' ? (
               <RoadmapCard workspaceId={workspaceId} />
             ) : (
-              <div className="h-full p-6 bg-muted/50 rounded-lg flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">Loading roadmap...</p>
-              </div>
+              <Card className="h-full flex flex-col overflow-hidden">
+                <div className="border-b bg-background px-6 py-4 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <Compass 
+                      className="w-6 h-6"
+                      style={{
+                        stroke: 'url(#icon-gradient-roadmap-missing)',
+                        strokeWidth: 2,
+                        filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+                      }}
+                    />
+                    <svg width="0" height="0" className="absolute">
+                      <defs>
+                        <linearGradient id="icon-gradient-roadmap-missing" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#8b5cf6" />
+                          <stop offset="100%" stopColor="#3b82f6" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <h2 
+                      className="branded-page-title text-xl uppercase"
+                      style={{ 
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                      }}
+                    >
+                      R O A D M A P
+                    </h2>
+                  </div>
+                </div>
+                <div className="flex-1 flex items-center justify-center p-6">
+                  <p className="text-sm text-muted-foreground">Unable to load roadmap</p>
+                </div>
+              </Card>
             )}
           </div>
         </div>

@@ -137,11 +137,11 @@ export default function LaboratoryWizard({
   const canProceed = step === 1 || (step === 2 && config.name.trim().length > 0);
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full min-w-0">
       {/* Left Panel - Configurator */}
-      <div className="flex-1 flex flex-col p-6 min-h-0">
+      <div className="flex-1 flex flex-col p-3 sm:p-4 md:p-6 min-h-0 min-w-0 overflow-hidden">
         {/* Header with Step Indicator */}
-        <div className="flex flex-col items-center gap-3 mb-6">
+        <div className="flex flex-col items-center gap-2 sm:gap-3 mb-4 sm:mb-6 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
               <Sparkles className="h-5 w-5 text-white" />
@@ -155,8 +155,8 @@ export default function LaboratoryWizard({
 
         {/* Step Content - Step 1 needs scrolling in compact mode, overflow-visible in grid mode */}
         <div className={cn(
-          "flex-1 min-h-0", 
-          step === 1 ? (neptuneOpen ? "overflow-y-auto" : "overflow-visible") : "overflow-hidden"
+          "flex-1 min-h-0 min-w-0", 
+          step === 1 ? (neptuneOpen ? "overflow-y-auto" : "overflow-y-auto") : "overflow-y-auto"
         )}>
           <AnimatePresence mode="wait">
             {step === 1 && (

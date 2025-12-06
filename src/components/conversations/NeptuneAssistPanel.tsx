@@ -301,8 +301,37 @@ export default function NeptuneAssistPanel({
   return (
     <NeptuneCardWrapper isFullscreen={isFullscreen}>
       <div className={`flex h-full w-full flex-col ${isFullscreen ? 'bg-card' : 'bg-background'}`}>
-      {/* Header - Only show in default variant */}
-      {!isFullscreen && (
+      {/* Header */}
+      {isFullscreen ? (
+        <div className="border-b bg-background px-6 py-4 shrink-0">
+          <div className="flex items-center gap-3">
+            <Sparkles 
+              className="w-6 h-6"
+              style={{
+                stroke: 'url(#icon-gradient-neptune-card)',
+                strokeWidth: 2,
+                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
+              }}
+            />
+            <svg width="0" height="0" className="absolute">
+              <defs>
+                <linearGradient id="icon-gradient-neptune-card" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#3b82f6" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <h2 
+              className="branded-page-title text-xl uppercase"
+              style={{ 
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+              }}
+            >
+              N E P T U N E
+            </h2>
+          </div>
+        </div>
+      ) : (
         <div className="border-b p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

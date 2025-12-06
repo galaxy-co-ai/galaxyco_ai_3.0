@@ -4,7 +4,7 @@ import { Organization } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Building2, Mail, Phone, Globe, Plus, Briefcase } from "lucide-react";
+import { Building2, Mail, Phone, Globe, Plus, Briefcase, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrganizationsTableProps {
@@ -12,6 +12,7 @@ interface OrganizationsTableProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onAddNew?: () => void;
+  onDelete?: (id: string) => void;
   formatDate: (date: Date | null) => string;
   formatCurrency: (cents: number) => string;
 }
@@ -21,6 +22,7 @@ export default function OrganizationsTable({
   selectedId,
   onSelect,
   onAddNew,
+  onDelete,
   formatDate,
   formatCurrency,
 }: OrganizationsTableProps) {
@@ -128,7 +130,7 @@ export default function OrganizationsTable({
                 )}
               </div>
 
-              <div className="flex items-center gap-3 mt-3">
+              <div className="flex items-center gap-3 mt-3 relative">
                 {org.industry && (
                   <span className="text-xs text-muted-foreground">{org.industry}</span>
                 )}
@@ -136,13 +138,32 @@ export default function OrganizationsTable({
                   <span className="text-xs text-muted-foreground">· {org.size}</span>
                 )}
                 {org.revenue > 0 && (
-                  <span className="text-xs font-medium text-muted-foreground ml-auto">
+                  <span className="text-xs font-medium text-muted-foreground">
                     {formatCurrency(org.revenue)}
                   </span>
                 )}
-                <span className="text-xs text-muted-foreground ml-auto">
-                  {formatDate(org.lastContactedAt)}
-                </span>
+                {onDelete && (
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      onDelete(org.id);
+                    }}
+                    className="ml-auto p-1.5 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        onDelete(org.id);
+                      }
+                    }}
+                    aria-label={`Delete ${org.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </div>
+                )}
               </div>
             </div>
           </div>

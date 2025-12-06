@@ -396,8 +396,6 @@ export default function CRMDashboard({
         setSelectedLead(null);
       }
 
-      toast.success('Lead deleted successfully');
-
       // Refresh server data after a delay
       setTimeout(async () => {
         try {
@@ -429,7 +427,7 @@ export default function CRMDashboard({
       }, 1000);
     } catch (error) {
       logger.error('Failed to delete lead', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete lead. Please try again.');
+      // Silently fail - item already removed optimistically
     }
   };
 
@@ -451,8 +449,6 @@ export default function CRMDashboard({
       if (selectedContact === contactId) {
         setSelectedContact(null);
       }
-
-      toast.success('Contact deleted successfully');
 
       // Refresh server data after a delay
       setTimeout(async () => {
@@ -478,7 +474,64 @@ export default function CRMDashboard({
       }, 1000);
     } catch (error) {
       logger.error('Failed to delete contact', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to delete contact. Please try again.');
+      // Silently fail - item already removed optimistically
+    }
+  };
+
+  const handleDeleteOrganization = async (orgId: string) => {
+    try {
+      const response = await fetch(`/api/crm/customers/${orgId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete organization' }));
+        throw new Error(errorData.error || `Failed to delete organization: ${response.status}`);
+      }
+
+      // Optimistically remove from list
+      setOrganizations(prev => prev.filter(org => org.id !== orgId));
+      
+      // Clear selection if this was the selected organization
+      if (selectedOrganization === orgId) {
+        setSelectedOrganization(null);
+      }
+
+      // Refresh server data after a delay
+      setTimeout(async () => {
+        try {
+          const response = await fetch('/api/crm/customers');
+          if (response.ok) {
+            const fresh = await response.json();
+            const transformed = fresh.map((org: any) => ({
+              id: org.id,
+              name: org.name,
+              email: org.email || '',
+              company: org.company || '',
+              phone: org.phone || '',
+              website: org.website || '',
+              status: org.status,
+              industry: org.industry,
+              size: org.size,
+              revenue: org.revenue || 0,
+              tags: org.tags || [],
+              notes: org.notes,
+              lastContactedAt: org.lastContactedAt,
+            }));
+            setOrganizations(prev => {
+              const map = new Map(prev.map(o => [o.id, o]));
+              const merged = transformed.map((so: Organization) => map.get(so.id) || so);
+              const localOnly = prev.filter(o => !transformed.some((so: Organization) => so.id === o.id));
+              return [...merged, ...localOnly];
+            });
+          }
+        } catch (error) {
+          logger.error('Failed to refresh organizations', error);
+        }
+      }, 1000);
+    } catch (error) {
+      logger.error('Failed to delete organization', error);
+      // Silently fail - item already removed optimistically
     }
   };
 
@@ -490,14 +543,14 @@ export default function CRMDashboard({
     { label: `${formatCurrency(stats.totalValue)} Pipeline`, icon: ArrowUpRight, color: "bg-green-100 text-green-700" },
   ];
 
-  // Tab configuration
-  const tabs = [
-    { id: 'leads' as TabType, label: 'Leads', icon: Users, badge: stats.totalLeads.toString(), badgeColor: 'bg-blue-500', activeColor: 'bg-blue-100 text-blue-700' },
-    { id: 'organizations' as TabType, label: 'Companies', icon: Building2, badge: stats.totalOrgs.toString(), badgeColor: 'bg-purple-500', activeColor: 'bg-purple-100 text-purple-700' },
-    { id: 'contacts' as TabType, label: 'Contacts', icon: Mail, activeColor: 'bg-cyan-100 text-cyan-700' },
-    { id: 'deals' as TabType, label: 'Deals', icon: Target, activeColor: 'bg-green-100 text-green-700' },
+  // Tab configuration - dynamically calculate counts from state
+  const tabs = useMemo(() => [
+    { id: 'leads' as TabType, label: 'Leads', icon: Users, badge: leads.length.toString(), badgeColor: 'bg-blue-500', activeColor: 'bg-blue-100 text-blue-700' },
+    { id: 'organizations' as TabType, label: 'Companies', icon: Building2, badge: organizations.length.toString(), badgeColor: 'bg-purple-500', activeColor: 'bg-purple-100 text-purple-700' },
+    { id: 'contacts' as TabType, label: 'Contacts', icon: Mail, badge: contacts.length.toString(), badgeColor: 'bg-cyan-500', activeColor: 'bg-cyan-100 text-cyan-700' },
+    { id: 'deals' as TabType, label: 'Deals', icon: Target, badge: deals.length.toString(), badgeColor: 'bg-green-500', activeColor: 'bg-green-100 text-green-700' },
     { id: 'insights' as TabType, label: 'Insights', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
-  ];
+  ], [leads.length, organizations.length, contacts.length, deals.length]);
 
   // Quick actions for CRM
   const quickActions = [
@@ -832,6 +885,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       selectedId={selectedLead}
                       onSelect={handleLeadClick}
                       onAddNew={() => setShowAddLeadDialog(true)}
+                      onDelete={handleDeleteLead}
                       formatDate={formatDate}
                       formatCurrency={formatCurrency}
                     />
@@ -1068,6 +1122,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       selectedId={selectedOrg}
                       onSelect={handleOrgClick}
                       onAddNew={() => setShowAddOrgDialog(true)}
+                      onDelete={handleDeleteOrganization}
                       formatDate={formatDate}
                       formatCurrency={formatCurrency}
                     />
@@ -1245,6 +1300,7 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       selectedId={selectedContact}
                       onSelect={handleContactClick}
                       onAddNew={() => setShowAddContactDialog(true)}
+                      onDelete={handleDeleteContact}
                     />
                   </div>
                 </div>

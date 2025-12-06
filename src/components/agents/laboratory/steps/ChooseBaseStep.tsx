@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Plus, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Plus, ArrowRight } from "lucide-react";
 import * as Icons from "lucide-react";
 import { AGENT_TEMPLATES } from "../templates";
 import type { AgentTemplate } from "../types";
@@ -22,15 +22,15 @@ function DynamicIcon({ name, className }: { name: string; className?: string }) 
 export default function ChooseBaseStep({ onSelect, neptuneOpen = false }: ChooseBaseStepProps) {
   return (
     <div className={cn(
-      "flex flex-col",
+      "flex flex-col min-w-0",
       neptuneOpen ? "h-auto pb-4" : "h-full"
     )}>
       {/* Template Grid - Compact mode when Neptune is open */}
       <div className={cn(
-        "gap-3 mb-4",
+        "gap-3 mb-4 w-full",
         neptuneOpen 
           ? "flex flex-col pt-1" 
-          : "grid grid-cols-2 lg:grid-cols-3 pt-3 pr-1"
+          : "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 pt-3 pr-1"
       )}>
         {AGENT_TEMPLATES.map((template, index) => (
           <motion.button
@@ -40,13 +40,13 @@ export default function ChooseBaseStep({ onSelect, neptuneOpen = false }: Choose
             transition={{ delay: index * 0.05 }}
             onClick={() => onSelect(template)}
             className={cn(
-              "relative text-left transition-all duration-200 group",
+              "relative text-left transition-all duration-200 group w-full",
               "bg-white border-2 border-gray-100",
               "hover:shadow-md hover:border-gray-200",
               "focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2",
               neptuneOpen 
                 ? "flex items-center gap-3 p-3 rounded-lg overflow-hidden" 
-                : "p-4 rounded-xl overflow-visible"
+                : "p-3 sm:p-4 rounded-xl overflow-visible min-w-0 flex flex-col"
             )}
             whileHover={neptuneOpen ? { x: 2 } : { y: -2 }}
             whileTap={{ scale: 0.98 }}
@@ -54,7 +54,7 @@ export default function ChooseBaseStep({ onSelect, neptuneOpen = false }: Choose
           >
             {/* Badge - Only show in full mode */}
             {template.badgeText && !neptuneOpen && (
-              <div className="absolute -top-2.5 -right-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-medium shadow-sm z-10">
+              <div className="absolute -top-2.5 -right-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-medium shadow-sm z-50">
                 {template.badgeText}
               </div>
             )}
@@ -65,41 +65,24 @@ export default function ChooseBaseStep({ onSelect, neptuneOpen = false }: Choose
                 "rounded-lg flex items-center justify-center transition-all shrink-0",
                 template.iconBg,
                 "group-hover:scale-110",
-                neptuneOpen ? "w-10 h-10" : "w-10 h-10 mb-3"
+                neptuneOpen ? "w-10 h-10" : "w-10 h-10 mb-2.5"
               )}
             >
               <DynamicIcon name={template.icon} className={cn("h-5 w-5", template.iconColor)} />
             </div>
 
             {/* Content */}
-            <div className={cn("flex-1", neptuneOpen && "min-w-0")}>
+            <div className={cn("flex-1 min-w-0 w-full flex flex-col overflow-hidden", neptuneOpen && "min-w-0")}>
               <h3 className={cn(
                 "font-semibold text-gray-900",
-                neptuneOpen ? "text-sm truncate" : "text-sm mb-1"
+                neptuneOpen ? "text-sm truncate" : "text-sm mb-1.5 break-words leading-tight"
               )}>
                 {template.name}
               </h3>
               {!neptuneOpen && (
-                <>
-                  <p className="text-xs text-gray-500 line-clamp-2 mb-2">
-                    {template.shortDescription}
-                  </p>
-
-                  {/* KPIs */}
-                  <div className="flex items-center gap-2 text-xs">
-                    {template.kpis.successRate && (
-                      <span className="flex items-center gap-1 text-emerald-600">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {template.kpis.successRate}%
-                      </span>
-                    )}
-                    {template.kpis.avgTimeSaved && (
-                      <span className="text-gray-400">
-                        Saves {template.kpis.avgTimeSaved}
-                      </span>
-                    )}
-                  </div>
-                </>
+                <p className="text-xs text-gray-500 line-clamp-3 mb-2.5 break-words leading-relaxed min-w-0">
+                  {template.shortDescription}
+                </p>
               )}
               {neptuneOpen && template.badgeText && (
                 <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 text-white text-[10px] font-medium">
@@ -109,15 +92,19 @@ export default function ChooseBaseStep({ onSelect, neptuneOpen = false }: Choose
             </div>
 
             {/* Hover indicator */}
-            <ArrowRight
-              className={cn(
-                "transition-all shrink-0",
-                "text-gray-300 group-hover:text-violet-500",
-                neptuneOpen 
-                  ? "h-4 w-4 group-hover:translate-x-1" 
-                  : "absolute bottom-4 right-4 h-4 w-4 group-hover:translate-x-1"
-              )}
-            />
+            {!neptuneOpen && (
+              <ArrowRight
+                className={cn(
+                  "transition-all shrink-0 absolute bottom-3 right-3 h-4 w-4",
+                  "text-gray-300 group-hover:text-violet-500 group-hover:translate-x-1"
+                )}
+              />
+            )}
+            {neptuneOpen && (
+              <ArrowRight
+                className="h-4 w-4 shrink-0 transition-all text-gray-300 group-hover:text-violet-500 group-hover:translate-x-1"
+              />
+            )}
           </motion.button>
         ))}
       </div>
