@@ -20,7 +20,13 @@
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Recent Achievement:** Dynamic Dashboard Roadmap (December 6, 2025)
+**Recent Achievement:** Responsive Branded Titles (December 6, 2025)
+- **Mobile-Friendly Titles** - Branded titles no longer wrap awkwardly on smaller screens
+- **Responsive Text** - Shows compact text on mobile, spaced text on desktop
+- **Marketing Layout Fix** - Create tab cards now fill full height like Dashboard
+- **New CSS Class** - `.branded-page-title-compact` for consistent mobile styling
+
+**Previous Achievement:** Dynamic Dashboard Roadmap (December 6, 2025)
 - **Personalized Roadmaps** - Neptune builds custom roadmaps based on user's goals
 - **Conversation-Driven** - Tell Neptune what you want to accomplish, watch the roadmap appear
 - **Real-time Updates** - Items check off as Neptune helps complete each step
@@ -98,6 +104,37 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Responsive Branded Titles ✅
+
+#### Mobile-Friendly Title System
+Fixed branded titles (ROADMAP, NEPTUNE, etc.) that were wrapping awkwardly on smaller screens due to wide letter-spacing.
+
+**Problem:**
+- Titles like "R O A D M A P" with `letter-spacing: 0.25em` wrapped mid-word on narrow screens
+- "C A M P A I G N  R O A D M A P" was too long for the Marketing page's narrow card column
+- Marketing Create tab cards were shorter than Dashboard cards
+
+**Solution:**
+- **New CSS Class** - Added `.branded-page-title-compact` with tighter letter-spacing (`0.05em`) and `white-space: nowrap`
+- **Responsive Text Switching** - Each title shows:
+  - Mobile: Compact unspaced text (e.g., "ROADMAP", "NEPTUNE")
+  - Desktop: Full spaced text (e.g., "R O A D M A P", "N E P T U N E")
+- **Marketing Layout Fix** - Restructured layout so Create tab gets full height without `max-w-7xl` constraint
+
+**Files Modified:**
+- `src/app/globals.css` - Added `.branded-page-title-compact` class
+- `src/components/dashboard-v2/RoadmapCard.tsx` - Responsive title
+- `src/components/dashboard-v2/DashboardV2Client.tsx` - Fallback roadmap title
+- `src/components/marketing/CampaignRoadmapCard.tsx` - Responsive title
+- `src/components/marketing/MarketingDashboard.tsx` - Fixed Create tab layout
+- `src/components/conversations/NeptuneAssistPanel.tsx` - Responsive Neptune title
+
+**Breakpoints Used:**
+- `md:` (768px) for ROADMAP and NEPTUNE titles
+- Marketing page: Compact text always (card is narrow even on large screens)
+
+---
 
 ### December 6, 2025 - Dynamic Dashboard Roadmap ✅
 

@@ -279,12 +279,13 @@ export default function NeptuneAssistPanel({
                   </defs>
                 </svg>
                 <h2
-                  className="branded-page-title text-xl uppercase"
+                  className="branded-page-title-compact md:branded-page-title text-base md:text-xl uppercase"
                   style={{
                     textShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
                   }}
                 >
-                  N E P T U N E
+                  <span className="md:hidden">NEPTUNE</span>
+                  <span className="hidden md:inline">N E P T U N E</span>
                 </h2>
               </div>
               <Button

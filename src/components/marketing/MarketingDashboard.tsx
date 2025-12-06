@@ -1117,9 +1117,9 @@ Be creative, engaging, and write content that resonates!`;
   };
 
   return (
-    <div className="h-full bg-gray-50/50 overflow-hidden">
+    <div className="h-full bg-gray-50/50 overflow-hidden flex flex-col">
       {/* Header Section - Matching CRM */}
-      <div className="max-w-7xl mx-auto px-6 py-4 space-y-4">
+      <div className="max-w-7xl mx-auto px-6 py-4 space-y-4 shrink-0">
         {/* Header */}
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-3">
@@ -1213,9 +1213,13 @@ Be creative, engaging, and write content that resonates!`;
       </div>
 
       {/* Content Area with Neptune Panel */}
-      <div className="flex flex-1 overflow-hidden gap-6 px-6 pb-6">
-        <div className={`transition-all duration-200 ${showNeptune ? 'flex-1' : 'flex-1'}`}>
-          <div className="max-w-7xl mx-auto">
+      <div className="flex flex-1 min-h-0 overflow-hidden gap-6 px-6 pb-6">
+        <div className={`flex flex-col min-h-0 transition-all duration-200 ${showNeptune ? 'flex-1' : 'flex-1'}`}>
+          {/* Create tab needs full height - no max-width constraint */}
+          {activeTab === 'create' ? (
+            <CampaignCreateTab onCampaignCreated={() => setActiveTab('campaigns')} />
+          ) : (
+          <div className="max-w-7xl mx-auto w-full">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -1224,10 +1228,6 @@ Be creative, engaging, and write content that resonates!`;
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-            {/* CREATE TAB - Neptune-Guided Campaign Builder */}
-            {activeTab === 'create' && (
-              <CampaignCreateTab onCampaignCreated={() => setActiveTab('campaigns')} />
-            )}
 
             {/* CAMPAIGNS TAB - Template-based with Neptune */}
             {activeTab === 'campaigns' && (
@@ -2816,6 +2816,7 @@ Be creative, engaging, and write content that resonates!`;
               </motion.div>
             </AnimatePresence>
           </div>
+          )}
         </div>
 
         {/* Neptune Panel */}

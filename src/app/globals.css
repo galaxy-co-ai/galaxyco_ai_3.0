@@ -226,6 +226,15 @@
     font-family: 'Space Grotesk', var(--font-space-grotesk), system-ui, -apple-system, sans-serif !important;
     letter-spacing: 0.25em !important;
     font-weight: 700 !important;
+    white-space: nowrap;
+  }
+  
+  /* Compact version for small screens - no letter spacing */
+  .branded-page-title-compact {
+    font-family: 'Space Grotesk', var(--font-space-grotesk), system-ui, -apple-system, sans-serif !important;
+    letter-spacing: 0.05em !important;
+    font-weight: 700 !important;
+    white-space: nowrap;
   }
 
   h2 {

@@ -105,6 +105,11 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 📱 **Responsive Branded Titles** - Fixed title wrapping on smaller screens:
+  - Titles now show compact text on mobile ("ROADMAP") and spaced text on desktop ("R O A D M A P")
+  - New `.branded-page-title-compact` CSS class for mobile-friendly titles
+  - Marketing Create tab layout fixed to give cards full height like Dashboard
+  - Consistent styling across Dashboard, Marketing, and Neptune panels
 - 🎯 **Dynamic Dashboard Roadmap** - Neptune now builds personalized roadmaps based on your goals:
   - Tell Neptune what you want to accomplish: "I want to set up my sales pipeline"
   - Neptune dynamically builds a custom roadmap: Add first lead, Set up stages, Create follow-ups

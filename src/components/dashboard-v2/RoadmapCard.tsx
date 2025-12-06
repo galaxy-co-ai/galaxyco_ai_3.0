@@ -67,13 +67,15 @@ export default function RoadmapCard({
                 </linearGradient>
               </defs>
             </svg>
+            {/* Responsive title - compact on mobile, spaced on desktop */}
             <h2 
-              className="branded-page-title text-xl uppercase"
+              className="branded-page-title-compact md:branded-page-title text-base md:text-xl uppercase"
               style={{ 
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
               }}
             >
-              R O A D M A P
+              <span className="md:hidden">ROADMAP</span>
+              <span className="hidden md:inline">R O A D M A P</span>
             </h2>
           </div>
           {totalCount > 0 && (
