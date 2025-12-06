@@ -226,3 +226,4 @@ Extends existing `FloatingAIAssistant` with:
 
 
 
+
