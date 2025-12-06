@@ -20,7 +20,15 @@
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Recent Achievement:** Responsive Branded Titles (December 6, 2025)
+**Recent Achievement:** Twitter/X Social Media Integration (December 6, 2025)
+- **Social Media Posting** - Users can connect Twitter and post directly from Neptune
+- **OAuth 2.0 Integration** - Secure Twitter connection with PKCE flow
+- **Scheduled Posting** - Schedule tweets for future publication
+- **Neptune AI Tool** - `post_to_social_media` tool for natural language posting
+- **Background Jobs** - Automatic processing of scheduled posts every minute
+- **Post Tracking** - Database table for tracking posts, engagement, and status
+
+**Previous Achievement:** Responsive Branded Titles (December 6, 2025)
 - **Mobile-Friendly Titles** - Branded titles no longer wrap awkwardly on smaller screens
 - **Responsive Text** - Shows compact text on mobile, spaced text on desktop
 - **Marketing Layout Fix** - Create tab cards now fill full height like Dashboard
@@ -104,6 +112,84 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Twitter/X Social Media Integration ✅
+
+#### Social Media Posting from Neptune
+Implemented complete Twitter/X integration allowing users to connect their Twitter accounts and post directly from Neptune AI assistant.
+
+**Features:**
+- **OAuth 2.0 Connection** - Secure Twitter authentication with PKCE (Proof Key for Code Exchange)
+- **Direct Posting** - Post tweets immediately via Neptune: "Post to Twitter: 'Excited to launch our new feature!'"
+- **Scheduled Posting** - Schedule tweets for future: "Schedule a tweet for tomorrow at 10am: 'Product update coming soon!'"
+- **Neptune AI Tool** - New `post_to_social_media` tool integrated into Neptune's capabilities
+- **Background Processing** - Trigger.dev job processes scheduled posts every minute
+- **Post Tracking** - Complete database tracking of posts, engagement metrics, and status
+
+**Technical Implementation:**
+- **Database Schema:**
+  - Added `twitter` to `integrationProviderEnum`
+  - New `socialMediaPosts` table with fields for platform, content, status, scheduling, engagement, and error tracking
+- **OAuth Flow:**
+  - Updated `src/lib/oauth.ts` with Twitter OAuth 2.0 support and PKCE generation
+  - Enhanced authorize route to generate code verifier/challenge
+  - Updated callback route to handle Twitter user info and token exchange
+  - Token refresh support for Twitter
+- **Twitter API Client:**
+  - New `src/lib/social/twitter.ts` with functions for:
+    - `postTweet()` - Post tweets to Twitter
+    - `getTwitterUser()` - Get authenticated user info
+    - `uploadMedia()` - Upload images for tweets
+    - `getTwitterIntegration()` - Check connection status
+    - Automatic token refresh when expired
+- **Connected Apps Integration:**
+  - Added Twitter card to Connected Apps page with "Social Media" category
+  - OAuth connection flow integrated
+  - Status tracking in integrations API
+- **Neptune AI Tools:**
+  - New `post_to_social_media` tool with platform validation
+  - Checks Twitter connection before posting
+  - Validates 280 character limit
+  - Supports immediate and scheduled posting
+- **API Endpoints:**
+  - `POST /api/social/posts` - Create and post social content
+  - `GET /api/social/posts` - List posts with engagement metrics
+  - `GET /api/social/accounts` - List connected social accounts
+- **Background Jobs:**
+  - `processScheduledSocialPosts` - Trigger.dev task to process scheduled posts
+  - `scheduledSocialPosting` - Cron job running every minute
+  - Error handling and retry logic
+
+**Files Added:**
+- `src/lib/social/twitter.ts` - Twitter API client
+- `src/app/api/social/posts/route.ts` - Social posts API
+- `src/app/api/social/accounts/route.ts` - Connected accounts API
+- `src/trigger/social-posting.ts` - Scheduled posting background job
+
+**Files Modified:**
+- `src/db/schema.ts` - Added Twitter to enum and socialMediaPosts table
+- `src/lib/oauth.ts` - Twitter OAuth 2.0 with PKCE support
+- `src/app/api/auth/oauth/[provider]/authorize/route.ts` - Twitter PKCE generation
+- `src/app/api/auth/oauth/[provider]/callback/route.ts` - Twitter callback handling
+- `src/components/integrations/GalaxyIntegrations.tsx` - Twitter integration card
+- `src/app/api/integrations/status/route.ts` - Twitter status tracking
+- `src/lib/ai/tools.ts` - Added post_to_social_media tool
+
+**Environment Variables Required:**
+```bash
+TWITTER_CLIENT_ID=your_twitter_client_id
+TWITTER_CLIENT_SECRET=your_twitter_client_secret
+```
+
+**User Experience:**
+1. Connect Twitter: Go to Connected Apps → Social Media → Click "Connect" on Twitter card
+2. Post via Neptune: "Post to Twitter: 'Your message here'"
+3. Schedule posts: "Schedule a tweet for [date/time]: 'Your message'"
+4. Neptune confirms with tweet URL and tracks in database
+
+**Impact:** Users can now manage their social media presence directly from Neptune, with scheduled posting and engagement tracking.
+
+---
 
 ### December 6, 2025 - Responsive Branded Titles ✅
 

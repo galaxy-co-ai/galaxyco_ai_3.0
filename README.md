@@ -105,6 +105,14 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🐦 **Twitter/X Integration** - Social media posting directly from Neptune:
+  - Connect Twitter account via OAuth 2.0 (PKCE flow)
+  - Post tweets immediately or schedule for later
+  - Neptune AI tool: `post_to_social_media` for direct posting
+  - Background job processes scheduled posts automatically
+  - Track engagement metrics and post history
+  - New `socialMediaPosts` database table for post tracking
+- 📱 **Responsive Branded Titles** - Fixed title wrapping on smaller screens:
 - 📱 **Responsive Branded Titles** - Fixed title wrapping on smaller screens:
   - Titles now show compact text on mobile ("ROADMAP") and spaced text on desktop ("R O A D M A P")
   - New `.branded-page-title-compact` CSS class for mobile-friendly titles
@@ -407,7 +415,8 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 
 ### 🔗 Integrations
 - OAuth-based connections
-- Google, GitHub, Salesforce, HubSpot, Slack
+- Google, GitHub, Salesforce, HubSpot, Slack, Twitter/X
+- Social media posting (Twitter/X with scheduled posts)
 - Seamless data sync
 
 ### 📊 Dashboard (Neptune-First Experience)
@@ -529,6 +538,7 @@ See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 - **Google AI** - Gemini models (fallback AI provider)
 - **Twilio** - SMS, WhatsApp, Voice (Conversations feature)
 - **Pinecone** - Vector search (Knowledge Base)
+- **Twitter API** - Social media posting (Twitter/X OAuth credentials)
 
 **See `.env.example` for complete list with instructions.**
 
