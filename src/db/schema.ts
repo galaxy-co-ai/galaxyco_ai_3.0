@@ -216,6 +216,7 @@ export const integrationProviderEnum = pgEnum('integration_provider', [
   'quickbooks',
   'stripe',
   'shopify',
+  'twitter',
 ]);
 
 export const integrationStatusEnum = pgEnum('integration_status', [
@@ -1548,6 +1549,30 @@ export const workspaceIntelligence = pgTable(
     learnedPatterns: jsonb('learned_patterns')
       .$type<Record<string, unknown>>()
       .default({}),
+
+    // Website-extracted business intelligence
+    companyName: text('company_name'),
+    companyDescription: text('company_description'),
+    products: jsonb('products')
+      .$type<Array<{ name: string; description: string }>>()
+      .default([]),
+    services: jsonb('services')
+      .$type<Array<{ name: string; description: string }>>()
+      .default([]),
+    teamMembers: jsonb('team_members')
+      .$type<Array<{ name: string; role: string }>>()
+      .default([]),
+    targetAudience: text('target_audience'),
+    valuePropositions: text('value_propositions').array().default([]),
+    brandVoice: text('brand_voice'), // 'professional', 'friendly', 'technical', etc.
+    contactInfo: jsonb('contact_info')
+      .$type<{ email?: string; phone?: string; address?: string }>()
+      .default({}),
+    socialLinks: jsonb('social_links')
+      .$type<Record<string, string>>()
+      .default({}),
+    websiteUrl: text('website_url'),
+    websiteAnalyzedAt: timestamp('website_analyzed_at'),
 
     // Metadata
     lastUpdated: timestamp('last_updated').notNull().defaultNow(),
@@ -4285,6 +4310,65 @@ export const oauthTokens = pgTable(
 );
 
 // ============================================================================
+// SOCIAL MEDIA POSTS
+// ============================================================================
+
+export const socialMediaPosts = pgTable(
+  'social_media_posts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    integrationId: uuid('integration_id')
+      .references(() => integrations.id, { onDelete: 'set null' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Post details
+    platform: text('platform').notNull(), // 'twitter', 'linkedin', 'facebook', 'instagram'
+    content: text('content').notNull(),
+    mediaUrls: jsonb('media_urls')
+      .$type<string[]>()
+      .default([]),
+
+    // Status and scheduling
+    status: text('status').notNull().default('draft'), // 'draft', 'scheduled', 'posted', 'failed'
+    postedAt: timestamp('posted_at'),
+    scheduledFor: timestamp('scheduled_for'),
+    externalPostId: text('external_post_id'), // Platform's post ID (e.g., Twitter tweet ID)
+
+    // Engagement metrics
+    engagement: jsonb('engagement')
+      .$type<{
+        likes?: number;
+        comments?: number;
+        shares?: number;
+        retweets?: number;
+        impressions?: number;
+        clicks?: number;
+      }>()
+      .default({}),
+
+    // Error tracking
+    errorMessage: text('error_message'),
+    retryCount: integer('retry_count').default(0),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    workspaceIdx: index('social_media_posts_workspace_idx').on(table.workspaceId),
+    integrationIdx: index('social_media_posts_integration_idx').on(table.integrationId),
+    platformIdx: index('social_media_posts_platform_idx').on(table.platform),
+    statusIdx: index('social_media_posts_status_idx').on(table.status),
+    scheduledForIdx: index('social_media_posts_scheduled_for_idx').on(table.scheduledFor),
+  }),
+);
+
+// ============================================================================
 // GALAXY STUDIO - VISUAL WORKFLOW BUILDER
 // ============================================================================
 
@@ -4986,6 +5070,9 @@ export type NewIntegration = typeof integrations.$inferInsert;
 
 export type OAuthToken = typeof oauthTokens.$inferSelect;
 export type NewOAuthToken = typeof oauthTokens.$inferInsert;
+
+export type SocialMediaPost = typeof socialMediaPosts.$inferSelect;
+export type NewSocialMediaPost = typeof socialMediaPosts.$inferInsert;
 
 // Galaxy Studio Types
 export type GalaxyGrid = typeof galaxyGrids.$inferSelect;

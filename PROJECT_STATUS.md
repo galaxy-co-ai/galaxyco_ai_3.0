@@ -129,6 +129,33 @@
 
 ## Recent Changes
 
+### December 6, 2025 - Neptune Backend Optimization ✅
+
+#### Critical Fixes for Response Quality
+Comprehensive audit and optimization of Neptune's backend to dramatically improve response quality and reliability.
+
+**Issues Fixed:**
+
+| Setting | Before | After | Impact |
+|---------|--------|-------|--------|
+| max_tokens | 300 | 1500 | 5x longer responses, no truncation |
+| temperature | 0.8 | 0.5 | More accurate, consistent responses |
+| Model | Mixed | gpt-4o | Faster, cheaper, consistent |
+| History | 15 msgs | 25 msgs | Better context retention |
+
+**Technical Changes:**
+- `src/app/api/assistant/chat/route.ts` - Updated max_tokens (300→1500), temperature (0.8→0.5), history limit (15→25)
+- `src/lib/ai/memory.ts` - Standardized model to gpt-4o
+- `src/lib/ai/context.ts` - Updated default model preferences to gpt-4o
+- Added warning logging when max tool iterations (5) reached
+
+**New Documentation:**
+- `NEPTUNE_BACKEND_AUDIT.md` - Full audit report with findings and recommendations
+
+**Impact:** Neptune now provides much longer, more accurate, and more consistent responses. The 300 max_tokens limit was causing responses to be truncated mid-sentence.
+
+---
+
 ### December 6, 2025 - Instant Website Analysis ✅
 
 #### Neptune Now Analyzes Websites Immediately

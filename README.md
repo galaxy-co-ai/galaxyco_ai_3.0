@@ -105,6 +105,12 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🧠 **Neptune Backend Optimization** - Critical fixes for response quality:
+  - Fixed response truncation: max_tokens increased from 300 → 1500 (5x improvement)
+  - Improved accuracy: temperature lowered from 0.8 → 0.5 for more reliable responses
+  - Standardized all AI calls to use gpt-4o consistently
+  - Better context retention: conversation history increased from 15 → 25 messages
+  - Full audit report available in `NEPTUNE_BACKEND_AUDIT.md`
 - 🌐 **Instant Website Analysis** - Neptune now analyzes websites immediately when you share a URL:
   - No more "please wait 1-2 minutes" - analysis happens instantly
   - Uses lightweight fetch + cheerio crawler (works in serverless)
