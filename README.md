@@ -83,10 +83,10 @@ npm run typecheck           # TypeScript validation
 
 **Last Updated:** December 6, 2025  
 **Build Status:** ✅ Clean build - Next.js 16.0.7 (patched)  
-**Latest Commit:** Production database schema expansion (80+ tables)  
+**Latest Commit:** Unified Neptune conversation system + Smart file organization  
 **Test Coverage:** 70% (API routes, components, E2E)  
 **Deployment:** ✅ Live on Vercel Production  
-**Latest Enhancement:** Complete production database schema with campaign tracking, CRM interactions, expenses, automations, and deals
+**Latest Enhancement:** Neptune now maintains conversation history across all pages and intelligently organizes uploaded files into your Library
 
 ### Verified & Operational
 - ✅ All 19 critical environment variables verified
@@ -105,6 +105,21 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🔗 **Unified Neptune Conversations** - Neptune now maintains context across ALL pages:
+  - Single conversation persists when navigating Dashboard → CRM → Marketing → etc.
+  - Message history loads from database on app start
+  - New NeptuneProvider context wraps entire app
+  - New `/api/neptune/conversation` endpoint for conversation management
+  - "New Chat" button to start fresh conversations when needed
+- 📎 **Smart File Organization** - Neptune intelligently organizes your uploads:
+  - When you upload files, Neptune asks if you want to save to Library
+  - Automatically analyzes files and chooses the right collection (Invoices, Contracts, Screenshots, etc.)
+  - Creates clean titles, adds relevant tags, and writes summaries
+  - Creates new collections as needed - your Library stays organized automatically
+- 🖼️ **File Upload Previews** - Uploaded files now display beautifully in chat:
+  - Images show as thumbnails (not ugly URLs)
+  - Documents show as clickable pills with file icons
+  - Clean, visual display matching modern chat apps
 - 🗄️ **Production Database Schema Expansion** - 7 new tables for full production readiness:
   - `campaign_recipients` - Individual email send tracking (opens, clicks, bounces, unsubscribes)
   - `crm_interactions` - Call/email/meeting logs with AI insights and follow-up scheduling

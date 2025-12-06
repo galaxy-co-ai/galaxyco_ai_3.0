@@ -994,6 +994,8 @@ export const knowledgeItems = pgTable(
         extractedAt?: string;
         ocrConfidence?: number; // For images
         dimensions?: { width: number; height: number }; // For images
+        tags?: string[]; // User-defined or AI-generated tags
+        uploadedVia?: string; // 'neptune', 'library', 'api'
       }>()
       .default({}),
 

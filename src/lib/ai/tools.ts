@@ -602,6 +602,51 @@ export const aiTools: ChatCompletionTool[] = [
     },
   },
 
+  // Save uploaded file to Library with smart organization
+  {
+    type: 'function',
+    function: {
+      name: 'save_upload_to_library',
+      description: 'Save an uploaded file to the Library with smart organization. Analyze the file name and content to determine the best collection. Create new collections as needed. Use this when user confirms they want to save an uploaded file.',
+      parameters: {
+        type: 'object',
+        properties: {
+          fileUrl: {
+            type: 'string',
+            description: 'The URL of the uploaded file (from the attachment)',
+          },
+          fileName: {
+            type: 'string',
+            description: 'The original name of the file',
+          },
+          fileType: {
+            type: 'string',
+            enum: ['image', 'document', 'file'],
+            description: 'Type of file (image, document, or file)',
+          },
+          title: {
+            type: 'string',
+            description: 'A clean, descriptive title for the item (not just the filename)',
+          },
+          collectionName: {
+            type: 'string',
+            description: 'The collection to organize into. Analyze the file and choose intelligently: "Invoices", "Contracts", "Receipts", "Screenshots", "Logos & Branding", "Product Images", "Marketing Assets", "Meeting Notes", "Proposals", "Reports", "Presentations", "Legal Documents", "HR Documents", "Research", "Reference Materials", or create a new relevant collection.',
+          },
+          tags: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Relevant tags for the file (e.g., ["Q4", "2025", "client-name", "draft"])',
+          },
+          summary: {
+            type: 'string',
+            description: 'A brief description of what this file contains or is used for',
+          },
+        },
+        required: ['fileUrl', 'fileName', 'fileType', 'collectionName'],
+      },
+    },
+  },
+
   // ============================================================================
   // MARKETING TOOLS
   // ============================================================================
@@ -2878,6 +2923,133 @@ A: [Detailed answer]`,
       return {
         success: false,
         message: 'Failed to list collections',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // ============================================================================
+  // SAVE UPLOAD TO LIBRARY
+  // ============================================================================
+
+  async save_upload_to_library(args, context): Promise<ToolResult> {
+    try {
+      const fileUrl = args.fileUrl as string;
+      const fileName = args.fileName as string;
+      const fileType = args.fileType as 'image' | 'document' | 'file';
+      const title = (args.title as string) || fileName.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+      const collectionName = args.collectionName as string;
+      const tags = (args.tags as string[]) || [];
+      const userSummary = args.summary as string | undefined;
+
+      // Generate collection description based on name
+      const collectionDescriptions: Record<string, string> = {
+        'Invoices': 'Invoice documents and billing records',
+        'Contracts': 'Legal contracts and agreements',
+        'Receipts': 'Purchase receipts and expense records',
+        'Screenshots': 'Screen captures and UI references',
+        'Logos & Branding': 'Brand assets, logos, and visual identity',
+        'Product Images': 'Product photography and imagery',
+        'Marketing Assets': 'Marketing materials and campaign assets',
+        'Meeting Notes': 'Notes and summaries from meetings',
+        'Proposals': 'Business proposals and pitches',
+        'Reports': 'Business reports and analytics',
+        'Presentations': 'Slide decks and presentations',
+        'Legal Documents': 'Legal paperwork and documentation',
+        'HR Documents': 'Human resources documentation',
+        'Research': 'Research materials and findings',
+        'Reference Materials': 'Reference documents and guides',
+      };
+
+      // Find or create the collection
+      let collection = await db.query.knowledgeCollections.findFirst({
+        where: and(
+          eq(knowledgeCollections.workspaceId, context.workspaceId),
+          like(knowledgeCollections.name, collectionName)
+        ),
+      });
+
+      if (!collection) {
+        const [newCollection] = await db
+          .insert(knowledgeCollections)
+          .values({
+            workspaceId: context.workspaceId,
+            name: collectionName,
+            description: collectionDescriptions[collectionName] || `${collectionName} - organized by Neptune`,
+            createdBy: context.userId,
+          })
+          .returning();
+        collection = newCollection;
+        logger.info('AI created new collection', { collectionName, workspaceId: context.workspaceId });
+      }
+
+      // Determine the item type for the knowledge base
+      const itemType: 'image' | 'document' | 'url' | 'text' = 
+        fileType === 'image' ? 'image' : 'document';
+
+      // Build summary
+      const summary = userSummary || `${fileType.charAt(0).toUpperCase() + fileType.slice(1)} - ${collectionName}`;
+
+      // Save to knowledge items with tags in metadata
+      const [item] = await db
+        .insert(knowledgeItems)
+        .values({
+          workspaceId: context.workspaceId,
+          title,
+          type: itemType,
+          sourceUrl: fileUrl,
+          fileName: fileName,
+          content: `File: ${fileName}${userSummary ? `\n\n${userSummary}` : ''}`,
+          summary,
+          metadata: {
+            tags: tags.length > 0 ? tags : undefined,
+            uploadedVia: 'neptune',
+          },
+          collectionId: collection.id,
+          createdBy: context.userId,
+          status: 'ready',
+        })
+        .returning();
+
+      // Update collection item count
+      await db
+        .update(knowledgeCollections)
+        .set({
+          itemCount: sql`${knowledgeCollections.itemCount} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(eq(knowledgeCollections.id, collection.id));
+
+      logger.info('AI saved upload to library', { 
+        itemId: item.id, 
+        fileName,
+        title,
+        collectionName,
+        tags,
+        workspaceId: context.workspaceId 
+      });
+
+      // Build response message
+      const tagStr = tags.length > 0 ? ` Tagged: ${tags.join(', ')}.` : '';
+      
+      return {
+        success: true,
+        message: `✅ Saved "${title}" to **${collectionName}**.${tagStr}`,
+        data: {
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          collectionId: collection.id,
+          collectionName: collection.name,
+          tags,
+          sourceUrl: fileUrl,
+        },
+      };
+    } catch (error) {
+      logger.error('AI save_upload_to_library failed', error);
+      return {
+        success: false,
+        message: 'Failed to save file to Library',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -5172,8 +5344,8 @@ export const toolsByCategory = {
   tasks: ['create_task', 'prioritize_tasks', 'batch_similar_tasks'],
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
-  content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents'],
-  knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents'],
+  content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents', 'save_upload_to_library'],
+  knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library'],
   marketing: [
     'create_campaign',
     'get_campaign_stats',

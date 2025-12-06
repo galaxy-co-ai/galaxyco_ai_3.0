@@ -20,13 +20,12 @@
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Recent Achievement:** Production Database Schema Expansion (December 6, 2025)
-- **Campaign Recipients Table** - Individual email tracking (opens, clicks, bounces, unsubscribes)
-- **CRM Interactions Table** - Call/email/meeting logs with AI insights and follow-up scheduling
-- **Expenses Table** - Local expense tracking with approval workflows and receipt attachments
-- **Automation Rules Table** - CRM automation engine with triggers and actions
-- **Deals Table** - Proper deal pipeline separate from prospects with AI risk scoring
-- **10 New Enums** - Campaign status, interaction types, expense categories, deal stages, etc.
+**Recent Achievement:** Unified Neptune Experience (December 6, 2025)
+- **Unified Conversations** - Neptune maintains context across all pages (Dashboard, CRM, Marketing, etc.)
+- **Smart File Organization** - Neptune analyzes uploads and organizes into appropriate Library collections
+- **File Upload Previews** - Images show as thumbnails, documents as clickable pills in chat
+- **NeptuneProvider Context** - Global state management for seamless cross-page experience
+- **New API Endpoint** - `/api/neptune/conversation` for conversation persistence
 
 ---
 
@@ -36,12 +35,12 @@
 |-------|-------|
 | **Date** | December 6, 2025 |
 | **Build Status** | ✅ Passing (Verified - Local & Vercel) |
-| **Latest Commit** | Production database schema expansion (80+ tables) |
+| **Latest Commit** | Unified Neptune conversations + Smart file organization |
 | **Environment Status** | ✅ ALL SYSTEMS OPERATIONAL (19/19 services) |
 | **Overall Completion** | 100% Production-Ready + Enhanced AI + Proactive Intelligence |
 | **Test Coverage** | 70% (API routes, components, E2E) |
 | **Deployment Status** | ✅ Deployed to Vercel Production |
-| **Latest Update** | Added 7 new tables: campaign_recipients, crm_interactions, expenses, automation_rules, automation_executions, deals + 10 new enums |
+| **Latest Update** | Neptune maintains conversation context across all pages; intelligently organizes uploaded files into Library collections |
 
 ---
 
@@ -83,6 +82,91 @@
 ---
 
 ## Recent Changes
+
+### December 6, 2025 - Unified Neptune Conversation System ✅
+
+#### Neptune Now Feels Like ONE Continuous Assistant
+Implemented a unified conversation system so Neptune maintains context across all pages:
+
+**Problem Solved:**
+- Previously, each page's Neptune panel was isolated - users lost conversation history when navigating
+- Every page created a new conversation, making Neptune feel like amnesia
+
+**Solution:**
+- **NeptuneProvider Context** - Global state management for Neptune conversations
+  - Single conversation ID shared across all pages
+  - Messages persist in database and load on app start
+  - localStorage backup for quick re-initialization
+- **New API Endpoint** - `/api/neptune/conversation` (GET/POST)
+  - Gets or creates user's primary Neptune conversation
+  - Returns existing conversation with history if available
+  - Falls back to most recent conversation within 24 hours
+- **Updated NeptuneAssistPanel** - Now uses shared context
+  - Loads existing messages on mount
+  - All pages share the same conversation
+  - "New Chat" button to start fresh when needed
+
+**Files Added:**
+- `src/contexts/neptune-context.tsx` - Neptune context provider and hook
+- `src/contexts/index.ts` - Barrel export
+- `src/app/api/neptune/conversation/route.ts` - Conversation management API
+
+**Files Modified:**
+- `src/components/galaxy/app-layout.tsx` - Wrapped with NeptuneProvider
+- `src/components/conversations/NeptuneAssistPanel.tsx` - Uses shared context
+
+**User Experience:**
+- Talk to Neptune on Dashboard → Navigate to CRM → Same conversation continues
+- Neptune remembers context from previous interactions
+- Start fresh anytime with "New Chat" button
+- Conversation persists across browser sessions
+
+---
+
+### December 6, 2025 - Smart File Organization & Upload Previews ✅
+
+#### Neptune Intelligently Organizes Your Uploads
+Neptune now acts as a smart file organizer - when users upload files and confirm they want to save:
+
+**Smart Organization:**
+- Analyzes filename and content to determine the best collection
+- Creates clean, descriptive titles (not just filenames)
+- Adds relevant tags (dates, client names, project names)
+- Writes brief summaries
+- Creates new collections as needed
+
+**Built-in Collection Types:**
+- Invoices, Receipts, Contracts, Legal Documents
+- Screenshots, Logos & Branding, Product Images, Marketing Assets
+- Meeting Notes, Proposals, Reports, Presentations
+- HR Documents, Research, Reference Materials
+
+**Example Flow:**
+```
+User: [uploads quarterly_report_q4_2025.pdf]
+Neptune: "I see your Q4 report. Want me to save this to your Library?"
+User: "Yes"
+Neptune: "Saved 'Q4 2025 Quarterly Report' to **Reports**. Tagged: Q4, 2025."
+```
+
+**New Tool:** `save_upload_to_library`
+- Saves uploaded files to Library with smart organization
+- Parameters: fileUrl, fileName, fileType, title, collectionName, tags, summary
+- Creates collections on-demand
+
+#### File Upload Previews in Chat
+Uploaded files now display beautifully in Neptune chat:
+- **Images**: Thumbnail previews (not raw URLs)
+- **Documents**: Clickable pills with file icon and filename
+- Clean, visual display matching modern chat UX
+
+**Files Modified:**
+- `src/lib/ai/tools.ts` - Added `save_upload_to_library` tool
+- `src/lib/ai/system-prompt.ts` - Instructions for smart file organization
+- `src/db/schema.ts` - Added `tags` and `uploadedVia` to knowledgeItems metadata
+- `src/components/conversations/NeptuneAssistPanel.tsx` - File preview rendering
+
+---
 
 ### December 6, 2025 - Production Database Schema Expansion ✅
 
