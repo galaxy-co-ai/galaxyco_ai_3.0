@@ -19,22 +19,43 @@ export const metadata: Metadata = {
  * Client component uses SWR for real-time updates.
  */
 export default async function DashboardPage() {
-  let initialData;
-  
+  // Always render the same JSX tree; just vary the data we pass in.
+  let initialData = getEmptyDashboardData();
+  let userId = '';
+  let workspaceId = '';
+  let userName = 'there';
+
   try {
-    const { workspaceId, user } = await getCurrentWorkspace();
-    const userName = user?.firstName || 'there';
-    logger.info('Loading dashboard for workspace', { workspaceId });
-    initialData = await getDashboardData(workspaceId, userName);
+    // Get authenticated workspace and user
+    const { userId: authUserId, workspaceId: authWorkspaceId } = await getCurrentWorkspace();
+    userId = authUserId;
+    workspaceId = authWorkspaceId;
+
+    // Get user info for personalized greeting
+    const { getCurrentUser } = await import('@/lib/auth');
+    const user = await getCurrentUser();
+    if (user) {
+      userName = user.firstName || user.email?.split('@')[0] || 'there';
+    }
+
+    // Fetch dashboard data
+    if (workspaceId) {
+      initialData = await getDashboardData(workspaceId, userName);
+    }
   } catch (error) {
-    logger.error('Failed to load initial dashboard data', { error });
-    // Fall back to empty data if server-side fetch fails
-    initialData = getEmptyDashboardData();
+    // Log error but don't expose details to user
+    logger.error('Dashboard page error', { error });
+    // initialData already set to empty state fallback
   }
 
   return (
     <ErrorBoundary>
-      <DashboardV2Client initialData={initialData} />
+      <DashboardV2Client 
+        initialData={initialData} 
+        userId={userId}
+        workspaceId={workspaceId}
+        userName={userName}
+      />
     </ErrorBoundary>
   );
 }
