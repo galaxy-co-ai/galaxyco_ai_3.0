@@ -101,9 +101,9 @@ export default function DashboardV2Client({
         )}
 
         {/* Content Split: 2/3 Neptune, 1/3 Roadmap */}
-        <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 px-4 sm:px-6 pb-6">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 px-4 sm:px-6 pb-6">
           {/* Neptune Chat Interface - 2/3 width */}
-          <div className="min-w-0 min-h-0 overflow-hidden flex flex-col">
+          <div className="min-w-0 min-h-0 flex flex-col">
             <NeptuneAssistPanel
               conversationId={null}
               conversation={null}

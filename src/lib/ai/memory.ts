@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db';
-import { aiUserPreferences, aiMessages, aiConversations, aiMessageFeedback } from '@/db/schema';
+import { aiUserPreferences, aiMessages, aiConversations, aiMessageFeedback, workspaceIntelligence } from '@/db/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
@@ -477,6 +477,142 @@ export async function getRelevantHistory(
   } catch (error) {
     logger.error('Failed to get relevant history', error);
     return [];
+  }
+}
+
+// ============================================================================
+// BUSINESS CONTEXT LEARNING (Phase 5.1)
+// ============================================================================
+
+/**
+ * Learn business context from workspace data and conversations
+ */
+export async function learnBusinessContext(workspaceId: string): Promise<void> {
+  try {
+    // Get existing intelligence or create new
+    let intelligence = await db.query.workspaceIntelligence.findFirst({
+      where: eq(workspaceIntelligence.workspaceId, workspaceId),
+    });
+
+    // Analyze conversations to extract business context
+    const conversations = await db.query.aiConversations.findMany({
+      where: eq(aiConversations.workspaceId, workspaceId),
+      orderBy: [desc(aiConversations.createdAt)],
+      limit: 50,
+    });
+
+    if (conversations.length < 5) {
+      // Not enough data to learn from
+      return;
+    }
+
+    // Extract conversation text for analysis
+    const conversationText = conversations
+      .map(conv => conv.title || '')
+      .join(' ');
+
+    // Use AI to extract business context
+    const openai = getOpenAI();
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `Analyze conversation titles and extract business context. Output JSON with:
+{
+  "industry": "detected industry",
+  "businessModel": "b2b|b2c|saas|ecommerce|etc",
+  "goals": [{"goal": "goal description", "priority": 1-10}],
+  "priorities": ["priority1", "priority2"]
+}`,
+        },
+        {
+          role: 'user',
+          content: `Analyze these conversation titles:\n\n${conversationText}`,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 500,
+      response_format: { type: 'json_object' },
+    });
+
+    const context = JSON.parse(response.choices[0]?.message?.content || '{}');
+
+    if (intelligence) {
+      // Update existing
+      await db.update(workspaceIntelligence)
+        .set({
+          industry: context.industry || intelligence.industry,
+          businessModel: context.businessModel || intelligence.businessModel,
+          goals: context.goals || intelligence.goals,
+          priorities: context.priorities || intelligence.priorities,
+          lastUpdated: new Date(),
+        })
+        .where(eq(workspaceIntelligence.workspaceId, workspaceId));
+    } else {
+      // Create new
+      await db.insert(workspaceIntelligence).values({
+        workspaceId,
+        industry: context.industry,
+        businessModel: context.businessModel,
+        goals: context.goals || [],
+        priorities: context.priorities || [],
+      });
+    }
+
+    logger.info('Learned business context', { workspaceId, context });
+  } catch (error) {
+    logger.error('Failed to learn business context', { workspaceId, error });
+  }
+}
+
+/**
+ * Get workspace intelligence
+ */
+export async function getWorkspaceIntelligence(workspaceId: string) {
+  try {
+    const intelligence = await db.query.workspaceIntelligence.findFirst({
+      where: eq(workspaceIntelligence.workspaceId, workspaceId),
+    });
+
+    return intelligence || null;
+  } catch (error) {
+    logger.error('Failed to get workspace intelligence', { workspaceId, error });
+    return null;
+  }
+}
+
+/**
+ * Update communication style based on user feedback
+ */
+export async function updateCommunicationStyle(
+  workspaceId: string,
+  userId: string,
+  style: 'concise' | 'detailed' | 'balanced'
+): Promise<void> {
+  try {
+    const prefs = await db.query.aiUserPreferences.findFirst({
+      where: and(
+        eq(aiUserPreferences.workspaceId, workspaceId),
+        eq(aiUserPreferences.userId, userId)
+      ),
+    });
+
+    if (prefs) {
+      await db.update(aiUserPreferences)
+        .set({
+          communicationStyle: style,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(aiUserPreferences.workspaceId, workspaceId),
+            eq(aiUserPreferences.userId, userId)
+          )
+        );
+    }
+  } catch (error) {
+    logger.error('Failed to update communication style', { workspaceId, userId, error });
   }
 }
 

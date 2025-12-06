@@ -105,7 +105,13 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
-- 🎯 **Dashboard Redesign** - Neptune-first experience with workspace roadmap
+- 🚀 **Neptune AI Power Enhancement** - Transformed into proactive, autonomous, learning assistant:
+  - 15+ new action-oriented tools (sales, marketing, operations, finance)
+  - Learning-based autonomy system (starts cautious, becomes autonomous over time)
+  - Proactive intelligence engine (background monitoring, real-time insights)
+  - Deep learning system (business context, adaptive communication, pattern recognition)
+  - Predictive intelligence (think ahead, anticipatory actions)
+- 🎯 **Dashboard Redesign** - Neptune-first experience with workspace roadmap badges
 - 🔒 **Security Patch** - Next.js 16.0.7 (CVE-2025-66478 patched)
 - ✅ **Proxy Migration** - Migrated from deprecated middleware to proxy convention
 - ✅ **Clean Build** - Zero deprecation warnings, zero vulnerabilities blocked
@@ -115,6 +121,7 @@ npm run typecheck           # TypeScript validation
 - ✅ Test coverage: 70% (API routes, components, E2E)
 - ✅ TypeScript strict mode passing (0 errors)
 - ✅ **Agent runs queue through Trigger.dev** — Durable, retried execution via `agent_executions`
+- ✅ **UI Improvements** - Roadmap badges with expandable dropdowns, agent delete on hover
 
 ```
 Build:        ████████████████████ 100% ✅ Passing (Deployed to Vercel)
@@ -164,11 +171,11 @@ Deployment:   ████████████████████ 100% 
 
 ## 🎯 Key Features
 
-### 🤖 Neptune AI Assistant (Enterprise-Grade) 🚀 NEW
+### 🤖 Neptune AI Assistant (Enterprise-Grade + Proactive Intelligence) 🚀 NEW
 
-**Multimodal AI Assistant Powered by GPT-4o**
+**Autonomous, Learning AI Assistant Powered by GPT-4o**
 
-Neptune has been transformed from a basic chat assistant into an enterprise-grade AI powerhouse with cutting-edge capabilities:
+Neptune has been transformed from a basic chat assistant into a proactive, autonomous AI powerhouse that learns from you and thinks ahead:
 
 #### Core AI Engine
 - **GPT-4o** - OpenAI's latest model (2x faster, 50% cheaper than GPT-4 Turbo)
@@ -220,7 +227,31 @@ Neptune has been transformed from a basic chat assistant into an enterprise-grad
 - **Lead-to-Campaign Matching** - Smart recommendations for which campaigns to add leads to
 - **Proactive Marketing Insights** - Automatically flags underperforming campaigns and suggests optimizations
 
-#### Natural, Concise Communication (December 2025) 💬 NEW
+#### Proactive Intelligence & Autonomous Actions (December 2025) 🧠 NEW
+- **Autonomous Action System** - Neptune executes actions for you, not just tells you how:
+  - Low-risk actions auto-execute immediately (create drafts, add notes, prioritize tasks)
+  - Medium-risk actions learn from your approval patterns (create leads, schedule meetings)
+  - High-risk actions always confirm (send emails, financial transactions)
+  - Learns your preferences over time and becomes more autonomous
+- **Proactive Monitoring** - Background intelligence engine:
+  - Monitors sales pipeline, marketing campaigns, operations, and finance
+  - Generates prioritized insights and suggestions
+  - Real-time event hooks (new lead → suggest qualification, deal in negotiation → draft proposal)
+  - Daily intelligence briefings for returning users
+- **Pattern Recognition** - Learns from your behavior:
+  - "You always follow up with leads after 2 days" → Suggests follow-up before you ask
+  - "Campaigns sent Tuesday perform 30% better" → Suggests optimal send times
+  - Anticipatory actions (pre-draft meeting briefs, queue follow-ups)
+- **Business Context Learning** - Understands your business:
+  - Learns your industry, business model, goals, and priorities
+  - Adapts communication style to your preferences
+  - Cross-workspace learning (privacy-safe, anonymized patterns)
+- **Forward-Thinking** - Always suggests next 2-3 steps:
+  - When you ask about a lead → Mentions next steps automatically
+  - When you create a campaign → Suggests testing strategy
+  - When you schedule a meeting → Offers to prep materials
+
+#### Natural, Concise Communication (December 2025) 💬
 - **2-3 Sentence Responses** - Conversational like texting a colleague, not writing essays
 - **Action-Oriented** - "Done ✓" not "I have successfully completed..."
 - **Context-Aware** - References your CRM, campaigns, and business data automatically
@@ -252,10 +283,14 @@ Neptune has been transformed from a basic chat assistant into an enterprise-grad
 - "Make a professional proposal for [client]"
 - "Generate a social media banner"
 
-💼 Business
-- Upload invoice → Auto-extract data
-- Paste error screenshot → Get debugging help
-- Share design mockup → Get improvement suggestions
+💼 Business Actions (Neptune Executes For You)
+- "Create a lead for John at Acme Corp" → Neptune creates the lead
+- "Schedule a demo for this prospect" → Neptune finds time and sends invite
+- "Draft a proposal for this deal" → Neptune generates proposal document
+- "Set up follow-ups for my new leads" → Neptune creates 5-step sequence
+- "Optimize my underperforming campaign" → Neptune generates A/B test variations
+- "Prioritize my tasks" → Neptune re-orders by urgency and impact
+- "Flag any unusual expenses" → Neptune analyzes and reports anomalies
 
 📢 Marketing & Sales
 - "Generate an email subject line for my product launch"
@@ -264,6 +299,12 @@ Neptune has been transformed from a basic chat assistant into an enterprise-grad
 - "Create a content calendar for LinkedIn and Twitter"
 - "Write brand guidelines for my company"
 - "What's the next marketing action for this lead?"
+
+🧠 Proactive Intelligence
+- Neptune automatically suggests: "You have 3 stalled deals - want me to draft follow-ups?"
+- Neptune notices: "Your campaign open rate dropped to 12% - should I optimize it?"
+- Neptune anticipates: "You have a meeting with Acme Corp tomorrow - want me to prep a brief?"
+- Neptune learns: "You always follow up leads after 2 days - should I queue that now?"
 ```
 
 #### Technical Details
@@ -298,8 +339,13 @@ Neptune has been transformed from a basic chat assistant into an enterprise-grad
 
 ### 📊 Dashboard (Neptune-First Experience)
 - **Neptune AI as Primary Interface** - Neptune chat is the default view on login
-- **Workspace Roadmap** - Interactive checklist of setup tasks (right sidebar)
+- **Workspace Roadmap Badges** - Interactive badge-based checklist of setup tasks (right sidebar):
+  - Badges with truncated titles (no overflow)
+  - Expandable dropdowns with full descriptions
+  - "Complete with Neptune" button to start conversation
+  - Click badge to expand, then complete via Neptune conversation
 - **Contextual Welcome** - Personalized greeting for new users (dismissible)
+- **Daily Insights** - Top priorities and opportunities for returning users
 - **Card-Based Layout** - Neptune chat and roadmap displayed as matching cards
 - Real-time metrics and activity tracking
 
@@ -366,11 +412,14 @@ src/
 
 ## 📖 API Endpoints (All Functional!)
 
-**Neptune AI (Enhanced)**
+**Neptune AI (Enhanced + Proactive)**
 ```
-/api/assistant/chat          POST   AI chat with GPT-4o vision
+/api/assistant/chat          POST   AI chat with GPT-4o vision + autonomous actions
 /api/assistant/upload        POST   Upload files (images, docs, PDFs)
 /api/assistant/stream        POST   Streaming responses
+/api/assistant/insights      GET    Get proactive insights and suggestions
+/api/assistant/action-approval POST  Approve/reject actions for learning
+/api/assistant/feedback      POST   Rate Neptune responses (👍/👎)
 ```
 
 **Core Features**

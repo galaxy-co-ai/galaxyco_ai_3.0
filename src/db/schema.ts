@@ -1297,6 +1297,151 @@ export const aiMessageFeedback = pgTable(
   }),
 );
 
+// ============================================================================
+// NEPTUNE AUTONOMY LEARNING SYSTEM (Phase 3)
+// ============================================================================
+
+export const neptuneActionHistory = pgTable(
+  'neptune_action_history',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Action details
+    actionType: text('action_type').notNull(), // e.g., 'create_lead', 'send_email'
+    toolName: text('tool_name').notNull(),
+    wasAutomatic: boolean('was_automatic').notNull().default(false),
+    userApproved: boolean('user_approved'), // null if not asked, true/false if asked
+    executionTime: integer('execution_time'), // milliseconds
+    resultStatus: text('result_status').notNull().default('pending'), // 'success' | 'failed' | 'pending'
+
+    // Metadata
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    workspaceIdx: index('neptune_action_history_workspace_idx').on(table.workspaceId),
+    userIdx: index('neptune_action_history_user_idx').on(table.userId),
+    toolIdx: index('neptune_action_history_tool_idx').on(table.toolName),
+    createdAtIdx: index('neptune_action_history_created_at_idx').on(table.createdAt),
+  }),
+);
+
+export const proactiveInsights = pgTable(
+  'proactive_insights',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' }), // Optional - can be workspace-wide
+
+    // Insight details
+    type: text('type').notNull(), // 'opportunity' | 'risk' | 'suggestion' | 'alert'
+    priority: integer('priority').notNull().default(5), // 1-10
+    category: text('category').notNull(), // 'sales' | 'marketing' | 'operations' | 'finance'
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    suggestedActions: jsonb('suggested_actions')
+      .$type<Array<{ action: string; toolName?: string; args?: Record<string, unknown> }>>()
+      .default([]),
+    autoExecutable: boolean('auto_executable').notNull().default(false),
+
+    // Metadata
+    expiresAt: timestamp('expires_at'),
+    dismissedAt: timestamp('dismissed_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    workspaceIdx: index('proactive_insights_workspace_idx').on(table.workspaceId),
+    userIdx: index('proactive_insights_user_idx').on(table.userId),
+    typeIdx: index('proactive_insights_type_idx').on(table.type),
+    priorityIdx: index('proactive_insights_priority_idx').on(table.priority),
+    createdAtIdx: index('proactive_insights_created_at_idx').on(table.createdAt),
+  }),
+);
+
+export const userAutonomyPreferences = pgTable(
+  'user_autonomy_preferences',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Autonomy settings
+    actionType: text('action_type').notNull(), // e.g., 'create_lead', 'send_email'
+    toolName: text('tool_name').notNull(),
+    confidenceScore: integer('confidence_score').notNull().default(0), // 0-100
+    approvalCount: integer('approval_count').notNull().default(0),
+    rejectionCount: integer('rejection_count').notNull().default(0),
+    autoExecuteEnabled: boolean('auto_execute_enabled').notNull().default(false),
+
+    // Metadata
+    lastUpdated: timestamp('last_updated').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantUserActionIdx: uniqueIndex('user_autonomy_preferences_tenant_user_action_idx').on(
+      table.workspaceId,
+      table.userId,
+      table.toolName,
+    ),
+    workspaceIdx: index('user_autonomy_preferences_workspace_idx').on(table.workspaceId),
+    userIdx: index('user_autonomy_preferences_user_idx').on(table.userId),
+  }),
+);
+
+export const workspaceIntelligence = pgTable(
+  'workspace_intelligence',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' })
+      .unique(), // One intelligence record per workspace
+
+    // Business context
+    industry: text('industry'),
+    businessModel: text('business_model'), // 'b2b', 'b2c', 'saas', etc.
+    goals: jsonb('goals')
+      .$type<Array<{ goal: string; priority: number }>>()
+      .default([]),
+    metrics: jsonb('metrics')
+      .$type<Array<{ metric: string; target: number; current: number }>>()
+      .default([]),
+    priorities: text('priorities').array().default([]),
+
+    // Learned patterns
+    learnedPatterns: jsonb('learned_patterns')
+      .$type<Record<string, unknown>>()
+      .default({}),
+
+    // Metadata
+    lastUpdated: timestamp('last_updated').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    workspaceIdx: uniqueIndex('workspace_intelligence_workspace_idx').on(table.workspaceId),
+  }),
+);
+
 export const aiMessageFeedbackRelations = relations(aiMessageFeedback, ({ one }) => ({
   message: one(aiMessages, {
     fields: [aiMessageFeedback.messageId],

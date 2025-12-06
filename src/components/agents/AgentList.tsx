@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Search,
   Bot,
-  ChevronRight,
   RefreshCw,
   AlertCircle,
   Mail,
@@ -21,6 +21,7 @@ import {
   Database,
   Workflow,
   TrendingUp,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ interface AgentListProps {
   agents: Agent[];
   selectedAgentId: string | null;
   onSelectAgent: (agent: Agent | null) => void;
+  onDeleteAgent?: (agentId: string) => void;
   isLoading?: boolean;
   error?: boolean;
   onRetry?: () => void;
@@ -134,6 +136,7 @@ export default function AgentList({
   agents,
   selectedAgentId,
   onSelectAgent,
+  onDeleteAgent,
   isLoading = false,
   error = false,
   onRetry,
@@ -141,6 +144,7 @@ export default function AgentList({
 }: AgentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<AgentStatus | "all">("all");
+  const [hoveredAgentId, setHoveredAgentId] = useState<string | null>(null);
 
   const filteredAgents = agents.filter((agent) => {
     const matchesSearch =
@@ -236,65 +240,85 @@ export default function AgentList({
               bg: "bg-gray-50",
             };
 
+            const isHovered = hoveredAgentId === agent.id;
+
             return (
-              <button
+              <div
                 key={agent.id}
-                onClick={() => onSelectAgent(isSelected ? null : agent)}
                 className={cn(
-                  "w-full text-left p-3 rounded-xl border transition-all duration-200",
+                  "w-full p-3 rounded-xl border transition-all duration-200 relative group",
                   isSelected
                     ? "bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200 shadow-md"
                     : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"
                 )}
-                aria-label={`Select ${agent.name}`}
-                aria-pressed={isSelected}
+                onMouseEnter={() => setHoveredAgentId(agent.id)}
+                onMouseLeave={() => setHoveredAgentId(null)}
               >
-                <div className="flex items-start gap-3">
-                  <div className={cn("p-2.5 rounded-lg relative", colors.bg)}>
-                    <Icon className={cn("h-5 w-5", colors.text)} />
-                    <div className="absolute -top-0.5 -right-0.5">
-                      {getStatusIndicator(agent.status)}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h4 className="font-semibold text-sm text-gray-900 truncate">
-                        {agent.name}
-                      </h4>
-                      {showMessageBadge && agent.unreadMessages && agent.unreadMessages > 0 && (
-                        <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-500 text-white border-0">
-                          {agent.unreadMessages}
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 truncate mb-2">
-                      {agent.description}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        className={cn(
-                          "text-[10px] px-2 py-0.5 h-5 border font-medium",
-                          getStatusBadgeClasses(agent.status)
-                        )}
-                      >
+                <button
+                  onClick={() => onSelectAgent(isSelected ? null : agent)}
+                  className="w-full text-left"
+                  aria-label={`Select ${agent.name}`}
+                  aria-pressed={isSelected}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={cn("p-2.5 rounded-lg relative", colors.bg)}>
+                      <Icon className={cn("h-5 w-5", colors.text)} />
+                      <div className="absolute -top-0.5 -right-0.5">
                         {getStatusIndicator(agent.status)}
-                        <span className="ml-1">{getStatusLabel(agent.status)}</span>
-                      </Badge>
-                      <span className="text-[10px] text-gray-400">
-                        {agent.tasksToday} tasks today
-                      </span>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className="font-semibold text-sm text-gray-900 truncate">
+                          {agent.name}
+                        </h4>
+                        {showMessageBadge && agent.unreadMessages && agent.unreadMessages > 0 && (
+                          <Badge className="text-[10px] px-1.5 py-0 h-4 bg-blue-500 text-white border-0">
+                            {agent.unreadMessages}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate mb-2">
+                        {agent.description}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={cn(
+                            "text-[10px] px-2 py-0.5 h-5 border font-medium",
+                            getStatusBadgeClasses(agent.status)
+                          )}
+                        >
+                          {getStatusIndicator(agent.status)}
+                          <span className="ml-1">{getStatusLabel(agent.status)}</span>
+                        </Badge>
+                        <span className="text-[10px] text-gray-400">
+                          {agent.tasksToday} tasks today
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <ChevronRight
-                    className={cn(
-                      "h-4 w-4 transition-transform flex-shrink-0 mt-1",
-                      isSelected
-                        ? "text-emerald-600 rotate-90"
-                        : "text-gray-300"
-                    )}
-                  />
-                </div>
-              </button>
+                </button>
+                {/* Delete button - appears on hover */}
+                {onDeleteAgent && isHovered && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      if (window.confirm(`Are you sure you want to delete "${agent.name}"? This action cannot be undone.`)) {
+                        onDeleteAgent(agent.id);
+                        // Deselect if this agent was selected
+                        if (isSelected) {
+                          onSelectAgent(null);
+                        }
+                      }
+                    }}
+                    className="absolute top-3 right-3 p-1.5 rounded-md text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors z-10"
+                    aria-label={`Delete ${agent.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             );
           })
         )}

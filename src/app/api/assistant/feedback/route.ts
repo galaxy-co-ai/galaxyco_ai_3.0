@@ -1,38 +1,33 @@
+/**
+ * Feedback API
+ * 
+ * Allows users to rate Neptune responses (👍/👎) for learning
+ */
+
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
-import { z } from 'zod';
+import { db } from '@/lib/db';
+import { aiMessageFeedback, aiMessages } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
-import { createErrorResponse } from '@/lib/api-error-handler';
-import { recordMessageFeedback, recordCorrection } from '@/lib/ai/memory';
-
-// ============================================================================
-// SCHEMA VALIDATION
-// ============================================================================
+import { updateCommunicationStyle } from '@/lib/ai/memory';
+import { z } from 'zod';
 
 const feedbackSchema = z.object({
-  messageId: z.string().uuid('Invalid message ID'),
+  messageId: z.string().uuid(),
   feedbackType: z.enum(['positive', 'negative']),
-  comment: z.string().max(500).optional(),
+  comment: z.string().optional(),
+  communicationStyle: z.enum(['concise', 'detailed', 'balanced']).optional(),
 });
-
-const correctionSchema = z.object({
-  wrongResponse: z.string().max(500, 'Response text too long'),
-  correctInfo: z.string().max(500, 'Correction text too long'),
-});
-
-// ============================================================================
-// POST - Submit Feedback
-// ============================================================================
 
 export async function POST(request: Request) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
-    const user = await getCurrentUser();
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
+    const currentUser = await getCurrentUser();
 
     const body = await request.json();
-    
-    // Validate input
     const validationResult = feedbackSchema.safeParse(body);
+
     if (!validationResult.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: validationResult.error.errors },
@@ -40,70 +35,48 @@ export async function POST(request: Request) {
       );
     }
 
-    const { messageId, feedbackType, comment } = validationResult.data;
+    const { messageId, feedbackType, comment, communicationStyle } = validationResult.data;
 
-    // Record the feedback
-    const success = await recordMessageFeedback(
+    // Verify message exists and belongs to user
+    const message = await db.query.aiMessages.findFirst({
+      where: and(
+        eq(aiMessages.id, messageId),
+        eq(aiMessages.workspaceId, workspaceId)
+      ),
+    });
+
+    if (!message) {
+      return NextResponse.json(
+        { error: 'Message not found' },
+        { status: 404 }
+      );
+    }
+
+    // Record feedback
+    await db.insert(aiMessageFeedback).values({
       messageId,
       workspaceId,
-      user.id,
+      userId: currentUser.id,
       feedbackType,
-      comment
+      comment: comment || null,
+    });
+
+    // Update communication style if provided
+    if (communicationStyle) {
+      await updateCommunicationStyle(workspaceId, currentUser.id, communicationStyle);
+    }
+
+    logger.info('Feedback recorded', { messageId, feedbackType, userId: currentUser.id });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Feedback recorded - thank you!',
+    });
+  } catch (error) {
+    logger.error('Failed to record feedback', error);
+    return NextResponse.json(
+      { error: 'Failed to record feedback' },
+      { status: 500 }
     );
-
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Failed to record feedback - you may have already provided feedback for this message' },
-        { status: 409 }
-      );
-    }
-
-    logger.info('AI feedback recorded', { messageId, feedbackType, userId: user.id });
-
-    return NextResponse.json({
-      success: true,
-      message: feedbackType === 'positive' 
-        ? 'Thanks for the positive feedback!' 
-        : 'Thanks for letting us know. We\'ll work on improving.',
-    });
-  } catch (error) {
-    return createErrorResponse(error, 'Submit feedback error');
   }
 }
-
-// ============================================================================
-// PUT - Submit Correction
-// ============================================================================
-
-export async function PUT(request: Request) {
-  try {
-    const { workspaceId } = await getCurrentWorkspace();
-    const user = await getCurrentUser();
-
-    const body = await request.json();
-    
-    // Validate input
-    const validationResult = correctionSchema.safeParse(body);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
-    }
-
-    const { wrongResponse, correctInfo } = validationResult.data;
-
-    // Record the correction
-    await recordCorrection(workspaceId, user.id, wrongResponse, correctInfo);
-
-    logger.info('AI correction recorded', { userId: user.id });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Thanks for the correction! I\'ll remember this for next time.',
-    });
-  } catch (error) {
-    return createErrorResponse(error, 'Submit correction error');
-  }
-}
-

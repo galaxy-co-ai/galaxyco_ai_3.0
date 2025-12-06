@@ -14,7 +14,7 @@ import type { Conversation } from "./ConversationsDashboard";
 function NeptuneCardWrapper({ children, isFullscreen }: { children: React.ReactNode; isFullscreen: boolean }) {
   if (isFullscreen) {
     return (
-      <Card className="h-full flex flex-col border shadow-sm">
+      <Card className="h-full flex flex-col border shadow-sm overflow-hidden">
         {children}
       </Card>
     );

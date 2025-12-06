@@ -15,6 +15,7 @@ import { gatherAIContext, getQuickContext } from '@/lib/ai/context';
 import { generateSystemPrompt } from '@/lib/ai/system-prompt';
 import { trackFrequentQuestion, analyzeConversationForLearning, updateUserPreferencesFromInsights } from '@/lib/ai/memory';
 import { processDocuments } from '@/lib/document-processing';
+import { shouldAutoExecute, recordActionExecution } from '@/lib/ai/autonomy-learning';
 
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
 
@@ -37,7 +38,7 @@ const chatSchema = z.object({
 // ============================================================================
 
 /**
- * Process tool calls from GPT-4 response
+ * Process tool calls from GPT-4 response with autonomy learning
  */
 async function processToolCalls(
   toolCalls: Array<{
@@ -46,7 +47,7 @@ async function processToolCalls(
     function?: { name: string; arguments: string };
   }>,
   toolContext: ToolContext
-): Promise<Array<{ toolCallId: string; name: string; result: string }>> {
+): Promise<Array<{ toolCallId: string; name: string; result: string; requiresConfirmation?: boolean; autoExecuted?: boolean }>> {
   const results = [];
 
   for (const toolCall of toolCalls) {
@@ -58,12 +59,54 @@ async function processToolCalls(
     
     try {
       const args = JSON.parse(func.arguments);
-      const result = await executeTool(func.name, args, toolContext);
+      
+      // Check if we should auto-execute based on learned preferences
+      const autonomyCheck = await shouldAutoExecute(
+        func.name,
+        toolContext.workspaceId,
+        toolContext.userId
+      );
+
+      const startTime = Date.now();
+      let result;
+      let autoExecuted = false;
+
+      if (autonomyCheck.autoExecute) {
+        // Auto-execute: Low-risk or high-confidence learned action
+        result = await executeTool(func.name, args, toolContext);
+        autoExecuted = true;
+        
+        const executionTime = Date.now() - startTime;
+        await recordActionExecution(
+          toolContext.workspaceId,
+          toolContext.userId,
+          func.name,
+          true, // wasAutomatic
+          null, // userApproved (not asked)
+          executionTime,
+          result.success ? 'success' : 'failed'
+        );
+      } else {
+        // Requires confirmation: Medium/high-risk or low confidence
+        result = {
+          success: false,
+          message: `Action "${func.name}" requires confirmation. ${autonomyCheck.reason}`,
+          data: {
+            requiresConfirmation: true,
+            toolName: func.name,
+            args,
+            confidence: autonomyCheck.confidence,
+            reason: autonomyCheck.reason,
+          },
+        };
+      }
       
       results.push({
         toolCallId: id,
         name: func.name,
         result: JSON.stringify(result),
+        requiresConfirmation: !autonomyCheck.autoExecute,
+        autoExecuted,
       });
     } catch (error) {
       logger.error('Failed to execute tool call', { toolName: func.name, error });

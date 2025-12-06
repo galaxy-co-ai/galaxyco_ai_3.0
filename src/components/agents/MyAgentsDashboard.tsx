@@ -211,6 +211,42 @@ export default function MyAgentsDashboard({
     [agents, mutateAgents]
   );
 
+  // Handle agent deletion
+  const handleDeleteAgent = useCallback(
+    async (agentId: string) => {
+      setIsUpdatingAgent(agentId);
+
+      try {
+        const response = await fetch(`/api/agents/${agentId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to delete agent");
+        }
+
+        // Deselect if this agent was selected
+        if (selectedAgent?.id === agentId) {
+          setSelectedAgent(null);
+        }
+
+        await mutateAgents();
+        toast.success("Agent deleted successfully");
+      } catch (error) {
+        logger.error("Failed to delete agent", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to delete agent. Please try again."
+        );
+      } finally {
+        setIsUpdatingAgent(null);
+      }
+    },
+    [selectedAgent, mutateAgents]
+  );
+
   // Handle agent configuration
   const handleConfigureAgent = useCallback((agent: Agent) => {
     toast.info(`Opening configuration for ${agent.name}...`);
@@ -355,6 +391,7 @@ export default function MyAgentsDashboard({
                 agents={agents}
                 selectedAgentId={selectedAgent?.id || null}
                 onSelectAgent={setSelectedAgent}
+                onDeleteAgent={handleDeleteAgent}
                 isLoading={isLoadingAgents}
                 error={!!agentsError}
                 onRetry={handleRetry}

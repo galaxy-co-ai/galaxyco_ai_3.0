@@ -71,6 +71,36 @@ export default function NeptuneDashboardWelcome({
     fetchWelcomeData();
   }, [userId, workspaceId]);
 
+  // Fetch insights for returning users
+  const [insights, setInsights] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    type: string;
+    priority: number;
+    suggestedActions: Array<{ action: string; toolName?: string; args?: Record<string, unknown> }>;
+  }>>([]);
+
+  useEffect(() => {
+    if (!welcomeData || welcomeData.isNewUser) return;
+
+    async function fetchInsights() {
+      try {
+        const response = await fetch(`/api/assistant/insights?limit=3`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.insights) {
+            setInsights(data.insights);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching insights', error);
+      }
+    }
+
+    fetchInsights();
+  }, [welcomeData]);
+
   const handleDismiss = () => {
     setIsDismissed(true);
     localStorage.setItem(`welcome-dismissed-${userId}`, 'true');
@@ -83,9 +113,59 @@ export default function NeptuneDashboardWelcome({
   const { isNewUser, recentActivity, workspaceHealth } = welcomeData;
   const firstName = userName.split(' ')[0] || 'there';
 
-  // Only show welcome card for new users
+  // Show insights for returning users, welcome for new users
   if (!isNewUser) {
-    return null;
+    if (insights.length === 0) {
+      return null; // No insights to show
+    }
+
+    // Show top 3 insights for returning users
+    return (
+      <Card className="mb-4 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border-blue-200/50">
+        <div className="flex items-start gap-4">
+          <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 shrink-0">
+            <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Today's Top Priorities
+            </h3>
+            <div className="space-y-3">
+              {insights.slice(0, 3).map((insight) => (
+                <div key={insight.id} className="p-3 rounded-lg bg-background/50 border">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h4 className="font-medium text-sm">{insight.title}</h4>
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      insight.priority >= 8 ? 'bg-red-100 text-red-700' :
+                      insight.priority >= 6 ? 'bg-amber-100 text-amber-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {insight.priority >= 8 ? 'High' : insight.priority >= 6 ? 'Medium' : 'Low'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{insight.description}</p>
+                  {insight.suggestedActions.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => {
+                        const event = new CustomEvent('neptune-prompt', {
+                          detail: { prompt: insight.suggestedActions[0].action },
+                        });
+                        window.dispatchEvent(event);
+                      }}
+                    >
+                      {insight.suggestedActions[0].action}
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   // New user onboarding-focused welcome

@@ -3,15 +3,15 @@
 /**
  * Roadmap Card Component
  * 
- * Displays a checklist of important setup tasks for optimal workspace configuration.
- * Tasks are dynamically generated based on workspace health and completion status.
+ * Displays roadmap items as badges. Users complete items by discussing with Neptune,
+ * who executes the necessary actions.
  */
 
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Circle, Sparkles, Bot, Users, FolderOpen, Plug, ArrowRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Sparkles, Bot, Users, FolderOpen, Plug, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface RoadmapCardProps {
   workspaceId: string;
@@ -46,9 +46,9 @@ interface RoadmapData {
 }
 
 export default function RoadmapCard({ workspaceId }: RoadmapCardProps) {
-  const router = useRouter();
   const [roadmapData, setRoadmapData] = useState<RoadmapData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchRoadmapData() {
@@ -63,12 +63,12 @@ export default function RoadmapCard({ workspaceId }: RoadmapCardProps) {
           const data = await response.json();
           setRoadmapData(data);
         } else {
-          console.error('Roadmap API error:', response.status, response.statusText);
+          logger.error('Roadmap API error', { status: response.status, statusText: response.statusText });
           // Set empty data on error so component still renders
           setRoadmapData({ items: [], completionPercentage: 0 });
         }
       } catch (error) {
-        console.error('Error fetching roadmap data', error);
+        logger.error('Error fetching roadmap data', error);
         // Set empty data on error so component still renders
         setRoadmapData({ items: [], completionPercentage: 0 });
       } finally {
@@ -124,18 +124,59 @@ export default function RoadmapCard({ workspaceId }: RoadmapCardProps) {
   const incompleteItems = items.filter(item => !item.completed);
   const completedCount = items.length - incompleteItems.length;
 
-  const handleItemClick = (item: RoadmapItem) => {
+  const handleBadgeClick = (item: RoadmapItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Toggle expanded state
+    if (expandedItemId === item.id) {
+      setExpandedItemId(null);
+    } else {
+      setExpandedItemId(item.id);
+    }
+  };
+
+  const handleCompleteWithNeptune = (item: RoadmapItem) => {
     if (item.completed) return;
 
-    if (item.action?.type === 'navigate') {
-      router.push(item.action.target);
-    } else if (item.action?.type === 'neptune' && item.action.prompt) {
-      // Trigger Neptune with the prompt
-      // This will be handled by passing the prompt to Neptune via a custom event or context
-      const event = new CustomEvent('neptune-prompt', { 
-        detail: { prompt: item.action.prompt } 
-      });
-      window.dispatchEvent(event);
+    // Trigger Neptune conversation for roadmap items
+    // Neptune will help the user complete the task
+    const prompt = item.action?.prompt || `Help me ${item.title.toLowerCase()}`;
+    const event = new CustomEvent('neptune-prompt', { 
+      detail: { prompt } 
+    });
+    window.dispatchEvent(event);
+    
+    // Close dropdown after triggering Neptune
+    setExpandedItemId(null);
+  };
+
+  const getBadgeColor = (item: RoadmapItem) => {
+    if (item.completed) {
+      return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100';
+    }
+    
+    switch (item.priority) {
+      case 'high':
+        return 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100';
+      case 'medium':
+        return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100';
+    }
+  };
+
+  const getIconColor = (item: RoadmapItem) => {
+    if (item.completed) {
+      return 'text-green-600';
+    }
+    
+    switch (item.priority) {
+      case 'high':
+        return 'text-purple-600';
+      case 'medium':
+        return 'text-blue-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -163,65 +204,78 @@ export default function RoadmapCard({ workspaceId }: RoadmapCardProps) {
         </p>
       </div>
 
-      {/* Roadmap Items */}
-      <div className="flex-1 overflow-y-auto space-y-3">
-        {incompleteItems.length === 0 ? (
+      {/* Roadmap Items as Badges */}
+      <div className="flex-1 overflow-y-auto">
+        {items.length === 0 ? (
           <div className="text-center py-8">
-            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
-            <p className="text-sm font-medium text-foreground mb-1">
-              All set! 🎉
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Your workspace is fully configured.
+            <p className="text-sm text-muted-foreground">No roadmap items</p>
+          </div>
+        ) : incompleteItems.length === 0 ? (
+          <div className="text-center py-4 mb-4">
+            <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground mb-3">
+              All roadmap items complete! 🎉
             </p>
           </div>
-        ) : (
-          incompleteItems.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => handleItemClick(item)}
-              className={`p-4 rounded-lg border transition-all cursor-pointer group ${
-                item.completed
-                  ? 'bg-muted/50 border-muted'
-                  : item.priority === 'high'
-                  ? 'border-purple-200 bg-purple-50/50 hover:bg-purple-50 hover:border-purple-300'
-                  : 'border-border hover:bg-muted/50'
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0">
-                  {item.completed ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-muted-foreground group-hover:text-purple-500 transition-colors" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2 mb-1">
-                    {(() => {
-                      const IconComponent = iconMap[item.icon] || Sparkles;
-                      return <IconComponent className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />;
-                    })()}
-                    <h4 className={`text-sm font-medium ${
-                      item.completed ? 'text-muted-foreground line-through' : 'text-foreground'
-                    }`}>
+        ) : null}
+        
+        <div className="space-y-2">
+          {items.map((item) => {
+            const IconComponent = iconMap[item.icon] || Sparkles;
+            const isExpanded = expandedItemId === item.id;
+            
+            return (
+              <div key={item.id} className="w-full">
+                <Badge
+                  onClick={(e) => handleBadgeClick(item, e)}
+                  className={`px-3 py-1.5 border transition-colors w-full justify-between ${
+                    item.completed 
+                      ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 cursor-default' 
+                      : `cursor-pointer ${getBadgeColor(item)}`
+                  }`}
+                  aria-label={item.completed ? `${item.title} (completed)` : `Click to view details for ${item.title}`}
+                  aria-expanded={isExpanded}
+                >
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    {item.completed ? (
+                      <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${getIconColor(item)}`} />
+                    ) : (
+                      <IconComponent className={`h-3.5 w-3.5 shrink-0 ${getIconColor(item)}`} />
+                    )}
+                    <span className="font-semibold truncate" title={item.title}>
                       {item.title}
-                    </h4>
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {item.description}
-                  </p>
-                  {item.action && !item.completed && (
-                    <div className="flex items-center gap-1 text-xs text-purple-600 group-hover:text-purple-700">
-                      <span>Get started</span>
-                      <ArrowRight className="h-3 w-3" />
+                  {!item.completed && (
+                    <div className="shrink-0 ml-1.5">
+                      {isExpanded ? (
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      )}
                     </div>
                   )}
-                </div>
+                </Badge>
+                
+                {/* Expanded Dropdown */}
+                {isExpanded && !item.completed && (
+                  <div className="mt-2 p-3 rounded-lg border bg-background shadow-sm">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {item.description}
+                    </p>
+                    <button
+                      onClick={() => handleCompleteWithNeptune(item)}
+                      className="w-full px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-md hover:bg-purple-100 transition-colors"
+                      aria-label={`Complete ${item.title} with Neptune`}
+                    >
+                      Complete with Neptune
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
-        )}
+            );
+          })}
+        </div>
       </div>
     </Card>
   );
