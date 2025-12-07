@@ -115,6 +115,7 @@ Neptune is now a fully-featured AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🐛 **Bug Fix** - Fixed insights query that used impossible date range (always returned 0 results)
 - 🎙️ **Advanced Capabilities** - Voice, automation, and team collaboration:
   - Voice module with Whisper speech-to-text and OpenAI TTS
   - Create automations from natural language ("When a lead is qualified...")
