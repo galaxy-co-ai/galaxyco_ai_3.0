@@ -3,7 +3,7 @@
  * Supports Gmail, Google Calendar, Outlook, Microsoft Calendar, and Finance HQ
  */
 
-export type OAuthProvider = 'google' | 'microsoft' | 'quickbooks' | 'shopify';
+export type OAuthProvider = 'google' | 'microsoft' | 'quickbooks' | 'shopify' | 'twitter';
 
 export interface OAuthConfig {
   clientId: string;
@@ -72,7 +72,37 @@ export const oauthProviders: Record<OAuthProvider, OAuthConfig> = {
       'read_shopify_payments_disputes',
     ],
   },
+  twitter: {
+    clientId: process.env.TWITTER_CLIENT_ID || '',
+    clientSecret: process.env.TWITTER_CLIENT_SECRET || '',
+    authUrl: 'https://twitter.com/i/oauth2/authorize',
+    tokenUrl: 'https://api.twitter.com/2/oauth2/token',
+    scopes: [
+      'tweet.read',
+      'tweet.write',
+      'users.read',
+      'offline.access', // For refresh tokens
+    ],
+  },
 };
+
+/**
+ * Generate PKCE code verifier and challenge for OAuth 2.0
+ */
+export function generatePKCE(): { codeVerifier: string; codeChallenge: string } {
+  const crypto = require('crypto');
+  
+  // Generate code verifier (random string)
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  
+  // Generate code challenge (SHA256 hash of verifier)
+  const codeChallenge = crypto
+    .createHash('sha256')
+    .update(codeVerifier)
+    .digest('base64url');
+  
+  return { codeVerifier, codeChallenge };
+}
 
 /**
  * Generate OAuth authorization URL
@@ -80,7 +110,8 @@ export const oauthProviders: Record<OAuthProvider, OAuthConfig> = {
 export function getOAuthUrl(
   provider: OAuthProvider,
   redirectUri: string,
-  state: string
+  state: string,
+  codeChallenge?: string // For Twitter PKCE
 ): string {
   const config = oauthProviders[provider];
 
@@ -94,9 +125,17 @@ export function getOAuthUrl(
     response_type: 'code',
     scope: config.scopes.join(' '),
     state,
-    access_type: 'offline', // For refresh tokens
-    prompt: 'consent', // Force consent screen to get refresh token
   });
+
+  // Twitter requires PKCE
+  if (provider === 'twitter' && codeChallenge) {
+    params.append('code_challenge', codeChallenge);
+    params.append('code_challenge_method', 'S256');
+  } else if (provider !== 'twitter') {
+    // Other providers use standard OAuth
+    params.append('access_type', 'offline'); // For refresh tokens
+    params.append('prompt', 'consent'); // Force consent screen to get refresh token
+  }
 
   return `${config.authUrl}?${params.toString()}`;
 }
@@ -107,7 +146,8 @@ export function getOAuthUrl(
 export async function exchangeCodeForToken(
   provider: OAuthProvider,
   code: string,
-  redirectUri: string
+  redirectUri: string,
+  codeVerifier?: string // For Twitter PKCE
 ): Promise<{
   accessToken: string;
   refreshToken?: string;
@@ -122,17 +162,36 @@ export async function exchangeCodeForToken(
 
   const params = new URLSearchParams({
     client_id: config.clientId,
-    client_secret: config.clientSecret,
     code,
     redirect_uri: redirectUri,
     grant_type: 'authorization_code',
   });
 
+  // Twitter uses PKCE (code_verifier) instead of client_secret
+  if (provider === 'twitter') {
+    if (!codeVerifier) {
+      throw new Error('Code verifier required for Twitter OAuth');
+    }
+    params.append('code_verifier', codeVerifier);
+  } else {
+    // Other providers use client_secret
+    params.append('client_secret', config.clientSecret);
+  }
+
+  // Twitter requires Basic Auth header instead of client_secret in body
+  const headers: HeadersInit = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+
+  if (provider === 'twitter') {
+    // Twitter requires Basic Auth with client_id:client_secret
+    const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+    headers['Authorization'] = `Basic ${credentials}`;
+  }
+
   const response = await fetch(config.tokenUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers,
     body: params.toString(),
   });
 
@@ -146,8 +205,8 @@ export async function exchangeCodeForToken(
   return {
     accessToken: data.access_token,
     refreshToken: data.refresh_token,
-    expiresIn: data.expires_in,
-    tokenType: data.token_type,
+    expiresIn: data.expires_in || 7200, // Default 2 hours if not provided
+    tokenType: data.token_type || 'Bearer',
   };
 }
 
@@ -168,17 +227,28 @@ export async function refreshAccessToken(
   }
 
   const params = new URLSearchParams({
-    client_id: config.clientId,
-    client_secret: config.clientSecret,
     refresh_token: refreshToken,
     grant_type: 'refresh_token',
   });
 
+  // Twitter requires Basic Auth header
+  const headers: HeadersInit = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+
+  if (provider === 'twitter') {
+    // Twitter uses Basic Auth
+    const credentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+    headers['Authorization'] = `Basic ${credentials}`;
+  } else {
+    // Other providers include client credentials in body
+    params.append('client_id', config.clientId);
+    params.append('client_secret', config.clientSecret);
+  }
+
   const response = await fetch(config.tokenUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers,
     body: params.toString(),
   });
 
@@ -191,7 +261,7 @@ export async function refreshAccessToken(
 
   return {
     accessToken: data.access_token,
-    expiresIn: data.expires_in,
+    expiresIn: data.expires_in || 7200, // Default 2 hours if not provided
   };
 }
 
