@@ -105,6 +105,11 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🚀 **Parallel Tool Execution and Semantic Caching** - Performance optimization:
+  - Independent tools now execute simultaneously (Promise.all)
+  - Semantic caching: similar queries return cached responses instantly
+  - Cost reduction: avoid redundant API calls for similar questions
+  - Smart cache bypass for time-sensitive queries (today, schedule, create)
 - 📚 **Neptune RAG with Knowledge Base** - Grounded answers with document citations:
   - Neptune searches your uploaded documents to answer questions
   - Responses include citations: "According to [Document Title]..."

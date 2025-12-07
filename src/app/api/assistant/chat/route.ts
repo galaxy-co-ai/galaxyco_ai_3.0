@@ -14,6 +14,7 @@ import { generateSystemPrompt } from '@/lib/ai/system-prompt';
 import { trackFrequentQuestion, analyzeConversationForLearning, updateUserPreferencesFromInsights } from '@/lib/ai/memory';
 import { processDocuments } from '@/lib/document-processing';
 import { shouldAutoExecute, recordActionExecution } from '@/lib/ai/autonomy-learning';
+import { getCachedResponse, cacheResponse, isCacheAvailable } from '@/lib/ai/cache';
 
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
 
@@ -86,7 +87,8 @@ function createSSEStream() {
 }
 
 /**
- * Process tool calls with autonomy learning
+ * Process tool calls with autonomy learning and parallel execution
+ * Independent tools are executed simultaneously for better performance
  */
 async function processToolCalls(
   toolCalls: Array<{
@@ -96,78 +98,96 @@ async function processToolCalls(
   }>,
   toolContext: ToolContext
 ): Promise<Array<{ toolCallId: string; name: string; result: string; requiresConfirmation?: boolean; autoExecuted?: boolean }>> {
-  const results = [];
-
-  for (const toolCall of toolCalls) {
-    const { id, function: func } = toolCall;
-    
-    if (!func) {
-      continue;
-    }
-    
-    try {
-      const args = JSON.parse(func.arguments);
-      
-      const autonomyCheck = await shouldAutoExecute(
-        func.name,
-        toolContext.workspaceId,
-        toolContext.userId
-      );
-
-      const startTime = Date.now();
-      let result;
-      let autoExecuted = false;
-
-      if (autonomyCheck.autoExecute) {
-        result = await executeTool(func.name, args, toolContext);
-        autoExecuted = true;
-        
-        const executionTime = Date.now() - startTime;
-        await recordActionExecution(
-          toolContext.workspaceId,
-          toolContext.userId,
-          func.name,
-          true,
-          null,
-          executionTime,
-          result.success ? 'success' : 'failed'
-        );
-      } else {
-        result = {
-          success: false,
-          message: `Action "${func.name}" requires confirmation. ${autonomyCheck.reason}`,
-          data: {
-            requiresConfirmation: true,
-            toolName: func.name,
-            args,
-            confidence: autonomyCheck.confidence,
-            reason: autonomyCheck.reason,
-          },
-        };
-      }
-      
-      results.push({
-        toolCallId: id,
-        name: func.name,
-        result: JSON.stringify(result),
-        requiresConfirmation: !autonomyCheck.autoExecute,
-        autoExecuted,
-      });
-    } catch (error) {
-      logger.error('Failed to execute tool call', { toolName: func.name, error });
-      results.push({
-        toolCallId: id,
-        name: func.name,
-        result: JSON.stringify({
-          success: false,
-          message: 'Tool execution failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
-        }),
-      });
-    }
+  
+  // Filter out invalid tool calls
+  const validToolCalls = toolCalls.filter(tc => tc.function);
+  
+  if (validToolCalls.length === 0) {
+    return [];
   }
 
-  return results;
+  logger.info('[AI Chat] Executing tools in parallel', { 
+    toolCount: validToolCalls.length,
+    tools: validToolCalls.map(tc => tc.function?.name)
+  });
+
+  // Execute all tools in parallel using Promise.all
+  const results = await Promise.all(
+    validToolCalls.map(async (toolCall) => {
+      const { id, function: func } = toolCall;
+      
+      if (!func) {
+        return null;
+      }
+      
+      try {
+        const args = JSON.parse(func.arguments);
+        
+        // Check autonomy (fast operation, OK to do in parallel)
+        const autonomyCheck = await shouldAutoExecute(
+          func.name,
+          toolContext.workspaceId,
+          toolContext.userId
+        );
+
+        const startTime = Date.now();
+        let result;
+        let autoExecuted = false;
+
+        if (autonomyCheck.autoExecute) {
+          // Execute the tool
+          result = await executeTool(func.name, args, toolContext);
+          autoExecuted = true;
+          
+          // Record execution (async, non-blocking)
+          const executionTime = Date.now() - startTime;
+          recordActionExecution(
+            toolContext.workspaceId,
+            toolContext.userId,
+            func.name,
+            true,
+            null,
+            executionTime,
+            result.success ? 'success' : 'failed'
+          ).catch(err => logger.warn('Failed to record execution', { err }));
+        } else {
+          result = {
+            success: false,
+            message: `Action "${func.name}" requires confirmation. ${autonomyCheck.reason}`,
+            data: {
+              requiresConfirmation: true,
+              toolName: func.name,
+              args,
+              confidence: autonomyCheck.confidence,
+              reason: autonomyCheck.reason,
+            },
+          };
+        }
+        
+        return {
+          toolCallId: id,
+          name: func.name,
+          result: JSON.stringify(result),
+          requiresConfirmation: !autonomyCheck.autoExecute,
+          autoExecuted,
+        };
+      } catch (error) {
+        logger.error('Failed to execute tool call', { toolName: func.name, error });
+        return {
+          toolCallId: id,
+          name: func.name,
+          result: JSON.stringify({
+            success: false,
+            message: 'Tool execution failed',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }),
+        };
+      }
+    })
+  );
+
+  // Filter out nulls and return
+  return results.filter((r): r is NonNullable<typeof r> => r !== null);
 }
 
 // ============================================================================
@@ -233,6 +253,32 @@ export async function POST(request: Request) {
       });
 
       const userRecord = currentUser;
+
+      // Check semantic cache for similar queries (only for queries without attachments)
+      if (!attachments || attachments.length === 0) {
+        const cachedResponse = await getCachedResponse(message, workspaceId);
+        if (cachedResponse) {
+          logger.info('[AI Chat Stream] Cache hit - returning cached response', {
+            query: message.slice(0, 50),
+          });
+
+          // Stream the cached response to maintain UX consistency
+          const words = cachedResponse.response.split(' ');
+          for (let i = 0; i < words.length; i += 3) {
+            const chunk = words.slice(i, i + 3).join(' ') + ' ';
+            sse.sendContent(chunk);
+            // Small delay for natural feel
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+
+          sse.sendDone({
+            conversationId: conversationId || 'cached',
+            cached: true,
+            toolsExecuted: cachedResponse.toolsUsed,
+          });
+          return;
+        }
+      }
 
       // Gather AI context
       const aiContext = await gatherAIContext(workspaceId, clerkUserId);
@@ -565,6 +611,14 @@ export async function POST(request: Request) {
         toolsUsed: toolCallsMade.map(tc => tc.name),
         responseLength: fullResponse.length,
       });
+
+      // Cache the response for similar future queries (async, non-blocking)
+      if (!attachments || attachments.length === 0) {
+        cacheResponse(message, fullResponse, workspaceId, {
+          toolsUsed: toolCallsMade.map(tc => tc.name),
+          metadata: { duration, conversationId: conversation.id },
+        }).catch(err => logger.warn('[AI Chat Stream] Failed to cache response', { err }));
+      }
 
       // Send completion message
       sse.sendDone({
