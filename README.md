@@ -116,6 +116,7 @@ Neptune is now a fully-featured AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 💬 **Neptune Chat UX Improvements** - Fresh conversation on each login, Chat/History toggle in header, responsive icons on mobile
 - 📄 **Legal & Company Pages** - Privacy Policy, Terms of Service, Cookie Policy, Security, Compliance, About, Contact
 - 🔗 **Working Contact Form** - `/api/contact` sends emails via Resend with user confirmation
 - 🌐 **SEO Files** - robots.txt and sitemap.xml created

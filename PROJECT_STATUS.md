@@ -37,7 +37,14 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Latest Updates (December 6, 2025 - Evening):**
+**Latest Updates (December 6, 2025 - Night):**
+- **Neptune Chat UX Improvements**:
+  - Fresh conversation on each login (no longer restores previous conversation)
+  - Chat | History toggle in header replaces dropdown
+  - Full history view shows all past conversations with title, preview, date
+  - Click any conversation to load it and switch back to chat
+  - Responsive design: icons-only on mobile, full text on desktop
+  - New Chat button uses + icon instead of trash
 - **Legal Pages Created** - Privacy Policy, Terms of Service, Cookie Policy, Security, Compliance (all at `/privacy`, `/terms`, `/cookies`, `/security`, `/compliance`)
 - **Company Pages Created** - About page (`/about`) and Contact page (`/contact`) with working form
 - **Contact API** - `/api/contact` sends emails via Resend with confirmation to user
