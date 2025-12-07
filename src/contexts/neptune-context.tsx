@@ -46,6 +46,15 @@ export interface Attachment {
   mimeType: string;
 }
 
+export interface ConversationHistoryItem {
+  id: string;
+  title: string;
+  preview: string;
+  createdAt: string;
+  updatedAt: string;
+  messageCount: number;
+}
+
 interface NeptuneContextValue {
   // State
   conversationId: string | null;
@@ -53,6 +62,8 @@ interface NeptuneContextValue {
   isLoading: boolean;
   isInitialized: boolean;
   isStreaming: boolean;
+  conversationHistory: ConversationHistoryItem[];
+  isLoadingHistory: boolean;
 
   // Actions
   sendMessage: (
@@ -62,6 +73,8 @@ interface NeptuneContextValue {
   ) => Promise<void>;
   clearConversation: () => Promise<void>;
   refreshMessages: () => Promise<void>;
+  loadConversation: (conversationId: string) => Promise<void>;
+  fetchConversationHistory: () => Promise<void>;
 }
 
 // ============================================================================
@@ -141,82 +154,36 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState<ConversationHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const initRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Initialize Neptune - load or create conversation
+  // Initialize Neptune - always start fresh (don't restore old conversations)
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
 
     const initializeNeptune = async () => {
       try {
-        // Check localStorage for existing conversation ID
-        const storedConvId =
-          typeof window !== "undefined"
-            ? localStorage.getItem(STORAGE_KEY)
-            : null;
-
-        // Fetch or create primary Neptune conversation
-        const response = await fetch("/api/neptune/conversation", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            existingConversationId: storedConvId,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to initialize Neptune conversation");
-        }
-
-        const data = await response.json();
-
-        // Save conversation ID
-        setConversationId(data.conversationId);
+        // Clear any stored conversation ID - always start fresh
         if (typeof window !== "undefined") {
-          localStorage.setItem(STORAGE_KEY, data.conversationId);
+          localStorage.removeItem(STORAGE_KEY);
         }
 
-        // Load existing messages
-        if (data.messages && data.messages.length > 0) {
-          setMessages(
-            data.messages.map(
-              (msg: {
-                id: string;
-                role: string;
-                content: string;
-                createdAt: string;
-                attachments?: NeptuneMessage["attachments"];
-                metadata?: NeptuneMessage["metadata"];
-              }) => ({
-                id: msg.id,
-                role: msg.role as "user" | "assistant",
-                content: msg.content,
-                timestamp: new Date(msg.createdAt),
-                attachments: msg.attachments,
-                metadata: msg.metadata,
-              })
-            )
-          );
-        } else {
-          // Add welcome message for new conversations
-          setMessages([
-            {
-              id: "welcome",
-              role: "assistant",
-              content:
-                "Hey! 👋 I'm Neptune, your AI assistant. I can help you with your CRM, create documents, analyze data, and much more. What would you like to do?",
-              timestamp: new Date(),
-            },
-          ]);
-        }
+        // Set welcome message immediately - don't restore old conversations
+        setMessages([
+          {
+            id: "welcome",
+            role: "assistant",
+            content:
+              "Hey! 👋 I'm Neptune, your AI assistant. I can help you with your CRM, create documents, analyze data, and much more. What would you like to do?",
+            timestamp: new Date(),
+          },
+        ]);
 
         setIsInitialized(true);
-        logger.debug("[Neptune] Initialized", {
-          conversationId: data.conversationId,
-          messageCount: data.messages?.length || 0,
-        });
+        logger.debug("[Neptune] Initialized with fresh conversation");
       } catch (error) {
         logger.error("[Neptune] Initialization failed", error);
         // Still mark as initialized to prevent infinite retries
@@ -492,6 +459,103 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
     }
   }, [conversationId]);
 
+  // Load a specific conversation from history
+  const loadConversation = useCallback(async (targetConversationId: string) => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch(
+        `/api/neptune/conversation?conversationId=${targetConversationId}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to load conversation");
+      }
+
+      const data = await response.json();
+
+      // Update conversation ID and save to localStorage
+      setConversationId(data.conversationId);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, data.conversationId);
+      }
+
+      // Load messages
+      if (data.messages && data.messages.length > 0) {
+        setMessages(
+          data.messages.map(
+            (msg: {
+              id: string;
+              role: string;
+              content: string;
+              createdAt: string;
+              attachments?: NeptuneMessage["attachments"];
+              metadata?: NeptuneMessage["metadata"];
+            }) => ({
+              id: msg.id,
+              role: msg.role as "user" | "assistant",
+              content: msg.content,
+              timestamp: new Date(msg.createdAt),
+              attachments: msg.attachments,
+              metadata: msg.metadata,
+            })
+          )
+        );
+      }
+
+      logger.debug("[Neptune] Loaded conversation", {
+        conversationId: targetConversationId,
+        messageCount: data.messages?.length || 0,
+      });
+    } catch (error) {
+      logger.error("[Neptune] Load conversation failed", error);
+      toast.error("Failed to load conversation");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Fetch conversation history
+  const fetchConversationHistory = useCallback(async () => {
+    try {
+      setIsLoadingHistory(true);
+
+      const response = await fetch("/api/assistant/conversations");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch conversation history");
+      }
+
+      const data = await response.json();
+
+      setConversationHistory(
+        data.map((conv: {
+          id: string;
+          title: string;
+          preview: string;
+          createdAt: string;
+          updatedAt: string;
+          messageCount: number;
+        }) => ({
+          id: conv.id,
+          title: conv.title || "Conversation",
+          preview: conv.preview || "",
+          createdAt: conv.createdAt,
+          updatedAt: conv.updatedAt,
+          messageCount: conv.messageCount || 0,
+        }))
+      );
+
+      logger.debug("[Neptune] Fetched conversation history", {
+        count: data.length,
+      });
+    } catch (error) {
+      logger.error("[Neptune] Fetch history failed", error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, []);
+
   return (
     <NeptuneContext.Provider
       value={{
@@ -500,9 +564,13 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         isLoading,
         isInitialized,
         isStreaming,
+        conversationHistory,
+        isLoadingHistory,
         sendMessage,
         clearConversation,
         refreshMessages,
+        loadConversation,
+        fetchConversationHistory,
       }}
     >
       {children}
@@ -521,9 +589,13 @@ const defaultNeptuneContext: NeptuneContextValue = {
   isLoading: false,
   isInitialized: false,
   isStreaming: false,
+  conversationHistory: [],
+  isLoadingHistory: false,
   sendMessage: async () => {},
   clearConversation: async () => {},
   refreshMessages: async () => {},
+  loadConversation: async () => {},
+  fetchConversationHistory: async () => {},
 };
 
 export function useNeptune() {
