@@ -105,6 +105,11 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🧠 **Enhanced Intelligence** - Neptune thinks deeper for complex questions:
+  - Chain-of-thought reasoning for strategy and analysis questions
+  - Structured JSON output for reliable data extraction
+  - Daily precomputed insights job suggests actions proactively
+  - Updated system prompt with reasoning approach guidelines
 - 📧 **Email and Calendar Integration** - Neptune can now send emails and schedule meetings:
   - send_email tool sends actual emails via Resend
   - Google Calendar integration for availability checking

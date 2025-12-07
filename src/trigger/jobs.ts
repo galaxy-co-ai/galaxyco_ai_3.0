@@ -31,3 +31,20 @@ export {
   processActiveAgentsTask,
   scheduledAgentHealthCheck,
 } from "./workflow-executor";
+
+// Website Analysis Jobs
+export {
+  analyzeWebsiteTask,
+} from "./website-analysis";
+
+// Social Media Posting Jobs
+export {
+  processScheduledSocialPosts,
+  scheduledSocialPosting,
+} from "./social-posting";
+
+// Precomputed Insights Jobs
+export {
+  precomputeWorkspaceInsightsTask,
+  scheduledInsightsPrecompute,
+} from "./precompute-insights";
