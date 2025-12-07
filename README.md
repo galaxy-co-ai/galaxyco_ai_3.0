@@ -105,6 +105,12 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 📧 **Email and Calendar Integration** - Neptune can now send emails and schedule meetings:
+  - send_email tool sends actual emails via Resend
+  - Google Calendar integration for availability checking
+  - New find_available_times tool suggests open meeting slots
+  - Combines local + Google Calendar for conflict detection
+  - Filters to business hours and excludes weekends
 - 🚀 **Parallel Tool Execution and Semantic Caching** - Performance optimization:
   - Independent tools now execute simultaneously (Promise.all)
   - Semantic caching: similar queries return cached responses instantly

@@ -270,7 +270,35 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
-  
+  {
+    type: 'function',
+    function: {
+      name: 'find_available_times',
+      description: 'Find available time slots for scheduling meetings. Checks calendar for conflicts and suggests open slots.',
+      parameters: {
+        type: 'object',
+        properties: {
+          duration: {
+            type: 'number',
+            description: 'Meeting duration in minutes (default: 30)',
+          },
+          days_ahead: {
+            type: 'number',
+            description: 'How many days ahead to search (default: 7, max: 14)',
+          },
+          working_hours_only: {
+            type: 'boolean',
+            description: 'Only suggest slots during business hours 9am-5pm (default: true)',
+          },
+          exclude_weekends: {
+            type: 'boolean',
+            description: 'Exclude Saturday and Sunday (default: true)',
+          },
+        },
+      },
+    },
+  },
+
   // Task Tools
   {
     type: 'function',
@@ -2117,6 +2145,81 @@ const toolImplementations: Record<string, ToolFunction> = {
       return {
         success: false,
         message: 'Failed to get upcoming events',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Calendar: Find Available Times
+  async find_available_times(args, context): Promise<ToolResult> {
+    try {
+      const { findAvailableTimeSlots, isGoogleCalendarConnected } = await import('@/lib/calendar/google');
+      
+      const duration = (args.duration as number) || 30;
+      const daysAhead = Math.min((args.days_ahead as number) || 7, 14);
+      const workingHoursOnly = args.working_hours_only !== false;
+      const excludeWeekends = args.exclude_weekends !== false;
+
+      const startDate = new Date();
+      const endDate = new Date(startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+
+      const availableSlots = await findAvailableTimeSlots(context.workspaceId, {
+        startDate,
+        endDate,
+        duration,
+        workingHoursStart: workingHoursOnly ? 9 : 0,
+        workingHoursEnd: workingHoursOnly ? 17 : 24,
+        excludeWeekends,
+      });
+
+      const hasGoogleCalendar = await isGoogleCalendarConnected(context.workspaceId);
+
+      // Format slots for display
+      const formattedSlots = availableSlots.map(slot => {
+        const startStr = slot.start.toLocaleString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+        const endStr = slot.end.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+        return {
+          start: slot.start.toISOString(),
+          end: slot.end.toISOString(),
+          display: `${startStr} - ${endStr}`,
+        };
+      });
+
+      if (formattedSlots.length === 0) {
+        return {
+          success: true,
+          message: `No available ${duration}-minute slots found in the next ${daysAhead} days. Try extending the date range or adjusting the duration.`,
+          data: {
+            slots: [],
+            googleCalendarConnected: hasGoogleCalendar,
+          },
+        };
+      }
+
+      return {
+        success: true,
+        message: `Found ${formattedSlots.length} available ${duration}-minute slot(s) in the next ${daysAhead} days${hasGoogleCalendar ? ' (synced with Google Calendar)' : ''}`,
+        data: {
+          slots: formattedSlots,
+          googleCalendarConnected: hasGoogleCalendar,
+        },
+      };
+    } catch (error) {
+      logger.error('AI find_available_times failed', error);
+      return {
+        success: false,
+        message: 'Failed to find available times',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -5811,7 +5914,7 @@ export async function executeTool(
 
 export const toolsByCategory = {
   crm: ['create_lead', 'search_leads', 'update_lead_stage', 'create_contact', 'add_note', 'get_activity_timeline', 'auto_qualify_lead', 'draft_proposal', 'schedule_demo', 'create_follow_up_sequence'],
-  calendar: ['schedule_meeting', 'get_upcoming_events', 'book_meeting_rooms'],
+  calendar: ['schedule_meeting', 'get_upcoming_events', 'find_available_times', 'book_meeting_rooms'],
   tasks: ['create_task', 'prioritize_tasks', 'batch_similar_tasks'],
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
