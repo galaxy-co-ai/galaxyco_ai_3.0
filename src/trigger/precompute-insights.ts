@@ -32,6 +32,7 @@ interface InsightData {
 async function gatherWorkspaceMetrics(workspaceId: string) {
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   // Get lead metrics
@@ -100,12 +101,12 @@ async function gatherWorkspaceMetrics(workspaceId: string) {
     t => t.dueDate && new Date(t.dueDate) < now
   );
 
-  // Get upcoming events
+  // Get upcoming events (next 7 days)
   const upcomingEvents = await db.query.calendarEvents.findMany({
     where: and(
       eq(calendarEvents.workspaceId, workspaceId),
       gte(calendarEvents.startTime, now),
-      lte(calendarEvents.startTime, weekAgo)
+      lte(calendarEvents.startTime, weekAhead)
     ),
     limit: 10,
   });
