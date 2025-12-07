@@ -310,21 +310,21 @@ export default function NeptuneAssistPanel({
                     variant={viewMode === "chat" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("chat")}
-                    className={`h-7 px-3 ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    className={`h-7 px-2 md:px-3 ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
                     aria-label="View chat"
                   >
-                    <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
-                    Chat
+                    <MessageSquare className="h-3.5 w-3.5 md:mr-1.5" />
+                    <span className="hidden md:inline">Chat</span>
                   </Button>
                   <Button
                     variant={viewMode === "history" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("history")}
-                    className={`h-7 px-3 ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    className={`h-7 px-2 md:px-3 ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
                     aria-label="View history"
                   >
-                    <Clock className="h-3.5 w-3.5 mr-1.5" />
-                    History
+                    <Clock className="h-3.5 w-3.5 md:mr-1.5" />
+                    <span className="hidden md:inline">History</span>
                   </Button>
                 </div>
                 {/* New Chat Button */}
@@ -335,11 +335,11 @@ export default function NeptuneAssistPanel({
                     clearConversation();
                     setViewMode("chat");
                   }}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground px-2 md:px-3"
                   aria-label="Start new conversation"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
-                  New Chat
+                  <Plus className="h-4 w-4 md:mr-1" />
+                  <span className="hidden md:inline">New Chat</span>
                 </Button>
               </div>
             </div>
@@ -358,21 +358,21 @@ export default function NeptuneAssistPanel({
                     variant={viewMode === "chat" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("chat")}
-                    className={`h-6 px-2 text-xs ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    className={`h-6 px-1.5 sm:px-2 text-xs ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
                     aria-label="View chat"
                   >
-                    <MessageSquare className="h-3 w-3 mr-1" />
-                    Chat
+                    <MessageSquare className="h-3 w-3 sm:mr-1" />
+                    <span className="hidden sm:inline">Chat</span>
                   </Button>
                   <Button
                     variant={viewMode === "history" ? "secondary" : "ghost"}
                     size="sm"
                     onClick={() => setViewMode("history")}
-                    className={`h-6 px-2 text-xs ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    className={`h-6 px-1.5 sm:px-2 text-xs ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
                     aria-label="View history"
                   >
-                    <Clock className="h-3 w-3 mr-1" />
-                    History
+                    <Clock className="h-3 w-3 sm:mr-1" />
+                    <span className="hidden sm:inline">History</span>
                   </Button>
                 </div>
                 <Button
