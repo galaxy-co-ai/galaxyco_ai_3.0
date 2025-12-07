@@ -37,9 +37,9 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Latest Fix:** Insights Query Bug (December 6, 2025)
-- Fixed impossible date range in `precompute-insights.ts` that always returned zero upcoming events
-- Changed `weekAgo` → `weekAhead` for proper 7-day future window query
+**Latest Fixes (December 6, 2025):**
+- **OAuth Twitter Provider** - Added 'twitter' to OAuthProvider type and config (fixed Vercel build failure)
+- **Insights Query Bug** - Fixed impossible date range in `precompute-insights.ts` (weekAgo → weekAhead)
 
 **Recent Achievement:** Advanced Capabilities - Voice, Automation, Collaboration (December 6, 2025)
 - **Voice Module** - Whisper for speech-to-text, OpenAI TTS for text-to-speech
