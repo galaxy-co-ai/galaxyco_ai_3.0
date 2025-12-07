@@ -1173,32 +1173,34 @@ Be creative, engaging, and write content that resonates!`;
         </div>
 
         {/* Tab Bar with Ask Neptune Button */}
-        <div className="mt-14 relative flex items-center justify-center">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? `${tab.activeColor} shadow-sm`
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                aria-label={`Switch to ${tab.label} tab`}
-              >
-                <tab.icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-                {tab.badge && (
-                  <Badge 
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
-                  >
-                    {tab.badge}
-                  </Badge>
-                )}
-              </button>
-            ))}
+        <div className="mt-14 flex items-center justify-between gap-4">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    activeTab === tab.id
+                      ? `${tab.activeColor} shadow-sm`
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                  aria-label={`Switch to ${tab.label} tab`}
+                >
+                  <tab.icon className="h-4 w-4" />
+                  <span>{tab.label}</span>
+                  {tab.badge && (
+                    <Badge 
+                      className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
+                    >
+                      {tab.badge}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="absolute right-0">
+          <div className="flex-shrink-0">
             <Button
               size="sm"
               onClick={() => setShowNeptune(!showNeptune)}

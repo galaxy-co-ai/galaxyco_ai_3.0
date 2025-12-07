@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { CosmicBackground } from "@/components/shared/CosmicBackground";
 import { SmartNavigation } from "@/components/shared/SmartNavigation";
 import { Footer } from "@/components/landing/Footer";
@@ -7,14 +8,75 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Check, X, HelpCircle, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Check, X, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+
+// TODO: Replace these with your actual Stripe Price IDs from your Stripe Dashboard
+// Go to Products > Select Product > Copy the Price ID (starts with price_)
+const STRIPE_PRICE_IDS = {
+  starter: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || '',
+  pro: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || '',
+};
 
 export default function PricingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  // Check for checkout cancellation
+  const checkoutCancelled = searchParams.get('checkout') === 'cancelled';
+  if (checkoutCancelled) {
+    toast.info('Checkout cancelled. Feel free to try again when you\'re ready.');
+  }
 
   const handleEnterApp = () => {
     router.push("/dashboard");
+  };
+
+  const handleSubscribe = async (planName: string, priceId: string | undefined) => {
+    // Enterprise = Contact Sales
+    if (planName === 'Enterprise') {
+      router.push('/contact?subject=Enterprise%20Inquiry');
+      return;
+    }
+
+    // If no price ID configured, go to dashboard (free access for now)
+    if (!priceId) {
+      toast.info('Subscription not configured yet. Enjoy free access!');
+      router.push('/dashboard');
+      return;
+    }
+
+    setLoadingPlan(planName);
+
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId,
+          planName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Something went wrong';
+      toast.error(message);
+      setLoadingPlan(null);
+    }
   };
 
   const plans = [
@@ -22,6 +84,7 @@ export default function PricingPage() {
       name: "Starter",
       price: "$29",
       period: "/mo",
+      priceId: STRIPE_PRICE_IDS.starter,
       description: "Perfect for individuals and hobbyists exploring AI.",
       features: [
         "1 AI Agent",
@@ -42,6 +105,7 @@ export default function PricingPage() {
       name: "Pro",
       price: "$99",
       period: "/mo",
+      priceId: STRIPE_PRICE_IDS.pro,
       description: "For professionals and small teams scaling operations.",
       features: [
         "Unlimited AI Agents",
@@ -62,6 +126,7 @@ export default function PricingPage() {
     {
       name: "Enterprise",
       price: "Custom",
+      priceId: undefined, // Contact sales
       description: "For large organizations requiring security and control.",
       features: [
         "Unlimited Everything",
@@ -153,9 +218,17 @@ export default function PricingPage() {
                     <Button 
                       className="w-full" 
                       variant={plan.popular ? "default" : "outline"}
-                      onClick={handleEnterApp}
+                      onClick={() => handleSubscribe(plan.name, plan.priceId)}
+                      disabled={loadingPlan !== null}
                     >
-                      {plan.cta}
+                      {loadingPlan === plan.name ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Redirecting...
+                        </>
+                      ) : (
+                        plan.cta
+                      )}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -191,6 +264,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
-
-

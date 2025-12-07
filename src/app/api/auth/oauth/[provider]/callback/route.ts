@@ -18,7 +18,7 @@ export async function GET(
 ) {
   try {
     const { provider: providerParam } = await params;
-    const provider = providerParam as 'google' | 'microsoft';
+    const provider = providerParam as 'google' | 'microsoft' | 'twitter';
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state');
@@ -27,27 +27,37 @@ export async function GET(
     // Handle OAuth errors
     if (error) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/integrations?error=${error}`
+        `${process.env.NEXT_PUBLIC_APP_URL}/connected-apps?error=${error}`
       );
     }
 
     if (!code || !state) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/integrations?error=missing_params`
+        `${process.env.NEXT_PUBLIC_APP_URL}/connected-apps?error=missing_params`
       );
     }
 
     // Validate state token with Redis to prevent CSRF attacks
+    let codeVerifier: string | undefined;
+    
     if (redis) {
       const storedState = await redis.get(`oauth:state:${state}`);
       if (!storedState || storedState !== state) {
         logger.warn('OAuth state validation failed', { state, storedState });
         return NextResponse.redirect(
-          `${process.env.NEXT_PUBLIC_APP_URL}/integrations?error=invalid_state`
+          `${process.env.NEXT_PUBLIC_APP_URL}/connected-apps?error=invalid_state`
         );
       }
       // Delete state after validation (one-time use)
       await redis.del(`oauth:state:${state}`);
+      
+      // Get code verifier for Twitter PKCE
+      if (provider === 'twitter') {
+        codeVerifier = await redis.get(`oauth:code_verifier:${state}`) || undefined;
+        if (codeVerifier) {
+          await redis.del(`oauth:code_verifier:${state}`);
+        }
+      }
     } else {
       // Fallback: Basic state validation if Redis is not configured
       // In production, Redis should be configured for proper security
@@ -59,13 +69,13 @@ export async function GET(
 
     if (!user) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/integrations?error=user_not_found`
+        `${process.env.NEXT_PUBLIC_APP_URL}/connected-apps?error=user_not_found`
       );
     }
 
     // Exchange code for tokens
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/oauth/${provider}/callback`;
-    const tokens = await exchangeCodeForToken(provider, code, redirectUri);
+    const tokens = await exchangeCodeForToken(provider, code, redirectUri, codeVerifier);
 
     // Encrypt tokens for storage
     const encryptedAccess = encryptApiKey(tokens.accessToken);
@@ -79,6 +89,16 @@ export async function GET(
     // Get user info from provider
     const userInfo = await getUserInfo(provider, tokens.accessToken);
 
+    // Determine integration type
+    let integrationType = 'email';
+    if (provider === 'google') {
+      integrationType = 'gmail';
+    } else if (provider === 'microsoft') {
+      integrationType = 'outlook';
+    } else if (provider === 'twitter') {
+      integrationType = 'twitter';
+    }
+
     // Store integration in database
     const [integration] = await db
       .insert(integrations)
@@ -86,7 +106,7 @@ export async function GET(
         workspaceId,
         userId: user.id,
         provider,
-        type: provider === 'google' ? 'gmail' : 'outlook',
+        type: integrationType,
         name: `${provider.charAt(0).toUpperCase() + provider.slice(1)} Integration`,
         status: 'active',
         providerAccountId: userInfo.id,
@@ -111,14 +131,14 @@ export async function GET(
       tokenType: tokens.tokenType,
     });
 
-    // Redirect to integrations page with success
+    // Redirect to connected apps page with success
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/integrations?success=${provider}`
+      `${process.env.NEXT_PUBLIC_APP_URL}/connected-apps?success=${provider}`
     );
   } catch (error) {
     logger.error('OAuth callback error', error);
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL}/integrations?error=callback_failed`
+      `${process.env.NEXT_PUBLIC_APP_URL}/connected-apps?error=callback_failed`
     );
   }
 }
@@ -127,7 +147,7 @@ export async function GET(
  * Get user info from OAuth provider
  */
 async function getUserInfo(
-  provider: 'google' | 'microsoft',
+  provider: 'google' | 'microsoft' | 'twitter',
   accessToken: string
 ): Promise<{
   id: string;
@@ -155,7 +175,7 @@ async function getUserInfo(
       name: data.name,
       picture: data.picture,
     };
-  } else {
+  } else if (provider === 'microsoft') {
     const response = await fetch('https://graph.microsoft.com/v1.0/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -170,7 +190,31 @@ async function getUserInfo(
       email: data.mail || data.userPrincipalName,
       name: data.displayName,
     };
+  } else if (provider === 'twitter') {
+    // Twitter API v2 - Get authenticated user
+    const response = await fetch(
+      'https://api.twitter.com/2/users/me?user.fields=profile_image_url,username',
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch Twitter user info');
+    }
+
+    const data = await response.json();
+    const user = data.data;
+    
+    return {
+      id: user.id,
+      email: `@${user.username}`, // Twitter doesn't provide email, use username
+      name: user.name || user.username,
+      picture: user.profile_image_url,
+    };
   }
+  
+  throw new Error(`Unsupported provider: ${provider}`);
 }
 
 

@@ -27,6 +27,7 @@ import {
   ShoppingCart,
   Receipt,
   DollarSign,
+  Twitter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -176,6 +177,17 @@ const INTEGRATIONS: Integration[] = [
     features: ["Orders", "Products", "Analytics"],
     popularity: "medium",
   },
+  {
+    id: "twitter",
+    name: "Twitter / X",
+    description: "Create and post tweets directly from Neptune. Schedule content and track engagement.",
+    icon: Twitter,
+    iconColor: "text-sky-600",
+    iconBg: "bg-sky-50",
+    category: "Social Media",
+    features: ["Post tweets", "Schedule content", "Track engagement"],
+    popularity: "high",
+  },
 ];
 
 interface Category {
@@ -187,12 +199,13 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { id: "all", name: "All Integrations", icon: Plug, count: 11, color: "text-indigo-600" },
+  { id: "all", name: "All Integrations", icon: Plug, count: 12, color: "text-indigo-600" },
   { id: "Communication", name: "Communication", icon: MessageSquare, count: 4, color: "text-purple-600" },
   { id: "Finance", name: "Finance", icon: DollarSign, count: 3, color: "text-green-600" },
   { id: "Productivity", name: "Productivity", icon: Zap, count: 1, color: "text-blue-600" },
   { id: "Sales", name: "Sales", icon: Users, count: 1, color: "text-emerald-600" },
   { id: "Marketing", name: "Marketing", icon: Globe, count: 1, color: "text-orange-600" },
+  { id: "Social Media", name: "Social Media", icon: Twitter, count: 1, color: "text-sky-600" },
   { id: "Knowledge", name: "Knowledge", icon: FileText, count: 1, color: "text-gray-600" },
 ];
 
@@ -209,7 +222,7 @@ export function GalaxyIntegrations() {
   });
 
   // Map integration IDs to provider names
-  const providerMap: Record<string, 'google' | 'microsoft' | 'slack' | 'twilio' | 'quickbooks' | 'shopify' | 'stripe'> = {
+  const providerMap: Record<string, 'google' | 'microsoft' | 'slack' | 'twilio' | 'quickbooks' | 'shopify' | 'stripe' | 'twitter'> = {
     'gmail': 'google',
     'calendar': 'google',
     'slack': 'slack',
@@ -221,6 +234,7 @@ export function GalaxyIntegrations() {
     'quickbooks': 'quickbooks',
     'shopify': 'shopify',
     'stripe': 'stripe',
+    'twitter': 'twitter',
   };
 
   // Get connected IDs from API status
@@ -253,6 +267,13 @@ export function GalaxyIntegrations() {
       if (statusData.finance.stripe) connected.add('stripe');
       if (statusData.finance.shopify) connected.add('shopify');
     }
+
+    // Check Twitter integration
+    Object.entries(statusData.status || {}).forEach(([provider, isConnected]) => {
+      if (isConnected && provider === 'twitter') {
+        connected.add('twitter');
+      }
+    });
     
     return connected;
   }, [statusData]);
@@ -278,8 +299,8 @@ export function GalaxyIntegrations() {
 
     setConnectingId(id);
     try {
-      // QuickBooks and Shopify use OAuth
-      if (provider === 'quickbooks' || provider === 'shopify') {
+      // QuickBooks, Shopify, and Twitter use OAuth
+      if (provider === 'quickbooks' || provider === 'shopify' || provider === 'twitter') {
         // Redirect to OAuth flow
         window.location.href = `/api/auth/oauth/${provider}/authorize`;
         return;

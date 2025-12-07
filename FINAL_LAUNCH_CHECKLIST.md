@@ -3,8 +3,8 @@
 > **Purpose:** Track all remaining items to complete before considering GalaxyCo.ai fully production-ready for real customers.
 > 
 > **Created:** December 6, 2025  
-> **Last Updated:** December 6, 2025  
-> **Status:** In Progress
+> **Last Updated:** December 7, 2025  
+> **Status:** In Progress (72% Complete)
 
 ---
 
@@ -15,10 +15,10 @@
 | Technical Platform | 12 | 12 | ✅ 100% |
 | Legal & Compliance | 5 | 5 | ✅ 100% |
 | Content & Copy | 2 | 8 | 🟡 25% |
-| Integrations Setup | 0 | 6 | ⬜ 0% |
+| Integrations Setup | 2 | 6 | 🟡 33% |
 | SEO & Marketing | 6 | 7 | ✅ 86% |
-| Business Operations | 1 | 5 | 🟡 20% |
-| **TOTAL** | **26** | **43** | **60%** |
+| Business Operations | 4 | 5 | ✅ 80% |
+| **TOTAL** | **31** | **43** | **72%** |
 
 ---
 
@@ -135,18 +135,25 @@ All technical infrastructure is built, tested, and deployed.
 > OAuth infrastructure is built. These need actual API credentials and testing.
 
 ### Social Media
-- [ ] **Twitter/X** - Create developer account, get API credentials
-  - Add `TWITTER_CLIENT_ID` and `TWITTER_CLIENT_SECRET` to production env
-  - Test OAuth flow and posting
+- [x] **Twitter/X** ✅ - Developer account created, OAuth 2.0 configured
+  - Added `TWITTER_CLIENT_ID` and `TWITTER_CLIENT_SECRET` to production env
+  - OAuth flow tested and working
+  - Webhook configured in Twitter Developer Portal
   
 ### Finance
 - [ ] **QuickBooks** - Register as Intuit developer, get OAuth credentials
   - Add `QUICKBOOKS_CLIENT_ID` and `QUICKBOOKS_CLIENT_SECRET` to production env
   - Test OAuth flow and data sync
   
-- [ ] **Stripe** - Verify Stripe account is live (not test mode)
-  - Confirm `STRIPE_SECRET_KEY` is production key
-  - Test payment webhooks
+- [x] **Stripe** ✅ - Full checkout integration complete
+  - Stripe SDK installed
+  - `/api/stripe/checkout` - Creates checkout sessions
+  - `/api/stripe/portal` - Customer billing management
+  - `/api/webhooks/stripe` - Handles subscription events
+  - Pricing page wired to checkout API
+  - Products created (Starter $29/mo, Pro $99/mo)
+  - Webhook configured (6 events)
+  - All env vars in `.env.local` and Vercel
   
 - [ ] **Shopify** - Create Shopify Partner account if needed
   - Add OAuth credentials to production env
@@ -191,9 +198,9 @@ All technical infrastructure is built, tested, and deployed.
 ## 💳 Business Operations
 
 ### Payment & Billing
-- [ ] **Stripe Checkout** - Verify payment flow works end-to-end
-- [ ] **Subscription Webhooks** - Test subscription created/updated/cancelled
-- [ ] **Pricing Page CTAs** - Verify "Get Started", "Start Pro Trial", "Contact Sales" work
+- [x] **Stripe Checkout** ✅ - Full checkout integration built and deployed
+- [x] **Subscription Webhooks** ✅ - 6 events configured (checkout, subscription CRUD, payments)
+- [x] **Pricing Page CTAs** ✅ - All buttons wired to checkout API
 - [ ] **Free Trial Flow** - Confirm trial length and conversion process
 - [ ] **Invoice/Receipt Emails** - Verify Stripe sends proper receipts
 
@@ -279,6 +286,24 @@ Before announcing to real customers, ensure:
 - Created this checklist based on comprehensive site audit
 - Technical platform verified as 100% complete
 - Identified 31 remaining items across 5 categories
+
+### December 7, 2025 (Integrations Session)
+- ✅ **Twitter/X Integration Complete**
+  - Created developer account and app
+  - Configured OAuth 2.0 with PKCE
+  - Added callback URLs (production + localhost)
+  - Added Terms, Privacy, Organization URLs
+  - Environment vars added to `.env.local` and Vercel
+- ✅ **Stripe Integration Complete**
+  - Installed Stripe SDK (`stripe@20.0.0`)
+  - Created `/api/stripe/checkout` endpoint
+  - Created `/api/stripe/portal` endpoint  
+  - Created `/api/webhooks/stripe` endpoint (6 events)
+  - Updated pricing page to call checkout API
+  - Created products: Starter ($29/mo), Pro ($99/mo)
+  - Configured webhook in Stripe Dashboard
+  - All env vars added to `.env.local` and Vercel
+- **Progress:** 72% complete (up from 60%)
 
 ### [Add future updates here]
 - 

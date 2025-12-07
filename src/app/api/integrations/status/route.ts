@@ -31,6 +31,7 @@ export async function GET() {
       slack: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'slack' && i.status === 'active'),
       salesforce: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'salesforce' && i.status === 'active'),
       hubspot: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'hubspot' && i.status === 'active'),
+      twitter: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'twitter' && i.status === 'active'),
       twilio: twilioConfigured && twilioVerified,
     };
 

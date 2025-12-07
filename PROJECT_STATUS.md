@@ -37,7 +37,22 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Database** | ✅ **80+ tables** connected (expanded) |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Latest Updates (December 6, 2025 - Night):**
+**Latest Updates (December 7, 2025):**
+- **Stripe Integration Complete** ✅
+  - Installed Stripe SDK (`stripe@20.0.0`)
+  - Created `/api/stripe/checkout` - Checkout session creation
+  - Created `/api/stripe/portal` - Customer billing portal
+  - Created `/api/webhooks/stripe` - Subscription event handling (6 events)
+  - Updated pricing page with checkout flow
+  - Products created: Starter ($29/mo), Pro ($99/mo)
+  - Webhook configured in Stripe Dashboard
+- **Twitter/X Integration Complete** ✅
+  - Developer account and app created
+  - OAuth 2.0 with PKCE configured
+  - Environment variables added to production
+- **Launch Checklist Progress:** 72% complete (up from 60%)
+
+**Previous Updates (December 6, 2025 - Night):**
 - **Neptune Chat UX Improvements**:
   - Fresh conversation on each login (no longer restores previous conversation)
   - Chat | History toggle in header replaces dropdown
@@ -50,7 +65,7 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - **Contact API** - `/api/contact` sends emails via Resend with confirmation to user
 - **SEO Files** - `robots.txt` and `sitemap.xml` added to `/public/`
 - **Footer Links Updated** - Real Twitter (x.com/galaxyco_ai), email (hello@galaxyco.ai), removed GitHub
-- **Launch Checklist** - Created `FINAL_LAUNCH_CHECKLIST.md` to track remaining items (60% complete)
+- **Launch Checklist** - Created `FINAL_LAUNCH_CHECKLIST.md` to track remaining items (72% complete)
 
 **Previous Fixes (December 6, 2025):**
 - **OAuth Twitter Provider** - Added 'twitter' to OAuthProvider type and config (fixed Vercel build failure)
