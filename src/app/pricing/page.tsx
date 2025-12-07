@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { CosmicBackground } from "@/components/shared/CosmicBackground";
 import { SmartNavigation } from "@/components/shared/SmartNavigation";
 import { Footer } from "@/components/landing/Footer";
@@ -19,16 +19,90 @@ const STRIPE_PRICE_IDS = {
   pro: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || '',
 };
 
-export default function PricingPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-
-  // Check for checkout cancellation
-  const checkoutCancelled = searchParams.get('checkout') === 'cancelled';
-  if (checkoutCancelled) {
-    toast.info('Checkout cancelled. Feel free to try again when you\'re ready.');
+const plans = [
+  {
+    name: "Starter",
+    price: "$29",
+    period: "/mo",
+    priceId: STRIPE_PRICE_IDS.starter,
+    description: "Perfect for individuals and hobbyists exploring AI.",
+    features: [
+      "1 AI Agent",
+      "500 Monthly Tasks",
+      "Basic Workflow Builder",
+      "Community Support",
+      "7-day Data Retention"
+    ],
+    limitations: [
+      "No Custom Integrations",
+      "No Team Collaboration",
+      "No API Access"
+    ],
+    cta: "Get Started",
+    popular: false
+  },
+  {
+    name: "Pro",
+    price: "$99",
+    period: "/mo",
+    priceId: STRIPE_PRICE_IDS.pro,
+    description: "For professionals and small teams scaling operations.",
+    features: [
+      "Unlimited AI Agents",
+      "10,000 Monthly Tasks",
+      "Advanced Workflows",
+      "Priority Email Support",
+      "30-day Data Retention",
+      "5 Team Members",
+      "Custom Integrations"
+    ],
+    limitations: [
+      "No SSO / SAML",
+      "Shared Compute Resources"
+    ],
+    cta: "Start Pro Trial",
+    popular: true
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    priceId: undefined, // Contact sales
+    description: "For large organizations requiring security and control.",
+    features: [
+      "Unlimited Everything",
+      "Dedicated Compute",
+      "SSO & Advanced Security",
+      "Dedicated Success Manager",
+      "Custom Data Retention",
+      "Audit Logs",
+      "SLA Guarantee"
+    ],
+    limitations: [],
+    cta: "Contact Sales",
+    popular: false
   }
+];
+
+/**
+ * Component that handles checkout cancellation via search params
+ * Wrapped in Suspense to allow static generation
+ */
+function CheckoutCancelledHandler() {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const checkoutCancelled = searchParams.get('checkout') === 'cancelled';
+    if (checkoutCancelled) {
+      toast.info('Checkout cancelled. Feel free to try again when you\'re ready.');
+    }
+  }, [searchParams]);
+
+  return null;
+}
+
+function PricingContent() {
+  const router = useRouter();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleEnterApp = () => {
     router.push("/dashboard");
@@ -78,70 +152,6 @@ export default function PricingPage() {
       setLoadingPlan(null);
     }
   };
-
-  const plans = [
-    {
-      name: "Starter",
-      price: "$29",
-      period: "/mo",
-      priceId: STRIPE_PRICE_IDS.starter,
-      description: "Perfect for individuals and hobbyists exploring AI.",
-      features: [
-        "1 AI Agent",
-        "500 Monthly Tasks",
-        "Basic Workflow Builder",
-        "Community Support",
-        "7-day Data Retention"
-      ],
-      limitations: [
-        "No Custom Integrations",
-        "No Team Collaboration",
-        "No API Access"
-      ],
-      cta: "Get Started",
-      popular: false
-    },
-    {
-      name: "Pro",
-      price: "$99",
-      period: "/mo",
-      priceId: STRIPE_PRICE_IDS.pro,
-      description: "For professionals and small teams scaling operations.",
-      features: [
-        "Unlimited AI Agents",
-        "10,000 Monthly Tasks",
-        "Advanced Workflows",
-        "Priority Email Support",
-        "30-day Data Retention",
-        "5 Team Members",
-        "Custom Integrations"
-      ],
-      limitations: [
-        "No SSO / SAML",
-        "Shared Compute Resources"
-      ],
-      cta: "Start Pro Trial",
-      popular: true
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      priceId: undefined, // Contact sales
-      description: "For large organizations requiring security and control.",
-      features: [
-        "Unlimited Everything",
-        "Dedicated Compute",
-        "SSO & Advanced Security",
-        "Dedicated Success Manager",
-        "Custom Data Retention",
-        "Audit Logs",
-        "SLA Guarantee"
-      ],
-      limitations: [],
-      cta: "Contact Sales",
-      popular: false
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
@@ -262,5 +272,17 @@ export default function PricingPage() {
         <Footer />
       </main>
     </div>
+  );
+}
+
+export default function PricingPage() {
+  return (
+    <>
+      {/* Wrap useSearchParams in Suspense for static generation */}
+      <Suspense fallback={null}>
+        <CheckoutCancelledHandler />
+      </Suspense>
+      <PricingContent />
+    </>
   );
 }
