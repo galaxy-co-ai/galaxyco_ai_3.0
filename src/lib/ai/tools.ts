@@ -378,6 +378,72 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
+
+  // Automation Tools
+  {
+    type: 'function',
+    function: {
+      name: 'create_automation',
+      description: 'Create a workflow automation from a natural language description. Use when user wants to automate a process.',
+      parameters: {
+        type: 'object',
+        properties: {
+          description: {
+            type: 'string',
+            description: 'Natural language description of the automation (e.g., "When a lead reaches qualified stage, send a welcome email")',
+          },
+        },
+        required: ['description'],
+      },
+    },
+  },
+
+  // Team Collaboration Tools
+  {
+    type: 'function',
+    function: {
+      name: 'assign_to_team_member',
+      description: 'Assign a task to a specific team member. Use when user wants to delegate work.',
+      parameters: {
+        type: 'object',
+        properties: {
+          task_title: {
+            type: 'string',
+            description: 'Title of the task to assign',
+          },
+          assignee_name: {
+            type: 'string',
+            description: 'Name or email of the team member to assign to',
+          },
+          description: {
+            type: 'string',
+            description: 'Optional task description',
+          },
+          due_date: {
+            type: 'string',
+            description: 'Optional due date (ISO format or relative like "tomorrow", "next week")',
+          },
+          priority: {
+            type: 'string',
+            enum: ['low', 'medium', 'high'],
+            description: 'Task priority (default: medium)',
+          },
+        },
+        required: ['task_title', 'assignee_name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'list_team_members',
+      description: 'Get a list of team members in the workspace. Use to see who is available for assignment.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
   
   // Content Generation Tools
   {
@@ -2400,6 +2466,120 @@ const toolImplementations: Record<string, ToolFunction> = {
       return {
         success: false,
         message: 'Failed to list agents',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Automation: Create Automation from Natural Language
+  async create_automation(args, context): Promise<ToolResult> {
+    try {
+      const { createAutomationFromChat } = await import('@/lib/ai/workflow-builder');
+      
+      const description = args.description as string;
+      const result = await createAutomationFromChat(context.workspaceId, description);
+
+      if (!result.success) {
+        return {
+          success: false,
+          message: result.message,
+        };
+      }
+
+      return {
+        success: true,
+        message: result.message,
+        data: {
+          automationId: result.automationId,
+          workflow: result.workflow,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_automation failed', error);
+      return {
+        success: false,
+        message: 'Failed to create automation',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Team: Assign Task to Team Member
+  async assign_to_team_member(args, context): Promise<ToolResult> {
+    try {
+      const { delegateTask } = await import('@/lib/ai/collaboration');
+      
+      // Parse due date
+      let dueDate: Date | undefined;
+      if (args.due_date) {
+        const dueDateStr = args.due_date as string;
+        if (dueDateStr === 'tomorrow') {
+          dueDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        } else if (dueDateStr === 'next week') {
+          dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        } else {
+          dueDate = new Date(dueDateStr);
+        }
+      }
+
+      const result = await delegateTask(context.workspaceId, {
+        title: args.task_title as string,
+        description: args.description as string | undefined,
+        assigneeName: args.assignee_name as string,
+        dueDate,
+        priority: args.priority as 'low' | 'medium' | 'high' | undefined,
+      });
+
+      return {
+        success: result.success,
+        message: result.message,
+        data: result.success ? {
+          taskId: result.taskId,
+          assignee: result.assignee,
+        } : undefined,
+      };
+    } catch (error) {
+      logger.error('AI assign_to_team_member failed', error);
+      return {
+        success: false,
+        message: 'Failed to assign task',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Team: List Team Members
+  async list_team_members(args, context): Promise<ToolResult> {
+    try {
+      const { getTeamMembers } = await import('@/lib/ai/collaboration');
+      
+      const members = await getTeamMembers(context.workspaceId);
+
+      if (members.length === 0) {
+        return {
+          success: true,
+          message: 'No team members found in this workspace',
+          data: { members: [] },
+        };
+      }
+
+      return {
+        success: true,
+        message: `Found ${members.length} team member(s)`,
+        data: {
+          members: members.map(m => ({
+            id: m.id,
+            name: m.name,
+            email: m.email,
+            role: m.role,
+          })),
+        },
+      };
+    } catch (error) {
+      logger.error('AI list_team_members failed', error);
+      return {
+        success: false,
+        message: 'Failed to list team members',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -5915,12 +6095,14 @@ export async function executeTool(
 export const toolsByCategory = {
   crm: ['create_lead', 'search_leads', 'update_lead_stage', 'create_contact', 'add_note', 'get_activity_timeline', 'auto_qualify_lead', 'draft_proposal', 'schedule_demo', 'create_follow_up_sequence'],
   calendar: ['schedule_meeting', 'get_upcoming_events', 'find_available_times', 'book_meeting_rooms'],
-  tasks: ['create_task', 'prioritize_tasks', 'batch_similar_tasks'],
+  tasks: ['create_task', 'prioritize_tasks', 'batch_similar_tasks', 'assign_to_team_member'],
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
   content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents', 'save_upload_to_library'],
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library'],
   dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media'],
+  automation: ['create_automation'],
+  team: ['list_team_members', 'assign_to_team_member'],
   marketing: [
     'create_campaign',
     'get_campaign_stats',

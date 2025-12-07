@@ -105,6 +105,11 @@ npm run typecheck           # TypeScript validation
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 🎙️ **Advanced Capabilities** - Voice, automation, and team collaboration:
+  - Voice module with Whisper speech-to-text and OpenAI TTS
+  - Create automations from natural language ("When a lead is qualified...")
+  - Team @mentions and task delegation features
+  - New tools: create_automation, assign_to_team_member, list_team_members
 - 🧠 **Enhanced Intelligence** - Neptune thinks deeper for complex questions:
   - Chain-of-thought reasoning for strategy and analysis questions
   - Structured JSON output for reliable data extraction
