@@ -42,6 +42,7 @@ This guide will walk you through:
 
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
+| **[FINAL_LAUNCH_CHECKLIST.md](./FINAL_LAUNCH_CHECKLIST.md)** | 🚀 **Launch readiness tracker** | **Track remaining items to complete** |
 | **[START_HERE.md](./START_HERE.md)** | Project overview & navigation | First time setup |
 | **[ONE_PAGE_SUMMARY.md](./ONE_PAGE_SUMMARY.md)** | Quick reference (printable) | Quick status check |
 | **[EXECUTION_PLAN.md](./EXECUTION_PLAN.md)** | Complete implementation guide | When coding features |
@@ -115,6 +116,11 @@ Neptune is now a fully-featured AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 6, 2025):**
+- 📄 **Legal & Company Pages** - Privacy Policy, Terms of Service, Cookie Policy, Security, Compliance, About, Contact
+- 🔗 **Working Contact Form** - `/api/contact` sends emails via Resend with user confirmation
+- 🌐 **SEO Files** - robots.txt and sitemap.xml created
+- 🐦 **Social Links** - Footer updated with real Twitter (x.com/galaxyco_ai) and email (hello@galaxyco.ai)
+- 📋 **Launch Checklist** - [FINAL_LAUNCH_CHECKLIST.md](./FINAL_LAUNCH_CHECKLIST.md) tracks remaining items (60% complete)
 - 🐛 **Bug Fixes** - Fixed Vercel build (Twitter OAuth type) and insights query date range
 - 🎙️ **Advanced Capabilities** - Voice, automation, and team collaboration:
   - Voice module with Whisper speech-to-text and OpenAI TTS

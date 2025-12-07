@@ -1,0 +1,30 @@
+# GalaxyCo.ai Robots.txt
+# https://www.galaxyco.ai/
+
+User-agent: *
+Allow: /
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /sign-in/
+Disallow: /sign-up/
+
+# Allow public pages
+Allow: /
+Allow: /features
+Allow: /pricing
+Allow: /docs
+Allow: /launchpad
+Allow: /launchpad/*
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /security
+
+# Sitemap location
+Sitemap: https://www.galaxyco.ai/sitemap.xml

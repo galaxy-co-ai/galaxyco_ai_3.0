@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Rocket, Search, ArrowLeft, Twitter, Github, Linkedin, Mail, ArrowUp, Send, Sparkles } from 'lucide-react';
+import { Rocket, Search, ArrowLeft, Twitter, Linkedin, Mail, ArrowUp, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@clerk/nextjs';
@@ -171,9 +171,8 @@ export default function LaunchpadLayout({
   };
 
   const socialLinks = [
-    { icon: Twitter, href: "https://twitter.com/galaxycoai", label: "Twitter" },
-    { icon: Linkedin, href: "https://linkedin.com/company/galaxyco-ai", label: "LinkedIn" },
-    { icon: Github, href: "https://github.com/galaxyco-ai", label: "GitHub" },
+    { icon: Twitter, href: "https://x.com/galaxyco_ai", label: "Twitter" },
+    { icon: Linkedin, href: "https://linkedin.com/company/galaxyco", label: "LinkedIn" },
     { icon: Mail, href: "mailto:hello@galaxyco.ai", label: "Email" }
   ];
 

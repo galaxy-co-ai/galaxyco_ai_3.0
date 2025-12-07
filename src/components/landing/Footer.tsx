@@ -1,11 +1,10 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { 
   Rocket, 
   Twitter, 
   Linkedin, 
-  Github, 
   Mail,
   ArrowUp,
   Send
@@ -42,39 +41,38 @@ export function Footer() {
 
   const footerLinks = {
     product: [
-      { label: "Features", href: "#features" },
-      { label: "Pricing", href: "#pricing" },
-      { label: "Integrations", href: "#integrations" },
-      { label: "Changelog", href: "#changelog" },
-      { label: "Roadmap", href: "#roadmap" }
+      { label: "Features", href: "/features" },
+      { label: "Pricing", href: "/pricing" },
+      { label: "Integrations", href: "/connected-apps" },
+      { label: "Changelog", href: "/launchpad" },
+      { label: "Roadmap", href: "/launchpad" }
     ],
     company: [
-      { label: "About", href: "#about" },
-      { label: "Blog", href: "#blog" },
-      { label: "Careers", href: "#careers" },
-      { label: "Press Kit", href: "#press" },
-      { label: "Contact", href: "#contact" }
+      { label: "About", href: "/about" },
+      { label: "Blog", href: "/launchpad" },
+      { label: "Careers", href: "/contact" },
+      { label: "Press Kit", href: "/contact" },
+      { label: "Contact", href: "/contact" }
     ],
     resources: [
-      { label: "Documentation", href: "#docs" },
-      { label: "API Reference", href: "#api" },
-      { label: "Guides", href: "#guides" },
-      { label: "Support", href: "#support" },
-      { label: "Community", href: "#community" }
+      { label: "Documentation", href: "/docs" },
+      { label: "API Reference", href: "/docs" },
+      { label: "Guides", href: "/launchpad" },
+      { label: "Support", href: "/contact" },
+      { label: "Community", href: "/launchpad" }
     ],
     legal: [
-      { label: "Privacy Policy", href: "#privacy" },
-      { label: "Terms of Service", href: "#terms" },
-      { label: "Security", href: "#security" },
-      { label: "Compliance", href: "#compliance" },
-      { label: "Cookies", href: "#cookies" }
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+      { label: "Security", href: "/security" },
+      { label: "Compliance", href: "/compliance" },
+      { label: "Cookies", href: "/cookies" }
     ]
   };
 
   const socialLinks = [
-    { icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-    { icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-    { icon: Github, href: "https://github.com", label: "GitHub" },
+    { icon: Twitter, href: "https://x.com/galaxyco_ai", label: "Twitter" },
+    { icon: Linkedin, href: "https://linkedin.com/company/galaxyco", label: "LinkedIn" },
     { icon: Mail, href: "mailto:hello@galaxyco.ai", label: "Email" }
   ];
 
