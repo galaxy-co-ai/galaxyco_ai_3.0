@@ -5,14 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Sparkles,
   Send,
   RefreshCw,
@@ -25,9 +17,9 @@ import {
   ExternalLink,
   Download,
   Eye,
-  Trash2,
-  History,
+  Plus,
   MessageSquare,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -86,8 +78,16 @@ export default function NeptuneAssistPanel({
     []
   );
   const [isUploading, setIsUploading] = useState(false);
+  const [viewMode, setViewMode] = useState<"chat" | "history">("chat");
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch history when switching to history view
+  useEffect(() => {
+    if (viewMode === "history") {
+      fetchConversationHistory();
+    }
+  }, [viewMode, fetchConversationHistory]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -304,70 +304,41 @@ export default function NeptuneAssistPanel({
                 </h2>
               </div>
               <div className="flex items-center gap-2">
-                {/* History Dropdown */}
-                <DropdownMenu onOpenChange={(open) => open && fetchConversationHistory()}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground hover:text-foreground"
-                      aria-label="View conversation history"
-                    >
-                      <History className="h-4 w-4 mr-1" />
-                      History
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-72">
-                    <DropdownMenuLabel className="flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Conversation History
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {isLoadingHistory ? (
-                      <div className="py-4 flex items-center justify-center">
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : conversationHistory.length === 0 ? (
-                      <div className="py-4 px-2 text-center text-sm text-muted-foreground">
-                        No previous conversations
-                      </div>
-                    ) : (
-                      <div className="max-h-64 overflow-y-auto">
-                        {conversationHistory.map((conv) => (
-                          <DropdownMenuItem
-                            key={conv.id}
-                            onClick={() => loadConversation(conv.id)}
-                            className="flex flex-col items-start gap-1 cursor-pointer py-2"
-                          >
-                            <div className="flex items-center gap-2 w-full">
-                              <span className="font-medium text-sm truncate flex-1">
-                                {conv.title}
-                              </span>
-                              <Badge variant="secondary" className="text-xs shrink-0">
-                                {conv.messageCount} msgs
-                              </Badge>
-                            </div>
-                            <span className="text-xs text-muted-foreground truncate w-full">
-                              {conv.preview || "No preview available"}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(conv.updatedAt).toLocaleDateString()}
-                            </span>
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Chat/History Toggle */}
+                <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
+                  <Button
+                    variant={viewMode === "chat" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("chat")}
+                    className={`h-7 px-3 ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    aria-label="View chat"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                    Chat
+                  </Button>
+                  <Button
+                    variant={viewMode === "history" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("history")}
+                    className={`h-7 px-3 ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    aria-label="View history"
+                  >
+                    <Clock className="h-3.5 w-3.5 mr-1.5" />
+                    History
+                  </Button>
+                </div>
                 {/* New Chat Button */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={clearConversation}
+                  onClick={() => {
+                    clearConversation();
+                    setViewMode("chat");
+                  }}
                   className="text-muted-foreground hover:text-foreground"
                   aria-label="Start new conversation"
                 >
-                  <Trash2 className="h-4 w-4 mr-1" />
+                  <Plus className="h-4 w-4 mr-1" />
                   New Chat
                 </Button>
               </div>
@@ -381,63 +352,40 @@ export default function NeptuneAssistPanel({
                 <h3 className="font-semibold">Neptune</h3>
               </div>
               <div className="flex items-center gap-1">
-                {/* History Dropdown (compact) */}
-                <DropdownMenu onOpenChange={(open) => open && fetchConversationHistory()}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      aria-label="View conversation history"
-                    >
-                      <History className="h-3.5 w-3.5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64">
-                    <DropdownMenuLabel className="flex items-center gap-2 text-xs">
-                      <MessageSquare className="h-3.5 w-3.5" />
-                      History
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {isLoadingHistory ? (
-                      <div className="py-3 flex items-center justify-center">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : conversationHistory.length === 0 ? (
-                      <div className="py-3 px-2 text-center text-xs text-muted-foreground">
-                        No previous conversations
-                      </div>
-                    ) : (
-                      <div className="max-h-48 overflow-y-auto">
-                        {conversationHistory.slice(0, 5).map((conv) => (
-                          <DropdownMenuItem
-                            key={conv.id}
-                            onClick={() => loadConversation(conv.id)}
-                            className="flex flex-col items-start gap-0.5 cursor-pointer py-1.5"
-                          >
-                            <span className="text-xs font-medium truncate w-full">
-                              {conv.title}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(conv.updatedAt).toLocaleDateString()}
-                            </span>
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Chat/History Toggle (compact) */}
+                <div className="flex items-center rounded-md border bg-muted/50 p-0.5">
+                  <Button
+                    variant={viewMode === "chat" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("chat")}
+                    className={`h-6 px-2 text-xs ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    aria-label="View chat"
+                  >
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    Chat
+                  </Button>
+                  <Button
+                    variant={viewMode === "history" ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => setViewMode("history")}
+                    className={`h-6 px-2 text-xs ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
+                    aria-label="View history"
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    History
+                  </Button>
+                </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-7 w-7"
-                  onClick={clearConversation}
+                  onClick={() => {
+                    clearConversation();
+                    setViewMode("chat");
+                  }}
                   aria-label="Start new conversation"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7">
-                  <RefreshCw className="h-3.5 w-3.5" />
+                  <Plus className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -445,7 +393,7 @@ export default function NeptuneAssistPanel({
         )}
 
         {/* Quick Actions - Only show in default variant with conversation context */}
-        {!isFullscreen && legacyConversation && (
+        {!isFullscreen && legacyConversation && viewMode === "chat" && (
           <div className="border-b p-4">
             <QuickActions
               conversationId={legacyConversationId ?? null}
@@ -455,11 +403,63 @@ export default function NeptuneAssistPanel({
           </div>
         )}
 
-        {/* Chat Messages */}
-        <div
-          className={`flex-1 overflow-y-auto ${isFullscreen ? "p-6" : "p-4"}`}
-          ref={scrollRef}
-        >
+        {/* History View */}
+        {viewMode === "history" ? (
+          <div className={`flex-1 overflow-y-auto ${isFullscreen ? "p-6" : "p-4"}`}>
+            {isLoadingHistory ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : conversationHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-32 text-center">
+                <Clock className="h-10 w-10 text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground">No conversation history yet</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  Your past conversations will appear here
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {conversationHistory.map((conv) => (
+                  <button
+                    key={conv.id}
+                    onClick={() => {
+                      loadConversation(conv.id);
+                      setViewMode("chat");
+                    }}
+                    className="w-full text-left p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <h4 className="font-medium text-sm truncate flex-1">
+                        {conv.title}
+                      </h4>
+                      <Badge variant="secondary" className="text-xs shrink-0">
+                        {conv.messageCount} msgs
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate mb-2">
+                      {conv.preview || "No preview available"}
+                    </p>
+                    <p className="text-xs text-muted-foreground/70">
+                      {new Date(conv.updatedAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Chat Messages */
+          <div
+            className={`flex-1 overflow-y-auto ${isFullscreen ? "p-6" : "p-4"}`}
+            ref={scrollRef}
+          >
           <div className="space-y-4">
             {messages.map((msg) => (
               <div
@@ -745,8 +745,10 @@ export default function NeptuneAssistPanel({
             )}
           </div>
         </div>
+        )}
 
-        {/* Input */}
+        {/* Input - Only show in chat mode */}
+        {viewMode === "chat" && (
         <div className={`border-t ${isFullscreen ? "p-6" : "p-4"} shrink-0`}>
           <input
             ref={fileInputRef}
@@ -831,6 +833,7 @@ export default function NeptuneAssistPanel({
             </Button>
           </div>
         </div>
+        )}
       </div>
     </NeptuneCardWrapper>
   );
