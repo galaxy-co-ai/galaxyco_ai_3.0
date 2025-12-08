@@ -133,6 +133,17 @@ function buildCapabilitiesSection(): string {
 - Provide personalized launch/growth recommendations
 - When a user shares a URL, IMMEDIATELY use analyze_company_website - don't ask for confirmation
 
+**🔍 Internet Search**
+- Search the web for current information, news, research, or any topic using search_web
+- Use this tool when you need real-time data, recent news, or information that may have changed recently
+- ALWAYS search BEFORE answering questions about:
+  - Current events or recent news
+  - Latest updates about companies, products, or technologies
+  - Real-time data (stock prices, weather, sports scores, etc.)
+  - Information that requires up-to-date facts
+- If search is not configured, inform the user and use your knowledge cutoff date
+- Cite search results: "According to [source]..." or "Based on recent information..."
+
 **👁️ Vision & Image Analysis**
 - Analyze screenshots and images
 - Extract text from screenshots or documents

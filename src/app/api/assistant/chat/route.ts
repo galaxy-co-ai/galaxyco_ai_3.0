@@ -77,6 +77,37 @@ function detectComplexQuestion(message: string): boolean {
   return hasComplexIndicator || (questionCount > 1) || (isLongQuestion && hasComparison);
 }
 
+/**
+ * Detect URLs in a message
+ */
+function detectUrls(message: string): string[] {
+  // Match full URLs (http://, https://)
+  const fullUrlRegex = /https?:\/\/[^\s<>"']+/gi;
+  // Match domain patterns (example.com, www.example.com, example.io, etc.)
+  const domainRegex = /(?:www\.)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?:\/[^\s<>"']*)?/gi;
+  
+  const fullUrls = [...message.matchAll(fullUrlRegex)].map(m => m[0]);
+  const domains = [...message.matchAll(domainRegex)].map(m => m[0]);
+  
+  // Combine and deduplicate
+  const allUrls = [...new Set([...fullUrls, ...domains])];
+  
+  // Filter out common false positives (email addresses, common words)
+  const falsePositives = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];
+  return allUrls.filter(url => {
+    // Skip if it's part of an email
+    if (/\S+@\S+/.test(message) && message.includes(url)) {
+      return false;
+    }
+    // Skip common false positives
+    if (falsePositives.some(fp => url.includes(fp))) {
+      return false;
+    }
+    // Must have a valid TLD
+    return /\.(com|net|org|io|ai|co|app|dev|tech|online|site|website|xyz|info|biz|us|uk|ca|au|de|fr|jp|cn|in|br|ru|es|it|nl|se|no|dk|fi|pl|cz|at|ch|be|ie|pt|gr|ro|hu|bg|hr|sk|si|lt|lv|ee|lu|mt|cy|is|li|mc|ad|sm|va|ax|fo|gi|je|gg|im|mt|mk|me|rs|ba|al|md|ua|by|ge|am|az|kz|kg|tj|tm|uz|mn|mo|hk|tw|sg|my|th|ph|vn|id|kr|jp|cn|in|pk|bd|lk|np|mm|kh|la|bn|tl|pg|fj|nc|pf|ws|to|vu|sb|ki|pw|fm|mh|nr|tv|ck|nu|pn|tk|gs|ac|io|sh|cx|cc|nf|hm|aq|tf|bv|sj|um|as|gu|mp|vi|pr|ky|vg|ai|ag|aw|bb|bs|bz|bm|br|vg|ky|co|cu|dm|do|ec|fk|gd|gp|gt|gy|hn|ht|jm|kn|lc|mq|ms|mx|ni|pa|pe|py|sr|sv|tc|tt|uy|ve|wf|ws|ax|dk|ee|fi|fo|gl|is|ie|im|je|lv|lt|lu|mt|no|pt|se|sj|sk|si|uk|ad|al|at|ba|be|bg|by|ch|cy|cz|de|es|fr|gb|gg|gi|gr|hr|hu|ie|im|is|it|je|li|lu|lv|mc|md|me|mk|mt|nl|no|pl|pt|ro|rs|se|si|sk|sm|ua|va|yu|za|zw|ae|af|ag|ai|al|am|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bl|bm|bn|bo|bq|br|bs|bt|bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cu|cv|cw|cx|cy|cz|de|dj|dk|dm|do|dz|ec|ee|eg|eh|er|es|et|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|lu|lv|ly|ma|mc|md|me|mf|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|ss|st|sv|sx|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tr|tt|tv|tw|tz|ua|ug|um|us|uy|uz|va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw)/i.test(url);
+  });
+}
+
 // ============================================================================
 // STREAMING HELPERS
 // ============================================================================
@@ -400,6 +431,18 @@ export async function POST(request: Request) {
         limit: 30,
       });
 
+      // Detect URLs in the current user message and inject tool call hint
+      const detectedUrls = detectUrls(message);
+      let enhancedUserMessage = fullMessage;
+      if (detectedUrls.length > 0) {
+        const urlList = detectedUrls.join(', ');
+        enhancedUserMessage = `${fullMessage}\n\n[SYSTEM INSTRUCTION: URLs detected in message: ${urlList}. You MUST call the analyze_company_website tool immediately with the URL(s) found. Do NOT ask for confirmation. Do NOT respond with text first. Call the tool NOW.]`;
+        logger.info('[AI Chat Stream] URLs detected, forcing website analysis', { 
+          urls: detectedUrls,
+          conversationId: conversation.id 
+        });
+      }
+
       // Build messages array with vision support
       const messages: ChatCompletionMessageParam[] = [
         {
@@ -428,6 +471,11 @@ export async function POST(request: Request) {
             content: msg.content,
           };
         }),
+        // Add current user message with URL detection hint if URLs found
+        {
+          role: 'user',
+          content: enhancedUserMessage,
+        },
       ];
 
       // Select tools based on feature context

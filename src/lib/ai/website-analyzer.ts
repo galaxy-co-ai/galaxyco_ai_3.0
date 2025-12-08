@@ -249,7 +249,7 @@ export async function analyzeWebsiteQuick(
     const jinaUrl = `https://r.jina.ai/${normalizedUrl}`;
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout (increased from 15s)
     
     try {
       const jinaResponse = await fetch(jinaUrl, {
@@ -282,13 +282,64 @@ export async function analyzeWebsiteQuick(
     logger.info('Got content from Jina Reader', { url: normalizedUrl, length: contentSummary.length });
   }
   
-  // Fallback to direct fetch if Jina failed
+  // Fallback to Firecrawl API if Jina failed (if configured)
+  if (!contentSummary || contentSummary.length < 200) {
+    if (process.env.FIRECRAWL_API_KEY) {
+      const firecrawlResult = await retryWithBackoff(async () => {
+        logger.info('Trying Firecrawl API as fallback', { url: normalizedUrl });
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        
+        try {
+          const firecrawlResponse = await fetch('https://api.firecrawl.dev/v0/scrape', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: normalizedUrl,
+              pageOptions: {
+                onlyMainContent: true,
+              },
+            }),
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (firecrawlResponse.ok) {
+            const firecrawlData = await firecrawlResponse.json();
+            if (firecrawlData.data?.markdown || firecrawlData.data?.content) {
+              const content = firecrawlData.data.markdown || firecrawlData.data.content;
+              if (content && content.length > 200) {
+                return { content: content.slice(0, 6000), method: 'firecrawl' };
+              }
+            }
+          }
+          throw new Error(`Firecrawl returned status ${firecrawlResponse.status}`);
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
+      }, 1, 1000); // 1 retry with 1s delay
+      
+      if (firecrawlResult) {
+        contentSummary = firecrawlResult.content;
+        methodUsed = firecrawlResult.method;
+        logger.info('Got content from Firecrawl', { url: normalizedUrl, length: contentSummary.length });
+      }
+    }
+  }
+
+  // Fallback to direct fetch if previous methods failed
   if (!contentSummary || contentSummary.length < 200) {
     const fetchResult = await retryWithBackoff(async () => {
       logger.info('Trying direct fetch as fallback', { url: normalizedUrl });
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased from 8s to 10s
       
       try {
         const response = await fetch(normalizedUrl, {
@@ -341,7 +392,10 @@ export async function analyzeWebsiteQuick(
   
   // If we still have no content, try URL inference as last resort
   if (!contentSummary || contentSummary.length < 100) {
-    logger.warn('Could not fetch website content, using URL inference', { url: websiteUrl });
+    logger.warn('Could not fetch website content, using URL inference', { 
+      url: websiteUrl,
+      methodsAttempted: ['jina', process.env.FIRECRAWL_API_KEY ? 'firecrawl' : null, 'direct_fetch'].filter(Boolean)
+    });
     
     // Extract domain name for basic inference
     let domainName = normalizedUrl;
@@ -349,18 +403,20 @@ export async function analyzeWebsiteQuick(
       domainName = new URL(normalizedUrl).hostname.replace('www.', '');
     } catch {}
     
-    // Return partial success with inferred data
+    // Return partial success with inferred data and clear error message
     return {
       companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
-      description: `Company website at ${domainName}`,
-      keyOfferings: ['Products and services'],
-      targetAudience: 'To be determined',
+      description: `Company website at ${domainName}. Note: I couldn't fully access the website content (it may be blocking automated requests or require authentication).`,
+      keyOfferings: ['Products and services - details unavailable'],
+      targetAudience: 'To be determined - please share more about your business',
       suggestedActions: [
-        'Share more details about your business',
-        'Tell me about your products or services',
-        'Describe your target customers'
+        'Share more details about what your company does',
+        'Tell me about your main products or services',
+        'Describe your target customers or market',
+        'The website may be blocking automated access - you can paste key information here'
       ],
       websiteUrl: normalizedUrl,
+      analysisNote: 'Limited analysis - website content could not be fully accessed. Please provide additional details about your business.',
     };
   }
   
@@ -407,8 +463,28 @@ export async function analyzeWebsiteQuick(
     
     return { ...analysis, websiteUrl };
   } catch (aiError) {
-    logger.error('AI analysis failed', { url: websiteUrl, error: aiError });
-    return null;
+    logger.error('AI analysis failed', { url: websiteUrl, error: aiError, methodUsed });
+    
+    // Return a helpful error response instead of null
+    let domainName = normalizedUrl;
+    try {
+      domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+    } catch {}
+    
+    return {
+      companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
+      description: `I encountered an error analyzing ${domainName}. The website may be blocking automated access, require authentication, or have connectivity issues.`,
+      keyOfferings: ['Unable to determine - website analysis failed'],
+      targetAudience: 'Unable to determine - please share details',
+      suggestedActions: [
+        'The website could not be analyzed automatically',
+        'Please share key information about your business',
+        'Tell me about your products, services, and target customers',
+        'Check if the website requires authentication or blocks bots'
+      ],
+      websiteUrl: normalizedUrl,
+      analysisNote: `Analysis failed: ${aiError instanceof Error ? aiError.message : 'Unknown error'}. Please provide business details manually.`,
+    };
   }
 }
 

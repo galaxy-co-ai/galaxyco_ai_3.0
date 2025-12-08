@@ -224,10 +224,19 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - 🌐 **Instant Website Analysis** - Neptune now analyzes websites immediately when you share a URL:
   - No more "please wait 1-2 minutes" - analysis happens instantly
   - Uses lightweight fetch + cheerio crawler (works in serverless)
-  - Jina AI Reader fallback for JavaScript-heavy sites
+  - Jina AI Reader fallback for JavaScript-heavy sites (25s timeout)
+  - Firecrawl API fallback for enhanced crawling (when configured)
+  - Multiple retry attempts with exponential backoff
   - Provides personalized business insights and growth recommendations
   - Automatically extracts company info, products, services, and target audience
   - Neptune suggests specific next actions tailored to your business
+  - Automatic URL detection - just paste a URL and Neptune analyzes it
+- 🔍 **Internet Search Capability** - Neptune can now search the web for current information:
+  - Google Custom Search API integration for real-time web search
+  - Search for news, current events, research, and any topic
+  - Automatically searches before answering questions about recent information
+  - Cites sources from search results
+  - Graceful degradation when search is not configured
 - 🐦 **Twitter/X Integration** - Social media posting directly from Neptune:
   - Connect Twitter account via OAuth 2.0 (PKCE flow)
   - Post tweets immediately or schedule for later
@@ -399,6 +408,22 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - Smart summarization and Q&A
 - Works seamlessly - just upload and ask questions
 
+**🔍 Internet Search & Web Research**
+- Search the web for current information using Google Custom Search API
+- Automatically searches before answering questions about recent events or news
+- Real-time data lookup (stock prices, weather, sports, etc.)
+- Research any topic with cited sources
+- Works seamlessly - just ask "What's the latest news about X?"
+- Graceful fallback when search API is not configured
+
+**🌐 Website Analysis**
+- Instantly analyze any company website when you share a URL
+- Automatic URL detection - just paste a URL and Neptune analyzes it
+- Multiple crawling methods: Jina Reader → Firecrawl → Direct Fetch
+- Extracts business info, products, services, target audience
+- Provides personalized growth recommendations
+- Handles JavaScript-heavy sites and authentication-protected pages
+
 **🎨 Professional Document Creation (Gamma.app)**
 - Generate polished presentations and pitch decks
 - Create professional proposals and reports
@@ -496,6 +521,19 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - "Create a content calendar for LinkedIn and Twitter"
 - "Write brand guidelines for my company"
 - "What's the next marketing action for this lead?"
+
+🔍 Web Search & Research
+- "What's the latest news about OpenAI?"
+- "Search for information about [topic]"
+- "What happened with Tesla stock today?"
+- "Find recent articles about [company]"
+- "What are the latest trends in [industry]?"
+
+🌐 Website Analysis
+- "https://example.com" (just paste URL - auto-detected)
+- "Analyze https://acme.com"
+- "Tell me about stripe.com"
+- Neptune automatically extracts company info, products, services
 
 🧠 Proactive Intelligence
 - Neptune automatically suggests: "You have 3 stalled deals - want me to draft follow-ups?"
@@ -659,6 +697,8 @@ See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 - **Gamma.app** - Professional document generation (Pro/Teams/Business plan required)
 - **Anthropic** - Claude models (fallback AI provider)
 - **Google AI** - Gemini models (fallback AI provider)
+- **Google Custom Search API** - Internet search capability (GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_ENGINE_ID)
+- **Firecrawl API** - Enhanced website crawling fallback (FIRECRAWL_API_KEY)
 - **Twilio** - SMS, WhatsApp, Voice (Conversations feature)
 - **Pinecone** - Vector search (Knowledge Base)
 - **Twitter API** - Social media posting (Twitter/X OAuth credentials)

@@ -69,9 +69,13 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 
 ### Phase 1.2: Website Analysis Reliability ✅
 - Added retry logic with exponential backoff (2 retries per method)
-- Improved fallback chain: Jina Reader → Direct Fetch → URL Inference
-- Better error handling with partial success responses
+- Improved fallback chain: Jina Reader → Firecrawl API → Direct Fetch → URL Inference
+- Increased Jina Reader timeout from 15s to 25s for better reliability
+- Added Firecrawl API as optional fallback (when FIRECRAWL_API_KEY configured)
+- Increased direct fetch timeout from 8s to 10s
+- Better error handling with partial success responses and detailed failure messages
 - Timeout configuration and graceful degradation
+- Automatic URL detection in chat messages - forces tool execution
 
 ### Phase 1.3: Semantic Cache Optimization ✅
 - Lowered similarity threshold from 0.95 to 0.90 (increased cache hit rate)
@@ -266,6 +270,41 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 
 ---
 
+## 🔍 Neptune Web Search & Enhanced Website Analysis - December 7, 2025 ✅
+
+**Completed December 7, 2025** - Added internet search capability and improved website analysis:
+
+### Web Search Integration ✅
+- **Google Custom Search API** - Full web search capability for Neptune
+- New `search_web` tool added to Neptune's toolset
+- Automatically searches before answering questions about current events, news, or recent information
+- Cites sources from search results
+- Graceful degradation when search API is not configured
+- Integrated into system prompt with clear usage guidelines
+
+### Enhanced Website Analysis ✅
+- **Automatic URL Detection** - Programmatic URL detection in chat messages
+- Forces `analyze_company_website` tool execution when URLs are detected
+- No more relying solely on AI judgment - URLs are detected and processed automatically
+- **Improved Fallback Chain:**
+  1. Jina Reader (25s timeout, increased from 15s)
+  2. Firecrawl API (20s timeout, when configured)
+  3. Direct Fetch (10s timeout, increased from 8s)
+  4. URL Inference with helpful error messages
+- Better error messages explaining why analysis failed
+- Returns partial results instead of null on failures
+
+### Technical Implementation ✅
+- Added `isSearchConfigured()` helper for graceful degradation
+- URL detection regex handles full URLs and domain patterns
+- System instruction injection forces tool calls for detected URLs
+- All tools properly categorized in `toolsByCategory`
+- No linter errors, follows existing codebase patterns
+
+**Impact:** Neptune can now search the internet for current information and reliably analyze websites with automatic URL detection and multiple fallback methods.
+
+---
+
 ## 🎉 Current Status: DEPLOYED & OPERATIONAL - NEPTUNE AI 100% COMPLETE
 
 **🚀 Project is LIVE on Vercel Production with Fully Enhanced Neptune AI**
@@ -283,6 +322,12 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Overall** | ✅ 100% Production-Ready |
 
 **Latest Updates (December 7, 2025):**
+- **Web Search & Enhanced Website Analysis** ✅
+  - Added `search_web` tool with Google Custom Search API integration
+  - Automatic URL detection in chat messages
+  - Enhanced website analyzer with Firecrawl API fallback
+  - Improved timeouts and error handling
+  - System prompt updated with search capabilities
 - **Stripe Integration Complete** ✅
   - Installed Stripe SDK (`stripe@20.0.0`)
   - Created `/api/stripe/checkout` - Checkout session creation

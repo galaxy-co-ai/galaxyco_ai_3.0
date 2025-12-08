@@ -114,6 +114,16 @@ export function extractSearchInsights(results: SearchResult[]): string {
     .join('\n\n');
 }
 
+/**
+ * Check if web search is configured
+ */
+export function isSearchConfigured(): boolean {
+  return !!(
+    process.env.GOOGLE_CUSTOM_SEARCH_API_KEY &&
+    process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+  );
+}
+
 
 
 

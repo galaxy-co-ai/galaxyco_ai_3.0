@@ -1899,6 +1899,27 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'search_web',
+      description: 'Search the internet for current information, news, research, or any topic. Use this tool when you need real-time data, recent news, or information that may have changed recently. Always search BEFORE answering questions about current events, recent news, or topics that require up-to-date information.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'The search query to find information on the web',
+          },
+          numResults: {
+            type: 'number',
+            description: 'Number of search results to return (1-10, default: 5)',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
 ];
 
 // ============================================================================
@@ -7250,6 +7271,83 @@ Provide analysis in JSON format:
       };
     }
   },
+  // Web Search Tool
+  async search_web(args, context): Promise<ToolResult> {
+    try {
+      const query = args.query as string;
+      const numResults = Math.min(Math.max((args.numResults as number) || 5, 1), 10);
+
+      if (!query || query.trim().length === 0) {
+        return {
+          success: false,
+          message: 'Please provide a search query.',
+          error: 'Missing query',
+        };
+      }
+
+      // Check if search is configured
+      const { isSearchConfigured } = await import('@/lib/search');
+      if (!isSearchConfigured()) {
+        return {
+          success: false,
+          message: 'Web search is not configured. Please configure Google Custom Search API keys in environment variables (GOOGLE_CUSTOM_SEARCH_API_KEY and GOOGLE_CUSTOM_SEARCH_ENGINE_ID).',
+          error: 'Search not configured',
+        };
+      }
+
+      // Import search functions
+      const { searchWeb, extractSearchInsights } = await import('@/lib/search');
+      
+      logger.info('Executing web search', { query, numResults, workspaceId: context.workspaceId });
+      
+      const results = await searchWeb(query, { numResults });
+      const summary = extractSearchInsights(results);
+
+      if (results.length === 0) {
+        return {
+          success: true,
+          message: `I searched for "${query}" but didn't find any results. Try rephrasing your query or being more specific.`,
+          data: {
+            query,
+            results: [],
+            summary: 'No results found',
+          },
+        };
+      }
+
+      return {
+        success: true,
+        message: `Found ${results.length} result${results.length === 1 ? '' : 's'} for "${query}".`,
+        data: {
+          query,
+          results: results.map(r => ({
+            title: r.title,
+            link: r.link,
+            snippet: r.snippet,
+            displayLink: r.displayLink,
+          })),
+          summary,
+        },
+      };
+    } catch (error) {
+      logger.error('AI search_web failed', error);
+      
+      // Check if it's a configuration error
+      if (error instanceof Error && error.message.includes('not configured')) {
+        return {
+          success: false,
+          message: 'Web search is not configured. Please configure Google Custom Search API keys in environment variables.',
+          error: 'Search not configured',
+        };
+      }
+
+      return {
+        success: false,
+        message: `Failed to search the web: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -7297,8 +7395,8 @@ export const toolsByCategory = {
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
   content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents', 'save_upload_to_library'],
-  knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library'],
-  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media'],
+  knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library', 'search_web'],
+  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media', 'search_web'],
   automation: ['create_automation'],
   team: ['list_team_members', 'assign_to_team_member'],
   marketing: [
