@@ -7075,7 +7075,7 @@ Provide analysis in JSON format:
         // Quick analysis for immediate response
         logger.info('Starting quick website analysis', { url: normalizedUrl, workspaceId: context.workspaceId });
         
-        let insights: QuickWebsiteInsights | null = null;
+        let insights: Awaited<ReturnType<typeof analyzeWebsiteQuick>> = null;
         try {
           insights = await analyzeWebsiteQuick(normalizedUrl, { maxPages: 5 });
         } catch (error) {
