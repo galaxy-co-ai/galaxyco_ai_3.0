@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 // Animated star field for footer
 function StarField({ count = 25 }: { count?: number }) {
@@ -130,6 +131,7 @@ export default function LaunchpadLayout({
   const [isScrolled, setIsScrolled] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const { trackEvent } = useAnalytics({ trackPageViews: false });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -243,6 +245,19 @@ export default function LaunchpadLayout({
                 type="text"
                 placeholder="Search articles..."
                 className="w-48 lg:w-56 h-9 pl-9 pr-3 rounded-full bg-white/95 border-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400/50 shadow-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    trackEvent({
+                      eventType: 'search',
+                      eventName: 'launchpad_search',
+                      metadata: {
+                        searchQuery: e.currentTarget.value.trim(),
+                        source: 'launchpad'
+                      }
+                    });
+                    // TODO: Navigate to search results or perform search
+                  }
+                }}
               />
             </div>
             <Link href="/launchpad/search" className="sm:hidden">

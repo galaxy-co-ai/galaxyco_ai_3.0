@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   title?: string;
@@ -36,6 +37,8 @@ export function Header({
   ...props
 }: HeaderProps) {
   const [searchOpen, setSearchOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const { trackEvent } = useAnalytics({ trackPageViews: false });
 
   const getInitials = (name: string) => {
     return name
@@ -92,7 +95,37 @@ export function Header({
                   placeholder="Search..."
                   className="pl-9 pr-9"
                   autoFocus
-                  onBlur={() => setSearchOpen(false)}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      trackEvent({
+                        eventType: 'search',
+                        eventName: 'global_search',
+                        metadata: {
+                          searchQuery: searchQuery.trim(),
+                          source: 'header'
+                        }
+                      });
+                      // TODO: Navigate to search results or perform search
+                      setSearchOpen(false);
+                      setSearchQuery("");
+                    }
+                  }}
+                  onBlur={() => {
+                    if (searchQuery.trim()) {
+                      trackEvent({
+                        eventType: 'search',
+                        eventName: 'global_search',
+                        metadata: {
+                          searchQuery: searchQuery.trim(),
+                          source: 'header'
+                        }
+                      });
+                    }
+                    setSearchOpen(false);
+                    setSearchQuery("");
+                  }}
                 />
                 <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
                   <Command className="h-3 w-3" />K
