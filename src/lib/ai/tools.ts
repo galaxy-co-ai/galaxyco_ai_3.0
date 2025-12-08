@@ -7073,9 +7073,18 @@ Provide analysis in JSON format:
         };
       } else {
         // Quick analysis for immediate response
-        const insights = await analyzeWebsiteQuick(normalizedUrl, { maxPages: 5 });
+        logger.info('Starting quick website analysis', { url: normalizedUrl, workspaceId: context.workspaceId });
+        
+        let insights: QuickWebsiteInsights | null = null;
+        try {
+          insights = await analyzeWebsiteQuick(normalizedUrl, { maxPages: 5 });
+        } catch (error) {
+          logger.error('analyzeWebsiteQuick threw an error', { url: normalizedUrl, error });
+          // Continue to fallback handling below
+        }
 
         if (!insights) {
+          logger.warn('Website analysis returned null, using fallback', { url: normalizedUrl });
           // Extract domain name for friendlier message
           let domainName = normalizedUrl;
           try {

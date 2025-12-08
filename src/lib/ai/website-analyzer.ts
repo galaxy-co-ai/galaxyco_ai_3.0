@@ -232,16 +232,35 @@ export async function analyzeWebsiteQuick(
   websiteUrl: string,
   options?: { maxPages?: number }
 ): Promise<QuickWebsiteInsights | null> {
-  logger.info('Starting quick website analysis', { url: websiteUrl });
-  
-  // Normalize URL
-  let normalizedUrl = websiteUrl.trim();
-  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
-    normalizedUrl = 'https://' + normalizedUrl;
-  }
-  
-  let contentSummary = '';
-  let methodUsed = '';
+  try {
+    logger.info('Starting quick website analysis', { url: websiteUrl });
+    
+    // Normalize URL
+    let normalizedUrl = websiteUrl.trim();
+    if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+      normalizedUrl = 'https://' + normalizedUrl;
+    }
+    
+    // Validate URL format
+    try {
+      new URL(normalizedUrl);
+    } catch {
+      logger.warn('Invalid URL format', { url: normalizedUrl });
+      // Return partial result instead of null
+      const domainName = normalizedUrl.split('/')[0].replace('www.', '');
+      return {
+        companyName: domainName.split('.')[0]?.charAt(0).toUpperCase() + domainName.split('.')[0]?.slice(1) || 'Unknown',
+        description: `Invalid URL format: ${normalizedUrl}. Please provide a valid website URL.`,
+        keyOfferings: ['Unable to analyze - invalid URL'],
+        targetAudience: 'Please provide a valid URL',
+        suggestedActions: ['Please provide a valid website URL starting with http:// or https://'],
+        websiteUrl: normalizedUrl,
+        analysisNote: 'Invalid URL format provided',
+      };
+    }
+    
+    let contentSummary = '';
+    let methodUsed = '';
   
   // Try Jina Reader FIRST - it handles auth-protected and JS-heavy sites best
   // With retry logic
@@ -485,6 +504,29 @@ export async function analyzeWebsiteQuick(
       ],
       websiteUrl: normalizedUrl,
       analysisNote: `Analysis failed: ${aiError instanceof Error ? aiError.message : 'Unknown error'}. Please provide business details manually.`,
+    };
+  } catch (outerError) {
+    // Catch any unexpected errors and return a helpful response
+    logger.error('Unexpected error in analyzeWebsiteQuick', { url: websiteUrl, error: outerError });
+    
+    let domainName = websiteUrl;
+    try {
+      const urlObj = new URL(websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`);
+      domainName = urlObj.hostname.replace('www.', '');
+    } catch {}
+    
+    return {
+      companyName: domainName.split('.')[0]?.charAt(0).toUpperCase() + domainName.split('.')[0]?.slice(1) || 'Unknown',
+      description: `I encountered an unexpected error while analyzing ${domainName}. Please try again or share details about your business.`,
+      keyOfferings: ['Unable to determine - analysis error'],
+      targetAudience: 'Please share details about your business',
+      suggestedActions: [
+        'Please try again with the website URL',
+        'Or share key information about your business directly',
+        'Tell me about your products, services, and target customers'
+      ],
+      websiteUrl: websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`,
+      analysisNote: `Unexpected error: ${outerError instanceof Error ? outerError.message : 'Unknown error'}`,
     };
   }
 }
