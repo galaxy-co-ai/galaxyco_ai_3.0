@@ -174,6 +174,9 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - 🔐 **Google OAuth Fresh Setup** - New GalaxyCo AI Platform project in Google Cloud:
   - Fresh OAuth credentials with Gmail and Calendar APIs enabled
   - Test users configured for immediate access
+- 📊 **Analytics Duplicate Tracking Fix** - Prevented double search events when pressing Enter:
+  - Added ref to track submission state and skip duplicate onBlur tracking
+  - Added `method` metadata field to distinguish `enter` vs `blur` search submissions
 - 🎛️ **Mission Control Admin Dashboard** - Complete admin panel improvements:
   - Fixed admin access for `dev@galaxyco.ai` (sidebar link visibility + server-side authorization)
   - Added Users page (`/admin/users`) with user list, stats cards, and avatars
