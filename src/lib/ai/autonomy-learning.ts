@@ -223,17 +223,31 @@ async function updateAutonomyLearning(
         : defaultConfidence;
 
       // Boost confidence if we have consistent approvals
-      if (approved && newApprovalCount >= 5 && newRejectionCount === 0) {
-        newConfidence = Math.min(90, newConfidence + 10);
+      if (approved && newApprovalCount >= 3 && newRejectionCount === 0) {
+        newConfidence = Math.min(90, newConfidence + 15);
       }
 
-      // Reset if user rejects 2x in a row
-      if (!approved && newRejectionCount >= 2 && existing.approvalCount === 0) {
+      // Decay old rejections (reduce impact of old rejections over time)
+      // If last update was > 30 days ago, reduce rejection impact
+      const daysSinceLastUpdate = existing.lastUpdated
+        ? Math.floor((Date.now() - existing.lastUpdated.getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
+      
+      if (daysSinceLastUpdate > 30 && newRejectionCount > 0) {
+        // Reduce effective rejection count for old rejections
+        const effectiveRejections = Math.max(0, newRejectionCount - Math.floor(daysSinceLastUpdate / 30));
+        newConfidence = (newApprovalCount + effectiveRejections) > 0
+          ? Math.round((newApprovalCount / (newApprovalCount + effectiveRejections)) * 100)
+          : defaultConfidence;
+      }
+
+      // Reset if user rejects 2x in a row (only if recent - within last 7 days)
+      if (!approved && newRejectionCount >= 2 && existing.approvalCount === 0 && daysSinceLastUpdate < 7) {
         newConfidence = 0;
       }
 
-      // Auto-enable if confidence >= 80 and user has approved 10+ times
-      const autoExecuteEnabled = newConfidence >= 80 && newApprovalCount >= 10;
+      // Auto-enable if confidence >= 80 and user has approved 5+ times (lowered from 10)
+      const autoExecuteEnabled = newConfidence >= 80 && newApprovalCount >= 5;
 
       await db.update(userAutonomyPreferences)
         .set({

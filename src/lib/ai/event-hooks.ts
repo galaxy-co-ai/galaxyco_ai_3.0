@@ -3,10 +3,16 @@
  * 
  * Listens for key workspace actions and triggers proactive insights.
  * Integrates with existing API routes to fire async events.
+ * Uses Trigger.dev for async processing.
  */
 
-import { generateProactiveInsights, storeInsights } from './proactive-engine';
+import { 
+  detectNewLeadInsights, 
+  detectDealNegotiationInsights,
+  storeProactiveInsights,
+} from './proactive-engine';
 import { logger } from '@/lib/logger';
+import { onNewLeadCreated, onDealStageChanged } from '@/trigger/proactive-events';
 
 // ============================================================================
 // EVENT TYPES
@@ -25,6 +31,7 @@ export type WorkspaceEvent =
 
 /**
  * Handle lead created event
+ * Triggers async Trigger.dev task for processing
  */
 export async function handleLeadCreated(
   workspaceId: string,
@@ -32,42 +39,20 @@ export async function handleLeadCreated(
   leadId: string
 ): Promise<void> {
   try {
-    // Generate insights for new lead
-    const insights = await generateProactiveInsights(workspaceId, userId);
-    
-    // Filter to lead-related insights
-    const leadInsights = insights.filter(insight => 
-      insight.category === 'sales' && 
-      insight.title.toLowerCase().includes('lead')
-    );
-
-    if (leadInsights.length > 0) {
-      await storeInsights(workspaceId, leadInsights, userId);
+    // Trigger async task for proactive insights
+    if (process.env.TRIGGER_SECRET_KEY) {
+      await onNewLeadCreated.trigger({
+        workspaceId,
+        leadId,
+      });
+      logger.info('[Event Hooks] Triggered new lead proactive task', { workspaceId, leadId });
+    } else {
+      // Fallback: generate insights synchronously if Trigger.dev not configured
+      const insights = await detectNewLeadInsights(workspaceId, leadId);
+      if (insights.length > 0) {
+        await storeProactiveInsights(workspaceId, insights);
+      }
     }
-
-    // Also create immediate insight for this specific lead
-    const immediateInsight = {
-      type: 'suggestion' as const,
-      priority: 7,
-      category: 'sales' as const,
-      title: 'New Lead Added',
-      description: 'Qualify this lead and set up follow-up sequence.',
-      suggestedActions: [
-        {
-          action: 'Auto-qualify lead',
-          toolName: 'auto_qualify_lead',
-          args: { leadId },
-        },
-        {
-          action: 'Create follow-up sequence',
-          toolName: 'create_follow_up_sequence',
-          args: { leadId, sequenceType: 'nurture' },
-        },
-      ],
-      autoExecutable: false,
-    };
-
-    await storeInsights(workspaceId, [immediateInsight], userId);
   } catch (error) {
     logger.error('Failed to handle lead created event', { workspaceId, userId, leadId, error });
   }
@@ -75,6 +60,7 @@ export async function handleLeadCreated(
 
 /**
  * Handle deal stage changed event
+ * Triggers async Trigger.dev task for processing
  */
 export async function handleDealStageChanged(
   workspaceId: string,
@@ -83,25 +69,22 @@ export async function handleDealStageChanged(
   newStage: string
 ): Promise<void> {
   try {
-    if (newStage === 'negotiation') {
-      // High-priority: Deal in negotiation
-      const insight = {
-        type: 'opportunity' as const,
-        priority: 9,
-        category: 'sales' as const,
-        title: 'Deal in Negotiation',
-        description: 'Deal moved to negotiation stage. Draft proposal and push to close.',
-        suggestedActions: [
-          {
-            action: 'Draft proposal',
-            toolName: 'draft_proposal',
-            args: { dealId, includePricing: true },
-          },
-        ],
-        autoExecutable: false,
-      };
-
-      await storeInsights(workspaceId, [insight], userId);
+    // Trigger async task for proactive insights
+    if (process.env.TRIGGER_SECRET_KEY) {
+      await onDealStageChanged.trigger({
+        workspaceId,
+        dealId,
+        newStage,
+      });
+      logger.info('[Event Hooks] Triggered deal stage change proactive task', { workspaceId, dealId, newStage });
+    } else {
+      // Fallback: generate insights synchronously if Trigger.dev not configured
+      if (newStage === 'negotiation') {
+        const insights = await detectDealNegotiationInsights(workspaceId, dealId);
+        if (insights.length > 0) {
+          await storeProactiveInsights(workspaceId, insights);
+        }
+      }
     }
   } catch (error) {
     logger.error('Failed to handle deal stage changed event', { workspaceId, userId, dealId, error });
@@ -117,25 +100,27 @@ export async function handleCampaignSent(
   campaignId: string
 ): Promise<void> {
   try {
-    // Schedule follow-up analysis after 24 hours
-    // For now, just create a reminder insight
-    const insight = {
-      type: 'suggestion' as const,
-      priority: 5,
-      category: 'marketing' as const,
-      title: 'Review Campaign Performance',
-      description: 'Check campaign performance after 24 hours and optimize if needed.',
-      suggestedActions: [
-        {
-          action: 'Check campaign stats',
-          toolName: 'get_campaign_stats',
-          args: { campaignId },
-        },
-      ],
-      autoExecutable: false,
-    };
-
-    await storeInsights(workspaceId, [insight], userId);
+    // Trigger campaign performance check task
+    if (process.env.TRIGGER_SECRET_KEY) {
+      const { onCampaignPerformanceCheck } = await import('@/trigger/proactive-events');
+      await onCampaignPerformanceCheck.trigger({
+        workspaceId,
+      });
+      logger.info('[Event Hooks] Triggered campaign performance check', { workspaceId, campaignId });
+    } else {
+      // Fallback: create reminder insight
+      const { generateProactiveInsights, storeProactiveInsights } = await import('./proactive-engine');
+      const insights = await generateProactiveInsights(workspaceId, {
+        categories: ['marketing'],
+        maxInsights: 5,
+      });
+      const campaignInsights = insights.filter(i => 
+        i.category === 'marketing' && i.title.toLowerCase().includes('campaign')
+      );
+      if (campaignInsights.length > 0) {
+        await storeProactiveInsights(workspaceId, campaignInsights);
+      }
+    }
   } catch (error) {
     logger.error('Failed to handle campaign sent event', { workspaceId, userId, campaignId, error });
   }
@@ -150,23 +135,23 @@ export async function handleInvoiceOverdue(
   invoiceId: string
 ): Promise<void> {
   try {
+    const { storeProactiveInsights } = await import('./proactive-engine');
     const insight = {
-      type: 'alert' as const,
-      priority: 9,
+      type: 'warning' as const,
+      priority: 90,
       category: 'finance' as const,
       title: 'Invoice Overdue',
       description: 'Invoice is overdue. Send payment reminder to improve cash flow.',
+      metadata: { invoiceId },
       suggestedActions: [
         {
-          action: 'Send payment reminder',
-          toolName: 'send_payment_reminders',
+          action: 'send_payment_reminders',
           args: { invoiceIds: [invoiceId], autoSend: false },
         },
       ],
-      autoExecutable: false,
     };
 
-    await storeInsights(workspaceId, [insight], userId);
+    await storeProactiveInsights(workspaceId, [insight]);
   } catch (error) {
     logger.error('Failed to handle invoice overdue event', { workspaceId, userId, invoiceId, error });
   }

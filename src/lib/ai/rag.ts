@@ -35,6 +35,8 @@ export interface RAGContext {
     title: string;
     url: string | null;
   }>;
+  usedKeywordFallback?: boolean;
+  vectorSearchAvailable?: boolean;
 }
 
 // ============================================================================
@@ -63,9 +65,20 @@ export async function searchKnowledgeBase(
 
   try {
     // Check if vector search is available
-    if (!isVectorConfigured()) {
-      logger.warn('[RAG] Vector search not configured, using keyword fallback');
-      return keywordFallbackSearch(query, workspaceId, topK);
+    const vectorConfigured = isVectorConfigured();
+    if (!vectorConfigured) {
+      logger.warn('[RAG] Vector search not configured, using keyword fallback', {
+        workspaceId,
+        query: query.slice(0, 50),
+      });
+      const fallbackResult = await keywordFallbackSearch(query, workspaceId, topK);
+      
+      // Add metadata to indicate fallback was used
+      return {
+        ...fallbackResult,
+        usedKeywordFallback: true,
+        vectorSearchAvailable: false,
+      };
     }
 
     // Perform semantic search
@@ -76,8 +89,29 @@ export async function searchKnowledgeBase(
     });
 
     if (searchResults.results.length === 0) {
-      logger.info('[RAG] No semantic results, trying keyword fallback');
-      return keywordFallbackSearch(query, workspaceId, topK);
+      logger.info('[RAG] No semantic results, trying keyword fallback', {
+        workspaceId,
+        query: query.slice(0, 50),
+      });
+      const fallbackResult = await keywordFallbackSearch(query, workspaceId, topK);
+      
+      // Log fallback usage for monitoring
+      if (fallbackResult.hasResults) {
+        logger.info('[RAG] Keyword fallback found results', {
+          resultsCount: fallbackResult.results.length,
+        });
+      } else {
+        logger.warn('[RAG] No results found in knowledge base', {
+          workspaceId,
+          query: query.slice(0, 50),
+        });
+      }
+      
+      return {
+        ...fallbackResult,
+        usedKeywordFallback: true,
+        vectorSearchAvailable: true, // Vector is configured but no results
+      };
     }
 
     // Fetch full document data for results
@@ -149,6 +183,8 @@ export async function searchKnowledgeBase(
       hasResults: filteredResults.length > 0,
       contextText,
       citations,
+      usedKeywordFallback: false,
+      vectorSearchAvailable: true,
     };
   } catch (error) {
     logger.error('[RAG] Search failed', error);
@@ -157,6 +193,8 @@ export async function searchKnowledgeBase(
       hasResults: false,
       contextText: '',
       citations: [],
+      usedKeywordFallback: false,
+      vectorSearchAvailable: isVectorConfigured(),
     };
   }
 }
@@ -223,6 +261,8 @@ async function keywordFallbackSearch(
       hasResults: results.length > 0,
       contextText,
       citations,
+      usedKeywordFallback: true,
+      vectorSearchAvailable: false,
     };
   } catch (error) {
     logger.error('[RAG] Keyword fallback search failed', error);
@@ -231,6 +271,8 @@ async function keywordFallbackSearch(
       hasResults: false,
       contextText: '',
       citations: [],
+      usedKeywordFallback: true,
+      vectorSearchAvailable: false,
     };
   }
 }
@@ -293,16 +335,30 @@ ${contextParts.join('\n\n')}
  * Returns true for questions or queries that seem to be looking for information
  */
 export function shouldUseRAG(message: string): boolean {
-  const lowerMessage = message.toLowerCase();
+  const lowerMessage = message.toLowerCase().trim();
   
-  // Question indicators
+  // Skip very short messages
+  if (lowerMessage.length < 5) {
+    return false;
+  }
+  
+  // Question indicators - expanded list
   const questionIndicators = [
     'what', 'when', 'where', 'who', 'why', 'how',
-    'explain', 'describe', 'tell me', 'show me',
-    'find', 'search', 'look up', 'look for',
-    'according to', 'based on', 'in my documents',
-    'in my files', 'in my knowledge', 'from my',
-    '?'
+    'explain', 'describe', 'tell me', 'show me', 'give me',
+    'find', 'search', 'look up', 'look for', 'find me',
+    'according to', 'based on', 'in my documents', 'in my files',
+    'in my knowledge', 'from my', 'in the document', 'in the file',
+    'what does', 'what is', 'what are', 'what was', 'what were',
+    'how does', 'how is', 'how are', 'how do', 'how can',
+    'where is', 'where are', 'where does', 'where did',
+    'who is', 'who are', 'who does', 'who did',
+    'when is', 'when are', 'when does', 'when did',
+    'can you explain', 'can you tell', 'can you find',
+    'do you know', 'do you have', 'do you see',
+    'summary', 'summarize', 'overview', 'details',
+    'information', 'info', 'data', 'content',
+    '?', 'help me understand', 'i need to know'
   ];
 
   // Check if message contains question indicators
@@ -310,17 +366,23 @@ export function shouldUseRAG(message: string): boolean {
     indicator => lowerMessage.includes(indicator)
   );
 
-  // Don't use RAG for simple commands or actions
+  // Check for question mark (strong indicator)
+  const hasQuestionMark = lowerMessage.includes('?');
+
+  // Don't use RAG for simple commands or actions (only if at start of message)
   const actionIndicators = [
     'create', 'add', 'make', 'schedule', 'send',
-    'delete', 'remove', 'update', 'change', 'set'
+    'delete', 'remove', 'update', 'change', 'set',
+    'post', 'upload', 'generate', 'build', 'write'
   ];
 
   const isActionCommand = actionIndicators.some(
-    indicator => lowerMessage.startsWith(indicator)
+    indicator => lowerMessage.startsWith(indicator + ' ') || lowerMessage === indicator
   );
 
-  return hasQuestionIndicator && !isActionCommand;
+  // Use RAG if it has question indicators and is not a pure action command
+  // Also use RAG if it has a question mark (even if it's an action, might be asking about existing data)
+  return (hasQuestionIndicator || hasQuestionMark) && !isActionCommand;
 }
 
 /**

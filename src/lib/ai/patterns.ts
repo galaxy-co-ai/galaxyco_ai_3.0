@@ -1,241 +1,282 @@
 /**
  * Pattern Recognition System
  * 
- * Analyzes historical data to identify user behavior patterns
- * and predict future needs for anticipatory actions.
+ * Tracks user behavior patterns to personalize Neptune's behavior:
+ * - Follow-up timing preferences
+ * - Communication style preferences
+ * - Common task sequences
+ * - Preferred action patterns
  */
 
 import { db } from '@/lib/db';
-import { prospects, tasks, calendarEvents, campaigns, aiMessages, aiConversations } from '@/db/schema';
-import { eq, and, gte, desc } from 'drizzle-orm';
+import { workspaceIntelligence } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
-import { getOpenAI } from '@/lib/ai-providers';
 
 // ============================================================================
-// TYPE DEFINITIONS
+// TYPES
 // ============================================================================
 
-export interface UserPattern {
-  type: 'timing' | 'frequency' | 'preference' | 'workflow';
-  description: string;
-  confidence: number; // 0-1
-  actionable: boolean;
+export interface UserPatterns {
+  followUpTiming: {
+    preferredHours: number[]; // Hours of day when user typically responds
+    averageResponseTime: number; // Minutes
+    preferredDays: number[]; // Days of week (0=Sunday, 6=Saturday)
+  };
+  communicationStyle: {
+    prefersBrief: boolean;
+    prefersDetailed: boolean;
+    usesEmojis: boolean;
+    formalLevel: 'casual' | 'professional' | 'formal';
+  };
+  taskSequences: Array<{
+    sequence: string[]; // Array of tool names in order
+    frequency: number;
+    lastUsed: Date;
+  }>;
+  actionPatterns: Record<string, {
+    frequency: number;
+    averageTime: number; // Minutes between action and response
+    successRate: number; // 0-100
+  }>;
 }
 
 // ============================================================================
-// PATTERN ANALYSIS
+// PATTERN DETECTION
 // ============================================================================
 
 /**
- * Analyze user patterns from historical data
+ * Analyze conversation for timing patterns
  */
-export async function analyzeUserPatterns(
+export async function analyzeTimingPatterns(
   workspaceId: string,
-  userId: string,
-  daysBack = 90
-): Promise<UserPattern[]> {
-  const patterns: UserPattern[] = [];
-  const cutoffDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+  messages: Array<{ role: string; timestamp: Date }>
+): Promise<UserPatterns['followUpTiming']> {
+  if (messages.length < 4) {
+    return {
+      preferredHours: [9, 10, 11, 14, 15, 16], // Default business hours
+      averageResponseTime: 60,
+      preferredDays: [1, 2, 3, 4, 5], // Weekdays
+    };
+  }
 
-  try {
-    // Analyze lead follow-up patterns
-    const leads = await db.query.prospects.findMany({
-      where: and(
-        eq(prospects.workspaceId, workspaceId),
-        gte(prospects.createdAt, cutoffDate)
-      ),
-      orderBy: [desc(prospects.createdAt)],
-    });
+  const userMessages = messages.filter(m => m.role === 'user');
+  const hours: number[] = [];
+  const days: number[] = [];
+  const responseTimes: number[] = [];
 
-    // Check follow-up timing patterns
-    const followUpDelays: number[] = [];
-    for (let i = 0; i < leads.length - 1; i++) {
-      const lead = leads[i];
-      const nextUpdate = leads.find(l => 
-        l.id !== lead.id && 
-        l.updatedAt && 
-        new Date(l.updatedAt) > new Date(lead.createdAt || lead.updatedAt || 0)
-      );
-      
-      if (nextUpdate && lead.createdAt && nextUpdate.updatedAt) {
-        const delay = (new Date(nextUpdate.updatedAt).getTime() - 
-                      new Date(lead.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-        if (delay > 0 && delay < 30) {
-          followUpDelays.push(delay);
-        }
-      }
-    }
-
-    if (followUpDelays.length >= 5) {
-      const avgDelay = followUpDelays.reduce((a, b) => a + b, 0) / followUpDelays.length;
-      patterns.push({
-        type: 'timing',
-        description: `User typically follows up with leads after ${Math.round(avgDelay)} days`,
-        confidence: Math.min(0.9, followUpDelays.length / 20),
-        actionable: true,
-      });
-    }
-
-    // Analyze task completion patterns
-    const allTasks = await db.query.tasks.findMany({
-      where: and(
-        eq(tasks.workspaceId, workspaceId),
-        gte(tasks.createdAt, cutoffDate)
-      ),
-    });
-
-    // Check for recurring task patterns
-    const taskKeywords = allTasks
-      .map(t => t.title.toLowerCase().split(' ')[0])
-      .filter(word => word.length > 3);
+  for (let i = 1; i < userMessages.length; i++) {
+    const prev = userMessages[i - 1].timestamp;
+    const curr = userMessages[i].timestamp;
     
-    const keywordCounts: Record<string, number> = {};
-    taskKeywords.forEach(keyword => {
-      keywordCounts[keyword] = (keywordCounts[keyword] || 0) + 1;
-    });
+    const hour = curr.getHours();
+    const day = curr.getDay();
+    const timeDiff = (curr.getTime() - prev.getTime()) / (1000 * 60); // Minutes
 
-    const recurringKeywords = Object.entries(keywordCounts)
-      .filter(([_, count]) => count >= 5)
-      .map(([keyword]) => keyword);
-
-    if (recurringKeywords.length > 0) {
-      patterns.push({
-        type: 'frequency',
-        description: `User frequently creates tasks related to: ${recurringKeywords.slice(0, 3).join(', ')}`,
-        confidence: 0.7,
-        actionable: true,
-      });
+    hours.push(hour);
+    days.push(day);
+    if (timeDiff < 1440) { // Less than 24 hours
+      responseTimes.push(timeDiff);
     }
+  }
 
-    // Analyze calendar patterns
-    const events = await db.query.calendarEvents.findMany({
-      where: and(
-        eq(calendarEvents.workspaceId, workspaceId),
-        gte(calendarEvents.startTime, cutoffDate)
-      ),
-    });
+  // Find most common hours (top 6)
+  const hourCounts = hours.reduce((acc, h) => {
+    acc[h] = (acc[h] || 0) + 1;
+    return acc;
+  }, {} as Record<number, number>);
+  const preferredHours = Object.entries(hourCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([h]) => parseInt(h));
 
-    // Check for preferred meeting times
-    const hourCounts: Record<number, number> = {};
-    events.forEach(event => {
-      if (event.startTime) {
-        const hour = new Date(event.startTime).getHours();
-        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
-      }
-    });
+  // Find most common days
+  const dayCounts = days.reduce((acc, d) => {
+    acc[d] = (acc[d] || 0) + 1;
+    return acc;
+  }, {} as Record<number, number>);
+  const preferredDays = Object.entries(dayCounts)
+    .filter(([_, count]) => count >= 2)
+    .map(([d]) => parseInt(d));
 
-    const preferredHour = Object.entries(hourCounts)
-      .sort(([_, a], [__, b]) => b - a)[0]?.[0];
+  const averageResponseTime = responseTimes.length > 0
+    ? Math.round(responseTimes.reduce((sum, t) => sum + t, 0) / responseTimes.length)
+    : 60;
 
-    if (preferredHour && events.length >= 10) {
-      patterns.push({
-        type: 'preference',
-        description: `User prefers scheduling meetings around ${preferredHour}:00`,
-        confidence: 0.6,
-        actionable: true,
-      });
-    }
+  return {
+    preferredHours: preferredHours.length > 0 ? preferredHours : [9, 10, 11, 14, 15, 16],
+    averageResponseTime,
+    preferredDays: preferredDays.length > 0 ? preferredDays : [1, 2, 3, 4, 5],
+  };
+}
 
-    // Use AI to identify additional patterns from conversation history
-    // Note: aiMessages doesn't have workspaceId directly, fetch via conversations
-    const userConversations = await db.query.aiConversations.findMany({
-      where: and(
-        eq(aiConversations.workspaceId, workspaceId),
-        gte(aiConversations.createdAt, cutoffDate)
-      ),
-      with: {
-        messages: {
-          orderBy: [desc(aiMessages.createdAt)],
-          limit: 10,
-        },
-      },
-      limit: 10,
-    });
-    
-    const conversations = userConversations.flatMap(c => c.messages || []).slice(0, 100);
+/**
+ * Analyze communication style from messages
+ */
+export async function analyzeCommunicationStyle(
+  messages: Array<{ role: string; content: string }>
+): Promise<UserPatterns['communicationStyle']> {
+  const userMessages = messages.filter(m => m.role === 'user');
+  
+  if (userMessages.length === 0) {
+    return {
+      prefersBrief: false,
+      prefersDetailed: false,
+      usesEmojis: false,
+      formalLevel: 'professional',
+    };
+  }
 
-    if (conversations.length >= 20) {
-      const conversationText = conversations
-        .slice(0, 50)
-        .map(m => m.content)
-        .join('\n')
-        .slice(0, 2000); // Limit for API
+  const avgLength = userMessages.reduce((sum, m) => sum + m.content.length, 0) / userMessages.length;
+  const hasEmojis = userMessages.some(m => /[\u{1F300}-\u{1F9FF}]/u.test(m.content));
+  const formalIndicators = ['please', 'thank you', 'would you', 'could you'].some(phrase =>
+    userMessages.some(m => m.content.toLowerCase().includes(phrase))
+  );
+  const casualIndicators = ['hey', 'yo', 'lol', 'haha', '!'].some(phrase =>
+    userMessages.some(m => m.content.toLowerCase().includes(phrase))
+  );
 
-      try {
-        const openai = getOpenAI();
-        const response = await openai.chat.completions.create({
-          model: 'gpt-4o',
-          messages: [
-            {
-              role: 'system',
-              content: 'Analyze conversation history and identify user behavior patterns. Output JSON array of patterns with type, description, confidence (0-1), and actionable (boolean).',
-            },
-            {
-              role: 'user',
-              content: `Identify patterns in these conversations:\n\n${conversationText}`,
-            },
-          ],
-          temperature: 0.3,
-          max_tokens: 500,
-          response_format: { type: 'json_object' },
-        });
+  let formalLevel: 'casual' | 'professional' | 'formal' = 'professional';
+  if (casualIndicators && !formalIndicators) {
+    formalLevel = 'casual';
+  } else if (formalIndicators && !casualIndicators) {
+    formalLevel = 'formal';
+  }
 
-        const aiPatterns = JSON.parse(response.choices[0]?.message?.content || '{"patterns": []}');
-        if (Array.isArray(aiPatterns.patterns)) {
-          patterns.push(...aiPatterns.patterns);
-        }
-      } catch (error) {
-        logger.error('Failed to analyze patterns with AI', error);
-      }
-    }
+  return {
+    prefersBrief: avgLength < 50,
+    prefersDetailed: avgLength > 200,
+    usesEmojis: hasEmojis,
+    formalLevel,
+  };
+}
 
-    return patterns;
-  } catch (error) {
-    logger.error('Failed to analyze user patterns', { workspaceId, userId, error });
+/**
+ * Detect common task sequences
+ */
+export async function detectTaskSequences(
+  workspaceId: string,
+  actionHistory: Array<{ toolName: string; timestamp: Date }>
+): Promise<UserPatterns['taskSequences']> {
+  if (actionHistory.length < 3) {
     return [];
   }
-}
 
-/**
- * Generate anticipatory actions based on patterns
- */
-export async function generateAnticipatoryActions(
-  workspaceId: string,
-  userId: string
-): Promise<Array<{ action: string; toolName: string; args: Record<string, unknown>; priority: number }>> {
-  const actions: Array<{ action: string; toolName: string; args: Record<string, unknown>; priority: number }> = [];
-  const patterns = await analyzeUserPatterns(workspaceId, userId);
+  // Group actions by time windows (within 5 minutes = same sequence)
+  const sequences: string[][] = [];
+  let currentSequence: string[] = [];
+  let lastTime: Date | null = null;
 
-  for (const pattern of patterns) {
-    if (!pattern.actionable) continue;
-
-    if (pattern.type === 'timing' && pattern.description.includes('follow up')) {
-      // Find leads that need follow-up based on pattern
-      const leads = await db.query.prospects.findMany({
-        where: and(
-          eq(prospects.workspaceId, workspaceId),
-          eq(prospects.stage, 'contacted')
-        ),
-        limit: 5,
-      });
-
-      for (const lead of leads) {
-        if (lead.createdAt) {
-          const daysSinceCreated = (Date.now() - new Date(lead.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-          const avgDelay = parseFloat(pattern.description.match(/\d+/)?.[0] || '2');
-          
-          if (daysSinceCreated >= avgDelay - 1 && daysSinceCreated <= avgDelay + 1) {
-            actions.push({
-              action: `Follow up with ${lead.name}`,
-              toolName: 'create_follow_up_sequence',
-              args: { leadId: lead.id, sequenceType: 'nurture' },
-              priority: 7,
-            });
-          }
-        }
+  for (const action of actionHistory.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())) {
+    if (!lastTime || (action.timestamp.getTime() - lastTime.getTime()) / (1000 * 60) < 5) {
+      currentSequence.push(action.toolName);
+    } else {
+      if (currentSequence.length >= 2) {
+        sequences.push([...currentSequence]);
       }
+      currentSequence = [action.toolName];
+    }
+    lastTime = action.timestamp;
+  }
+
+  if (currentSequence.length >= 2) {
+    sequences.push(currentSequence);
+  }
+
+  // Count sequence frequencies
+  const sequenceCounts = new Map<string, { sequence: string[]; count: number; lastUsed: Date }>();
+  
+  for (const seq of sequences) {
+    const key = seq.join(' -> ');
+    const existing = sequenceCounts.get(key);
+    if (existing) {
+      existing.count++;
+      existing.lastUsed = new Date(); // Update to most recent
+    } else {
+      sequenceCounts.set(key, {
+        sequence: seq,
+        count: 1,
+        lastUsed: new Date(),
+      });
     }
   }
 
-  return actions.sort((a, b) => b.priority - a.priority);
+  return Array.from(sequenceCounts.values())
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10)
+    .map(s => ({
+      sequence: s.sequence,
+      frequency: s.count,
+      lastUsed: s.lastUsed,
+    }));
+}
+
+/**
+ * Store patterns in workspace intelligence
+ */
+export async function storeUserPatterns(
+  workspaceId: string,
+  patterns: UserPatterns
+): Promise<void> {
+  try {
+    const existing = await db.query.workspaceIntelligence.findFirst({
+      where: eq(workspaceIntelligence.workspaceId, workspaceId),
+    });
+
+    const patternsData = {
+      followUpTiming: patterns.followUpTiming,
+      communicationStyle: patterns.communicationStyle,
+      taskSequences: patterns.taskSequences,
+      actionPatterns: patterns.actionPatterns,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    if (existing) {
+      const learnedPatterns = (existing.learnedPatterns as Record<string, unknown>) || {};
+      await db.update(workspaceIntelligence)
+        .set({
+          learnedPatterns: {
+            ...learnedPatterns,
+            userPatterns: patternsData,
+          },
+          lastUpdated: new Date(),
+        })
+        .where(eq(workspaceIntelligence.workspaceId, workspaceId));
+    } else {
+      await db.insert(workspaceIntelligence).values({
+        workspaceId,
+        learnedPatterns: {
+          userPatterns: patternsData,
+        },
+        lastUpdated: new Date(),
+      });
+    }
+
+    logger.info('[Patterns] Stored user patterns', { workspaceId });
+  } catch (error) {
+    logger.error('[Patterns] Failed to store patterns', error);
+  }
+}
+
+/**
+ * Get stored user patterns
+ */
+export async function getUserPatterns(
+  workspaceId: string
+): Promise<UserPatterns | null> {
+  try {
+    const intelligence = await db.query.workspaceIntelligence.findFirst({
+      where: eq(workspaceIntelligence.workspaceId, workspaceId),
+    });
+
+    if (!intelligence || !intelligence.learnedPatterns) {
+      return null;
+    }
+
+    const patterns = (intelligence.learnedPatterns as Record<string, unknown>).userPatterns as UserPatterns | undefined;
+    return patterns || null;
+  } catch (error) {
+    logger.error('[Patterns] Failed to get patterns', error);
+    return null;
+  }
 }

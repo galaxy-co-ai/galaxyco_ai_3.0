@@ -20,6 +20,11 @@ import {
   Plus,
   MessageSquare,
   Clock,
+  Trash2,
+  ThumbsUp,
+  ThumbsDown,
+  Mic,
+  Volume2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -71,6 +76,7 @@ export default function NeptuneAssistPanel({
     clearConversation,
     loadConversation,
     fetchConversationHistory,
+    deleteConversation,
   } = useNeptune();
 
   const [input, setInput] = useState("");
@@ -79,8 +85,12 @@ export default function NeptuneAssistPanel({
   );
   const [isUploading, setIsUploading] = useState(false);
   const [viewMode, setViewMode] = useState<"chat" | "history">("chat");
+  const [isRecording, setIsRecording] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Fetch history when switching to history view
   useEffect(() => {
@@ -193,6 +203,113 @@ export default function NeptuneAssistPanel({
     setPendingAttachments([]);
 
     await sendMessage(messageToSend, attachmentsToSend, feature);
+  };
+
+  // Voice input handlers
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'recording.webm');
+
+          const response = await fetch('/api/assistant/voice/transcribe', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) throw new Error('Transcription failed');
+
+          const data = await response.json();
+          if (data.text) {
+            await sendMessage(data.text, [], feature);
+          }
+        } catch (error) {
+          logger.error('Voice transcription failed', error);
+          toast.error('Failed to transcribe audio. Please try again.');
+        }
+
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.info('Recording... Click again to stop');
+    } catch (error) {
+      logger.error('Failed to start recording', error);
+      toast.error('Microphone access denied. Please enable microphone permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleVoiceToggle = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  // Text-to-speech handler
+  const handleSpeak = async (text: string, messageId: string) => {
+    if (isPlayingAudio === messageId) {
+      // Stop if already playing
+      setIsPlayingAudio(null);
+      return;
+    }
+
+    try {
+      setIsPlayingAudio(messageId);
+
+      const response = await fetch('/api/assistant/voice/speak', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) throw new Error('TTS failed');
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
+      audio.onended = () => {
+        setIsPlayingAudio(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        setIsPlayingAudio(null);
+        URL.revokeObjectURL(audioUrl);
+        toast.error('Failed to play audio');
+      };
+
+      await audio.play();
+    } catch (error) {
+      logger.error('TTS playback failed', error);
+      toast.error('Failed to generate speech');
+      setIsPlayingAudio(null);
+    }
   };
 
   const handleQuickAction = async (action: string) => {
@@ -421,13 +538,23 @@ export default function NeptuneAssistPanel({
             ) : (
               <div className="space-y-2">
                 {conversationHistory.map((conv) => (
-                  <button
+                  <div
                     key={conv.id}
+                    className="group relative w-full text-left p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                     onClick={() => {
                       loadConversation(conv.id);
                       setViewMode("chat");
                     }}
-                    className="w-full text-left p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        loadConversation(conv.id);
+                        setViewMode("chat");
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Load conversation: ${conv.title}`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h4 className="font-medium text-sm truncate flex-1">
@@ -449,7 +576,18 @@ export default function NeptuneAssistPanel({
                         minute: "2-digit",
                       })}
                     </p>
-                  </button>
+                    {/* Delete button - appears on hover */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteConversation(conv.id);
+                      }}
+                      className="absolute bottom-3 right-3 p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all"
+                      aria-label={`Delete conversation: ${conv.title}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -516,12 +654,20 @@ export default function NeptuneAssistPanel({
                     <p className="text-sm whitespace-pre-wrap">
                       {msg.content}
                       {msg.isStreaming && (
-                        <span className="inline-block w-2 h-4 ml-0.5 bg-current animate-pulse" />
+                        <span className="inline-flex items-center gap-1 ml-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </span>
                       )}
                     </p>
                   )}
                   {!msg.content && msg.isStreaming && (
-                    <span className="inline-block w-2 h-4 bg-muted-foreground animate-pulse" />
+                    <span className="inline-flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </span>
                   )}
 
                   {/* Gamma Document Display */}
@@ -729,16 +875,98 @@ export default function NeptuneAssistPanel({
                         </div>
                       );
                     })()}
+
+                  {/* Action buttons for assistant messages */}
+                  {msg.role === "assistant" && !msg.isStreaming && msg.content && (
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border/50">
+                      {/* Text-to-speech button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`h-7 px-2 text-xs ${
+                          isPlayingAudio === msg.id
+                            ? "text-primary"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        onClick={() => handleSpeak(msg.content, msg.id)}
+                        aria-label="Read message aloud"
+                      >
+                        <Volume2 className={`h-3.5 w-3.5 ${isPlayingAudio === msg.id ? "animate-pulse" : ""}`} />
+                      </Button>
+                      {/* Feedback buttons */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={async () => {
+                          try {
+                            const response = await fetch("/api/assistant/feedback", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                messageId: msg.id,
+                                feedback: "positive",
+                              }),
+                            });
+
+                            if (response.ok) {
+                              toast.success("Thanks for your feedback!");
+                            }
+                          } catch (error) {
+                            logger.error("Failed to submit feedback", error);
+                          }
+                        }}
+                        aria-label="Thumbs up - helpful response"
+                      >
+                        <ThumbsUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={async () => {
+                          try {
+                            const response = await fetch("/api/assistant/feedback", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                messageId: msg.id,
+                                feedback: "negative",
+                              }),
+                            });
+
+                            if (response.ok) {
+                              toast.success("Thanks for your feedback!");
+                            }
+                          } catch (error) {
+                            logger.error("Failed to submit feedback", error);
+                          }
+                        }}
+                        aria-label="Thumbs down - not helpful"
+                      >
+                        <ThumbsDown className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
             {isLoading && !isStreaming && (
               <div className="flex justify-start">
                 <div className="rounded-lg bg-muted p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" />
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground delay-75" />
-                    <div className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground delay-150" />
+                  <div className="flex items-center gap-1.5">
+                    <span 
+                      className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <span 
+                      className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <span 
+                      className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
                   </div>
                 </div>
               </div>
@@ -817,13 +1045,23 @@ export default function NeptuneAssistPanel({
               }}
               placeholder="Ask Neptune..."
               className="flex-1 rounded-md border bg-background px-3 py-2 text-sm min-w-0"
-              disabled={isLoading}
+              disabled={isLoading || isRecording}
               aria-label="Message Neptune"
             />
             <Button
+              variant={isRecording ? "destructive" : "ghost"}
+              size="icon"
+              onClick={handleVoiceToggle}
+              disabled={isLoading}
+              className={`h-9 w-9 shrink-0 ${isRecording ? "animate-pulse" : ""}`}
+              aria-label={isRecording ? "Stop recording" : "Start voice input"}
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+            <Button
               onClick={() => handleSend(undefined)}
               disabled={
-                (!input.trim() && pendingAttachments.length === 0) || isLoading
+                (!input.trim() && pendingAttachments.length === 0) || isLoading || isRecording
               }
               size="icon"
               className="h-9 w-9 shrink-0"

@@ -19,6 +19,7 @@ import {
   aiMessages,
   users,
   workspaceIntelligence,
+  proactiveInsights,
 } from '@/db/schema';
 import { eq, and, desc, gte, lte, count, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -170,6 +171,18 @@ export interface WebsiteContext {
   hasAnalysis: boolean;
 }
 
+export interface ProactiveInsightsContext {
+  insights: Array<{
+    type: string;
+    category: string;
+    title: string;
+    description: string;
+    priority: number;
+    suggestedActions?: Array<{ action: string; args?: Record<string, unknown> }>;
+  }>;
+  hasInsights: boolean;
+}
+
 export interface AIContextData {
   user: UserContext;
   preferences: UserPreferencesContext;
@@ -181,6 +194,7 @@ export interface AIContextData {
   finance?: FinanceContext;
   marketing?: MarketingContext;
   website?: WebsiteContext;
+  proactiveInsights?: ProactiveInsightsContext;
   currentTime: string;
   currentDate: string;
   dayOfWeek: string;
@@ -639,38 +653,116 @@ async function getFinanceContext(workspaceId: string): Promise<FinanceContext> {
 
     const connectedProviders = financeIntegrations.map(i => i.provider);
 
-    // Try to fetch summary data from finance overview API
-    // This is a lightweight summary for AI context, not full data fetch
+    // Fetch real financial data from connected providers
     let summary: FinanceContext['summary'] | undefined;
     let recentInvoices: FinanceContext['recentInvoices'] | undefined;
     let recentTransactions: FinanceContext['recentTransactions'] | undefined;
 
     try {
-      // Get overview data if available
-      const hasQuickBooks = connectedProviders.includes('quickbooks');
-      const hasStripe = connectedProviders.includes('stripe');
-      const hasShopify = connectedProviders.includes('shopify');
+      // Import finance services
+      const { QuickBooksService, StripeService, ShopifyService } = await import('@/lib/finance');
+      
+      // Calculate date range (last 30 days for summary)
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      // Initialize services
+      const qbService = new QuickBooksService(workspaceId);
+      const stripeService = new StripeService(workspaceId);
+      const shopifyService = new ShopifyService(workspaceId);
+      
+      // Try to initialize each service (gracefully handle failures)
+      const [qbInit, stripeInit, shopifyInit] = await Promise.all([
+        qbService.initialize().catch(() => ({ success: false })),
+        stripeService.initialize().catch(() => ({ success: false })),
+        shopifyService.initialize().catch(() => ({ success: false })),
+      ]);
 
-      // Initialize summary with zeros
+      // Aggregate data from available providers
+      let revenue = 0;
+      let expenses = 0;
+      let outstandingInvoices = 0;
+
+      // QuickBooks data
+      if (qbInit.success && connectedProviders.includes('quickbooks')) {
+        try {
+          const qbFinancials = await qbService.getFinancials(thirtyDaysAgo, now);
+          const qbInvoices = await qbService.getInvoices({ 
+            startDate: thirtyDaysAgo, 
+            endDate: now, 
+            status: 'unpaid' 
+          });
+          
+          revenue += qbFinancials.revenue;
+          expenses += qbFinancials.expenses;
+          outstandingInvoices += qbInvoices.reduce((sum, inv) => sum + inv.balance, 0);
+          
+          // Get recent invoices for context
+          const allInvoices = await qbService.getInvoices({ 
+            startDate: thirtyDaysAgo, 
+            endDate: now 
+          });
+          recentInvoices = allInvoices.slice(0, 10).map(inv => ({
+            id: inv.id,
+            number: inv.number || inv.id,
+            customer: inv.customerName || 'Unknown',
+            amount: inv.total,
+            status: inv.status === 'paid' ? 'paid' : inv.dueDate && new Date(inv.dueDate) < now ? 'overdue' : 'unpaid',
+            dueDate: inv.dueDate || new Date().toISOString(),
+          }));
+        } catch (error) {
+          logger.warn('QuickBooks data fetch failed for AI context', { error });
+        }
+      }
+
+      // Stripe data
+      if (stripeInit.success && connectedProviders.includes('stripe')) {
+        try {
+          const stripeData = await stripeService.getRevenueData(thirtyDaysAgo, now);
+          const stripeNet = stripeData.charges - stripeData.fees - stripeData.refunds;
+          revenue += stripeNet;
+          expenses += stripeData.fees; // Stripe fees are expenses
+        } catch (error) {
+          logger.warn('Stripe data fetch failed for AI context', { error });
+        }
+      }
+
+      // Shopify data
+      if (shopifyInit.success && connectedProviders.includes('shopify')) {
+        try {
+          const shopifyData = await shopifyService.getRevenueData(thirtyDaysAgo, now);
+          revenue += shopifyData.total;
+        } catch (error) {
+          logger.warn('Shopify data fetch failed for AI context', { error });
+        }
+      }
+
+      // Calculate profit and cash flow
+      const profit = revenue - expenses;
+      const cashflow = profit; // Simplified calculation
+
       summary = {
-        revenue: 0,
-        expenses: 0,
-        profit: 0,
-        outstandingInvoices: 0,
-        cashflow: 0,
+        revenue,
+        expenses,
+        profit,
+        outstandingInvoices,
+        cashflow,
       };
 
-      // Try to get quick summary data from each connected provider
-      if (hasQuickBooks || hasStripe || hasShopify) {
-        // Note: In a production environment, this would call cached finance data
-        // For now, we provide the connected providers info which is most useful
-        logger.info('Finance context: providers found', { connectedProviders, workspaceId });
-      }
+      logger.info('Finance context: fetched real data', { 
+        workspaceId, 
+        connectedProviders,
+        revenue,
+        expenses,
+        profit,
+        outstandingInvoices,
+      });
     } catch (dataError) {
       logger.warn('Failed to fetch finance summary data for AI context', { 
-        error: dataError instanceof Error ? dataError.message : 'Unknown error' 
+        error: dataError instanceof Error ? dataError.message : 'Unknown error',
+        workspaceId,
       });
-      // Continue without summary data - provider list is still useful
+      // Continue with provider list even if data fetch fails
     }
 
     return {
@@ -741,6 +833,52 @@ async function getWebsiteContext(workspaceId: string): Promise<WebsiteContext> {
 }
 
 /**
+ * Get proactive insights for the workspace
+ */
+async function getProactiveInsightsContext(
+  workspaceId: string,
+  userId: string
+): Promise<ProactiveInsightsContext> {
+  try {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Get recent, non-dismissed insights
+    const insights = await db.query.proactiveInsights.findMany({
+      where: and(
+        eq(proactiveInsights.workspaceId, workspaceId),
+        gte(proactiveInsights.createdAt, sevenDaysAgo),
+        sql`${proactiveInsights.dismissedAt} IS NULL`,
+        or(
+          eq(proactiveInsights.userId, userId),
+          sql`${proactiveInsights.userId} IS NULL` // Workspace-wide insights
+        )!
+      ),
+      orderBy: [desc(proactiveInsights.priority), desc(proactiveInsights.createdAt)],
+      limit: 10,
+    });
+
+    return {
+      insights: insights.map(i => ({
+        type: i.type,
+        category: i.category,
+        title: i.title,
+        description: i.description,
+        priority: i.priority,
+        suggestedActions: i.suggestedActions as Array<{ action: string; args?: Record<string, unknown> }> || [],
+      })),
+      hasInsights: insights.length > 0,
+    };
+  } catch (error) {
+    logger.error('Failed to get proactive insights context', error);
+    return {
+      insights: [],
+      hasInsights: false,
+    };
+  }
+}
+
+/**
  * Gather comprehensive AI context for the current user and workspace
  */
 export async function gatherAIContext(
@@ -755,7 +893,7 @@ export async function gatherAIContext(
     }
 
     // Gather all contexts in parallel for performance
-    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing, website] = await Promise.all([
+    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing, website, proactive] = await Promise.all([
       getUserPreferencesContext(workspaceId, user.id),
       getCRMContext(workspaceId),
       getCalendarContext(workspaceId),
@@ -765,6 +903,7 @@ export async function gatherAIContext(
       getFinanceContext(workspaceId),
       getMarketingContext(workspaceId),
       getWebsiteContext(workspaceId),
+      getProactiveInsightsContext(workspaceId, user.id),
     ]);
 
     const now = new Date();
@@ -781,6 +920,7 @@ export async function gatherAIContext(
       finance,
       marketing,
       website,
+      proactiveInsights: proactive,
       currentTime: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       currentDate: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       dayOfWeek: days[now.getDay()],

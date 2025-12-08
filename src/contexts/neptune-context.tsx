@@ -75,6 +75,7 @@ interface NeptuneContextValue {
   refreshMessages: () => Promise<void>;
   loadConversation: (conversationId: string) => Promise<void>;
   fetchConversationHistory: () => Promise<void>;
+  deleteConversation: (conversationId: string) => Promise<void>;
 }
 
 // ============================================================================
@@ -159,25 +160,70 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const initRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Initialize Neptune - always start fresh (don't restore old conversations)
+  // Initialize Neptune - restore conversation if available
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
 
     const initializeNeptune = async () => {
       try {
-        // Clear any stored conversation ID - always start fresh
+        // Try to restore previous conversation
+        let storedConversationId: string | null = null;
         if (typeof window !== "undefined") {
-          localStorage.removeItem(STORAGE_KEY);
+          storedConversationId = localStorage.getItem(STORAGE_KEY);
         }
 
-        // Set welcome message immediately - don't restore old conversations
+        if (storedConversationId) {
+          // Try to load the stored conversation
+          try {
+            const response = await fetch(
+              `/api/neptune/conversation?conversationId=${storedConversationId}`
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              if (data.messages && data.messages.length > 0) {
+                setConversationId(storedConversationId);
+                setMessages(
+                  data.messages.map(
+                    (msg: {
+                      id: string;
+                      role: string;
+                      content: string;
+                      createdAt: string;
+                      attachments?: NeptuneMessage["attachments"];
+                      metadata?: NeptuneMessage["metadata"];
+                    }) => ({
+                      id: msg.id,
+                      role: msg.role as "user" | "assistant",
+                      content: msg.content,
+                      timestamp: new Date(msg.createdAt),
+                      attachments: msg.attachments,
+                      metadata: msg.metadata,
+                    })
+                  )
+                );
+                setIsInitialized(true);
+                logger.debug("[Neptune] Restored conversation", { conversationId: storedConversationId });
+                return;
+              }
+            }
+          } catch (error) {
+            logger.warn("[Neptune] Failed to restore conversation, starting fresh", { error });
+            // Clear invalid conversation ID
+            if (typeof window !== "undefined") {
+              localStorage.removeItem(STORAGE_KEY);
+            }
+          }
+        }
+
+        // No valid conversation to restore - show welcome message
         setMessages([
           {
             id: "welcome",
             role: "assistant",
             content:
-              "Hey! 👋 I'm Neptune, your AI assistant. I can help you with your CRM, create documents, analyze data, and much more. What would you like to do?",
+              "Hey! I'm Neptune. I see you're just getting started - perfect timing. Tell me about your business in a sentence or two. What do you do and who do you serve? I'll build you a personalized setup roadmap from there.",
             timestamp: new Date(),
           },
         ]);
@@ -194,7 +240,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
             id: "welcome",
             role: "assistant",
             content:
-              "Hey! 👋 I'm Neptune, your AI assistant. I can help you with your CRM, create documents, analyze data, and much more. What would you like to do?",
+              "Hey! I'm Neptune. I see you're just getting started - perfect timing. Tell me about your business in a sentence or two. What do you do and who do you serve? I'll build you a personalized setup roadmap from there.",
             timestamp: new Date(),
           },
         ]);
@@ -405,7 +451,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
           id: "welcome",
           role: "assistant",
           content:
-            "Hey! 👋 I'm Neptune, your AI assistant. Starting a fresh conversation. How can I help you?",
+            "Fresh start! What would you like to tackle?",
           timestamp: new Date(),
         },
       ]);
@@ -556,6 +602,47 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Delete a conversation from history
+  const deleteConversation = useCallback(async (targetConversationId: string) => {
+    try {
+      const response = await fetch(`/api/assistant/conversations/${targetConversationId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete conversation");
+      }
+
+      // Optimistically remove from local state
+      setConversationHistory((prev) =>
+        prev.filter((conv) => conv.id !== targetConversationId)
+      );
+
+      // If we deleted the current conversation, clear it
+      if (conversationId === targetConversationId) {
+        setConversationId(null);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+        setMessages([
+          {
+            id: "welcome",
+            role: "assistant",
+            content:
+              "Fresh start! What would you like to tackle?",
+            timestamp: new Date(),
+          },
+        ]);
+      }
+
+      toast.success("Conversation deleted");
+      logger.debug("[Neptune] Deleted conversation", { conversationId: targetConversationId });
+    } catch (error) {
+      logger.error("[Neptune] Delete conversation failed", error);
+      toast.error("Failed to delete conversation");
+    }
+  }, [conversationId]);
+
   return (
     <NeptuneContext.Provider
       value={{
@@ -571,6 +658,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         refreshMessages,
         loadConversation,
         fetchConversationHistory,
+        deleteConversation,
       }}
     >
       {children}
@@ -596,6 +684,7 @@ const defaultNeptuneContext: NeptuneContextValue = {
   refreshMessages: async () => {},
   loadConversation: async () => {},
   fetchConversationHistory: async () => {},
+  deleteConversation: async () => {},
 };
 
 export function useNeptune() {

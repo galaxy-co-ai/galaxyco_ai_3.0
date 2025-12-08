@@ -1,422 +1,431 @@
 /**
  * Proactive Intelligence Engine
  * 
- * Monitors workspace data and generates proactive insights and suggestions.
- * Runs in background to identify opportunities, risks, and actions.
+ * Monitors workspace data and generates real-time insights and suggestions.
+ * Event-driven system that responds to changes in CRM, campaigns, tasks, etc.
  */
 
 import { db } from '@/lib/db';
-import { proactiveInsights, prospects, campaigns, tasks, calendarEvents, invoices } from '@/db/schema';
-import { eq, and, gte, lte, sql, desc } from 'drizzle-orm';
+import { 
+  prospects, 
+  campaigns, 
+  tasks, 
+  calendarEvents,
+  deals,
+  proactiveInsights,
+} from '@/db/schema';
+import { eq, and, lt, gte, lte, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { getOpenAI } from '@/lib/ai-providers';
 
 // ============================================================================
-// TYPE DEFINITIONS
+// TYPES
 // ============================================================================
 
-export interface Insight {
-  type: 'opportunity' | 'risk' | 'suggestion' | 'alert';
-  priority: number; // 1-10
+export interface ProactiveInsight {
+  type: 'opportunity' | 'warning' | 'suggestion' | 'achievement';
   category: 'sales' | 'marketing' | 'operations' | 'finance';
   title: string;
   description: string;
-  suggestedActions: Array<{ action: string; toolName?: string; args?: Record<string, unknown> }>;
-  autoExecutable: boolean;
+  priority: number; // 1-10 (matches database schema)
+  metadata?: Record<string, unknown>;
+  suggestedActions?: Array<{
+    action: string;
+    args?: Record<string, unknown>;
+  }>;
 }
 
 // ============================================================================
-// SALES & CRM MONITORING
+// EVENT DETECTORS
 // ============================================================================
 
 /**
- * Analyze sales pipeline for opportunities and risks
+ * Detect insights when a new lead is created
  */
-export async function analyzeSalesPipeline(workspaceId: string): Promise<Insight[]> {
-  const insights: Insight[] = [];
-
+export async function detectNewLeadInsights(
+  workspaceId: string,
+  leadId: string
+): Promise<ProactiveInsight[]> {
   try {
-    // Get all leads
-    const leads = await db.query.prospects.findMany({
-      where: eq(prospects.workspaceId, workspaceId),
-    });
-
-    // Check for stalled deals
-    const stalledLeads = leads.filter(lead => {
-      if (!lead.updatedAt) return false;
-      const daysSinceUpdate = (Date.now() - new Date(lead.updatedAt).getTime()) / (1000 * 60 * 60 * 24);
-      return daysSinceUpdate > 7 && ['qualified', 'proposal', 'negotiation'].includes(lead.stage || '');
-    });
-
-    if (stalledLeads.length > 0) {
-      insights.push({
-        type: 'risk',
-        priority: 7,
-        category: 'sales',
-        title: `${stalledLeads.length} Stalled Deal${stalledLeads.length !== 1 ? 's' : ''}`,
-        description: `${stalledLeads.length} deal${stalledLeads.length !== 1 ? 's' : ''} haven't been updated in over a week. Follow up to re-engage.`,
-        suggestedActions: stalledLeads.slice(0, 3).map(lead => ({
-          action: `Follow up with ${lead.name}`,
-          toolName: 'create_follow_up_sequence',
-          args: { leadId: lead.id, sequenceType: 'sales' },
-        })),
-        autoExecutable: false,
-      });
-    }
-
-    // Check for hot leads ready to close
-    const hotLeads = leads.filter(lead => 
-      lead.stage === 'negotiation' && lead.estimatedValue && lead.estimatedValue > 10000
-    );
-
-    if (hotLeads.length > 0) {
-      insights.push({
-        type: 'opportunity',
-        priority: 9,
-        category: 'sales',
-        title: `${hotLeads.length} High-Value Deal${hotLeads.length !== 1 ? 's' : ''} in Negotiation`,
-        description: `${hotLeads.length} deal${hotLeads.length !== 1 ? 's' : ''} worth $${hotLeads.reduce((sum, l) => sum + (l.estimatedValue || 0), 0).toLocaleString()} in final stage. Push to close!`,
-        suggestedActions: [
-          {
-            action: 'Draft proposal for top deal',
-            toolName: 'draft_proposal',
-            args: { dealId: hotLeads[0].id, includePricing: true },
-          },
-        ],
-        autoExecutable: false,
-      });
-    }
-
-    // Check for new leads without follow-up
-    const newLeadsWithoutFollowUp = leads.filter(lead => {
-      if (lead.stage !== 'new') return false;
-      if (!lead.createdAt) return false;
-      const daysSinceCreated = (Date.now() - new Date(lead.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-      return daysSinceCreated > 2;
-    });
-
-    if (newLeadsWithoutFollowUp.length > 0) {
-      insights.push({
-        type: 'suggestion',
-        priority: 6,
-        category: 'sales',
-        title: `${newLeadsWithoutFollowUp.length} New Lead${newLeadsWithoutFollowUp.length !== 1 ? 's' : ''} Need Follow-Up`,
-        description: `Qualify and engage ${newLeadsWithoutFollowUp.length} new lead${newLeadsWithoutFollowUp.length !== 1 ? 's' : ''} before they go cold.`,
-        suggestedActions: [
-          {
-            action: 'Auto-qualify leads',
-            toolName: 'auto_qualify_lead',
-            args: { leadId: newLeadsWithoutFollowUp[0].id },
-          },
-        ],
-        autoExecutable: false,
-      });
-    }
-  } catch (error) {
-    logger.error('Failed to analyze sales pipeline', { workspaceId, error });
-  }
-
-  return insights;
-}
-
-// ============================================================================
-// MARKETING MONITORING
-// ============================================================================
-
-/**
- * Analyze marketing campaigns for opportunities
- */
-export async function analyzeMarketingCampaigns(workspaceId: string): Promise<Insight[]> {
-  const insights: Insight[] = [];
-
-  try {
-    const allCampaigns = await db.query.campaigns.findMany({
-      where: eq(campaigns.workspaceId, workspaceId),
-    });
-
-    // Check for low-performing campaigns
-    const lowPerformers = allCampaigns.filter(campaign => {
-      if (!campaign.sentCount || campaign.sentCount < 50) return false; // Need meaningful volume
-      const openRate = campaign.openCount && campaign.sentCount 
-        ? (campaign.openCount / campaign.sentCount) * 100 
-        : 0;
-      return openRate < 15; // Below industry average
-    });
-
-    if (lowPerformers.length > 0) {
-      insights.push({
-        type: 'risk',
-        priority: 6,
-        category: 'marketing',
-        title: `${lowPerformers.length} Campaign${lowPerformers.length !== 1 ? 's' : ''} Underperforming`,
-        description: `${lowPerformers.length} campaign${lowPerformers.length !== 1 ? 's' : ''} have open rates below 15%. Optimize subject lines and content.`,
-        suggestedActions: [
-          {
-            action: 'Optimize campaign',
-            toolName: 'optimize_campaign',
-            args: { campaignId: lowPerformers[0].id, testType: 'subject' },
-          },
-        ],
-        autoExecutable: false,
-      });
-    }
-
-    // Check for high-performing campaigns to scale
-    const highPerformers = allCampaigns.filter(campaign => {
-      if (!campaign.sentCount || campaign.sentCount < 50) return false;
-      const openRate = campaign.openCount && campaign.sentCount 
-        ? (campaign.openCount / campaign.sentCount) * 100 
-        : 0;
-      return openRate >= 25; // Well above average
-    });
-
-    if (highPerformers.length > 0) {
-      insights.push({
-        type: 'opportunity',
-        priority: 7,
-        category: 'marketing',
-        title: `${highPerformers.length} High-Performing Campaign${highPerformers.length !== 1 ? 's' : ''}`,
-        description: `Scale these winning campaigns to reach more leads.`,
-        suggestedActions: [
-          {
-            action: 'Create similar campaign',
-            toolName: 'create_campaign',
-            args: {},
-          },
-        ],
-        autoExecutable: false,
-      });
-    }
-  } catch (error) {
-    logger.error('Failed to analyze marketing campaigns', { workspaceId, error });
-  }
-
-  return insights;
-}
-
-// ============================================================================
-// OPERATIONS MONITORING
-// ============================================================================
-
-/**
- * Analyze operations for efficiency opportunities
- */
-export async function analyzeOperations(workspaceId: string): Promise<Insight[]> {
-  const insights: Insight[] = [];
-
-  try {
-    // Check for overdue tasks
-    const allTasks = await db.query.tasks.findMany({
+    const lead = await db.query.prospects.findFirst({
       where: and(
-        eq(tasks.workspaceId, workspaceId),
-        eq(tasks.status, 'todo')
+        eq(prospects.id, leadId),
+        eq(prospects.workspaceId, workspaceId)
       ),
     });
 
-    const overdueTasks = allTasks.filter(task => {
-      if (!task.dueDate) return false;
-      return new Date(task.dueDate) < new Date();
-    });
+    if (!lead) return [];
 
-    if (overdueTasks.length > 0) {
+    const insights: ProactiveInsight[] = [];
+
+    // Suggest qualification if lead has high estimated value
+    if (lead.estimatedValue && lead.estimatedValue > 10000) {
       insights.push({
-        type: 'alert',
-        priority: 8,
-        category: 'operations',
-        title: `${overdueTasks.length} Overdue Task${overdueTasks.length !== 1 ? 's' : ''}`,
-        description: `You have ${overdueTasks.length} task${overdueTasks.length !== 1 ? 's' : ''} past their due date. Prioritize and complete them.`,
+        type: 'opportunity',
+        category: 'sales',
+        title: 'High-Value Lead Created',
+        description: `${lead.name} has an estimated value of $${(lead.estimatedValue / 100).toFixed(2)}. Consider prioritizing qualification.`,
+        priority: 9,
+        metadata: { leadId: lead.id, leadName: lead.name },
         suggestedActions: [
           {
-            action: 'Prioritize tasks',
-            toolName: 'prioritize_tasks',
-            args: { priorityMethod: 'urgency' },
+            action: 'auto_qualify_lead',
+            args: { leadId: lead.id },
           },
         ],
-        autoExecutable: true, // Safe to auto-execute
       });
     }
 
-    // Check for tasks that can be batched
-    const taskTitles = allTasks.map(t => t.title.toLowerCase());
-    const commonWords = taskTitles
-      .flatMap(title => title.split(' '))
-      .filter(word => word.length > 3)
-      .reduce((acc, word) => {
-        acc[word] = (acc[word] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-    const batchableKeywords = Object.entries(commonWords)
-      .filter(([_, count]) => count >= 3)
-      .map(([word]) => word);
-
-    if (batchableKeywords.length > 0) {
+    // Suggest adding to campaign if email provided
+    if (lead.email) {
       insights.push({
         type: 'suggestion',
-        priority: 5,
-        category: 'operations',
-        title: 'Batch Similar Tasks',
-        description: `You have multiple similar tasks that can be completed together for efficiency.`,
-        suggestedActions: [
-          {
-            action: 'Group similar tasks',
-            toolName: 'batch_similar_tasks',
-            args: {},
-          },
-        ],
-        autoExecutable: true,
+        category: 'marketing',
+        title: 'Add Lead to Campaign',
+        description: `${lead.name} has an email address. Consider adding them to a nurturing campaign.`,
+        priority: 60,
+        metadata: { leadId: lead.id, leadEmail: lead.email },
       });
     }
+
+    return insights;
   } catch (error) {
-    logger.error('Failed to analyze operations', { workspaceId, error });
+    logger.error('[Proactive Engine] Failed to detect new lead insights', error);
+    return [];
   }
-
-  return insights;
 }
-
-// ============================================================================
-// FINANCE MONITORING
-// ============================================================================
 
 /**
- * Analyze financial data for risks and opportunities
+ * Detect insights when a deal enters negotiation stage
  */
-export async function analyzeFinance(workspaceId: string): Promise<Insight[]> {
-  const insights: Insight[] = [];
-
+export async function detectDealNegotiationInsights(
+  workspaceId: string,
+  dealId: string
+): Promise<ProactiveInsight[]> {
   try {
-    // Check for overdue invoices
-    const allInvoices = await db.query.invoices.findMany({
-      where: eq(invoices.workspaceId, workspaceId),
+    const deal = await db.query.deals.findFirst({
+      where: and(
+        eq(deals.id, dealId),
+        eq(deals.workspaceId, workspaceId)
+      ),
     });
 
-    const overdueInvoices = allInvoices.filter(invoice => {
-      if (!invoice.dueDate || invoice.status === 'paid') return false;
-      return new Date(invoice.dueDate) < new Date();
-    });
+    if (!deal || deal.stage !== 'negotiation') return [];
 
-    if (overdueInvoices.length > 0) {
-      const totalOverdue = overdueInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
-      insights.push({
-        type: 'alert',
+    const insights: ProactiveInsight[] = [];
+
+    // Suggest drafting proposal
+    insights.push({
+      type: 'opportunity',
+      category: 'sales',
+      title: 'Deal in Negotiation - Draft Proposal',
+      description: `Deal "${deal.name}" is in negotiation stage. Consider drafting a proposal to move it forward.`,
         priority: 9,
-        category: 'finance',
-        title: `${overdueInvoices.length} Overdue Invoice${overdueInvoices.length !== 1 ? 's' : ''}`,
-        description: `$${totalOverdue.toLocaleString()} in overdue invoices. Send payment reminders to improve cash flow.`,
-        suggestedActions: [
-          {
-            action: 'Send payment reminders',
-            toolName: 'send_payment_reminders',
-            args: { autoSend: false }, // Create drafts for review
+      metadata: { dealId: deal.id, dealName: deal.name, dealValue: deal.value },
+      suggestedActions: [
+        {
+          action: 'draft_proposal',
+          args: { dealId: deal.id },
+        },
+      ],
+    });
+
+    return insights;
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect deal negotiation insights', error);
+    return [];
+  }
+}
+
+/**
+ * Detect insights for overdue tasks
+ */
+export async function detectOverdueTaskInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const now = new Date();
+    const overdueTasks = await db.query.tasks.findMany({
+      where: and(
+        eq(tasks.workspaceId, workspaceId),
+        eq(tasks.status, 'todo'),
+        lt(tasks.dueDate, now)
+      ),
+      orderBy: [desc(tasks.dueDate)],
+      limit: 10,
+    });
+
+    if (overdueTasks.length === 0) return [];
+
+    return [{
+      type: 'warning',
+      category: 'operations',
+      title: `${overdueTasks.length} Overdue Task${overdueTasks.length !== 1 ? 's' : ''}`,
+      description: `You have ${overdueTasks.length} overdue task${overdueTasks.length !== 1 ? 's' : ''}. Consider prioritizing or rescheduling.`,
+      priority: 85,
+      metadata: { 
+        overdueCount: overdueTasks.length,
+        taskIds: overdueTasks.map(t => t.id),
+      },
+      suggestedActions: [
+        {
+          action: 'prioritize_tasks',
+          args: { 
+            taskIds: overdueTasks.map(t => t.id),
+            priorityMethod: 'urgency',
           },
-        ],
-        autoExecutable: false,
+        },
+      ],
+    }];
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect overdue task insights', error);
+    return [];
+  }
+}
+
+/**
+ * Detect insights for underperforming campaigns
+ */
+export async function detectCampaignPerformanceInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const activeCampaigns = await db.query.campaigns.findMany({
+      where: and(
+        eq(campaigns.workspaceId, workspaceId),
+        eq(campaigns.status, 'active')
+      ),
+    });
+
+    const insights: ProactiveInsight[] = [];
+
+    for (const campaign of activeCampaigns) {
+      if (!campaign.sentCount || campaign.sentCount < 50) continue; // Need meaningful volume
+
+      const openRate = (campaign.openCount || 0) / campaign.sentCount;
+      const clickRate = (campaign.clickCount || 0) / campaign.sentCount;
+
+      // Low open rate
+      if (openRate < 0.15) {
+        insights.push({
+          type: 'warning',
+          category: 'marketing',
+          title: `Campaign "${campaign.name}" Underperforming`,
+          description: `Open rate is ${(openRate * 100).toFixed(1)}% (industry average: 21%). Consider A/B testing subject lines.`,
+          priority: 8,
+          metadata: { 
+            campaignId: campaign.id,
+            campaignName: campaign.name,
+            openRate: openRate * 100,
+          },
+          suggestedActions: [
+            {
+              action: 'optimize_campaign',
+              args: { 
+                campaignId: campaign.id,
+                testType: 'subject',
+              },
+            },
+          ],
+        });
+      }
+
+      // Low click rate (but good open rate)
+      if (openRate >= 0.20 && clickRate < 0.02) {
+        insights.push({
+          type: 'suggestion',
+          category: 'marketing',
+          title: `Campaign "${campaign.name}" - Low Click Rate`,
+          description: `Click rate is ${(clickRate * 100).toFixed(1)}% despite good open rate. Consider optimizing CTAs.`,
+          priority: 7,
+          metadata: { 
+            campaignId: campaign.id,
+            campaignName: campaign.name,
+            clickRate: clickRate * 100,
+          },
+          suggestedActions: [
+            {
+              action: 'optimize_campaign',
+              args: { 
+                campaignId: campaign.id,
+                testType: 'cta',
+              },
+            },
+          ],
+        });
+      }
+    }
+
+    return insights;
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect campaign performance insights', error);
+    return [];
+  }
+}
+
+/**
+ * Detect insights for upcoming meetings
+ */
+export async function detectUpcomingMeetingInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const now = new Date();
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const dayAfter = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+    const upcomingEvents = await db.query.calendarEvents.findMany({
+      where: and(
+        eq(calendarEvents.workspaceId, workspaceId),
+        gte(calendarEvents.startTime, now),
+        lte(calendarEvents.startTime, dayAfter)
+      ),
+      orderBy: [calendarEvents.startTime],
+      limit: 5,
+    });
+
+    if (upcomingEvents.length === 0) return [];
+
+    const insights: ProactiveInsight[] = [];
+
+    // Check for meetings tomorrow
+    const tomorrowEvents = upcomingEvents.filter(e => {
+      const eventDate = new Date(e.startTime);
+      return eventDate >= tomorrow && eventDate < dayAfter;
+    });
+
+    if (tomorrowEvents.length > 0) {
+      insights.push({
+        type: 'suggestion',
+        category: 'operations',
+        title: `${tomorrowEvents.length} Meeting${tomorrowEvents.length !== 1 ? 's' : ''} Tomorrow`,
+        description: `You have ${tomorrowEvents.length} meeting${tomorrowEvents.length !== 1 ? 's' : ''} scheduled for tomorrow. Want me to prep briefs?`,
+        priority: 70,
+        metadata: { 
+          eventCount: tomorrowEvents.length,
+          eventIds: tomorrowEvents.map(e => e.id),
+        },
       });
     }
 
-    // Check for cash flow projection
-    insights.push({
-      type: 'suggestion',
-      priority: 6,
-      category: 'finance',
-      title: 'Review Cash Flow Projection',
-      description: 'Generate 30/60/90 day cash flow forecast to plan ahead.',
-      suggestedActions: [
-        {
-          action: 'Project cash flow',
-          toolName: 'project_cash_flow',
-          args: { includeScenarios: true },
-        },
-      ],
-      autoExecutable: true,
-    });
+    return insights;
   } catch (error) {
-    logger.error('Failed to analyze finance', { workspaceId, error });
+    logger.error('[Proactive Engine] Failed to detect upcoming meeting insights', error);
+    return [];
   }
-
-  return insights;
 }
 
 // ============================================================================
-// MAIN INSIGHT GENERATOR
+// MAIN INSIGHT GENERATION
 // ============================================================================
 
 /**
  * Generate all proactive insights for a workspace
  */
-export async function generateProactiveInsights(workspaceId: string, userId?: string): Promise<Insight[]> {
-  const allInsights: Insight[] = [];
+export async function generateProactiveInsights(
+  workspaceId: string,
+  options: {
+    categories?: Array<'sales' | 'marketing' | 'operations' | 'finance'>;
+    maxInsights?: number;
+  } = {}
+): Promise<ProactiveInsight[]> {
+  const { categories = ['sales', 'marketing', 'operations', 'finance'], maxInsights = 10 } = options;
 
-  // Run all analyzers in parallel
-  const [salesInsights, marketingInsights, operationsInsights, financeInsights] = await Promise.all([
-    analyzeSalesPipeline(workspaceId),
-    analyzeMarketingCampaigns(workspaceId),
-    analyzeOperations(workspaceId),
-    analyzeFinance(workspaceId),
-  ]);
+  const allInsights: ProactiveInsight[] = [];
 
-  allInsights.push(...salesInsights, ...marketingInsights, ...operationsInsights, ...financeInsights);
+  try {
+    // Sales insights
+    if (categories.includes('sales')) {
+      // Overdue tasks that might be sales-related
+      const overdueTaskInsights = await detectOverdueTaskInsights(workspaceId);
+      allInsights.push(...overdueTaskInsights);
 
-  // Sort by priority (highest first)
-  allInsights.sort((a, b) => b.priority - a.priority);
+      // Stalled deals
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const stalledDeals = await db.query.deals.findMany({
+        where: and(
+          eq(deals.workspaceId, workspaceId),
+          lt(deals.updatedAt, weekAgo),
+          eq(deals.stage, 'negotiation')
+        ),
+        limit: 5,
+      });
 
-  return allInsights;
+      if (stalledDeals.length > 0) {
+        allInsights.push({
+          type: 'warning',
+          category: 'sales',
+          title: `${stalledDeals.length} Stalled Deal${stalledDeals.length !== 1 ? 's' : ''}`,
+          description: `${stalledDeals.length} deal${stalledDeals.length !== 1 ? 's' : ''} in negotiation haven't been updated in over a week. Consider following up.`,
+          priority: 8,
+          metadata: { 
+            dealCount: stalledDeals.length,
+            dealIds: stalledDeals.map(d => d.id),
+          },
+        });
+      }
+    }
+
+    // Marketing insights
+    if (categories.includes('marketing')) {
+      const campaignInsights = await detectCampaignPerformanceInsights(workspaceId);
+      allInsights.push(...campaignInsights);
+    }
+
+    // Operations insights
+    if (categories.includes('operations')) {
+      const meetingInsights = await detectUpcomingMeetingInsights(workspaceId);
+      allInsights.push(...meetingInsights);
+    }
+
+    // Finance insights (handled by precompute-insights.ts)
+
+    // Sort by priority and limit
+    return allInsights
+      .sort((a, b) => b.priority - a.priority)
+      .slice(0, maxInsights);
+
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to generate insights', error);
+    return [];
+  }
 }
 
 /**
  * Store insights in database
  */
-export async function storeInsights(workspaceId: string, insights: Insight[], userId?: string): Promise<void> {
-  try {
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // Expire after 7 days
+export async function storeProactiveInsights(
+  workspaceId: string,
+  insights: ProactiveInsight[],
+  userId?: string
+): Promise<void> {
+  if (insights.length === 0) return;
 
+  try {
     for (const insight of insights) {
       await db.insert(proactiveInsights).values({
         workspaceId,
         userId: userId || null,
         type: insight.type,
-        priority: insight.priority,
         category: insight.category,
         title: insight.title,
         description: insight.description,
-        suggestedActions: insight.suggestedActions,
-        autoExecutable: insight.autoExecutable,
-        expiresAt,
+        priority: insight.priority,
+        suggestedActions: (insight.suggestedActions || []).map(sa => ({
+          action: sa.action,
+          args: sa.args,
+        })),
+        autoExecutable: false, // Default to false for safety
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Expire after 7 days
       });
     }
 
-    logger.info('Stored proactive insights', { workspaceId, count: insights.length });
-  } catch (error) {
-    logger.error('Failed to store insights', { workspaceId, error });
-  }
-}
-
-/**
- * Get active insights for a workspace/user
- */
-export async function getActiveInsights(workspaceId: string, userId?: string, limit = 10): Promise<typeof proactiveInsights.$inferSelect[]> {
-  try {
-    const whereConditions = [
-      eq(proactiveInsights.workspaceId, workspaceId),
-      sql`${proactiveInsights.dismissedAt} IS NULL`,
-      sql`(${proactiveInsights.expiresAt} IS NULL OR ${proactiveInsights.expiresAt} > NOW())`,
-    ];
-
-    if (userId) {
-      whereConditions.push(
-        sql`(${proactiveInsights.userId} IS NULL OR ${proactiveInsights.userId} = ${userId})`
-      );
-    }
-
-    const insights = await db.query.proactiveInsights.findMany({
-      where: and(...whereConditions),
-      orderBy: [desc(proactiveInsights.priority), desc(proactiveInsights.createdAt)],
-      limit,
+    logger.info('[Proactive Engine] Stored insights', {
+      workspaceId,
+      userId,
+      count: insights.length,
     });
-
-    return insights;
   } catch (error) {
-    logger.error('Failed to get active insights', { workspaceId, userId, error });
-    return [];
+    logger.error('[Proactive Engine] Failed to store insights', error);
   }
 }

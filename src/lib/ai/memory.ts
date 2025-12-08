@@ -6,10 +6,11 @@
  */
 
 import { db } from '@/lib/db';
-import { aiUserPreferences, aiMessages, aiConversations, aiMessageFeedback, workspaceIntelligence } from '@/db/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { aiUserPreferences, aiMessages, aiConversations, aiMessageFeedback, workspaceIntelligence, neptuneActionHistory } from '@/db/schema';
+import { eq, and, desc, sql, gte } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
+import { analyzeTimingPatterns, analyzeCommunicationStyle, detectTaskSequences, storeUserPatterns } from '@/lib/ai/patterns';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -427,6 +428,44 @@ export async function processRecentConversationsForLearning(
       if (insights.length > 0) {
         await updateUserPreferencesFromInsights(workspaceId, userId, insights);
       }
+
+      // Also analyze patterns from this conversation
+      const messages = await db.query.aiMessages.findMany({
+        where: eq(aiMessages.conversationId, conv.id),
+        orderBy: [aiMessages.createdAt],
+      });
+
+      if (messages.length >= 4) {
+        const timingPatterns = await analyzeTimingPatterns(workspaceId, messages);
+        const commStyle = await analyzeCommunicationStyle(messages);
+
+        // Get action history for task sequences
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const actionHistory = await db.query.neptuneActionHistory.findMany({
+          where: and(
+            eq(neptuneActionHistory.workspaceId, workspaceId),
+            eq(neptuneActionHistory.userId, userId),
+            gte(neptuneActionHistory.createdAt, thirtyDaysAgo)
+          ),
+          orderBy: [neptuneActionHistory.createdAt],
+        });
+
+        const taskSequences = await detectTaskSequences(
+          workspaceId,
+          actionHistory.map(a => ({
+            toolName: a.toolName,
+            timestamp: a.createdAt,
+          }))
+        );
+
+        // Store patterns
+        await storeUserPatterns(workspaceId, {
+          followUpTiming: timingPatterns,
+          communicationStyle: commStyle,
+          taskSequences,
+          actionPatterns: {}, // Can be enhanced later
+        });
+      }
     }
 
     logger.info('Processed conversations for learning', { 
@@ -506,10 +545,27 @@ export async function learnBusinessContext(workspaceId: string): Promise<void> {
       return;
     }
 
-    // Extract conversation text for analysis
-    const conversationText = conversations
-      .map(conv => conv.title || '')
-      .join(' ');
+    // Get full conversation messages for better analysis
+    const conversationIds = conversations.map(c => c.id);
+    const allMessages = await db.query.aiMessages.findMany({
+      where: sql`${aiMessages.conversationId} = ANY(${conversationIds})`,
+      orderBy: [aiMessages.createdAt],
+    });
+
+    // Group messages by conversation
+    const messagesByConv = new Map<string, typeof allMessages>();
+    for (const msg of allMessages) {
+      if (!messagesByConv.has(msg.conversationId)) {
+        messagesByConv.set(msg.conversationId, []);
+      }
+      messagesByConv.get(msg.conversationId)!.push(msg);
+    }
+
+    // Extract conversation text for analysis (use full content, not just titles)
+    const conversationText = Array.from(messagesByConv.values())
+      .slice(0, 10) // Analyze top 10 conversations
+      .map(msgs => msgs.map(m => `${m.role}: ${m.content}`).join('\n'))
+      .join('\n\n---\n\n');
 
     // Use AI to extract business context
     const openai = getOpenAI();

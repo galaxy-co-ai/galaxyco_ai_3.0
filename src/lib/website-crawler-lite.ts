@@ -23,6 +23,7 @@ export interface CrawlOptions {
   maxDepth?: number;
   timeout?: number;
   useJinaReader?: boolean;
+  abortSignal?: AbortSignal;
 }
 
 export interface CrawledPage {

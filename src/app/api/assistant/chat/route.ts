@@ -24,7 +24,7 @@ import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/reso
 
 const chatSchema = z.object({
   message: z.string().min(1, 'Message is required').max(10000, 'Message too long'),
-  conversationId: z.string().uuid().optional(),
+  conversationId: z.string().uuid().nullish(),
   attachments: z.array(z.object({
     type: z.enum(['image', 'document', 'file']),
     url: z.string(),
@@ -33,13 +33,49 @@ const chatSchema = z.object({
     mimeType: z.string(),
   })).optional(),
   context: z.object({
-    workspace: z.string().optional(),
-    feature: z.string().optional(),
-    page: z.string().optional(),
-    type: z.string().optional(),
-  }).optional(),
-  feature: z.string().optional(),
+    workspace: z.string().nullish(),
+    feature: z.string().nullish(),
+    page: z.string().nullish(),
+    type: z.string().nullish(),
+  }).nullish(),
+  feature: z.string().nullish(),
 });
+
+// ============================================================================
+// COMPLEX QUESTION DETECTION
+// ============================================================================
+
+/**
+ * Detect if a question requires chain-of-thought reasoning
+ */
+function detectComplexQuestion(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  
+  const complexIndicators = [
+    'strategy', 'strategic', 'plan', 'planning',
+    'compare', 'comparison', 'versus', 'vs', 'difference between',
+    'analyze', 'analysis', 'evaluate', 'assessment',
+    'recommend', 'recommendation', 'suggest', 'advice',
+    'best approach', 'best way', 'how should', 'what should',
+    'pros and cons', 'advantages', 'disadvantages',
+    'why', 'explain why', 'reason', 'reasoning',
+    'complex', 'complicated', 'multiple', 'several',
+  ];
+
+  // Check for complex question patterns
+  const hasComplexIndicator = complexIndicators.some(indicator => 
+    lowerMessage.includes(indicator)
+  );
+
+  // Check for multiple question marks or long questions
+  const questionCount = (message.match(/\?/g) || []).length;
+  const isLongQuestion = message.length > 100;
+
+  // Check for comparison words
+  const hasComparison = /\b(vs|versus|compared to|better than|worse than|instead of)\b/i.test(message);
+
+  return hasComplexIndicator || (questionCount > 1) || (isLongQuestion && hasComparison);
+}
 
 // ============================================================================
 // STREAMING HELPERS
@@ -425,13 +461,40 @@ export async function POST(request: Request) {
       while (continueLoop && iterations < maxIterations) {
         iterations++;
         
+        // Detect complex questions that need chain-of-thought reasoning
+        const isComplexQuestion = detectComplexQuestion(message);
+        const useChainOfThought = isComplexQuestion && iterations === 1;
+
+        // Enhance system prompt for complex questions
+        let enhancedMessages = messages;
+        if (useChainOfThought) {
+          // Inject chain-of-thought instruction for first iteration
+          const enhancedSystemPrompt = systemPrompt + `
+
+IMPORTANT: This is a complex question requiring deep analysis. Use chain-of-thought reasoning:
+1. Break down the question into components
+2. Consider multiple perspectives and trade-offs
+3. Analyze implications and potential outcomes
+4. Synthesize into a clear, actionable recommendation
+Show your reasoning process naturally in your response.`;
+
+          enhancedMessages = [
+            { role: 'system', content: enhancedSystemPrompt },
+            ...messages.slice(1), // Keep other messages
+          ];
+
+          logger.info('[AI Chat Stream] Using chain-of-thought reasoning', {
+            message: message.slice(0, 50),
+          });
+        }
+
         const stream = await openai.chat.completions.create({
           model: 'gpt-4o',
-          messages,
+          messages: enhancedMessages,
           tools: tools.length > 0 ? tools : undefined,
           tool_choice: tools.length > 0 ? 'auto' : undefined,
-          temperature: 0.5,
-          max_tokens: 1500,
+          temperature: useChainOfThought ? 0.7 : 0.5, // Slightly higher for creative reasoning
+          max_tokens: useChainOfThought ? 2000 : 1500, // More tokens for complex reasoning
           frequency_penalty: 0.3,
           presence_penalty: 0.2,
           stream: true,

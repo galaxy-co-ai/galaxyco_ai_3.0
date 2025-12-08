@@ -88,6 +88,17 @@ export async function POST(request: Request) {
       logger.error('Cache invalidation failed (non-critical):', err);
     });
 
+    // Fire proactive event for new lead
+    const { fireEvent } = await import('@/lib/ai/event-hooks');
+    fireEvent({
+      type: 'lead_created',
+      workspaceId,
+      userId,
+      leadId: prospect.id,
+    }).catch(err => {
+      logger.error('Failed to fire lead created event (non-critical):', err);
+    });
+
     return NextResponse.json({
       id: prospect.id,
       name: prospect.name,

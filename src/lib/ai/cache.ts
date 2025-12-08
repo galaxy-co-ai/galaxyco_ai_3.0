@@ -32,8 +32,9 @@ interface CacheEntry {
 // ============================================================================
 
 const CACHE_CONFIG = {
-  // Minimum similarity score to consider a cache hit (0.95 = 95% similar)
-  minSimilarity: 0.95,
+  // Minimum similarity score to consider a cache hit (0.90 = 90% similar)
+  // Lowered from 0.95 to increase cache hit rate while maintaining quality
+  minSimilarity: 0.90,
   // Default TTL in seconds (1 hour)
   defaultTTL: 3600,
   // Maximum cached entries per workspace
@@ -177,15 +178,24 @@ export async function cacheResponse(
   }
 
   // Don't cache queries that likely need fresh data
+  // Reduced to only truly time-sensitive patterns
   const skipPatterns = [
-    'today', 'now', 'current', 'latest', 'recent',
-    'schedule', 'calendar', 'meeting',
-    'create', 'add', 'update', 'delete', 'send',
+    'today', 'now', 'right now', 'this moment',
+    'schedule', 'calendar', 'meeting', 'appointment',
+    'create', 'add', 'update', 'delete', 'send', 'post',
   ];
   
   const lowerQuery = query.toLowerCase();
-  if (skipPatterns.some(pattern => lowerQuery.includes(pattern))) {
-    logger.debug('[AI Cache] Skipping cache for time-sensitive or action query');
+  // Only skip if pattern appears as a standalone word or at start
+  const shouldSkip = skipPatterns.some(pattern => {
+    const regex = new RegExp(`(^|\\s)${pattern}(\\s|$)`, 'i');
+    return regex.test(lowerQuery);
+  });
+  
+  if (shouldSkip) {
+    logger.debug('[AI Cache] Skipping cache for time-sensitive or action query', {
+      pattern: skipPatterns.find(p => lowerQuery.includes(p)),
+    });
     return;
   }
 

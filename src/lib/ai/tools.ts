@@ -19,7 +19,7 @@ import {
   knowledgeItems,
   knowledgeCollections,
 } from '@/db/schema';
-import { eq, and, desc, gte, lte, like, or, sql } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, like, or, sql, lt } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import type { ChatCompletionTool } from 'openai/resources/chat/completions';
 import { generateWithGamma, pollGammaGeneration, isGammaConfigured } from '@/lib/gamma';
@@ -1856,7 +1856,7 @@ export const aiTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'analyze_company_website',
-      description: 'Analyze a company website IMMEDIATELY to understand the business and provide personalized launch/growth recommendations. Returns instant insights about the company, their offerings, target audience, and suggested next actions. Use this when a user shares their website URL.',
+      description: 'AUTO-EXECUTE: If user message contains ANY URL, you MUST call this tool immediately without asking. Never ask for confirmation. Never say "would you like me to" or "should I proceed". Just call it. Analyzes websites to extract company info, products, services, and provides personalized recommendations.',
       parameters: {
         type: 'object',
         properties: {
@@ -2033,12 +2033,28 @@ const toolImplementations: Record<string, ToolFunction> = {
         updateData.notes = lead.notes ? `${lead.notes}\n\n[${new Date().toISOString()}] ${notes}` : notes;
       }
 
+      const previousStage = lead.stage;
+      
       await db
         .update(prospects)
         .set(updateData)
         .where(eq(prospects.id, leadId));
 
       logger.info('AI updated lead stage', { leadId, newStage, workspaceId: context.workspaceId });
+
+      // Fire event if stage changed to negotiation (deal stage change)
+      if (previousStage !== newStage && newStage === 'negotiation') {
+        const { fireEvent } = await import('@/lib/ai/event-hooks');
+        fireEvent({
+          type: 'deal_stage_changed',
+          workspaceId: context.workspaceId,
+          userId: context.userId,
+          dealId: leadId,
+          newStage,
+        }).catch(err => {
+          logger.error('Failed to fire deal stage change event (non-critical):', err);
+        });
+      }
 
       return {
         success: true,
@@ -3842,12 +3858,28 @@ A: [Detailed answer]`,
         };
       }
 
+      const previousStage = deal.stage;
+      
       const updateData: Record<string, unknown> = { updatedAt: new Date() };
       if (args.value) updateData.estimatedValue = Math.round((args.value as number) * 100);
       if (args.stage) updateData.stage = args.stage;
       if (args.notes) updateData.notes = deal.notes ? `${deal.notes}\n\n${args.notes}` : args.notes;
 
       await db.update(prospects).set(updateData).where(eq(prospects.id, dealId));
+
+      // Fire event if stage changed to negotiation
+      if (args.stage && previousStage !== args.stage && args.stage === 'negotiation') {
+        const { fireEvent } = await import('@/lib/ai/event-hooks');
+        fireEvent({
+          type: 'deal_stage_changed',
+          workspaceId: context.workspaceId,
+          userId: context.userId,
+          dealId,
+          newStage: args.stage as string,
+        }).catch(err => {
+          logger.error('Failed to fire deal stage change event (non-critical):', err);
+        });
+      }
 
       return {
         success: true,
@@ -4337,11 +4369,76 @@ A: [Detailed answer]`,
 
       // Note: In production, this would fetch real data from the finance services
       // For now, return a helpful message about connected providers
-      logger.info('AI get_finance_summary', { period, connectedProviders, workspaceId: context.workspaceId });
+      // Fetch real financial data
+      const { QuickBooksService, StripeService, ShopifyService } = await import('@/lib/finance');
+      
+      let revenue = 0;
+      let expenses = 0;
+      let outstandingInvoices = 0;
+
+      // Initialize services
+      const qbService = new QuickBooksService(context.workspaceId);
+      const stripeService = new StripeService(context.workspaceId);
+      const shopifyService = new ShopifyService(context.workspaceId);
+
+      // Try to initialize each service
+      const [qbInit, stripeInit, shopifyInit] = await Promise.all([
+        qbService.initialize().catch(() => ({ success: false })),
+        stripeService.initialize().catch(() => ({ success: false })),
+        shopifyService.initialize().catch(() => ({ success: false })),
+      ]);
+
+      // QuickBooks data
+      if (qbInit.success && connectedProviders.includes('quickbooks')) {
+        try {
+          const qbFinancials = await qbService.getFinancials(startDate, now);
+          const qbInvoices = await qbService.getInvoices({ startDate, endDate: now, status: 'unpaid' });
+          
+          revenue += qbFinancials.revenue;
+          expenses += qbFinancials.expenses;
+          outstandingInvoices += qbInvoices.reduce((sum, inv) => sum + inv.balance, 0);
+        } catch (error) {
+          logger.warn('QuickBooks data fetch failed for finance summary', { error });
+        }
+      }
+
+      // Stripe data
+      if (stripeInit.success && connectedProviders.includes('stripe')) {
+        try {
+          const stripeData = await stripeService.getRevenueData(startDate, now);
+          const stripeNet = stripeData.charges - stripeData.fees - stripeData.refunds;
+          revenue += stripeNet;
+          expenses += stripeData.fees;
+        } catch (error) {
+          logger.warn('Stripe data fetch failed for finance summary', { error });
+        }
+      }
+
+      // Shopify data
+      if (shopifyInit.success && connectedProviders.includes('shopify')) {
+        try {
+          const shopifyData = await shopifyService.getRevenueData(startDate, now);
+          revenue += shopifyData.total;
+        } catch (error) {
+          logger.warn('Shopify data fetch failed for finance summary', { error });
+        }
+      }
+
+      const profit = revenue - expenses;
+      const cashflow = profit; // Simplified
+
+      logger.info('AI get_finance_summary', { 
+        period, 
+        connectedProviders, 
+        workspaceId: context.workspaceId,
+        revenue,
+        expenses,
+        profit,
+      });
 
       return {
         success: true,
-        message: `Financial summary for ${periodLabel}`,
+        message: `Financial summary for ${periodLabel}: Revenue $${revenue.toFixed(2)}, Expenses $${expenses.toFixed(2)}, Profit $${profit.toFixed(2)}`,
         data: {
           period: periodLabel,
           dateRange: {
@@ -4350,13 +4447,12 @@ A: [Detailed answer]`,
           },
           connectedProviders,
           summary: {
-            revenue: 0,
-            expenses: 0,
-            profit: 0,
-            outstandingInvoices: 0,
-            cashflow: 0,
+            revenue,
+            expenses,
+            profit,
+            outstandingInvoices,
+            cashflow,
           },
-          note: `Data from connected providers: ${connectedProviders.join(', ')}. View Finance HQ for detailed breakdown.`,
         },
       };
     } catch (error) {
@@ -4373,9 +4469,33 @@ A: [Detailed answer]`,
     try {
       const limit = (args.limit as number) || 10;
 
-      // Check for QuickBooks integration (invoices come from QB)
+      // Import schemas
+      const { invoices, customers } = await import('@/db/schema');
+      const { lt } = await import('drizzle-orm');
+
+      const now = new Date();
+
+      // Get overdue invoices from database
+      const overdueInvoices = await db.query.invoices.findMany({
+        where: and(
+          eq(invoices.workspaceId, context.workspaceId),
+          eq(invoices.status, 'unpaid'),
+          lt(invoices.dueDate, now)
+        ),
+        with: {
+          customer: {
+            columns: {
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: [invoices.dueDate], // Oldest first
+        limit,
+      });
+
+      // Also try to get from QuickBooks if connected
       const { integrations } = await import('@/db/schema');
-      
       const qbIntegration = await db.query.integrations.findFirst({
         where: and(
           eq(integrations.workspaceId, context.workspaceId),
@@ -4384,25 +4504,80 @@ A: [Detailed answer]`,
         ),
       });
 
-      if (!qbIntegration) {
-        return {
-          success: false,
-          message: 'QuickBooks is not connected. Please connect QuickBooks to view invoices.',
-          data: { hasQuickBooks: false },
-        };
+      let qbInvoices: Array<{
+        id: string;
+        number: string;
+        customer: string;
+        amount: number;
+        status: string;
+        dueDate: string;
+      }> = [];
+
+      if (qbIntegration) {
+        try {
+          const { QuickBooksService } = await import('@/lib/finance');
+          const qbService = new QuickBooksService(context.workspaceId);
+          const initResult = await qbService.initialize().catch(() => ({ success: false }));
+
+          if (initResult.success) {
+            const qbInvoicesData = await qbService.getInvoices({
+              startDate: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000),
+              endDate: now,
+              status: 'unpaid',
+            });
+
+            // Filter to overdue only
+            qbInvoices = qbInvoicesData
+              .filter(inv => inv.dueDate && new Date(inv.dueDate) < now)
+              .map(inv => ({
+                id: inv.id,
+                number: inv.number || inv.id,
+                customer: inv.customerName || 'Unknown',
+                amount: inv.balance,
+                status: 'overdue',
+                dueDate: inv.dueDate || new Date().toISOString(),
+              }))
+              .slice(0, limit);
+          }
+        } catch (error) {
+          logger.warn('QuickBooks invoice fetch failed', { error });
+        }
       }
 
-      // Note: In production, this would call the QuickBooks service to get real invoices
-      logger.info('AI get_overdue_invoices', { limit, workspaceId: context.workspaceId });
+      // Combine and deduplicate (prefer database invoices)
+      const allInvoices = overdueInvoices.map(inv => ({
+        id: inv.id,
+        number: inv.invoiceNumber,
+        customer: inv.customer?.name || 'Unknown',
+        amount: (inv.total - inv.amountPaid) / 100,
+        status: 'overdue',
+        dueDate: inv.dueDate.toISOString(),
+        daysOverdue: Math.floor((now.getTime() - inv.dueDate.getTime()) / (1000 * 60 * 60 * 24)),
+      }));
+
+      // Add QuickBooks invoices that aren't already in database
+      const existingIds = new Set(allInvoices.map(inv => inv.id));
+      for (const qbInv of qbInvoices) {
+        if (!existingIds.has(qbInv.id)) {
+          allInvoices.push({
+            ...qbInv,
+            daysOverdue: Math.floor((now.getTime() - new Date(qbInv.dueDate).getTime()) / (1000 * 60 * 60 * 24)),
+          });
+        }
+      }
+
+      // Sort by days overdue (most overdue first)
+      allInvoices.sort((a, b) => b.daysOverdue - a.daysOverdue);
+
+      const totalAmount = allInvoices.reduce((sum, inv) => sum + inv.amount, 0);
 
       return {
         success: true,
-        message: 'Retrieved overdue invoices',
+        message: `Found ${allInvoices.length} overdue invoice${allInvoices.length !== 1 ? 's' : ''} totaling $${totalAmount.toFixed(2)}.`,
         data: {
-          invoices: [],
-          total: 0,
-          totalAmount: 0,
-          note: 'View Finance HQ for detailed invoice list and management.',
+          invoices: allInvoices.slice(0, limit),
+          total: allInvoices.length,
+          totalAmount,
         },
       };
     } catch (error) {
@@ -4420,35 +4595,135 @@ A: [Detailed answer]`,
       const invoiceId = args.invoiceId as string;
       const customMessage = args.customMessage as string | undefined;
 
-      // Check for QuickBooks integration
-      const { integrations } = await import('@/db/schema');
-      
-      const qbIntegration = await db.query.integrations.findFirst({
+      // Import schemas
+      const { invoices } = await import('@/db/schema');
+      const { sendEmail, getNotificationTemplate } = await import('@/lib/email');
+
+      // Get invoice from database
+      const invoice = await db.query.invoices.findFirst({
         where: and(
-          eq(integrations.workspaceId, context.workspaceId),
-          eq(integrations.provider, 'quickbooks'),
-          eq(integrations.status, 'active')
+          eq(invoices.id, invoiceId),
+          eq(invoices.workspaceId, context.workspaceId)
         ),
+        with: {
+          customer: {
+            columns: {
+              name: true,
+              email: true,
+            },
+          },
+        },
       });
 
-      if (!qbIntegration) {
+      if (!invoice) {
+        // Try QuickBooks if not in database
+        const { integrations } = await import('@/db/schema');
+        const qbIntegration = await db.query.integrations.findFirst({
+          where: and(
+            eq(integrations.workspaceId, context.workspaceId),
+            eq(integrations.provider, 'quickbooks'),
+            eq(integrations.status, 'active')
+          ),
+        });
+
+        if (!qbIntegration) {
+          return {
+            success: false,
+            message: 'Invoice not found in database and QuickBooks is not connected.',
+          };
+        }
+
+        // Try to get from QuickBooks
+        try {
+          const { QuickBooksService } = await import('@/lib/finance');
+          const qbService = new QuickBooksService(context.workspaceId);
+          const initResult = await qbService.initialize().catch(() => ({ success: false }));
+
+          if (!initResult.success) {
+            return {
+              success: false,
+              message: 'QuickBooks is connected but could not be initialized. Please check your connection.',
+            };
+          }
+
+          // Note: QuickBooks service would need a getInvoiceById method
+          // For now, return a helpful message
+          return {
+            success: false,
+            message: 'Invoice found in QuickBooks. Please use Finance HQ to send reminders for QuickBooks invoices.',
+            data: { invoiceId, source: 'quickbooks' },
+          };
+        } catch (error) {
+          logger.error('QuickBooks invoice lookup failed', { error });
+          return {
+            success: false,
+            message: 'Failed to retrieve invoice from QuickBooks.',
+          };
+        }
+      }
+
+      // Check if invoice is overdue
+      const now = new Date();
+      const isOverdue = invoice.dueDate < now && invoice.status === 'unpaid';
+      const amountDue = (invoice.total - invoice.amountPaid) / 100;
+      const daysOverdue = isOverdue 
+        ? Math.floor((now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
+
+      if (!invoice.customer?.email) {
         return {
           success: false,
-          message: 'QuickBooks is not connected. Please connect QuickBooks to send invoice reminders.',
+          message: 'Customer email not found for this invoice. Cannot send reminder.',
         };
       }
 
-      // Note: In production, this would call the invoice reminder API
-      logger.info('AI send_invoice_reminder', { invoiceId, customMessage, workspaceId: context.workspaceId });
+      // Send reminder email
+      const message = customMessage || 
+        (isOverdue 
+          ? `This is a friendly reminder that invoice ${invoice.invoiceNumber} for $${amountDue.toFixed(2)} is ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''} overdue. Please remit payment at your earliest convenience.`
+          : `This is a reminder that invoice ${invoice.invoiceNumber} for $${amountDue.toFixed(2)} is due on ${invoice.dueDate.toLocaleDateString()}.`);
+
+      const emailTemplate = getNotificationTemplate(
+        invoice.customer.name || 'Valued Customer',
+        `Payment Reminder: Invoice ${invoice.invoiceNumber}`,
+        message,
+        'View Invoice',
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://galaxyco.ai'}/finance/invoices/${invoice.id}`
+      );
+
+      const emailResult = await sendEmail({
+        to: invoice.customer.email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+        text: emailTemplate.text,
+      });
+
+      if (!emailResult.success) {
+        return {
+          success: false,
+          message: `Failed to send reminder email: ${emailResult.error}`,
+        };
+      }
+
+      logger.info('AI send_invoice_reminder', { 
+        invoiceId, 
+        invoiceNumber: invoice.invoiceNumber,
+        customerEmail: invoice.customer.email,
+        workspaceId: context.workspaceId 
+      });
 
       return {
         success: true,
-        message: `Invoice reminder queued for invoice ${invoiceId}`,
+        message: `Payment reminder sent to ${invoice.customer.email} for invoice ${invoice.invoiceNumber}.`,
         data: {
           invoiceId,
-          customMessage: customMessage || 'Default reminder message',
-          status: 'queued',
-          note: 'Use Finance HQ to view invoice details and send reminders directly.',
+          invoiceNumber: invoice.invoiceNumber,
+          customerEmail: invoice.customer.email,
+          amountDue,
+          isOverdue,
+          daysOverdue,
+          emailSent: true,
+          messageId: emailResult.messageId,
         },
       };
     } catch (error) {
@@ -4465,12 +4740,19 @@ A: [Detailed answer]`,
     try {
       const days = args.days as number;
 
-      // Get connected finance integrations
+      // Use the same logic as project_cash_flow but for a specific number of days
+      const now = new Date();
+      const forecastDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+      const historicalStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+      // Import finance services
+      const { QuickBooksService, StripeService, ShopifyService } = await import('@/lib/finance');
       const { integrations } = await import('@/db/schema');
       const { inArray } = await import('drizzle-orm');
-      
+
+      // Get connected finance providers
       const financeProviders = ['quickbooks', 'stripe', 'shopify'] as const;
-      const connectedIntegrations = await db.query.integrations.findMany({
+      const financeIntegrations = await db.query.integrations.findMany({
         where: and(
           eq(integrations.workspaceId, context.workspaceId),
           inArray(integrations.provider, financeProviders),
@@ -4478,29 +4760,105 @@ A: [Detailed answer]`,
         ),
       });
 
-      if (connectedIntegrations.length === 0) {
+      if (financeIntegrations.length === 0) {
         return {
           success: false,
           message: 'No finance integrations connected. Please connect QuickBooks, Stripe, or Shopify to generate forecasts.',
         };
       }
 
-      const connectedProviders = connectedIntegrations.map(i => i.provider);
+      const connectedProviders = financeIntegrations.map(i => i.provider);
 
-      logger.info('AI generate_cash_flow_forecast', { days, connectedProviders, workspaceId: context.workspaceId });
+      // Get historical revenue and expenses
+      let historicalRevenue = 0;
+      let historicalExpenses = 0;
+
+      const qbService = new QuickBooksService(context.workspaceId);
+      const stripeService = new StripeService(context.workspaceId);
+      const shopifyService = new ShopifyService(context.workspaceId);
+
+      const [qbInit, stripeInit, shopifyInit] = await Promise.all([
+        qbService.initialize().catch(() => ({ success: false })),
+        stripeService.initialize().catch(() => ({ success: false })),
+        shopifyService.initialize().catch(() => ({ success: false })),
+      ]);
+
+      if (qbInit.success && connectedProviders.includes('quickbooks')) {
+        try {
+          const qbFinancials = await qbService.getFinancials(historicalStart, now);
+          historicalRevenue += qbFinancials.revenue;
+          historicalExpenses += qbFinancials.expenses;
+        } catch (error) {
+          logger.warn('QuickBooks data fetch failed for cash flow forecast', { error });
+        }
+      }
+
+      if (stripeInit.success && connectedProviders.includes('stripe')) {
+        try {
+          const stripeData = await stripeService.getRevenueData(historicalStart, now);
+          historicalRevenue += stripeData.charges - stripeData.fees - stripeData.refunds;
+          historicalExpenses += stripeData.fees;
+        } catch (error) {
+          logger.warn('Stripe data fetch failed for cash flow forecast', { error });
+        }
+      }
+
+      if (shopifyInit.success && connectedProviders.includes('shopify')) {
+        try {
+          const shopifyData = await shopifyService.getRevenueData(historicalStart, now);
+          historicalRevenue += shopifyData.total;
+        } catch (error) {
+          logger.warn('Shopify data fetch failed for cash flow forecast', { error });
+        }
+      }
+
+      // Get pending invoices (expected revenue)
+      const { invoices } = await import('@/db/schema');
+      const { gte } = await import('drizzle-orm');
+      
+      const pendingInvoices = await db.query.invoices.findMany({
+        where: and(
+          eq(invoices.workspaceId, context.workspaceId),
+          eq(invoices.status, 'unpaid'),
+          gte(invoices.dueDate, now),
+          lte(invoices.dueDate, forecastDate)
+        ),
+      });
+
+      const expectedInflows = pendingInvoices.reduce((sum, inv) => sum + (inv.total - inv.amountPaid), 0) / 100;
+
+      // Calculate daily averages
+      const dailyRevenue = historicalRevenue / days;
+      const dailyExpenses = historicalExpenses / days;
+      const dailyNet = dailyRevenue - dailyExpenses;
+
+      // Project cash flow
+      const projectedNetPosition = Math.round(dailyNet * days + expectedInflows);
+      const expectedOutflows = Math.round(dailyExpenses * days);
+
+      logger.info('AI generate_cash_flow_forecast', { 
+        days, 
+        connectedProviders, 
+        workspaceId: context.workspaceId,
+        projectedNetPosition,
+      });
 
       return {
         success: true,
-        message: `${days}-day cash flow forecast generated`,
+        message: `${days}-day cash flow forecast: Projected net position $${projectedNetPosition.toFixed(2)} (inflows: $${(expectedInflows + dailyRevenue * days).toFixed(2)}, outflows: $${expectedOutflows.toFixed(2)})`,
         data: {
           forecastDays: days,
           connectedProviders,
           forecast: {
-            expectedInflows: 0,
-            expectedOutflows: 0,
-            projectedNetPosition: 0,
+            expectedInflows: Math.round(expectedInflows + dailyRevenue * days),
+            expectedOutflows,
+            projectedNetPosition,
           },
-          note: `Forecast based on data from: ${connectedProviders.join(', ')}. View Finance HQ for detailed projections.`,
+          historicalData: {
+            revenue: historicalRevenue,
+            expenses: historicalExpenses,
+            periodDays: days,
+          },
         },
       };
     } catch (error) {
@@ -4519,10 +4877,11 @@ A: [Detailed answer]`,
       const period1 = args.period1 as string;
       const period2 = args.period2 as string;
 
-      // Get connected finance integrations
+      // Import finance services
+      const { QuickBooksService, StripeService, ShopifyService } = await import('@/lib/finance');
       const { integrations } = await import('@/db/schema');
       const { inArray } = await import('drizzle-orm');
-      
+
       const financeProviders = ['quickbooks', 'stripe', 'shopify'] as const;
       const connectedIntegrations = await db.query.integrations.findMany({
         where: and(
@@ -4541,27 +4900,188 @@ A: [Detailed answer]`,
 
       const connectedProviders = connectedIntegrations.map(i => i.provider);
 
-      logger.info('AI compare_financial_periods', { metric, period1, period2, connectedProviders, workspaceId: context.workspaceId });
+      // Calculate date ranges for both periods
+      const now = new Date();
+      let period1Start: Date;
+      let period1End: Date;
+      let period2Start: Date;
+      let period2End: Date;
+
+      // Period 1 (current period)
+      switch (period1) {
+        case 'this_week':
+          period1Start = new Date(now);
+          period1Start.setDate(now.getDate() - now.getDay());
+          period1Start.setHours(0, 0, 0, 0);
+          period1End = new Date(period1Start);
+          period1End.setDate(period1Start.getDate() + 7);
+          break;
+        case 'this_month':
+          period1Start = new Date(now.getFullYear(), now.getMonth(), 1);
+          period1End = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+          break;
+        case 'this_quarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          period1Start = new Date(now.getFullYear(), quarter * 3, 1);
+          period1End = new Date(now.getFullYear(), (quarter + 1) * 3, 0, 23, 59, 59);
+          break;
+        case 'this_year':
+          period1Start = new Date(now.getFullYear(), 0, 1);
+          period1End = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+          break;
+        default:
+          period1Start = new Date(now);
+          period1End = new Date(now);
+      }
+
+      // Period 2 (previous period)
+      switch (period2) {
+        case 'last_week':
+          period2Start = new Date(period1Start);
+          period2Start.setDate(period2Start.getDate() - 7);
+          period2End = new Date(period2Start);
+          period2End.setDate(period2End.getDate() + 7);
+          break;
+        case 'last_month':
+          period2Start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          period2End = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+          break;
+        case 'last_quarter':
+          const quarter = Math.floor(now.getMonth() / 3);
+          period2Start = new Date(now.getFullYear(), (quarter - 1) * 3, 1);
+          period2End = new Date(now.getFullYear(), quarter * 3, 0, 23, 59, 59);
+          break;
+        case 'last_year':
+          period2Start = new Date(now.getFullYear() - 1, 0, 1);
+          period2End = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59);
+          break;
+        default:
+          period2Start = new Date(period1Start);
+          period2End = new Date(period1End);
+      }
+
+      // Initialize services
+      const qbService = new QuickBooksService(context.workspaceId);
+      const stripeService = new StripeService(context.workspaceId);
+      const shopifyService = new ShopifyService(context.workspaceId);
+
+      const [qbInit, stripeInit, shopifyInit] = await Promise.all([
+        qbService.initialize().catch(() => ({ success: false })),
+        stripeService.initialize().catch(() => ({ success: false })),
+        shopifyService.initialize().catch(() => ({ success: false })),
+      ]);
+
+      // Fetch data for both periods
+      let period1Value = 0;
+      let period2Value = 0;
+
+      // QuickBooks
+      if (qbInit.success && connectedProviders.includes('quickbooks')) {
+        try {
+          const p1Data = await qbService.getFinancials(period1Start, period1End);
+          const p2Data = await qbService.getFinancials(period2Start, period2End);
+          
+          if (metric === 'revenue') {
+            period1Value += p1Data.revenue;
+            period2Value += p2Data.revenue;
+          } else if (metric === 'expenses') {
+            period1Value += p1Data.expenses;
+            period2Value += p2Data.expenses;
+          } else if (metric === 'profit') {
+            period1Value += p1Data.revenue - p1Data.expenses;
+            period2Value += p2Data.revenue - p2Data.expenses;
+          } else if (metric === 'invoices') {
+            const p1Invoices = await qbService.getInvoices({ startDate: period1Start, endDate: period1End });
+            const p2Invoices = await qbService.getInvoices({ startDate: period2Start, endDate: period2End });
+            period1Value += p1Invoices.length;
+            period2Value += p2Invoices.length;
+          }
+        } catch (error) {
+          logger.warn('QuickBooks period comparison failed', { error });
+        }
+      }
+
+      // Stripe
+      if (stripeInit.success && connectedProviders.includes('stripe')) {
+        try {
+          const p1Data = await stripeService.getRevenueData(period1Start, period1End);
+          const p2Data = await stripeService.getRevenueData(period2Start, period2End);
+          
+          if (metric === 'revenue') {
+            period1Value += p1Data.charges - p1Data.fees - p1Data.refunds;
+            period2Value += p2Data.charges - p2Data.fees - p2Data.refunds;
+          } else if (metric === 'expenses') {
+            period1Value += p1Data.fees;
+            period2Value += p2Data.fees;
+          } else if (metric === 'profit') {
+            period1Value += (p1Data.charges - p1Data.fees - p1Data.refunds) - p1Data.fees;
+            period2Value += (p2Data.charges - p2Data.fees - p2Data.refunds) - p2Data.fees;
+          } else if (metric === 'orders') {
+            period1Value += p1Data.chargeCount || 0;
+            period2Value += p2Data.chargeCount || 0;
+          }
+        } catch (error) {
+          logger.warn('Stripe period comparison failed', { error });
+        }
+      }
+
+      // Shopify
+      if (shopifyInit.success && connectedProviders.includes('shopify')) {
+        try {
+          const p1Data = await shopifyService.getRevenueData(period1Start, period1End);
+          const p2Data = await shopifyService.getRevenueData(period2Start, period2End);
+          
+          if (metric === 'revenue' || metric === 'profit') {
+            period1Value += p1Data.total;
+            period2Value += p2Data.total;
+          } else if (metric === 'orders') {
+            period1Value += p1Data.orderCount || 0;
+            period2Value += p2Data.orderCount || 0;
+          }
+        } catch (error) {
+          logger.warn('Shopify period comparison failed', { error });
+        }
+      }
+
+      // Calculate change
+      const absoluteChange = period1Value - period2Value;
+      const percentageChange = period2Value !== 0 
+        ? ((absoluteChange / period2Value) * 100).toFixed(1) + '%'
+        : period1Value > 0 ? '100%' : '0%';
+
+      logger.info('AI compare_financial_periods', { 
+        metric, 
+        period1, 
+        period2, 
+        period1Value,
+        period2Value,
+        connectedProviders, 
+        workspaceId: context.workspaceId 
+      });
 
       return {
         success: true,
-        message: `Comparison of ${metric} between ${period1.replace('_', ' ')} and ${period2.replace('_', ' ')}`,
+        message: `${metric} comparison: ${period1.replace('_', ' ')} $${period1Value.toFixed(2)} vs ${period2.replace('_', ' ')} $${period2Value.toFixed(2)}. Change: ${absoluteChange >= 0 ? '+' : ''}$${absoluteChange.toFixed(2)} (${percentageChange}).`,
         data: {
           metric,
           period1: {
             label: period1.replace('_', ' '),
-            value: 0,
+            value: period1Value,
+            startDate: period1Start.toISOString(),
+            endDate: period1End.toISOString(),
           },
           period2: {
             label: period2.replace('_', ' '),
-            value: 0,
+            value: period2Value,
+            startDate: period2Start.toISOString(),
+            endDate: period2End.toISOString(),
           },
           change: {
-            absolute: 0,
-            percentage: '0%',
+            absolute: absoluteChange,
+            percentage: percentageChange,
+            direction: absoluteChange > 0 ? 'increase' : absoluteChange < 0 ? 'decrease' : 'no_change',
           },
           connectedProviders,
-          note: 'View Finance HQ for detailed period comparisons with charts.',
         },
       };
     } catch (error) {
@@ -5345,6 +5865,8 @@ Looking forward to your response!`;
       // Generate test variations if not provided
       let testVariations = variations;
       const campaignSubject = campaign.content?.subject || campaign.name;
+      const campaignBody = campaign.content?.body || '';
+      
       if (testVariations.length === 0) {
         if (testType === 'subject') {
           testVariations = [
@@ -5354,19 +5876,92 @@ Looking forward to your response!`;
           ];
         } else if (testType === 'cta') {
           testVariations = ['Get Started', 'Learn More', 'Try Now'];
+        } else if (testType === 'content') {
+          // Generate content variations using AI
+          const { getOpenAI } = await import('@/lib/ai-providers');
+          const openai = getOpenAI();
+          
+          const response = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content: 'Generate 3 variations of the following content. Return as JSON array of strings.',
+              },
+              {
+                role: 'user',
+                content: `Generate 3 variations of this email body:\n\n${campaignBody}`,
+              },
+            ],
+            temperature: 0.7,
+            max_tokens: 500,
+            response_format: { type: 'json_object' },
+          });
+
+          try {
+            const parsed = JSON.parse(response.choices[0]?.message?.content || '{}');
+            testVariations = parsed.variations || ['Variation A', 'Variation B', 'Variation C'];
+          } catch {
+            testVariations = ['Variation A', 'Variation B', 'Variation C'];
+          }
         } else {
           testVariations = ['Variation A', 'Variation B', 'Variation C'];
         }
       }
 
+      // Store A/B test data in campaign content or tags
+      // Since campaigns table doesn't have metadata field, we'll store in tags and update content
+      const existingTags = campaign.tags || [];
+      const abTestTag = `ab-test:${testType}`;
+      const updatedTags = existingTags.includes(abTestTag) 
+        ? existingTags 
+        : [...existingTags, abTestTag];
+
+      // Store variations in campaign content as JSON
+      const existingContent = campaign.content || {};
+      const abTests = (existingContent.abTests as Array<{
+        testType: string;
+        variations: string[];
+        createdAt: string;
+        status: string;
+      }>) || [];
+
+      abTests.push({
+        testType,
+        variations: testVariations,
+        createdAt: new Date().toISOString(),
+        status: 'draft',
+      });
+
+      // Update campaign with A/B test data
+      await db
+        .update(campaigns)
+        .set({
+          content: {
+            ...existingContent,
+            abTests,
+          },
+          tags: updatedTags,
+          updatedAt: new Date(),
+        })
+        .where(eq(campaigns.id, campaignId));
+
+      logger.info('AI optimize_campaign', {
+        campaignId,
+        testType,
+        variationsCount: testVariations.length,
+        workspaceId: context.workspaceId,
+      });
+
       return {
         success: true,
-        message: `Generated ${testVariations.length} ${testType} variations for A/B testing. Ready to test.`,
+        message: `Generated ${testVariations.length} ${testType} variations for A/B testing. Variations saved to campaign.`,
         data: {
           campaignId: campaign.id,
           testType,
           variations: testVariations,
           recommendation: 'Test all variations with equal distribution, then scale the winner.',
+          savedToCampaign: true,
         },
       };
     } catch (error) {
@@ -5383,31 +5978,104 @@ Looking forward to your response!`;
       const criteria = args.criteria as Record<string, unknown>;
       const segmentName = args.segmentName as string;
 
+      // Import segments schema
+      const { segments } = await import('@/db/schema');
+
       // Query leads matching criteria
       const whereConditions = [eq(prospects.workspaceId, context.workspaceId)];
-      
+
       if (criteria.behavior === 'high_engagement') {
-        // This would need more complex logic in production
-        whereConditions.push(sql`${prospects.estimatedValue} > 1000`);
+        // High engagement = high estimated value or in advanced stages
+        whereConditions.push(
+          or(
+            sql`${prospects.estimatedValue} > 10000`, // $100+ deals
+            sql`${prospects.stage} IN ('qualified', 'proposal', 'negotiation')`
+          )!
+        );
       }
       if (criteria.industry) {
         whereConditions.push(like(prospects.company, `%${criteria.industry as string}%`));
       }
+      if (criteria.stage) {
+        whereConditions.push(eq(prospects.stage, criteria.stage as string));
+      }
+      if (criteria.minValue) {
+        whereConditions.push(sql`${prospects.estimatedValue} >= ${(criteria.minValue as number) * 100}`);
+      }
 
       const matchingLeads = await db.query.prospects.findMany({
         where: and(...whereConditions),
-        limit: 100,
+        limit: 1000, // Reasonable limit
       });
 
-      // Create segment (would use segments table in production)
+      // Also check contacts if needed
+      const { contacts } = await import('@/db/schema');
+      let matchingContacts: typeof contacts.$inferSelect[] = [];
+      
+      if (criteria.industry || criteria.behavior === 'high_engagement') {
+        const contactConditions = [eq(contacts.workspaceId, context.workspaceId)];
+        if (criteria.industry) {
+          contactConditions.push(like(contacts.company, `%${criteria.industry as string}%`));
+        }
+        matchingContacts = await db.query.contacts.findMany({
+          where: and(...contactConditions),
+          limit: 500,
+        });
+      }
+
+      // Get internal user ID from clerk user ID
+      const { users } = await import('@/db/schema');
+      const userRecord = await db.query.users.findFirst({
+        where: eq(users.clerkUserId, context.userId),
+      });
+
+      if (!userRecord) {
+        return {
+          success: false,
+          message: 'User not found. Cannot create segment.',
+        };
+      }
+
+      // Create segment in database
+      const [newSegment] = await db
+        .insert(segments)
+        .values({
+          workspaceId: context.workspaceId,
+          name: segmentName,
+          description: `Segment created by Neptune: ${JSON.stringify(criteria)}`,
+          criteria: {
+            rules: Object.entries(criteria).map(([field, value]) => ({
+              field,
+              operator: 'equals',
+              value,
+            })),
+            logic: 'and',
+          },
+          memberCount: matchingLeads.length + matchingContacts.length,
+          createdBy: userRecord.id,
+        })
+        .returning();
+
+      logger.info('AI segment_audience', {
+        segmentId: newSegment.id,
+        segmentName,
+        leadCount: matchingLeads.length,
+        contactCount: matchingContacts.length,
+        workspaceId: context.workspaceId,
+      });
+
       return {
         success: true,
-        message: `Created segment "${segmentName}" with ${matchingLeads.length} matching leads.`,
+        message: `Created segment "${segmentName}" with ${matchingLeads.length + matchingContacts.length} matching members (${matchingLeads.length} leads, ${matchingContacts.length} contacts).`,
         data: {
+          segmentId: newSegment.id,
           segmentName,
           criteria,
           leadCount: matchingLeads.length,
-          leadIds: matchingLeads.map(l => l.id),
+          contactCount: matchingContacts.length,
+          totalMembers: matchingLeads.length + matchingContacts.length,
+          leadIds: matchingLeads.slice(0, 50).map(l => l.id), // Limit for response size
+          contactIds: matchingContacts.slice(0, 50).map(c => c.id),
         },
       };
     } catch (error) {
@@ -5463,26 +6131,104 @@ Looking forward to your response!`;
       const competitorName = args.competitorName as string;
       const focusAreas = (args.focusAreas as string[]) || ['pricing', 'features', 'marketing'];
 
-      // In production, this would use web scraping or API calls
-      // For now, return structured analysis template
-      const analysis = {
-        competitor: competitorName,
-        focusAreas,
-        findings: {
-          pricing: 'Research pricing model and tiers',
-          features: 'Analyze feature set and positioning',
-          marketing: 'Review marketing messaging and channels',
-        },
-        summary: `Analysis of ${competitorName} focusing on ${focusAreas.join(', ')}. Research complete.`,
+      // Try to find competitor website
+      let competitorUrl = competitorName;
+      
+      // If it's not a URL, try to construct one
+      if (!competitorUrl.includes('http') && !competitorUrl.includes('.com') && !competitorUrl.includes('.ai') && !competitorUrl.includes('.io')) {
+        // Try common domain patterns
+        const cleanName = competitorName.toLowerCase().replace(/\s+/g, '');
+        competitorUrl = `https://${cleanName}.com`;
+      } else if (!competitorUrl.startsWith('http')) {
+        competitorUrl = 'https://' + competitorUrl;
+      }
+
+      // Use website analyzer to get real data
+      const { analyzeWebsiteQuick } = await import('@/lib/ai/website-analyzer');
+      const websiteAnalysis = await analyzeWebsiteQuick(competitorUrl);
+
+      // Use GPT-4o to analyze competitor based on website data and focus areas
+      const { getOpenAI } = await import('@/lib/ai-providers');
+      const openai = getOpenAI();
+
+      const analysisPrompt = `Analyze ${competitorName} as a competitor. Focus on: ${focusAreas.join(', ')}.
+${websiteAnalysis ? `Website data:\nCompany: ${websiteAnalysis.companyName}\nDescription: ${websiteAnalysis.description}\nOfferings: ${websiteAnalysis.keyOfferings.join(', ')}\nTarget Audience: ${websiteAnalysis.targetAudience}` : 'Limited website data available.'}
+
+Provide analysis in JSON format:
+{
+  "pricing": "pricing model and tiers",
+  "features": "key features and positioning",
+  "marketing": "marketing messaging and channels",
+  "positioning": "market positioning",
+  "strengths": ["strength1", "strength2"],
+  "weaknesses": ["weakness1", "weakness2"],
+  "recommendations": ["recommendation1", "recommendation2"]
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a competitive intelligence analyst. Analyze competitors and provide structured insights.',
+          },
+          {
+            role: 'user',
+            content: analysisPrompt,
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 1000,
+        response_format: { type: 'json_object' },
+      });
+
+      const analysisText = response.choices[0]?.message?.content;
+      let analysis: {
+        pricing: string;
+        features: string;
+        marketing: string;
+        positioning: string;
+        strengths: string[];
+        weaknesses: string[];
+        recommendations: string[];
       };
+
+      if (analysisText) {
+        try {
+          analysis = JSON.parse(analysisText);
+        } catch {
+          // Fallback if JSON parsing fails
+          analysis = {
+            pricing: 'Pricing information to be researched',
+            features: 'Feature set to be analyzed',
+            marketing: 'Marketing strategy to be reviewed',
+            positioning: 'Market positioning to be determined',
+            strengths: [],
+            weaknesses: [],
+            recommendations: [],
+          };
+        }
+      } else {
+        analysis = {
+          pricing: 'Pricing information to be researched',
+          features: 'Feature set to be analyzed',
+          marketing: 'Marketing strategy to be reviewed',
+          positioning: 'Market positioning to be determined',
+          strengths: [],
+          weaknesses: [],
+          recommendations: [],
+        };
+      }
 
       return {
         success: true,
-        message: `Completed competitor analysis for ${competitorName}. Findings ready for review.`,
+        message: `Completed competitor analysis for ${competitorName}. Analyzed ${focusAreas.join(', ')}.`,
         data: {
           competitor: competitorName,
+          competitorUrl: websiteAnalysis ? websiteAnalysis.websiteUrl : competitorUrl,
           analysis,
           focusAreas,
+          websiteAnalyzed: !!websiteAnalysis,
         },
       };
     } catch (error) {
@@ -5528,13 +6274,40 @@ Looking forward to your response!`;
         }
       });
 
+      // Actually update task priorities/order in database
+      // We'll use a priorityOrder field or update due dates to reflect urgency
+      for (let i = 0; i < prioritized.length; i++) {
+        const task = prioritized[i];
+        // Update priority based on position (higher position = higher priority)
+        let newPriority: 'low' | 'medium' | 'high' = 'medium';
+        if (i < prioritized.length * 0.2) {
+          newPriority = 'high';
+        } else if (i > prioritized.length * 0.8) {
+          newPriority = 'low';
+        }
+
+        // Only update if priority actually changed
+        if (task.priority !== newPriority) {
+          await db
+            .update(tasks)
+            .set({
+              priority: newPriority,
+              updatedAt: new Date(),
+            })
+            .where(eq(tasks.id, task.id));
+        }
+      }
+
       return {
         success: true,
-        message: `Prioritized ${prioritized.length} tasks using ${priorityMethod} method.`,
+        message: `Prioritized ${prioritized.length} tasks using ${priorityMethod} method. Task priorities updated in database.`,
         data: {
           prioritizedTaskIds: prioritized.map(t => t.id),
           method: priorityMethod,
           taskCount: prioritized.length,
+          highPriorityCount: prioritized.slice(0, Math.ceil(prioritized.length * 0.2)).length,
+          mediumPriorityCount: prioritized.slice(Math.ceil(prioritized.length * 0.2), Math.floor(prioritized.length * 0.8)).length,
+          lowPriorityCount: prioritized.slice(Math.floor(prioritized.length * 0.8)).length,
         },
       };
     } catch (error) {
@@ -5573,12 +6346,34 @@ Looking forward to your response!`;
           taskIds: tasks.map(t => t.id),
         }));
 
+      // Actually tag/group tasks in database using tags field
+      for (const batch of batchSummary) {
+        // Add batch tag to tasks
+        for (const taskId of batch.taskIds) {
+          const task = allTasks.find(t => t.id === taskId);
+          if (task) {
+            const existingTags = task.tags || [];
+            const batchTag = `batch:${batch.category}`;
+            if (!existingTags.includes(batchTag)) {
+              await db
+                .update(tasks)
+                .set({
+                  tags: [...existingTags, batchTag],
+                  updatedAt: new Date(),
+                })
+                .where(eq(tasks.id, taskId));
+            }
+          }
+        }
+      }
+
       return {
         success: true,
-        message: `Identified ${batchSummary.length} batches of similar tasks for efficient execution.`,
+        message: `Identified ${batchSummary.length} batches of similar tasks. Tasks have been tagged for batch execution.`,
         data: {
           batches: batchSummary,
           totalBatchedTasks: batchSummary.reduce((sum, b) => sum + b.taskCount, 0),
+          tasksTagged: true,
         },
       };
     } catch (error) {
@@ -5610,16 +6405,74 @@ Looking forward to your response!`;
         };
       }
 
-      // In production, this would integrate with room booking system
-      // For now, create a note/task about room booking
+      // Get user record for task creation
+      const { users } = await import('@/db/schema');
+      const userRecord = await db.query.users.findFirst({
+        where: eq(users.clerkUserId, context.userId),
+      });
+
+      if (!userRecord) {
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      // Create a task for room booking (since we don't have direct Google Calendar room booking API)
+      const requirementsText = roomRequirements.length > 0 
+        ? `Requirements: ${roomRequirements.join(', ')}`
+        : 'Standard room';
+      
+      const [roomBookingTask] = await db
+        .insert(tasks)
+        .values({
+          workspaceId: context.workspaceId,
+          title: `Book meeting room for: ${event.title}`,
+          description: `Room booking needed for event "${event.title}" on ${event.startTime?.toLocaleDateString()} at ${event.startTime?.toLocaleTimeString()}. ${requirementsText}.`,
+          status: 'todo',
+          priority: 'high',
+          dueDate: event.startTime ? new Date(event.startTime.getTime() - 24 * 60 * 60 * 1000) : null, // Due 1 day before event
+          assignedTo: userRecord.id,
+          createdBy: userRecord.id,
+          tags: ['room-booking', `event:${eventId}`],
+        })
+        .returning();
+
+      // Try to update event with room requirements in location field if Google Calendar is connected
+      const { isGoogleCalendarConnected } = await import('@/lib/calendar/google');
+      if (await isGoogleCalendarConnected(context.workspaceId)) {
+        // Note: Would need Google Calendar API to update event with room resource
+        // For now, update local event location
+        if (roomRequirements.length > 0) {
+          await db
+            .update(calendarEvents)
+            .set({
+              location: event.location 
+                ? `${event.location} | Room requirements: ${roomRequirements.join(', ')}`
+                : `Room requirements: ${roomRequirements.join(', ')}`,
+              updatedAt: new Date(),
+            })
+            .where(eq(calendarEvents.id, eventId));
+        }
+      }
+
+      logger.info('AI book_meeting_rooms', {
+        eventId,
+        taskId: roomBookingTask.id,
+        roomRequirements,
+        workspaceId: context.workspaceId,
+      });
+
       return {
         success: true,
-        message: `Room booking request created for event. Requirements: ${roomRequirements.join(', ') || 'standard room'}.`,
+        message: `Created room booking task for event "${event.title}". ${roomRequirements.length > 0 ? `Requirements: ${roomRequirements.join(', ')}.` : 'Standard room requested.'}`,
         data: {
           eventId: event.id,
+          eventTitle: event.title,
           roomRequirements,
-          bookingStatus: 'requested',
-          note: `Room booking needed for ${event.title} on ${event.startTime?.toLocaleDateString()}`,
+          bookingStatus: 'task_created',
+          taskId: roomBookingTask.id,
+          dueDate: roomBookingTask.dueDate,
         },
       };
     } catch (error) {
@@ -5703,31 +6556,94 @@ Looking forward to your response!`;
   async flag_anomalies(args, context): Promise<ToolResult> {
     try {
       const period = args.period as string;
-      const threshold = (args.threshold as number) || undefined;
+      const threshold = (args.threshold as number) || 2.0; // Default: 2x standard deviation
 
       // Calculate date range
       const now = new Date();
       const periodDays = period === 'week' ? 7 : period === 'month' ? 30 : 90;
       const startDate = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
 
-      // In production, would analyze actual financial data
-      const anomalies = [
-        {
-          type: 'unusual_expense',
-          description: 'Expense 2x higher than average',
-          amount: 5000,
-          date: new Date().toISOString(),
-        },
-      ];
+      // Import expenses schema
+      const { expenses } = await import('@/db/schema');
+      const { gte, lte } = await import('drizzle-orm');
+
+      // Get all expenses in the period
+      const allExpenses = await db.query.expenses.findMany({
+        where: and(
+          eq(expenses.workspaceId, context.workspaceId),
+          gte(expenses.expenseDate, startDate),
+          lte(expenses.expenseDate, now)
+        ),
+        orderBy: [desc(expenses.expenseDate)],
+      });
+
+      if (allExpenses.length === 0) {
+        return {
+          success: true,
+          message: `No expenses found in the last ${period}. No anomalies to detect.`,
+          data: {
+            period,
+            anomalies: [],
+            threshold,
+            analysisDate: now.toISOString(),
+            totalExpenses: 0,
+          },
+        };
+      }
+
+      // Calculate statistics
+      const amounts = allExpenses.map(e => e.amount / 100); // Convert from cents
+      const mean = amounts.reduce((sum, amt) => sum + amt, 0) / amounts.length;
+      const variance = amounts.reduce((sum, amt) => sum + Math.pow(amt - mean, 2), 0) / amounts.length;
+      const stdDev = Math.sqrt(variance);
+      const thresholdAmount = mean + (threshold * stdDev);
+
+      // Find anomalies (expenses significantly above average)
+      const anomalies = allExpenses
+        .filter(exp => (exp.amount / 100) >= thresholdAmount)
+        .map(exp => ({
+          type: 'unusual_expense' as const,
+          description: `${exp.description} - ${((exp.amount / 100) / mean).toFixed(1)}x higher than average`,
+          amount: exp.amount / 100,
+          date: exp.expenseDate.toISOString(),
+          expenseId: exp.id,
+          category: exp.category,
+          vendor: exp.vendor || 'Unknown',
+        }))
+        .slice(0, 10); // Limit to top 10
+
+      // Also check for unusual patterns (e.g., many small expenses from same vendor)
+      const vendorCounts = new Map<string, number>();
+      allExpenses.forEach(exp => {
+        const vendor = exp.vendor || 'Unknown';
+        vendorCounts.set(vendor, (vendorCounts.get(vendor) || 0) + 1);
+      });
+
+      const avgVendorFrequency = allExpenses.length / vendorCounts.size;
+      const frequentVendorAnomalies = Array.from(vendorCounts.entries())
+        .filter(([_, count]) => count > avgVendorFrequency * 3)
+        .map(([vendor, count]) => ({
+          type: 'frequent_vendor' as const,
+          description: `Unusually frequent expenses from ${vendor} (${count} transactions)`,
+          vendor,
+          transactionCount: count,
+          averageFrequency: avgVendorFrequency.toFixed(1),
+        }))
+        .slice(0, 5);
+
+      const allAnomalies = [...anomalies, ...frequentVendorAnomalies];
 
       return {
         success: true,
-        message: `Analyzed ${period} period. Found ${anomalies.length} financial anomaly${anomalies.length !== 1 ? 'ies' : ''} requiring attention.`,
+        message: `Analyzed ${period} period (${allExpenses.length} expenses). Found ${allAnomalies.length} financial anomaly${allAnomalies.length !== 1 ? 'ies' : ''} requiring attention.`,
         data: {
           period,
-          anomalies,
+          anomalies: allAnomalies,
           threshold,
           analysisDate: now.toISOString(),
+          totalExpenses: allExpenses.length,
+          averageExpense: mean,
+          standardDeviation: stdDev,
         },
       };
     } catch (error) {
@@ -5744,43 +6660,139 @@ Looking forward to your response!`;
       const includeScenarios = (args.includeScenarios as boolean) ?? true;
       const assumptions = (args.assumptions as Record<string, unknown>) || {};
 
-      // Generate cash flow projections
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+      // Import finance services
+      const { QuickBooksService, StripeService, ShopifyService } = await import('@/lib/finance');
+      const { integrations } = await import('@/db/schema');
+      const { inArray } = await import('drizzle-orm');
+
+      // Get connected finance providers
+      const financeProviders = ['quickbooks', 'stripe', 'shopify'] as const;
+      const financeIntegrations = await db.query.integrations.findMany({
+        where: and(
+          eq(integrations.workspaceId, context.workspaceId),
+          inArray(integrations.provider, financeProviders),
+          eq(integrations.status, 'active')
+        ),
+      });
+
+      const connectedProviders = financeIntegrations.map(i => i.provider);
+
+      // Get historical revenue data (last 90 days)
+      let historicalRevenue = 0;
+      let historicalExpenses = 0;
+
+      if (connectedProviders.length > 0) {
+        const qbService = new QuickBooksService(context.workspaceId);
+        const stripeService = new StripeService(context.workspaceId);
+        const shopifyService = new ShopifyService(context.workspaceId);
+
+        // Try to get data from each provider
+        const [qbInit, stripeInit, shopifyInit] = await Promise.all([
+          qbService.initialize().catch(() => ({ success: false })),
+          stripeService.initialize().catch(() => ({ success: false })),
+          shopifyService.initialize().catch(() => ({ success: false })),
+        ]);
+
+        if (qbInit.success && connectedProviders.includes('quickbooks')) {
+          try {
+            const qbFinancials = await qbService.getFinancials(ninetyDaysAgo, now);
+            historicalRevenue += qbFinancials.revenue;
+            historicalExpenses += qbFinancials.expenses;
+          } catch (error) {
+            logger.warn('QuickBooks data fetch failed for cash flow projection', { error });
+          }
+        }
+
+        if (stripeInit.success && connectedProviders.includes('stripe')) {
+          try {
+            const stripeData = await stripeService.getRevenueData(ninetyDaysAgo, now);
+            historicalRevenue += stripeData.charges - stripeData.fees - stripeData.refunds;
+            historicalExpenses += stripeData.fees;
+          } catch (error) {
+            logger.warn('Stripe data fetch failed for cash flow projection', { error });
+          }
+        }
+
+        if (shopifyInit.success && connectedProviders.includes('shopify')) {
+          try {
+            const shopifyData = await shopifyService.getRevenueData(ninetyDaysAgo, now);
+            historicalRevenue += shopifyData.total;
+          } catch (error) {
+            logger.warn('Shopify data fetch failed for cash flow projection', { error });
+          }
+        }
+      }
+
+      // Also get pending invoices (expected revenue)
+      const { invoices } = await import('@/db/schema');
+      const { gte } = await import('drizzle-orm');
+      
+      const pendingInvoices = await db.query.invoices.findMany({
+        where: and(
+          eq(invoices.workspaceId, context.workspaceId),
+          eq(invoices.status, 'unpaid'),
+          gte(invoices.dueDate, now)
+        ),
+      });
+
+      const expectedRevenue = pendingInvoices.reduce((sum, inv) => sum + (inv.total - inv.amountPaid), 0) / 100;
+
+      // Calculate daily averages
+      const daysInPeriod = 90;
+      const dailyRevenue = historicalRevenue / daysInPeriod;
+      const dailyExpenses = historicalExpenses / daysInPeriod;
+      const dailyNet = dailyRevenue - dailyExpenses;
+
+      // Project cash flow
       const projections = {
         '30_day': {
-          projected: 50000,
-          confidence: 'high',
+          projected: Math.round(dailyNet * 30 + expectedRevenue * 0.3), // 30% of expected revenue in 30 days
+          confidence: historicalRevenue > 0 ? 'high' : 'low',
         },
         '60_day': {
-          projected: 75000,
-          confidence: 'medium',
+          projected: Math.round(dailyNet * 60 + expectedRevenue * 0.6),
+          confidence: historicalRevenue > 0 ? 'medium' : 'low',
         },
         '90_day': {
-          projected: 100000,
-          confidence: 'medium',
+          projected: Math.round(dailyNet * 90 + expectedRevenue),
+          confidence: historicalRevenue > 0 ? 'medium' : 'low',
         },
       };
 
+      // Generate scenarios if requested
       const scenarios = includeScenarios ? {
         bestCase: {
-          '30_day': 60000,
-          '60_day': 90000,
-          '90_day': 120000,
+          '30_day': Math.round(projections['30_day'].projected * 1.2),
+          '60_day': Math.round(projections['60_day'].projected * 1.2),
+          '90_day': Math.round(projections['90_day'].projected * 1.2),
         },
         worstCase: {
-          '30_day': 40000,
-          '60_day': 60000,
-          '90_day': 80000,
+          '30_day': Math.round(projections['30_day'].projected * 0.8),
+          '60_day': Math.round(projections['60_day'].projected * 0.8),
+          '90_day': Math.round(projections['90_day'].projected * 0.8),
         },
       } : undefined;
 
       return {
         success: true,
-        message: `Generated ${includeScenarios ? 'scenario-based ' : ''}cash flow projections for 30/60/90 days.`,
+        message: `Generated ${includeScenarios ? 'scenario-based ' : ''}cash flow projections for 30/60/90 days based on ${daysInPeriod}-day historical data.`,
         data: {
           projections,
           scenarios,
           assumptions,
           generatedAt: new Date().toISOString(),
+          historicalData: {
+            revenue: historicalRevenue,
+            expenses: historicalExpenses,
+            net: historicalRevenue - historicalExpenses,
+            periodDays: daysInPeriod,
+          },
+          expectedRevenue,
         },
       };
     } catch (error) {
@@ -5797,18 +6809,128 @@ Looking forward to your response!`;
       const invoiceIds = (args.invoiceIds as string[]) || [];
       const autoSend = (args.autoSend as boolean) ?? false;
 
-      // In production, would query actual invoices table
-      const reminders = invoiceIds.length > 0 
-        ? invoiceIds.map(id => ({ invoiceId: id, status: autoSend ? 'sent' : 'draft' }))
-        : [{ invoiceId: 'sample', status: autoSend ? 'sent' : 'draft' }];
+      // Import schemas
+      const { invoices, customers } = await import('@/db/schema');
+      const { lt } = await import('drizzle-orm');
+      const { sendEmail, getNotificationTemplate } = await import('@/lib/email');
+
+      const now = new Date();
+
+      // Get overdue invoices
+      let overdueInvoices;
+      if (invoiceIds.length > 0) {
+        // Get specific invoices
+        overdueInvoices = await db.query.invoices.findMany({
+          where: and(
+            eq(invoices.workspaceId, context.workspaceId),
+            eq(invoices.status, 'unpaid'),
+            lt(invoices.dueDate, now),
+            or(...invoiceIds.map(id => eq(invoices.id, id)))
+          ),
+          with: {
+            customer: {
+              columns: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+        });
+      } else {
+        // Get all overdue invoices
+        overdueInvoices = await db.query.invoices.findMany({
+          where: and(
+            eq(invoices.workspaceId, context.workspaceId),
+            eq(invoices.status, 'unpaid'),
+            lt(invoices.dueDate, now)
+          ),
+          with: {
+            customer: {
+              columns: {
+                name: true,
+                email: true,
+              },
+            },
+          },
+          limit: 20, // Limit to 20 to avoid sending too many
+        });
+      }
+
+      if (overdueInvoices.length === 0) {
+        return {
+          success: true,
+          message: 'No overdue invoices found.',
+          data: {
+            reminders: [],
+            autoSend,
+            count: 0,
+          },
+        };
+      }
+
+      const reminders: Array<{ invoiceId: string; status: string; emailSent?: boolean; error?: string }> = [];
+
+      // Send reminders
+      for (const invoice of overdueInvoices) {
+        const customer = invoice.customer;
+        if (!customer?.email) {
+          reminders.push({
+            invoiceId: invoice.id,
+            status: 'skipped',
+            error: 'Customer email not found',
+          });
+          continue;
+        }
+
+        const amountDue = (invoice.total - invoice.amountPaid) / 100;
+        const daysOverdue = Math.floor((now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (autoSend) {
+          // Send email immediately
+          const emailTemplate = getNotificationTemplate(
+            customer.name || 'Valued Customer',
+            `Payment Reminder: Invoice ${invoice.invoiceNumber}`,
+            `This is a friendly reminder that invoice ${invoice.invoiceNumber} for $${amountDue.toFixed(2)} is ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''} overdue. Please remit payment at your earliest convenience.`,
+            'View Invoice',
+            `${process.env.NEXT_PUBLIC_APP_URL || 'https://galaxyco.ai'}/finance/invoices/${invoice.id}`
+          );
+
+          const emailResult = await sendEmail({
+            to: customer.email,
+            subject: emailTemplate.subject,
+            html: emailTemplate.html,
+            text: emailTemplate.text,
+          });
+
+          reminders.push({
+            invoiceId: invoice.id,
+            status: emailResult.success ? 'sent' : 'failed',
+            emailSent: emailResult.success,
+            error: emailResult.error,
+          });
+        } else {
+          // Create draft (just log it)
+          reminders.push({
+            invoiceId: invoice.id,
+            status: 'draft',
+          });
+        }
+      }
+
+      const sentCount = reminders.filter(r => r.status === 'sent').length;
+      const failedCount = reminders.filter(r => r.status === 'failed').length;
 
       return {
         success: true,
-        message: `${autoSend ? 'Sent' : 'Created draft'} payment reminder${reminders.length !== 1 ? 's' : ''} for ${reminders.length} overdue invoice${reminders.length !== 1 ? 's' : ''}.`,
+        message: autoSend
+          ? `Sent ${sentCount} payment reminder${sentCount !== 1 ? 's' : ''}${failedCount > 0 ? ` (${failedCount} failed)` : ''} for overdue invoices.`
+          : `Created ${reminders.length} draft payment reminder${reminders.length !== 1 ? 's' : ''} for overdue invoices.`,
         data: {
           reminders,
           autoSend,
           count: reminders.length,
+          sent: sentCount,
+          failed: failedCount,
         },
       };
     } catch (error) {
@@ -5822,6 +6944,44 @@ Looking forward to your response!`;
   },
   // Website Analysis Tool - Now synchronous with immediate results!
   async analyze_company_website(args, context): Promise<ToolResult> {
+    // Helper function to infer company info from URL when crawling fails
+    const inferCompanyFromUrl = (websiteUrl: string) => {
+      let domain = '';
+      try {
+        domain = new URL(websiteUrl).hostname.replace('www.', '').replace('.com', '').replace('.ai', '').replace('.io', '');
+      } catch {
+        domain = websiteUrl;
+      }
+      
+      // Clean up domain to get company name
+      const companyName = domain
+        .split('.')[0]
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      // Infer type from domain TLD and keywords
+      const urlLower = websiteUrl.toLowerCase();
+      let inferredType = 'technology';
+      if (urlLower.includes('.ai') || urlLower.includes('ai')) inferredType = 'AI/technology';
+      else if (urlLower.includes('shop') || urlLower.includes('store')) inferredType = 'e-commerce';
+      else if (urlLower.includes('agency') || urlLower.includes('studio')) inferredType = 'agency/services';
+      else if (urlLower.includes('consulting') || urlLower.includes('consult')) inferredType = 'consulting';
+      
+      return {
+        companyName,
+        inferredType,
+        description: `${companyName} appears to be a ${inferredType} company.`,
+        keyOfferings: ['Products/services to be discovered', 'Core business offerings'],
+        targetAudience: 'Target audience to be confirmed with user',
+        suggestedActions: [
+          'Tell me more about what you do so I can personalize your setup',
+          'Share your main product or service offerings',
+          'Describe your ideal customer'
+        ],
+      };
+    };
+
     try {
       const url = args.url as string;
       const detailed = args.detailed as boolean || false;
@@ -5891,12 +7051,27 @@ Looking forward to your response!`;
         const insights = await analyzeWebsiteQuick(normalizedUrl, { maxPages: 5 });
 
         if (!insights) {
+          // Extract domain name for friendlier message
+          let domainName = normalizedUrl;
+          try {
+            domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+          } catch {}
+          
+          // Smart fallback: Infer what we can from the domain/URL
+          const inferredData = inferCompanyFromUrl(normalizedUrl);
+          
           return {
-            success: false,
-            message: `I couldn't access ${normalizedUrl}. The site might be blocking automated requests, require login, or have technical issues. No worries though - tell me about your business and I can still help you!`,
-            error: 'Website analysis failed',
+            success: true, // Mark as success so Neptune uses the inferred data
+            message: `I can see you're from ${inferredData.companyName}. I couldn't fully crawl the site, but based on the URL I can see this is likely a ${inferredData.inferredType} business.`,
             data: {
-              suggestion: 'Tell me: What does your business do? Who are your customers? What are you trying to achieve?',
+              companyName: inferredData.companyName,
+              description: inferredData.description,
+              keyOfferings: inferredData.keyOfferings,
+              targetAudience: inferredData.targetAudience,
+              suggestedActions: inferredData.suggestedActions,
+              websiteUrl: normalizedUrl,
+              analysisType: 'inferred',
+              needsMoreInfo: true,
             },
           };
         }
@@ -5926,10 +7101,29 @@ Looking forward to your response!`;
       }
     } catch (error) {
       logger.error('AI analyze_company_website failed', error);
+      
+      // Smart fallback: even on error, infer what we can from the URL
+      const url = args.url as string;
+      let normalizedUrl = url?.trim() || '';
+      if (normalizedUrl && !normalizedUrl.startsWith('http')) {
+        normalizedUrl = 'https://' + normalizedUrl;
+      }
+      
+      const inferredData = inferCompanyFromUrl(normalizedUrl);
+      
       return {
-        success: false,
-        message: 'I ran into an issue analyzing that website. Can you tell me about your business instead? What do you do and who are your customers?',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        success: true, // Mark success so Neptune uses the data
+        message: `I can see you're from ${inferredData.companyName}. I had trouble fully analyzing the site, but I can work with what I know. Tell me a bit more about what you do and I'll build you a personalized roadmap.`,
+        data: {
+          companyName: inferredData.companyName,
+          description: inferredData.description,
+          keyOfferings: inferredData.keyOfferings,
+          targetAudience: inferredData.targetAudience,
+          suggestedActions: inferredData.suggestedActions,
+          websiteUrl: normalizedUrl,
+          analysisType: 'inferred',
+          needsMoreInfo: true,
+        },
       };
     }
   },

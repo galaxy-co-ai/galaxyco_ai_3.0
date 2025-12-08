@@ -199,42 +199,173 @@ Be thorough but accurate. Only include information you can confidently extract f
 // ============================================================================
 
 /**
+ * Retry helper with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T | null> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries - 1) {
+        logger.warn(`Retry failed after ${maxRetries} attempts`, { error });
+        return null;
+      }
+      const delay = initialDelay * Math.pow(2, attempt);
+      logger.debug(`Retry attempt ${attempt + 1} after ${delay}ms`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  return null;
+}
+
+/**
  * Quick website analysis for immediate Neptune responses.
- * Uses lightweight crawler and GPT-4o for fast, actionable insights.
+ * Uses multiple methods with short timeouts to ensure fast response.
+ * Includes retry logic with exponential backoff for reliability.
  */
 export async function analyzeWebsiteQuick(
   websiteUrl: string,
   options?: { maxPages?: number }
 ): Promise<QuickWebsiteInsights | null> {
-  const maxPages = options?.maxPages || 5;
+  logger.info('Starting quick website analysis', { url: websiteUrl });
   
-  logger.info('Starting quick website analysis', { url: websiteUrl, maxPages });
+  // Normalize URL
+  let normalizedUrl = websiteUrl.trim();
+  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+    normalizedUrl = 'https://' + normalizedUrl;
+  }
   
-  try {
-    // Use lightweight crawler
-    const { pages, mainPage } = await crawlWebsiteLite(websiteUrl, {
-      maxPages,
-      maxDepth: 1,
-      useJinaReader: true, // Enable Jina fallback for JS sites
-    });
+  let contentSummary = '';
+  let methodUsed = '';
+  
+  // Try Jina Reader FIRST - it handles auth-protected and JS-heavy sites best
+  // With retry logic
+  const jinaResult = await retryWithBackoff(async () => {
+    logger.info('Trying Jina Reader', { url: normalizedUrl });
+    const jinaUrl = `https://r.jina.ai/${normalizedUrl}`;
     
-    if (pages.length === 0 && !mainPage) {
-      // Try single page fetch as last resort
-      const singlePage = await fetchSinglePage(websiteUrl);
-      if (!singlePage || singlePage.content.length < 100) {
-        logger.warn('Could not fetch website content', { url: websiteUrl });
-        return null;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    
+    try {
+      const jinaResponse = await fetch(jinaUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/plain',
+          'X-No-Cache': 'true',
+        },
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (jinaResponse.ok) {
+        const jinaContent = await jinaResponse.text();
+        if (jinaContent && jinaContent.length > 200) {
+          return { content: jinaContent.slice(0, 6000), method: 'jina' };
+        }
       }
-      pages.push(singlePage);
+      throw new Error(`Jina returned status ${jinaResponse.status}`);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
     }
+  }, 2, 1000); // 2 retries with 1s initial delay
+  
+  if (jinaResult) {
+    contentSummary = jinaResult.content;
+    methodUsed = jinaResult.method;
+    logger.info('Got content from Jina Reader', { url: normalizedUrl, length: contentSummary.length });
+  }
+  
+  // Fallback to direct fetch if Jina failed
+  if (!contentSummary || contentSummary.length < 200) {
+    const fetchResult = await retryWithBackoff(async () => {
+      logger.info('Trying direct fetch as fallback', { url: normalizedUrl });
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      
+      try {
+        const response = await fetch(normalizedUrl, {
+          method: 'GET',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html',
+          },
+          signal: controller.signal,
+          redirect: 'follow', // Follow redirects but limit depth
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok || response.status === 200) {
+          const html = await response.text();
+          
+          // Quick extraction
+          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+          const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
+          
+          const textContent = html
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 5000);
+          
+          if (textContent.length > 100) {
+            return {
+              content: `Title: ${titleMatch?.[1] || 'Unknown'}\nDescription: ${descMatch?.[1] || ''}\n\nContent:\n${textContent}`,
+              method: 'direct_fetch'
+            };
+          }
+        }
+        throw new Error(`Direct fetch returned status ${response.status}`);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    }, 2, 500); // 2 retries with 500ms initial delay
     
-    // Prepare condensed content for quick analysis
-    const contentSummary = pages
-      .slice(0, 5)
-      .map(p => `## ${p.title}\n${p.meta.description || ''}\n${p.content.slice(0, 2000)}`)
-      .join('\n\n---\n\n');
+    if (fetchResult) {
+      contentSummary = fetchResult.content;
+      methodUsed = fetchResult.method;
+      logger.info('Got content from direct fetch', { url: normalizedUrl, length: contentSummary.length });
+    }
+  }
+  
+  // If we still have no content, try URL inference as last resort
+  if (!contentSummary || contentSummary.length < 100) {
+    logger.warn('Could not fetch website content, using URL inference', { url: websiteUrl });
     
-    // Use GPT-4o for quick analysis
+    // Extract domain name for basic inference
+    let domainName = normalizedUrl;
+    try {
+      domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+    } catch {}
+    
+    // Return partial success with inferred data
+    return {
+      companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
+      description: `Company website at ${domainName}`,
+      keyOfferings: ['Products and services'],
+      targetAudience: 'To be determined',
+      suggestedActions: [
+        'Share more details about your business',
+        'Tell me about your products or services',
+        'Describe your target customers'
+      ],
+      websiteUrl: normalizedUrl,
+    };
+  }
+  
+  // Use GPT-4o for analysis
+  try {
     const openai = getOpenAI();
     
     const response = await openai.chat.completions.create({
@@ -242,50 +373,41 @@ export async function analyzeWebsiteQuick(
       messages: [
         {
           role: 'system',
-          content: `You are analyzing a company website to provide quick, actionable insights. Be concise and practical.
-
-Output a JSON object with this structure:
+          content: `Analyze this website content and extract business information. Output JSON only:
 {
-  "companyName": "the company name",
-  "description": "one sentence about what the company does",
-  "keyOfferings": ["product/service 1", "product/service 2", "product/service 3"],
-  "targetAudience": "who they serve in one phrase",
-  "suggestedActions": ["specific action 1 to help launch/grow", "specific action 2", "specific action 3"]
-}
-
-For suggestedActions, think about what would help this business grow:
-- If they sell products: suggest marketing strategies, CRM setup, etc.
-- If they offer services: suggest lead generation, content marketing, etc.
-- Always be specific to their industry and offerings.`,
+  "companyName": "company name",
+  "description": "one sentence about what they do",
+  "keyOfferings": ["offering 1", "offering 2", "offering 3"],
+  "targetAudience": "who they serve",
+  "suggestedActions": ["action 1 to help them grow", "action 2", "action 3"]
+}`,
         },
         {
           role: 'user',
-          content: `Analyze this website and provide quick insights:\n\nURL: ${websiteUrl}\n\n${contentSummary}`,
+          content: `URL: ${websiteUrl}\n\n${contentSummary}`,
         },
       ],
       temperature: 0.3,
-      max_tokens: 500,
+      max_tokens: 400,
       response_format: { type: 'json_object' },
     });
     
     const analysisText = response.choices[0]?.message?.content;
     if (!analysisText) {
-      throw new Error('No response from AI');
+      throw new Error('No AI response');
     }
     
     const analysis = JSON.parse(analysisText) as Omit<QuickWebsiteInsights, 'websiteUrl'>;
     
-    logger.info('Quick website analysis complete', { 
-      url: websiteUrl,
+    logger.info('Website analysis complete', { 
+      url: websiteUrl, 
       companyName: analysis.companyName,
+      method: methodUsed || 'unknown'
     });
     
-    return {
-      ...analysis,
-      websiteUrl,
-    };
-  } catch (error) {
-    logger.error('Quick website analysis failed', { url: websiteUrl, error });
+    return { ...analysis, websiteUrl };
+  } catch (aiError) {
+    logger.error('AI analysis failed', { url: websiteUrl, error: aiError });
     return null;
   }
 }
