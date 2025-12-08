@@ -99,16 +99,27 @@ export function Sidebar({ className, user }: SidebarProps) {
   
   // Check if user is system admin (by metadata OR email whitelist)
   const isSystemAdmin = React.useMemo(() => {
-    if (!clerkUser) return false;
+    if (!clerkUser) {
+      console.log('[Sidebar] No clerkUser yet');
+      return false;
+    }
+    
+    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
+    const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
+    
+    console.log('[Sidebar] Admin check:', {
+      email: primaryEmail,
+      metadata,
+      metadataIsAdmin: metadata?.isSystemAdmin,
+      emailInWhitelist: primaryEmail && SYSTEM_ADMIN_EMAILS.some(e => e.toLowerCase() === primaryEmail),
+    });
     
     // Check Clerk metadata first (most secure)
-    const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
     if (metadata?.isSystemAdmin === true) {
       return true;
     }
     
     // Check email whitelist (case-insensitive)
-    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
     if (primaryEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === primaryEmail)) {
       return true;
     }
