@@ -17,10 +17,12 @@ import {
   TrendingUp,
   MessageSquare,
   Rocket,
+  MessageSquarePlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { trackClick } from "@/lib/analytics";
+import { useFeedback } from "@/contexts/feedback-context";
 import {
   Tooltip,
   TooltipContent,
@@ -55,6 +57,7 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [isManuallyControlled, setIsManuallyControlled] = React.useState(false);
+  const { openFeedback } = useFeedback();
   
   // Auto-collapse sidebar on smaller screens
   React.useEffect(() => {
@@ -189,6 +192,58 @@ export function Sidebar({ className }: SidebarProps) {
               </Link>
             );
           })}
+
+          {/* Feedback Button - at bottom of Main section */}
+          <div className="mt-2 pt-2 border-t border-sidebar-border/50">
+            {isCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full h-9 rounded-lg transition-all duration-200",
+                      "flex items-center gap-2.5",
+                      "justify-center px-0",
+                      "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                      "font-normal"
+                    )}
+                    onClick={() => {
+                      trackClick('sidebar_feedback', { section: 'main', label: 'Feedback' });
+                      openFeedback();
+                    }}
+                    aria-label="Send Feedback"
+                  >
+                    <MessageSquarePlus className="h-4 w-4 shrink-0" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  align="center"
+                  className="bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-gray-900 font-medium px-3 py-1.5 rounded-lg"
+                >
+                  Feedback
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full h-9 rounded-lg transition-all duration-200",
+                  "flex items-center gap-2.5",
+                  "justify-start px-2.5",
+                  "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                  "font-normal"
+                )}
+                onClick={() => {
+                  trackClick('sidebar_feedback', { section: 'main', label: 'Feedback' });
+                  openFeedback();
+                }}
+              >
+                <MessageSquarePlus className="h-4 w-4 shrink-0" />
+                <span className="text-xs font-normal whitespace-nowrap">Feedback</span>
+              </Button>
+            )}
+          </div>
         </nav>
       </TooltipProvider>
 
