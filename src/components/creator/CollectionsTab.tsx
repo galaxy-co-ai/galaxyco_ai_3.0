@@ -221,14 +221,16 @@ export default function CollectionsTab() {
   }
 
   // Filter items by search query (client-side for responsiveness)
-  const filteredItems = useMemo(() => {
-    if (!searchQuery) return items;
-    const query = searchQuery.toLowerCase();
-    return items.filter(item =>
-      item.title.toLowerCase().includes(query) ||
-      Object.values(item.metadata || {}).some(v => v.toLowerCase().includes(query))
-    );
-  }, [items, searchQuery]);
+  const filteredItems = !searchQuery
+    ? items
+    : items.filter(item => {
+        const query = searchQuery.toLowerCase();
+        const inTitle = item.title.toLowerCase().includes(query);
+        const inMetadata = Object.values(item.metadata || {}).some((v) =>
+          String(v).toLowerCase().includes(query)
+        );
+        return inTitle || inMetadata;
+      });
 
   // Toggle star
   const toggleStar = async (itemId: string, currentStarred: boolean) => {

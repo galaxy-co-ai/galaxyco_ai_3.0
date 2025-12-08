@@ -556,7 +556,7 @@ Show your reasoning process naturally in your response.`;
 
         // Collect streamed response
         let currentContent = '';
-        let currentToolCalls: Array<{
+        const currentToolCalls: Array<{
           id: string;
           type: 'function';
           function: { name: string; arguments: string };

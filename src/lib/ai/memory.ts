@@ -535,7 +535,7 @@ export async function getRelevantHistory(
 export async function learnBusinessContext(workspaceId: string): Promise<void> {
   try {
     // Get existing intelligence or create new
-    let intelligence = await db.query.workspaceIntelligence.findFirst({
+    const intelligence = await db.query.workspaceIntelligence.findFirst({
       where: eq(workspaceIntelligence.workspaceId, workspaceId),
     });
 

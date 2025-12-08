@@ -3,6 +3,8 @@
  * Supports Gmail, Google Calendar, Outlook, Microsoft Calendar, and Finance HQ
  */
 
+import crypto from 'crypto';
+
 export type OAuthProvider = 'google' | 'microsoft' | 'quickbooks' | 'shopify' | 'twitter';
 
 export interface OAuthConfig {
@@ -90,8 +92,6 @@ export const oauthProviders: Record<OAuthProvider, OAuthConfig> = {
  * Generate PKCE code verifier and challenge for OAuth 2.0
  */
 export function generatePKCE(): { codeVerifier: string; codeChallenge: string } {
-  const crypto = require('crypto');
-  
   // Generate code verifier (random string)
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
   
