@@ -89,74 +89,149 @@ export default function GuidedSession({
   }, [docType]);
 
   // Handle user sending a message - accepts optional override to avoid stale closure issues
-  const handleSend = useCallback(async (messageOverride?: string) => {
-    const messageToSend = messageOverride ?? input;
-    if (!messageToSend.trim() || isLoading) return;
+  const handleSend = useCallback(
+    async (messageOverride?: string) => {
+      const messageToSend = messageOverride ?? input;
+      if (!messageToSend.trim() || isLoading) return;
 
-    const userInput = messageToSend.trim();
-    setInput("");
-    setIsLoading(true);
+      const userInput = messageToSend.trim();
+      setInput("");
+      setIsLoading(true);
 
-    // Add user message
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: userInput,
-      timestamp: new Date(),
-      requirementId: currentRequirement?.id,
-    };
-    setMessages((prev) => [...prev, userMessage]);
-
-    // Save the answer
-    if (currentRequirement) {
-      setAnswers((prev) => ({
-        ...prev,
-        [currentRequirement.id]: userInput,
-      }));
-    }
-
-    // Simulate Neptune processing
-    setIsTyping(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsTyping(false);
-
-    // Move to next requirement or acknowledge
-    const nextIndex = currentRequirementIndex + 1;
-
-    if (nextIndex < docType.requirements.length) {
-      const nextRequirement = docType.requirements[nextIndex];
-      
-      // Add acknowledgment + next question
-      const ackMessage: ChatMessage = {
-        id: `ack-${Date.now()}`,
-        role: "assistant",
-        content: getAcknowledgment(currentRequirement?.label || ""),
+      // Add user message
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: userInput,
         timestamp: new Date(),
+        requirementId: currentRequirement?.id,
       };
+      setMessages((prev) => [...prev, userMessage]);
 
-      const nextQuestion: ChatMessage = {
-        id: `q-${nextIndex}`,
-        role: "assistant",
-        content: nextRequirement.question,
-        timestamp: new Date(),
-        requirementId: nextRequirement.id,
-      };
+      // Save the answer locally for the requirements checklist and document generator
+      if (currentRequirement) {
+        setAnswers((prev) => ({
+          ...prev,
+          [currentRequirement.id]: userInput,
+        }));
+      }
 
-      setMessages((prev) => [...prev, ackMessage, nextQuestion]);
-      setCurrentRequirementIndex(nextIndex);
-    } else {
-      // All questions answered
-      const completeMessage: ChatMessage = {
-        id: `complete-${Date.now()}`,
-        role: "assistant",
-        content: `Perfect! I have everything I need to create your ${docType.name.toLowerCase()}. 🎉\n\nClick "Continue" when you're ready, or feel free to update any answers by clicking on them in the checklist.`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, completeMessage]);
-    }
+      try {
+        // Call Neptune assistant for a real acknowledgment
+        setIsTyping(true);
 
-    setIsLoading(false);
-  }, [input, isLoading, currentRequirement, currentRequirementIndex, docType]);
+        const response = await fetch("/api/assistant/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: userInput,
+            context: {
+              workspace: "Creator",
+              feature: "content",
+              page: "creator-guided-session",
+              type: docType.id,
+            },
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          const errorMessage =
+            errorData?.error || `Neptune error: HTTP ${response.status}`;
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        const assistantText =
+          data.message?.content ||
+          (typeof data.message === "string" ? data.message : null) ||
+          data.content ||
+          getAcknowledgment(currentRequirement?.label || "");
+
+        const assistantMessage: ChatMessage = {
+          id: `ack-${Date.now()}`,
+          role: "assistant",
+          content: assistantText,
+          timestamp: new Date(),
+        };
+
+        // Move to next requirement or finish after the AI acknowledgment
+        const nextIndex = currentRequirementIndex + 1;
+
+        if (nextIndex < docType.requirements.length) {
+          const nextRequirement = docType.requirements[nextIndex];
+
+          const nextQuestion: ChatMessage = {
+            id: `q-${nextIndex}`,
+            role: "assistant",
+            content: nextRequirement.question,
+            timestamp: new Date(),
+            requirementId: nextRequirement.id,
+          };
+
+          setMessages((prev) => [...prev, assistantMessage, nextQuestion]);
+          setCurrentRequirementIndex(nextIndex);
+        } else {
+          const completeMessage: ChatMessage = {
+            id: `complete-${Date.now()}`,
+            role: "assistant",
+            content: `Perfect. I have everything I need to create your ${docType.name.toLowerCase()}. Click "Continue" when you're ready, or update any answers from the checklist.`,
+            timestamp: new Date(),
+          };
+
+          setMessages((prev) => [...prev, assistantMessage, completeMessage]);
+        }
+      } catch (error) {
+        logger.error("Creator GuidedSession Neptune error", error);
+        const errorMsg =
+          error instanceof Error ? error.message : "Connection issue. Please try again.";
+
+        // Fallback: use local acknowledgment so flow never blocks
+        const fallbackAck: ChatMessage = {
+          id: `ack-${Date.now()}`,
+          role: "assistant",
+          content: `${getAcknowledgment(currentRequirement?.label || "")} (${errorMsg})`,
+          timestamp: new Date(),
+        };
+
+        const nextIndex = currentRequirementIndex + 1;
+
+        if (nextIndex < docType.requirements.length) {
+          const nextRequirement = docType.requirements[nextIndex];
+          const nextQuestion: ChatMessage = {
+            id: `q-${nextIndex}`,
+            role: "assistant",
+            content: nextRequirement.question,
+            timestamp: new Date(),
+            requirementId: nextRequirement.id,
+          };
+          setMessages((prev) => [...prev, fallbackAck, nextQuestion]);
+          setCurrentRequirementIndex(nextIndex);
+        } else {
+          const completeMessage: ChatMessage = {
+            id: `complete-${Date.now()}`,
+            role: "assistant",
+            content: `I think we have what we need. Click "Continue" when you're ready. (${errorMsg})`,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, fallbackAck, completeMessage]);
+        }
+
+        toast.error(errorMsg);
+      } finally {
+        setIsTyping(false);
+        setIsLoading(false);
+      }
+    },
+    [
+      input,
+      isLoading,
+      currentRequirement,
+      currentRequirementIndex,
+      docType.id,
+      docType.name,
+    ]
+  );
 
   // Handle clicking a requirement in the checklist to update it
   const handleRequirementClick = (req: RequirementItem, index: number) => {

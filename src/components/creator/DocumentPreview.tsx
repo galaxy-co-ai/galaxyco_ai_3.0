@@ -302,33 +302,59 @@ export default function DocumentPreview({
     setAiEditPrompt("");
   };
 
-  // Apply AI edit
+  // Apply AI edit using real AI endpoint
   const handleApplyAiEdit = async (sectionId: string) => {
     if (!aiEditPrompt.trim() || !document) return;
 
+    const section = document.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+
     setIsApplyingAiEdit(true);
 
-    // Simulate AI edit
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const response = await fetch('/api/creator/ai-edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          docTypeId: docType.id,
+          docTypeName: docType.name,
+          sectionType: section.type,
+          sectionContent: section.content,
+          instruction: aiEditPrompt,
+          answers,
+        }),
+      });
 
-    // Mock AI edit result
-    const section = document.sections.find((s) => s.id === sectionId);
-    if (section) {
-      const aiEditedContent = applyMockAiEdit(section.content, aiEditPrompt);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || 'AI edit failed');
+      }
+
+      const data = await response.json();
+      const aiEditedContent =
+        typeof data.content === 'string' && data.content.trim().length > 0
+          ? data.content
+          : section.content;
+
       setDocument({
         ...document,
         sections: document.sections.map((s) =>
           s.id === sectionId ? { ...s, content: aiEditedContent } : s
         ),
       });
+
       toast.success("AI edit applied", {
         description: "Neptune updated this section",
       });
+    } catch (error) {
+      toast.error("AI edit failed", {
+        description: error instanceof Error ? error.message : 'Please try again',
+      });
+    } finally {
+      setIsApplyingAiEdit(false);
+      setShowAiEdit(null);
+      setAiEditPrompt("");
     }
-
-    setIsApplyingAiEdit(false);
-    setShowAiEdit(null);
-    setAiEditPrompt("");
   };
 
   // Save to collections - calls real API
@@ -842,23 +868,3 @@ export default function DocumentPreview({
   );
 }
 
-// Note: Document generation now uses the real AI API at /api/creator/generate
-// This mock function is kept for the inline AI edit feature until a dedicated API is built
-function applyMockAiEdit(content: string, prompt: string): string {
-  const lowerPrompt = prompt.toLowerCase();
-  
-  if (lowerPrompt.includes("shorter") || lowerPrompt.includes("concise")) {
-    return content.split(".").slice(0, 2).join(".") + ".";
-  }
-  if (lowerPrompt.includes("casual") || lowerPrompt.includes("friendly")) {
-    return content.replace(/\./g, "!").replace(/We are/g, "We're").replace(/It is/g, "It's");
-  }
-  if (lowerPrompt.includes("formal") || lowerPrompt.includes("professional")) {
-    return content.replace(/!/g, ".").replace(/We're/g, "We are");
-  }
-  if (lowerPrompt.includes("exciting") || lowerPrompt.includes("energetic")) {
-    return "🚀 " + content + " 🎉";
-  }
-  
-  return content + " [Updated based on your feedback]";
-}

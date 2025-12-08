@@ -45,7 +45,7 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - ✅ Learning system progressing (autonomy thresholds, pattern recognition)
 - ✅ RAG returning cited results (enhanced detection, fallback handling)
 - ✅ Website analysis fully functional (serverless crawler with Firecrawl-first approach)
-- ⚠️ Web search NOT functional (Perplexity API integration attempted but not working)
+- ✅ Web search functional (Perplexity-first with Google Custom Search fallback; auto-executes `search_web`)
 - ✅ All integrations connected (QuickBooks, Stripe, Shopify, Google Calendar, etc.)
 - ✅ Conversation persistence working (restores on login)
 - ✅ Feedback UI functional (thumbs up/down updates learning)
@@ -270,21 +270,14 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 
 ---
 
-## 🔍 Neptune Web Search & Enhanced Website Analysis - December 7, 2025 ✅
+## 🔍 Neptune Web Search & Enhanced Website Analysis - December 8, 2025 ✅
 
-**Completed December 7, 2025** - Added internet search capability and improved website analysis:
+**Completed December 8, 2025** - Internet search restored and website analysis remains solid:
 
-### Web Search Integration ⚠️ **NOT FUNCTIONAL**
-- ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns error messages when users ask about latest news
-- **Perplexity AI API Integration** - Attempted integration for real-time web browsing
-  - API key configured in environment variables
-  - Integration code implemented with fallback to Google Custom Search
-  - ⚠️ **Status**: Not working - Neptune returns "can't access the web right now" errors
-  - Diagnostic logging added to troubleshoot API integration issues
-- **Google Custom Search API** - Fallback option available but also not currently functional
-- New `search_web` tool exists but fails when called
-- System prompt instructs Neptune to search, but tool execution fails
-- **Investigation Needed**: Check Vercel logs to diagnose Perplexity API errors
+### Web Search Integration ✅ **LIVE**
+- `search_web` now auto-executes (low-risk) and returns live results via Perplexity with Google Custom Search fallback.
+- `/api/system/search-debug` confirms configured Perplexity + Google keys and successful test query responses.
+- Friendly error handling remains for rate limits or provider hiccups.
 
 ### Enhanced Website Analysis ✅ **FULLY FUNCTIONAL**
 - ✅ **Serverless Web Crawler**: Replaced Playwright dependency with serverless-compatible implementation
@@ -328,13 +321,13 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Neptune AI** | ✅ **100% Complete** - All 6 phases implemented |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Latest Updates (December 7, 2025):**
-- **Web Search** ⚠️ **NOT FUNCTIONAL**
-  - Perplexity AI API integration attempted for real-time web browsing
-  - Google Custom Search API fallback available
-  - ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns "can't access the web right now" error
-  - Diagnostic logging added to troubleshoot API integration issues
-  - **Status**: Investigation ongoing - API keys configured but search functionality not working
+**Latest Updates (December 8, 2025):**
+- **Web Search** ✅ **LIVE** (Perplexity-first, Google CSE fallback; `search_web` marked low-risk so it auto-executes and returns real news/results).
+- **Creator Guided Flow** ✅ Neptune-powered acknowledgments/questions via `/api/assistant/chat`; flow continues even on errors with friendly toasts.
+- **Creator AI Edit** ✅ New `/api/creator/ai-edit` endpoint rewrites single sections with audience/goal-aware prompt; DocumentPreview uses it for the “AI edit with Neptune” pill.
+- **Env Template Sync** ✅ `.env.example` updated to match `.env.local` placeholders (no secrets) to prevent missing-var errors.
+
+**Previous Updates (December 7, 2025):**
 - **Website Analysis** ✅ **FULLY FUNCTIONAL**
   - Serverless web crawler with Firecrawl-first approach
   - Replaced Playwright dependency with serverless-compatible lite crawler
@@ -342,13 +335,6 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
   - Deep crawl support (50 pages, depth 4) for background analysis
   - Comprehensive logging and metadata tracking
   - **Website analysis now works reliably** - Neptune can analyze any website URL
-- **Web Search Capability** ⚠️ **NOT FUNCTIONAL**
-  - Perplexity AI API integration attempted for real-time web browsing
-  - Google Custom Search API fallback available
-  - ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns "can't access the web right now" error
-  - Diagnostic logging added to troubleshoot API integration issues
-  - **Status**: Investigation ongoing - API keys configured in environment but search functionality not working
-  - Users asking about latest news or current events receive error messages instead of search results
 - **Stripe Integration Complete** ✅
   - Installed Stripe SDK (`stripe@20.0.0`)
   - Created `/api/stripe/checkout` - Checkout session creation

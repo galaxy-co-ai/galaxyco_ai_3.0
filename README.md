@@ -165,6 +165,12 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Project Status:** [PROJECT_STATUS.md](./PROJECT_STATUS.md) ← Always check here first
 - **Test Coverage:** Run `npm run test:coverage`
 
+**Recent Updates (December 8, 2025):**
+- 🌐 **Web Search Fixed** - Perplexity-first with Google CSE fallback now returns live results; `search_web` is marked low-risk and auto-executes in autonomy learning.
+- 🧠 **Creator Guided Flow is Neptune-Powered** - GuidedSession now calls `/api/assistant/chat` for real acknowledgments/questions and still advances even on error.
+- ✨ **Section-Level AI Edits** - New `/api/creator/ai-edit` endpoint rewrites a single section with audience/goal-aware prompts; DocumentPreview calls it from the inline “AI edit with Neptune” pill.
+- 🔧 **Env Template Sync** - `.env.example` aligned with `.env.local` (no secrets) to prevent missing-variable errors.
+
 **Recent Updates (December 7, 2025):**
 - 💳 **Stripe Integration Complete** - Full subscription checkout flow:
   - `/api/stripe/checkout` - Creates Stripe Checkout sessions
@@ -229,12 +235,10 @@ Neptune is now a fully-featured, production-ready AI assistant with:
   - Deep crawl support (50 pages, depth 4) for background analysis
   - Serverless-compatible (no Playwright dependency)
   - Comprehensive logging and metadata tracking
-- 🔍 **Internet Search Capability** - ⚠️ **NOT FUNCTIONAL** - Web search integration in progress:
-  - Perplexity AI API integration attempted (for real-time web browsing)
-  - Google Custom Search API fallback available
-  - ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns error messages when users ask about latest news or current events
-  - Diagnostic logging added to troubleshoot Perplexity API integration
-  - **Status**: Investigation ongoing - API keys configured but search functionality not working
+- 🔍 **Internet Search Capability** - ✅ **LIVE** - Perplexity-first with Google Custom Search fallback:
+  - `search_web` tool now auto-executes (low-risk) and returns live results for news/current events.
+  - Debug endpoint `/api/system/search-debug` confirms Perplexity + Google CSE keys configured and working.
+  - Falls back gracefully with user-friendly errors if providers rate-limit.
 - 🐦 **Twitter/X Integration** - Social media posting directly from Neptune:
   - Connect Twitter account via OAuth 2.0 (PKCE flow)
   - Post tweets immediately or schedule for later
@@ -695,8 +699,8 @@ See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 - **Gamma.app** - Professional document generation (Pro/Teams/Business plan required)
 - **Anthropic** - Claude models (fallback AI provider)
 - **Google AI** - Gemini models (fallback AI provider)
-- **Perplexity AI API** - Real-time web browsing and AI-powered search (PERPLEXITY_API_KEY) - ⚠️ **INTEGRATION IN PROGRESS** - Not currently functional
-- **Google Custom Search API** - Internet search capability (GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_ENGINE_ID) - Fallback option (also not currently functional)
+- **Perplexity AI API** - Real-time web browsing and AI-powered search (PERPLEXITY_API_KEY) - **Live** and used by `search_web`
+- **Google Custom Search API** - Internet search capability (GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_ENGINE_ID) - Fallback for `search_web`
 - **Firecrawl API** - Enhanced website crawling fallback (FIRECRAWL_API_KEY)
 - **Twilio** - SMS, WhatsApp, Voice (Conversations feature)
 - **Pinecone** - Vector search (Knowledge Base)
