@@ -17,7 +17,6 @@ import {
   Filter
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import FeedbackStatusDropdown from './FeedbackStatusDropdown';
 
@@ -59,6 +58,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
   textColor: string;
   borderColor: string;
   activeBg: string;
+  iconColor: string;
+  countBg: string;
 }> = {
   all: {
     label: 'All',
@@ -67,6 +68,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-slate-700',
     borderColor: 'border-slate-200',
     activeBg: 'bg-slate-200',
+    iconColor: 'text-slate-600',
+    countBg: 'bg-slate-500',
   },
   new: {
     label: 'New',
@@ -75,6 +78,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-blue-700',
     borderColor: 'border-blue-200',
     activeBg: 'bg-blue-200',
+    iconColor: 'text-blue-600',
+    countBg: 'bg-blue-500',
   },
   in_review: {
     label: 'In Review',
@@ -83,6 +88,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-amber-700',
     borderColor: 'border-amber-200',
     activeBg: 'bg-amber-200',
+    iconColor: 'text-amber-600',
+    countBg: 'bg-amber-500',
   },
   planned: {
     label: 'Planned',
@@ -91,6 +98,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-purple-700',
     borderColor: 'border-purple-200',
     activeBg: 'bg-purple-200',
+    iconColor: 'text-purple-600',
+    countBg: 'bg-purple-500',
   },
   in_progress: {
     label: 'In Progress',
@@ -99,6 +108,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-indigo-700',
     borderColor: 'border-indigo-200',
     activeBg: 'bg-indigo-200',
+    iconColor: 'text-indigo-600',
+    countBg: 'bg-indigo-500',
   },
   done: {
     label: 'Done',
@@ -107,6 +118,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-green-700',
     borderColor: 'border-green-200',
     activeBg: 'bg-green-200',
+    iconColor: 'text-green-600',
+    countBg: 'bg-green-500',
   },
   closed: {
     label: 'Closed',
@@ -115,6 +128,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-zinc-700',
     borderColor: 'border-zinc-200',
     activeBg: 'bg-zinc-200',
+    iconColor: 'text-zinc-600',
+    countBg: 'bg-zinc-500',
   },
   wont_fix: {
     label: "Won't Fix",
@@ -123,6 +138,8 @@ const statusConfig: Record<FeedbackStatus | 'all', {
     textColor: 'text-red-700',
     borderColor: 'border-red-200',
     activeBg: 'bg-red-200',
+    iconColor: 'text-red-600',
+    countBg: 'bg-red-500',
   },
 };
 
@@ -188,8 +205,8 @@ export default function FeedbackList({ initialFeedback, initialCounts }: Feedbac
 
   return (
     <div className="space-y-6">
-      {/* Status Filter Badges */}
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      {/* Status Filter Badges - styled like Overview page */}
+      <div className="flex flex-wrap items-center justify-center gap-3">
         {filterOptions.map((status) => {
           const config = statusConfig[status];
           const Icon = config.icon;
@@ -200,24 +217,25 @@ export default function FeedbackList({ initialFeedback, initialCounts }: Feedbac
             <button
               key={status}
               onClick={() => setActiveFilter(status)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+              className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm border transition-colors ${
                 isActive 
-                  ? `${config.activeBg} ${config.textColor} ${config.borderColor} ring-2 ring-offset-1 ring-${config.textColor.split('-')[1]}-400`
+                  ? `${config.activeBg} ${config.textColor} ${config.borderColor} ring-2 ring-offset-1`
                   : `${config.bgColor} ${config.textColor} ${config.borderColor} hover:opacity-80`
               }`}
               aria-pressed={isActive}
               aria-label={`Filter by ${config.label}`}
             >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{config.label}</span>
-              <Badge 
-                variant="secondary" 
-                className={`ml-1 px-1.5 py-0 h-5 min-w-[20px] text-xs ${
-                  isActive ? 'bg-white/80' : 'bg-white/60'
-                }`}
-              >
-                {count}
-              </Badge>
+              <Icon className={`h-3.5 w-3.5 mr-1.5 ${config.iconColor}`} />
+              <span className="font-normal">{config.label}</span>
+              {count > 0 && (
+                <span className={`ml-1.5 px-1.5 py-0.5 text-xs rounded-full ${
+                  isActive 
+                    ? 'bg-white/90 text-gray-700' 
+                    : `${config.countBg} text-white`
+                }`}>
+                  {count}
+                </span>
+              )}
             </button>
           );
         })}
