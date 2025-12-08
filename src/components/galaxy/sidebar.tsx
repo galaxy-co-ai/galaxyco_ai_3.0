@@ -32,6 +32,14 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 
+/**
+ * System admin email whitelist (client-side mirror of server-side list)
+ * Keep in sync with src/lib/auth.ts SYSTEM_ADMIN_EMAILS
+ */
+const SYSTEM_ADMIN_EMAILS: string[] = [
+  'dev@galaxyco.ai',
+];
+
 // Main navigation items
 const mainNavItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", id: "dashboard" },
@@ -89,11 +97,23 @@ export function Sidebar({ className, user }: SidebarProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, [isManuallyControlled]);
   
-  // Check if user is system admin
+  // Check if user is system admin (by metadata OR email whitelist)
   const isSystemAdmin = React.useMemo(() => {
     if (!clerkUser) return false;
+    
+    // Check Clerk metadata first (most secure)
     const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
-    return metadata?.isSystemAdmin === true;
+    if (metadata?.isSystemAdmin === true) {
+      return true;
+    }
+    
+    // Check email whitelist (case-insensitive)
+    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
+    if (primaryEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === primaryEmail)) {
+      return true;
+    }
+    
+    return false;
   }, [clerkUser]);
 
   const isActive = (href: string) => {
