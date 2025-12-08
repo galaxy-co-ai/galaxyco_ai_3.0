@@ -708,6 +708,73 @@ See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 
 ---
 
+## 📊 Analytics & Tracking System
+
+**Complete user engagement tracking with Finance HQ-style dashboard**
+
+### What's Tracked
+
+| Event Type | Description | Where |
+|------------|-------------|-------|
+| **Page Views** | Automatic tracking on all routes | Global (via AnalyticsProvider) |
+| **Time on Page** | Duration spent on each page (seconds) | Global (via visibilitychange events) |
+| **Scroll Depth** | Article engagement (25%, 50%, 75%, 100%) | Launchpad blog posts |
+| **Clicks** | Navigation and CTA interactions | Sidebar, buttons, tracked elements |
+| **Search Queries** | What users search for | Header search, Launchpad search |
+
+### How to Add Custom Tracking
+
+**Track a click event:**
+```tsx
+import { trackClick } from '@/lib/analytics';
+
+trackClick('my_button_id', { section: 'dashboard', action: 'create' });
+```
+
+**Track a custom event:**
+```tsx
+import { useAnalytics } from '@/hooks/useAnalytics';
+
+const { trackEvent } = useAnalytics({ trackPageViews: false });
+trackEvent({
+  eventType: 'custom_event',
+  eventName: 'feature_used',
+  metadata: { feature: 'export', format: 'csv' }
+});
+```
+
+**Use TrackedButton component:**
+```tsx
+import { TrackedButton } from '@/components/ui/tracked-button';
+
+<TrackedButton 
+  trackId="cta_create_contact" 
+  trackMetadata={{ section: 'crm' }}
+  onClick={handleCreate}
+>
+  Create Contact
+</TrackedButton>
+```
+
+### Privacy Considerations
+
+- All tracking is session-based (no persistent user identification)
+- Anonymous users are tracked with session IDs only
+- Authenticated users are linked via userId (optional)
+- No PII (Personally Identifiable Information) is collected
+- All data is stored in your own database (no third-party analytics)
+
+### Analytics Dashboard
+
+Access the analytics dashboard at `/admin/analytics` (admin only). Features:
+- Real-time metrics (page views, active users, engagement rate)
+- Trend charts (7-day page views, user activity, engagement)
+- Analytics timeline (horizontal scroll of recent events)
+- Activity table (detailed event log)
+- Insights cards (top clicks, popular searches, scroll depth)
+
+---
+
 ## 🔒 Environment Variables
 
 **Required services (all have free tiers):**
