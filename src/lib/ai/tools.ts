@@ -4475,11 +4475,11 @@ A: [Detailed answer]`,
 
       const now = new Date();
 
-      // Get overdue invoices from database
+      // Get overdue invoices from database (sent or overdue status, past due date)
       const overdueInvoices = await db.query.invoices.findMany({
         where: and(
           eq(invoices.workspaceId, context.workspaceId),
-          eq(invoices.status, 'unpaid'),
+          or(eq(invoices.status, 'sent'), eq(invoices.status, 'overdue')),
           lt(invoices.dueDate, now)
         ),
         with: {
@@ -4531,8 +4531,8 @@ A: [Detailed answer]`,
               .filter(inv => inv.dueDate && new Date(inv.dueDate) < now)
               .map(inv => ({
                 id: inv.id,
-                number: inv.number || inv.id,
-                customer: inv.customerName || 'Unknown',
+                number: inv.invoiceNumber || inv.id,
+                customer: inv.customer?.name || 'Unknown',
                 amount: inv.balance,
                 status: 'overdue',
                 dueDate: inv.dueDate || new Date().toISOString(),
@@ -4549,7 +4549,7 @@ A: [Detailed answer]`,
         id: inv.id,
         number: inv.invoiceNumber,
         customer: inv.customer?.name || 'Unknown',
-        amount: (inv.total - inv.amountPaid) / 100,
+        amount: (inv.total - (inv.amountPaid ?? 0)) / 100,
         status: 'overdue',
         dueDate: inv.dueDate.toISOString(),
         daysOverdue: Math.floor((now.getTime() - inv.dueDate.getTime()) / (1000 * 60 * 60 * 24)),
@@ -4664,8 +4664,8 @@ A: [Detailed answer]`,
 
       // Check if invoice is overdue
       const now = new Date();
-      const isOverdue = invoice.dueDate < now && invoice.status === 'unpaid';
-      const amountDue = (invoice.total - invoice.amountPaid) / 100;
+      const isOverdue = invoice.dueDate < now && (invoice.status === 'sent' || invoice.status === 'overdue');
+      const amountDue = (invoice.total - (invoice.amountPaid ?? 0)) / 100;
       const daysOverdue = isOverdue 
         ? Math.floor((now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24))
         : 0;
@@ -4819,13 +4819,13 @@ A: [Detailed answer]`,
       const pendingInvoices = await db.query.invoices.findMany({
         where: and(
           eq(invoices.workspaceId, context.workspaceId),
-          eq(invoices.status, 'unpaid'),
+          eq(invoices.status, 'sent'),
           gte(invoices.dueDate, now),
           lte(invoices.dueDate, forecastDate)
         ),
       });
 
-      const expectedInflows = pendingInvoices.reduce((sum, inv) => sum + (inv.total - inv.amountPaid), 0) / 100;
+      const expectedInflows = pendingInvoices.reduce((sum, inv) => sum + (inv.total - (inv.amountPaid ?? 0)), 0) / 100;
 
       // Calculate daily averages
       const dailyRevenue = historicalRevenue / days;
@@ -5017,8 +5017,9 @@ A: [Detailed answer]`,
             period1Value += (p1Data.charges - p1Data.fees - p1Data.refunds) - p1Data.fees;
             period2Value += (p2Data.charges - p2Data.fees - p2Data.refunds) - p2Data.fees;
           } else if (metric === 'orders') {
-            period1Value += p1Data.chargeCount || 0;
-            period2Value += p2Data.chargeCount || 0;
+            // Stripe doesn't have a charge count in revenue data, estimate from charges amount
+            period1Value += p1Data.charges > 0 ? 1 : 0;
+            period2Value += p2Data.charges > 0 ? 1 : 0;
           }
         } catch (error) {
           logger.warn('Stripe period comparison failed', { error });
@@ -5918,7 +5919,8 @@ Looking forward to your response!`;
         : [...existingTags, abTestTag];
 
       // Store variations in campaign content as JSON
-      const existingContent = campaign.content || {};
+      // Cast to extended type to allow abTests property
+      const existingContent = (campaign.content || {}) as Record<string, unknown>;
       const abTests = (existingContent.abTests as Array<{
         testType: string;
         variations: string[];
@@ -5940,7 +5942,7 @@ Looking forward to your response!`;
           content: {
             ...existingContent,
             abTests,
-          },
+          } as typeof campaign.content,
           tags: updatedTags,
           updatedAt: new Date(),
         })
@@ -5997,7 +5999,9 @@ Looking forward to your response!`;
         whereConditions.push(like(prospects.company, `%${criteria.industry as string}%`));
       }
       if (criteria.stage) {
-        whereConditions.push(eq(prospects.stage, criteria.stage as string));
+        // Cast to the prospect stage enum type
+        const stageValue = criteria.stage as 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost';
+        whereConditions.push(eq(prospects.stage, stageValue));
       }
       if (criteria.minValue) {
         whereConditions.push(sql`${prospects.estimatedValue} >= ${(criteria.minValue as number) * 100}`);
@@ -6735,12 +6739,12 @@ Provide analysis in JSON format:
       const pendingInvoices = await db.query.invoices.findMany({
         where: and(
           eq(invoices.workspaceId, context.workspaceId),
-          eq(invoices.status, 'unpaid'),
+          eq(invoices.status, 'sent'),
           gte(invoices.dueDate, now)
         ),
       });
 
-      const expectedRevenue = pendingInvoices.reduce((sum, inv) => sum + (inv.total - inv.amountPaid), 0) / 100;
+      const expectedRevenue = pendingInvoices.reduce((sum, inv) => sum + (inv.total - (inv.amountPaid ?? 0)), 0) / 100;
 
       // Calculate daily averages
       const daysInPeriod = 90;
@@ -6819,11 +6823,11 @@ Provide analysis in JSON format:
       // Get overdue invoices
       let overdueInvoices;
       if (invoiceIds.length > 0) {
-        // Get specific invoices
+        // Get specific invoices (sent or overdue status, past due date)
         overdueInvoices = await db.query.invoices.findMany({
           where: and(
             eq(invoices.workspaceId, context.workspaceId),
-            eq(invoices.status, 'unpaid'),
+            or(eq(invoices.status, 'sent'), eq(invoices.status, 'overdue')),
             lt(invoices.dueDate, now),
             or(...invoiceIds.map(id => eq(invoices.id, id)))
           ),
@@ -6837,11 +6841,11 @@ Provide analysis in JSON format:
           },
         });
       } else {
-        // Get all overdue invoices
+        // Get all overdue invoices (sent or overdue status, past due date)
         overdueInvoices = await db.query.invoices.findMany({
           where: and(
             eq(invoices.workspaceId, context.workspaceId),
-            eq(invoices.status, 'unpaid'),
+            or(eq(invoices.status, 'sent'), eq(invoices.status, 'overdue')),
             lt(invoices.dueDate, now)
           ),
           with: {
@@ -6882,7 +6886,7 @@ Provide analysis in JSON format:
           continue;
         }
 
-        const amountDue = (invoice.total - invoice.amountPaid) / 100;
+        const amountDue = (invoice.total - (invoice.amountPaid ?? 0)) / 100;
         const daysOverdue = Math.floor((now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24));
 
         if (autoSend) {

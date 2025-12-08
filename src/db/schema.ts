@@ -3724,6 +3724,25 @@ export const crmInteractionsRelations = relations(crmInteractions, ({ one }) => 
 }));
 
 // ============================================================================
+// INVOICES - RELATIONS
+// ============================================================================
+
+export const invoicesRelations = relations(invoices, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [invoices.workspaceId],
+    references: [workspaces.id],
+  }),
+  customer: one(customers, {
+    fields: [invoices.customerId],
+    references: [customers.id],
+  }),
+  project: one(projects, {
+    fields: [invoices.projectId],
+    references: [projects.id],
+  }),
+}));
+
+// ============================================================================
 // EXPENSES - RELATIONS
 // ============================================================================
 

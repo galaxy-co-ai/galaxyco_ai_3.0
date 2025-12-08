@@ -119,9 +119,9 @@ export async function detectDealNegotiationInsights(
       type: 'opportunity',
       category: 'sales',
       title: 'Deal in Negotiation - Draft Proposal',
-      description: `Deal "${deal.name}" is in negotiation stage. Consider drafting a proposal to move it forward.`,
+      description: `Deal "${deal.title}" is in negotiation stage. Consider drafting a proposal to move it forward.`,
         priority: 9,
-      metadata: { dealId: deal.id, dealName: deal.name, dealValue: deal.value },
+      metadata: { dealId: deal.id, dealName: deal.title, dealValue: deal.value },
       suggestedActions: [
         {
           action: 'draft_proposal',

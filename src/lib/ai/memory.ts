@@ -436,8 +436,14 @@ export async function processRecentConversationsForLearning(
       });
 
       if (messages.length >= 4) {
-        const timingPatterns = await analyzeTimingPatterns(workspaceId, messages);
-        const commStyle = await analyzeCommunicationStyle(messages);
+        // Map messages to the format expected by pattern analysis functions
+        const messagesWithTimestamp = messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.createdAt,
+        }));
+        const timingPatterns = await analyzeTimingPatterns(workspaceId, messagesWithTimestamp);
+        const commStyle = await analyzeCommunicationStyle(messagesWithTimestamp);
 
         // Get action history for task sequences
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
