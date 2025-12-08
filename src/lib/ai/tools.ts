@@ -7096,7 +7096,7 @@ Provide analysis in JSON format:
           
           return {
             success: true, // Mark as success so Neptune uses the inferred data
-            message: `I can see you're from ${inferredData.companyName}. I couldn't fully crawl the site, but based on the URL I can see this is likely a ${inferredData.inferredType} business.`,
+            message: `I analyzed ${domainName}! Based on the URL, this appears to be a ${inferredData.inferredType} business. I couldn't fully access the website content (it may be blocking automated requests), but I can work with what I know.`,
             data: {
               companyName: inferredData.companyName,
               description: inferredData.description,

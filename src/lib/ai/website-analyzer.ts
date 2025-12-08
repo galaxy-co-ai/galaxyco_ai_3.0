@@ -231,7 +231,7 @@ async function retryWithBackoff<T>(
 export async function analyzeWebsiteQuick(
   websiteUrl: string,
   options?: { maxPages?: number }
-): Promise<QuickWebsiteInsights | null> {
+): Promise<QuickWebsiteInsights> {
   try {
     logger.info('Starting quick website analysis', { url: websiteUrl });
     
