@@ -505,6 +505,7 @@ export async function analyzeWebsiteQuick(
       websiteUrl: normalizedUrl,
       analysisNote: `Analysis failed: ${aiError instanceof Error ? aiError.message : 'Unknown error'}. Please provide business details manually.`,
     };
+  }
   } catch (outerError) {
     // Catch any unexpected errors and return a helpful response
     logger.error('Unexpected error in analyzeWebsiteQuick', { url: websiteUrl, error: outerError });
