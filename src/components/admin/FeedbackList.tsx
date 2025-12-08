@@ -217,7 +217,7 @@ export default function FeedbackList({ initialFeedback, initialCounts }: Feedbac
             <button
               key={status}
               onClick={() => setActiveFilter(status)}
-              className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm border transition-colors ${
+              className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs border transition-colors ${
                 isActive 
                   ? `${config.activeBg} ${config.textColor} ${config.borderColor} ring-2 ring-offset-1`
                   : `${config.bgColor} ${config.textColor} ${config.borderColor} hover:opacity-80`
