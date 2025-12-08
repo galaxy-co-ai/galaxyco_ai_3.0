@@ -41,6 +41,7 @@ export interface QuickWebsiteInsights {
   targetAudience: string;
   suggestedActions: string[];
   websiteUrl: string;
+  analysisNote?: string; // Optional note about analysis quality or limitations
 }
 
 // ============================================================================
