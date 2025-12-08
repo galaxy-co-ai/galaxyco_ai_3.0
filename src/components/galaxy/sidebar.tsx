@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { trackClick } from "@/lib/analytics";
 import {
   Tooltip,
   TooltipContent,
@@ -99,27 +100,16 @@ export function Sidebar({ className, user }: SidebarProps) {
   
   // Check if user is system admin (by metadata OR email whitelist)
   const isSystemAdmin = React.useMemo(() => {
-    if (!clerkUser) {
-      console.log('[Sidebar] No clerkUser yet');
-      return false;
-    }
-    
-    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
-    const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
-    
-    console.log('[Sidebar] Admin check:', {
-      email: primaryEmail,
-      metadata,
-      metadataIsAdmin: metadata?.isSystemAdmin,
-      emailInWhitelist: primaryEmail && SYSTEM_ADMIN_EMAILS.some(e => e.toLowerCase() === primaryEmail),
-    });
+    if (!clerkUser) return false;
     
     // Check Clerk metadata first (most secure)
+    const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
     if (metadata?.isSystemAdmin === true) {
       return true;
     }
     
     // Check email whitelist (case-insensitive)
+    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
     if (primaryEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === primaryEmail)) {
       return true;
     }
@@ -154,6 +144,7 @@ export function Sidebar({ className, user }: SidebarProps) {
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => {
+                  trackClick('sidebar_toggle', { action: isCollapsed ? 'expand' : 'collapse' });
                   setIsManuallyControlled(true);
                   setIsCollapsed(!isCollapsed);
                 }}
@@ -215,7 +206,11 @@ export function Sidebar({ className, user }: SidebarProps) {
             );
 
             return (
-              <Link key={item.id} href={item.href}>
+              <Link 
+                key={item.id} 
+                href={item.href}
+                onClick={() => trackClick(`sidebar_${item.id}`, { section: 'main', label: item.label })}
+              >
                 {isCollapsed ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -277,7 +272,11 @@ export function Sidebar({ className, user }: SidebarProps) {
               );
 
               return (
-                <Link key={item.id} href={item.href}>
+                <Link 
+                  key={item.id} 
+                  href={item.href}
+                  onClick={() => trackClick(`sidebar_${item.id}`, { section: 'secondary', label: item.label })}
+                >
                   {isCollapsed ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -314,7 +313,10 @@ export function Sidebar({ className, user }: SidebarProps) {
                   </p>
                 </div>
               )}
-              <Link href="/admin">
+              <Link 
+                href="/admin"
+                onClick={() => trackClick('sidebar_mission_control', { section: 'admin', label: 'Mission Control' })}
+              >
                 {isCollapsed ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
