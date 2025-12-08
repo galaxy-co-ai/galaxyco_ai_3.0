@@ -166,6 +166,14 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 8, 2025):**
+- 🎛️ **Mission Control Admin Dashboard** - Complete admin panel improvements:
+  - Fixed admin access for `dev@galaxyco.ai` (sidebar link visibility + server-side authorization)
+  - Added Users page (`/admin/users`) with user list, stats cards, and avatars
+  - Added Settings page (`/admin/settings`) with platform configuration sections
+  - Feedback page now has interactive status dropdown (New, In Review, Planned, In Progress, Done, Closed, Won't Fix)
+  - Status filter badges to filter feedback by status with real-time count updates
+  - Fixed tab active state for nested routes (Categories no longer highlights Content tab)
+  - Moved admin authorization from middleware to layout for proper Clerk integration
 - 📚 **Launchpad Tab Restructure** - Replaced category-based navigation with intent-based tabs (Discover, Learn, Docs, Saved). Added AI Tools Spotlight section for curated tool breakdowns. New Learn page with filtered tutorial content and category filter chips. Extracted sidebar into reusable component.
 - 🌐 **Web Search Fixed** - Perplexity-first with Google CSE fallback now returns live results; `search_web` is marked low-risk and auto-executes in autonomy learning.
 - 🧠 **Creator Guided Flow is Neptune-Powered** - GuidedSession now calls `/api/assistant/chat` for real acknowledgments/questions and still advances even on error.
