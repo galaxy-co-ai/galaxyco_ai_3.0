@@ -2425,12 +2425,10 @@ Be helpful, proactive, and use CRM tools when needed.`;
                 setShowLeadDetailDialog(false);
               }}
               onUpdate={(updatedLead) => {
-                // Update lead in local state
+                // Update lead in local state - selectedLeadData will auto-update since it's derived from leads.find()
                 setLeads(prevLeads => 
                   prevLeads.map(l => l.id === updatedLead.id ? updatedLead : l)
                 );
-                // Update the selected lead data as well
-                setSelectedLeadData(updatedLead);
               }}
             />
           )}
