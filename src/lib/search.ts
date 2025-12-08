@@ -43,19 +43,81 @@ export async function searchWeb(
     dateRestrict?: string;
   }
 ): Promise<SearchResult[]> {
+  const { logger } = await import('@/lib/logger');
+  
+  // Check if Perplexity API key is configured
+  const hasPerplexityKey = !!process.env.PERPLEXITY_API_KEY;
+  const perplexityKeyPrefix = process.env.PERPLEXITY_API_KEY?.substring(0, 10) || 'not set';
+  
+  logger.info('searchWeb called', { 
+    query, 
+    hasPerplexityKey,
+    keyPrefix: perplexityKeyPrefix,
+    hasGoogleKey: !!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY
+  });
+  
   // Try Perplexity first (better for real-time browsing and AI-powered results)
-  if (process.env.PERPLEXITY_API_KEY) {
+  if (hasPerplexityKey) {
     try {
-      return await searchWebWithPerplexity(query, options);
+      logger.info('Attempting Perplexity search', { 
+        query,
+        keyLength: process.env.PERPLEXITY_API_KEY?.length 
+      });
+      const result = await searchWebWithPerplexity(query, options);
+      logger.info('Perplexity search succeeded', { resultCount: result.length });
+      return result;
     } catch (error) {
       // Fall back to Google if Perplexity fails
-      console.warn('Perplexity search failed, falling back to Google', error);
+      logger.warn('Perplexity search failed, falling back to Google', { 
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+        query 
+      });
+      // Don't return here - continue to Google fallback
     }
+  } else {
+    logger.warn('Perplexity API key not found in environment', {
+      envKeys: Object.keys(process.env).filter(k => k.includes('PERPLEXITY') || k.includes('SEARCH'))
+    });
   }
 
   // Fallback to Google Custom Search
+  if (process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
+    try {
+      logger.info('Falling back to Google Custom Search', { query });
+      return await searchWebWithGoogle(query, options);
+    } catch (error) {
+      logger.error('Google search also failed', { 
+        error: error instanceof Error ? error.message : String(error),
+        query 
+      });
+      throw error; // Re-throw if both fail
+    }
+  }
+
+  // If we get here, Perplexity failed and Google isn't configured
+  logger.error('Both Perplexity and Google search failed or not configured', {
+    hasPerplexityKey: !!process.env.PERPLEXITY_API_KEY,
+    hasGoogleKey: !!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY,
+    hasGoogleEngineId: !!process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+  });
+  
+  throw new Error('No search API configured or both APIs failed. Please set PERPLEXITY_API_KEY or GOOGLE_CUSTOM_SEARCH_API_KEY');
+}
+
+/**
+ * Search the web using Google Custom Search API (fallback)
+ */
+async function searchWebWithGoogle(
+  query: string,
+  options?: {
+    numResults?: number;
+    siteSearch?: string;
+    dateRestrict?: string;
+  }
+): Promise<SearchResult[]> {
   if (!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY) {
-    throw new Error('No search API configured. Please set PERPLEXITY_API_KEY or GOOGLE_CUSTOM_SEARCH_API_KEY');
+    throw new Error('GOOGLE_CUSTOM_SEARCH_API_KEY not configured');
   }
 
   if (!process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
@@ -106,7 +168,11 @@ async function searchWebWithPerplexity(
   }
 
   const { logger } = await import('@/lib/logger');
-  logger.info('Using Perplexity AI for web search', { query, numResults: options?.numResults });
+  logger.info('Using Perplexity AI for web search', { 
+    query, 
+    numResults: options?.numResults,
+    hasApiKey: !!process.env.PERPLEXITY_API_KEY 
+  });
 
   // Build query with optional site restriction
   let searchQuery = query;
@@ -184,7 +250,14 @@ async function searchWebWithPerplexity(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
+    logger.error('Perplexity API request failed', {
+      status: response.status,
+      statusText: response.statusText,
+      errorText: errorText.substring(0, 500),
+      model,
+      query: searchQuery.substring(0, 100)
+    });
+    throw new Error(`Perplexity API error: ${response.status} - ${errorText.substring(0, 200)}`);
   }
 
   const data = await response.json();
@@ -197,7 +270,9 @@ async function searchWebWithPerplexity(
   logger.info('Perplexity search completed', { 
     model,
     answerLength: answer.length,
-    searchResultsCount: searchResults.length 
+    searchResultsCount: searchResults.length,
+    hasAnswer: !!answer,
+    responseKeys: Object.keys(data)
   });
   
   // Convert Perplexity search_results to our SearchResult format
@@ -224,23 +299,34 @@ async function searchWebWithPerplexity(
       }
     });
 
-  // If we have an answer but no citations, create a result from the answer
+  // If we have an answer but no search results, create a result from the answer
+  // This is important - Perplexity might return just an answer without sources
   if (answer && results.length === 0) {
+    logger.info('Perplexity returned answer but no search results, creating result from answer');
     results.push({
-      title: 'AI-Powered Answer',
+      title: 'AI-Powered Answer from Perplexity',
       link: '',
-      snippet: answer.substring(0, 500),
+      snippet: answer.substring(0, 1000), // Use more of the answer
       displayLink: 'perplexity.ai',
       formattedUrl: '',
     });
   }
 
-  // If we have both answer and citations, prepend the answer as context
+  // If we have both answer and search results, enhance the first result with the answer
   if (answer && results.length > 0) {
     // Add answer as additional context to first result
-    results[0].snippet = `${answer.substring(0, 300)}\n\n${results[0].snippet}`;
+    results[0].snippet = `${answer.substring(0, 500)}\n\n--- Sources ---\n${results[0].snippet}`;
   }
 
+  // If we have no answer and no results, something went wrong
+  if (!answer && results.length === 0) {
+    logger.warn('Perplexity returned no answer and no search results', { 
+      responseData: JSON.stringify(data).substring(0, 500) 
+    });
+    throw new Error('Perplexity API returned no results or answer');
+  }
+
+  logger.info('Returning Perplexity search results', { resultCount: results.length });
   return results;
 }
 

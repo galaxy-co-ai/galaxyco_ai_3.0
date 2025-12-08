@@ -7370,7 +7370,22 @@ Provide analysis in JSON format:
       // Import search functions
       const { searchWeb, extractSearchInsights } = await import('@/lib/search');
       
+      logger.info('Calling searchWeb function', { 
+        query, 
+        numResults, 
+        provider,
+        hasPerplexityKey: !!process.env.PERPLEXITY_API_KEY,
+        hasGoogleKey: !!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY
+      });
+      
       const results = await searchWeb(query, { numResults });
+      
+      logger.info('searchWeb returned results', { 
+        resultCount: results.length, 
+        provider,
+        firstResultTitle: results[0]?.title 
+      });
+      
       const summary = extractSearchInsights(results);
 
       if (results.length === 0) {
@@ -7417,10 +7432,19 @@ Provide analysis in JSON format:
         };
       }
 
+      // Return a helpful error that guides the user
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Web search tool failed', { 
+        error: errorMessage,
+        query: args.query,
+        hasPerplexityKey: !!process.env.PERPLEXITY_API_KEY,
+        hasGoogleKey: !!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY
+      });
+      
       return {
         success: false,
-        message: `Failed to search the web: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        message: `I'm having trouble accessing the web right now. The search service returned: ${errorMessage}. This might be a temporary issue - please try again in a moment, or you can ask me questions that don't require current web information.`,
+        error: errorMessage,
       };
     }
   },
