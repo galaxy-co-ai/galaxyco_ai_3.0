@@ -229,12 +229,12 @@ Neptune is now a fully-featured, production-ready AI assistant with:
   - Deep crawl support (50 pages, depth 4) for background analysis
   - Serverless-compatible (no Playwright dependency)
   - Comprehensive logging and metadata tracking
-- 🔍 **Internet Search Capability** - Neptune can now search the web for current information:
-  - Google Custom Search API integration for real-time web search
-  - Search for news, current events, research, and any topic
-  - Automatically searches before answering questions about recent information
-  - Cites sources from search results
-  - Graceful degradation when search is not configured
+- 🔍 **Internet Search Capability** - ⚠️ **NOT FUNCTIONAL** - Web search integration in progress:
+  - Perplexity AI API integration attempted (for real-time web browsing)
+  - Google Custom Search API fallback available
+  - ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns error messages when users ask about latest news or current events
+  - Diagnostic logging added to troubleshoot Perplexity API integration
+  - **Status**: Investigation ongoing - API keys configured but search functionality not working
 - 🐦 **Twitter/X Integration** - Social media posting directly from Neptune:
   - Connect Twitter account via OAuth 2.0 (PKCE flow)
   - Post tweets immediately or schedule for later
@@ -695,8 +695,8 @@ See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 - **Gamma.app** - Professional document generation (Pro/Teams/Business plan required)
 - **Anthropic** - Claude models (fallback AI provider)
 - **Google AI** - Gemini models (fallback AI provider)
-- **Perplexity AI API** - Real-time web browsing and AI-powered search (PERPLEXITY_API_KEY) - Recommended for latest news and real-time information
-- **Google Custom Search API** - Internet search capability (GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_ENGINE_ID) - Fallback if Perplexity not configured
+- **Perplexity AI API** - Real-time web browsing and AI-powered search (PERPLEXITY_API_KEY) - ⚠️ **INTEGRATION IN PROGRESS** - Not currently functional
+- **Google Custom Search API** - Internet search capability (GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_ENGINE_ID) - Fallback option (also not currently functional)
 - **Firecrawl API** - Enhanced website crawling fallback (FIRECRAWL_API_KEY)
 - **Twilio** - SMS, WhatsApp, Voice (Conversations feature)
 - **Pinecone** - Vector search (Knowledge Base)

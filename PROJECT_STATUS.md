@@ -45,6 +45,7 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - ✅ Learning system progressing (autonomy thresholds, pattern recognition)
 - ✅ RAG returning cited results (enhanced detection, fallback handling)
 - ✅ Website analysis fully functional (serverless crawler with Firecrawl-first approach)
+- ⚠️ Web search NOT functional (Perplexity API integration attempted but not working)
 - ✅ All integrations connected (QuickBooks, Stripe, Shopify, Google Calendar, etc.)
 - ✅ Conversation persistence working (restores on login)
 - ✅ Feedback UI functional (thumbs up/down updates learning)
@@ -273,13 +274,17 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 
 **Completed December 7, 2025** - Added internet search capability and improved website analysis:
 
-### Web Search Integration ✅
-- **Google Custom Search API** - Full web search capability for Neptune
-- New `search_web` tool added to Neptune's toolset
-- Automatically searches before answering questions about current events, news, or recent information
-- Cites sources from search results
-- Graceful degradation when search API is not configured
-- Integrated into system prompt with clear usage guidelines
+### Web Search Integration ⚠️ **NOT FUNCTIONAL**
+- ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns error messages when users ask about latest news
+- **Perplexity AI API Integration** - Attempted integration for real-time web browsing
+  - API key configured in environment variables
+  - Integration code implemented with fallback to Google Custom Search
+  - ⚠️ **Status**: Not working - Neptune returns "can't access the web right now" errors
+  - Diagnostic logging added to troubleshoot API integration issues
+- **Google Custom Search API** - Fallback option available but also not currently functional
+- New `search_web` tool exists but fails when called
+- System prompt instructs Neptune to search, but tool execution fails
+- **Investigation Needed**: Check Vercel logs to diagnose Perplexity API errors
 
 ### Enhanced Website Analysis ✅ **FULLY FUNCTIONAL**
 - ✅ **Serverless Web Crawler**: Replaced Playwright dependency with serverless-compatible implementation
@@ -324,10 +329,12 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Overall** | ✅ 100% Production-Ready |
 
 **Latest Updates (December 7, 2025):**
-- **Web Search** ✅
-  - Added `search_web` tool with Google Custom Search API integration
-  - System prompt updated with search capabilities
-  - Works correctly for internet search queries
+- **Web Search** ⚠️ **NOT FUNCTIONAL**
+  - Perplexity AI API integration attempted for real-time web browsing
+  - Google Custom Search API fallback available
+  - ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns "can't access the web right now" error
+  - Diagnostic logging added to troubleshoot API integration issues
+  - **Status**: Investigation ongoing - API keys configured but search functionality not working
 - **Website Analysis** ✅ **FULLY FUNCTIONAL**
   - Serverless web crawler with Firecrawl-first approach
   - Replaced Playwright dependency with serverless-compatible lite crawler
@@ -335,6 +342,13 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
   - Deep crawl support (50 pages, depth 4) for background analysis
   - Comprehensive logging and metadata tracking
   - **Website analysis now works reliably** - Neptune can analyze any website URL
+- **Web Search Capability** ⚠️ **NOT FUNCTIONAL**
+  - Perplexity AI API integration attempted for real-time web browsing
+  - Google Custom Search API fallback available
+  - ⚠️ **CURRENT ISSUE**: Neptune cannot access the web - returns "can't access the web right now" error
+  - Diagnostic logging added to troubleshoot API integration issues
+  - **Status**: Investigation ongoing - API keys configured in environment but search functionality not working
+  - Users asking about latest news or current events receive error messages instead of search results
 - **Stripe Integration Complete** ✅
   - Installed Stripe SDK (`stripe@20.0.0`)
   - Created `/api/stripe/checkout` - Checkout session creation
