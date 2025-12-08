@@ -7350,19 +7350,25 @@ Provide analysis in JSON format:
       }
 
       // Check if search is configured
-      const { isSearchConfigured } = await import('@/lib/search');
+      const { isSearchConfigured, getSearchProvider } = await import('@/lib/search');
       if (!isSearchConfigured()) {
         return {
           success: false,
-          message: 'Web search is not configured. Please configure Google Custom Search API keys in environment variables (GOOGLE_CUSTOM_SEARCH_API_KEY and GOOGLE_CUSTOM_SEARCH_ENGINE_ID).',
+          message: 'Web search is not configured. Please configure Perplexity API key (PERPLEXITY_API_KEY) or Google Custom Search API keys (GOOGLE_CUSTOM_SEARCH_API_KEY and GOOGLE_CUSTOM_SEARCH_ENGINE_ID) in environment variables.',
           error: 'Search not configured',
         };
       }
 
+      const provider = getSearchProvider();
+      logger.info('Executing web search', { 
+        query, 
+        numResults, 
+        provider,
+        workspaceId: context.workspaceId 
+      });
+
       // Import search functions
       const { searchWeb, extractSearchInsights } = await import('@/lib/search');
-      
-      logger.info('Executing web search', { query, numResults, workspaceId: context.workspaceId });
       
       const results = await searchWeb(query, { numResults });
       const summary = extractSearchInsights(results);
@@ -7375,13 +7381,18 @@ Provide analysis in JSON format:
             query,
             results: [],
             summary: 'No results found',
+            provider,
           },
         };
       }
 
+      const providerMessage = provider === 'perplexity' 
+        ? `I found real-time information about "${query}" using Perplexity's web browsing.`
+        : `I found ${results.length} result${results.length === 1 ? '' : 's'} for "${query}".`;
+
       return {
         success: true,
-        message: `Found ${results.length} result${results.length === 1 ? '' : 's'} for "${query}".`,
+        message: providerMessage,
         data: {
           query,
           results: results.map(r => ({
@@ -7391,6 +7402,7 @@ Provide analysis in JSON format:
             displayLink: r.displayLink,
           })),
           summary,
+          provider,
         },
       };
     } catch (error) {
@@ -7400,7 +7412,7 @@ Provide analysis in JSON format:
       if (error instanceof Error && error.message.includes('not configured')) {
         return {
           success: false,
-          message: 'Web search is not configured. Please configure Google Custom Search API keys in environment variables.',
+          message: 'Web search is not configured. Please configure Perplexity API key (PERPLEXITY_API_KEY) or Google Custom Search API keys (GOOGLE_CUSTOM_SEARCH_API_KEY and GOOGLE_CUSTOM_SEARCH_ENGINE_ID) in environment variables.',
           error: 'Search not configured',
         };
       }

@@ -133,8 +133,9 @@ function buildCapabilitiesSection(): string {
 - Provide personalized launch/growth recommendations
 - When a user shares a URL, IMMEDIATELY use analyze_company_website - don't ask for confirmation
 
-**🔍 Internet Search**
+**🔍 Internet Search (Real-Time Web Browsing)**
 - Search the web for current information, news, research, or any topic using search_web
+- Uses Perplexity AI (if configured) for real-time web browsing and latest news, or Google Custom Search as fallback
 - Use this tool when you need real-time data, recent news, or information that may have changed recently
 - ALWAYS search BEFORE answering questions about:
   - Current events or recent news

@@ -695,7 +695,8 @@ See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 - **Gamma.app** - Professional document generation (Pro/Teams/Business plan required)
 - **Anthropic** - Claude models (fallback AI provider)
 - **Google AI** - Gemini models (fallback AI provider)
-- **Google Custom Search API** - Internet search capability (GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_ENGINE_ID)
+- **Perplexity AI API** - Real-time web browsing and AI-powered search (PERPLEXITY_API_KEY) - Recommended for latest news and real-time information
+- **Google Custom Search API** - Internet search capability (GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_ENGINE_ID) - Fallback if Perplexity not configured
 - **Firecrawl API** - Enhanced website crawling fallback (FIRECRAWL_API_KEY)
 - **Twilio** - SMS, WhatsApp, Voice (Conversations feature)
 - **Pinecone** - Vector search (Knowledge Base)

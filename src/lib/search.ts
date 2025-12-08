@@ -1,6 +1,7 @@
 /**
- * Google Custom Search API Integration
- * Used for lead intelligence and news enrichment
+ * Web Search Integration
+ * Supports Perplexity AI (primary) and Google Custom Search (fallback)
+ * Used for lead intelligence, news enrichment, and real-time web browsing
  */
 
 export interface SearchResult {
@@ -16,8 +17,23 @@ export interface SearchResult {
   };
 }
 
+export interface PerplexitySearchResult {
+  answer?: string;
+  citations?: Array<{
+    title: string;
+    url: string;
+    snippet?: string;
+  }>;
+  sources?: Array<{
+    title: string;
+    url: string;
+    snippet?: string;
+  }>;
+}
+
 /**
- * Search the web using Google Custom Search API
+ * Search the web using Perplexity AI API (primary) or Google Custom Search (fallback)
+ * Perplexity provides real-time web browsing and better AI-powered results
  */
 export async function searchWeb(
   query: string,
@@ -27,8 +43,19 @@ export async function searchWeb(
     dateRestrict?: string;
   }
 ): Promise<SearchResult[]> {
+  // Try Perplexity first (better for real-time browsing and AI-powered results)
+  if (process.env.PERPLEXITY_API_KEY) {
+    try {
+      return await searchWebWithPerplexity(query, options);
+    } catch (error) {
+      // Fall back to Google if Perplexity fails
+      console.warn('Perplexity search failed, falling back to Google', error);
+    }
+  }
+
+  // Fallback to Google Custom Search
   if (!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY) {
-    throw new Error('GOOGLE_CUSTOM_SEARCH_API_KEY not configured');
+    throw new Error('No search API configured. Please set PERPLEXITY_API_KEY or GOOGLE_CUSTOM_SEARCH_API_KEY');
   }
 
   if (!process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
@@ -60,6 +87,119 @@ export async function searchWeb(
 
   const data = await response.json();
   return data.items || [];
+}
+
+/**
+ * Search the web using Perplexity AI API
+ * Provides real-time web browsing and AI-powered search results
+ */
+async function searchWebWithPerplexity(
+  query: string,
+  options?: {
+    numResults?: number;
+    siteSearch?: string;
+    dateRestrict?: string;
+  }
+): Promise<SearchResult[]> {
+  if (!process.env.PERPLEXITY_API_KEY) {
+    throw new Error('PERPLEXITY_API_KEY not configured');
+  }
+
+  // Build query with optional site restriction
+  let searchQuery = query;
+  if (options?.siteSearch) {
+    searchQuery = `site:${options.siteSearch} ${query}`;
+  }
+
+  // Map date restrictions to Perplexity format
+  let searchRecencyFilter = 'month'; // default
+  if (options?.dateRestrict) {
+    if (options.dateRestrict.startsWith('d')) {
+      const days = parseInt(options.dateRestrict.substring(1));
+      if (days <= 7) searchRecencyFilter = 'week';
+      else if (days <= 1) searchRecencyFilter = 'day';
+      else if (days <= 30) searchRecencyFilter = 'month';
+      else searchRecencyFilter = 'year';
+    }
+  }
+
+  // Use Perplexity's chat completions API for web search
+  // Using the "online" model for real-time web browsing
+  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-sonar-large-128k-online', // Online model for real-time web browsing
+      messages: [
+        {
+          role: 'user',
+          content: searchQuery,
+        },
+      ],
+      return_citations: true,
+      return_related_questions: false,
+      search_domain_filter: options?.siteSearch ? [options.siteSearch] : undefined,
+      search_recency_filter: searchRecencyFilter,
+      temperature: 0.2, // Lower temperature for more factual results
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  
+  // Extract the answer and citations from Perplexity response
+  const answer = data.choices?.[0]?.message?.content || '';
+  const citations = data.citations || [];
+  
+  // Convert Perplexity citations to our SearchResult format
+  const results: SearchResult[] = citations
+    .slice(0, options?.numResults || 5)
+    .map((citation: any, index: number) => {
+      try {
+        const url = citation.url || citation.link || '';
+        return {
+          title: citation.title || citation.name || `Source ${index + 1}`,
+          link: url,
+          snippet: citation.snippet || citation.text || citation.description || answer.substring(0, 200),
+          displayLink: url ? new URL(url).hostname : 'perplexity.ai',
+          formattedUrl: url,
+        };
+      } catch {
+        return {
+          title: citation.title || `Source ${index + 1}`,
+          link: citation.url || '',
+          snippet: citation.snippet || answer.substring(0, 200),
+          displayLink: 'perplexity.ai',
+          formattedUrl: citation.url || '',
+        };
+      }
+    });
+
+  // If we have an answer but no citations, create a result from the answer
+  if (answer && results.length === 0) {
+    results.push({
+      title: 'AI-Powered Answer',
+      link: '',
+      snippet: answer.substring(0, 500),
+      displayLink: 'perplexity.ai',
+      formattedUrl: '',
+    });
+  }
+
+  // If we have both answer and citations, prepend the answer as context
+  if (answer && results.length > 0) {
+    // Add answer as additional context to first result
+    results[0].snippet = `${answer.substring(0, 300)}\n\n${results[0].snippet}`;
+  }
+
+  return results;
 }
 
 /**
@@ -116,12 +256,26 @@ export function extractSearchInsights(results: SearchResult[]): string {
 
 /**
  * Check if web search is configured
+ * Supports both Perplexity (preferred) and Google Custom Search
  */
 export function isSearchConfigured(): boolean {
   return !!(
-    process.env.GOOGLE_CUSTOM_SEARCH_API_KEY &&
-    process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+    process.env.PERPLEXITY_API_KEY ||
+    (process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID)
   );
+}
+
+/**
+ * Get the primary search provider name
+ */
+export function getSearchProvider(): 'perplexity' | 'google' | 'none' {
+  if (process.env.PERPLEXITY_API_KEY) {
+    return 'perplexity';
+  }
+  if (process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
+    return 'google';
+  }
+  return 'none';
 }
 
 
