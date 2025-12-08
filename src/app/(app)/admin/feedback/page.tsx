@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { db } from '@/lib/db';
-import { platformFeedback, users } from '@/db/schema';
+import { platformFeedback } from '@/db/schema';
 import { desc, eq, count, and, gte } from 'drizzle-orm';
 import { 
   MessageSquareWarning, 
@@ -10,13 +10,12 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  CheckCircle,
-  Clock,
   AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
+import FeedbackStatusDropdown from '@/components/admin/FeedbackStatusDropdown';
 
 export const dynamic = 'force-dynamic';
 
@@ -127,24 +126,7 @@ function getSentimentIcon(sentiment: string | null) {
   }
 }
 
-function getStatusBadge(status: string) {
-  switch (status) {
-    case 'new':
-      return <Badge variant="secondary" className="bg-blue-500/10 text-blue-500 border-blue-500/20">New</Badge>;
-    case 'in_review':
-      return <Badge variant="secondary" className="bg-amber-500/10 text-amber-500 border-amber-500/20">In Review</Badge>;
-    case 'planned':
-      return <Badge variant="secondary" className="bg-purple-500/10 text-purple-500 border-purple-500/20">Planned</Badge>;
-    case 'in_progress':
-      return <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20">In Progress</Badge>;
-    case 'done':
-      return <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">Done</Badge>;
-    case 'closed':
-      return <Badge variant="secondary" className="bg-zinc-500/10 text-zinc-500 border-zinc-500/20">Closed</Badge>;
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
-}
+type FeedbackStatus = 'new' | 'in_review' | 'planned' | 'in_progress' | 'done' | 'closed' | 'wont_fix';
 
 export default async function FeedbackHubPage() {
   const [stats, feedback] = await Promise.all([
@@ -230,7 +212,10 @@ export default async function FeedbackHubPage() {
                       <span className="font-medium">
                         {item.title || `${item.type.charAt(0).toUpperCase() + item.type.slice(1)} feedback`}
                       </span>
-                      {getStatusBadge(item.status)}
+                      <FeedbackStatusDropdown 
+                        feedbackId={item.id} 
+                        currentStatus={item.status as FeedbackStatus} 
+                      />
                     </div>
                     {item.content && (
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
