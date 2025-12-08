@@ -34,6 +34,7 @@ export const TOOL_RISK_LEVELS: Record<string, ActionRiskLevel> = {
   project_cash_flow: { toolName: 'project_cash_flow', level: 'low', defaultConfidence: 70 },
   get_pipeline_summary: { toolName: 'get_pipeline_summary', level: 'low', defaultConfidence: 90 },
   get_campaign_stats: { toolName: 'get_campaign_stats', level: 'low', defaultConfidence: 90 },
+  search_web: { toolName: 'search_web', level: 'low', defaultConfidence: 85 },
   
   // Medium-risk: Ask first, learn over time
   create_lead: { toolName: 'create_lead', level: 'medium', defaultConfidence: 0 },
