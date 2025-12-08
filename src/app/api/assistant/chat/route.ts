@@ -436,10 +436,16 @@ export async function POST(request: Request) {
       let enhancedUserMessage = fullMessage;
       if (detectedUrls.length > 0) {
         const urlList = detectedUrls.join(', ');
-        enhancedUserMessage = `${fullMessage}\n\n[SYSTEM INSTRUCTION: URLs detected in message: ${urlList}. You MUST call the analyze_company_website tool immediately with the URL(s) found. Do NOT ask for confirmation. Do NOT respond with text first. Call the tool NOW.]`;
+        // Use a more forceful instruction to ensure tool is called
+        enhancedUserMessage = `${fullMessage}\n\n[CRITICAL SYSTEM INSTRUCTION: The user's message contains these URLs: ${urlList}. You MUST immediately call the analyze_company_website tool with url="${detectedUrls[0]}" as your FIRST action. Do NOT write any text response first. Do NOT ask for permission. Call the tool function analyze_company_website NOW with the URL parameter.]`;
         logger.info('[AI Chat Stream] URLs detected, forcing website analysis', { 
           urls: detectedUrls,
+          originalMessage: message.slice(0, 100),
           conversationId: conversation.id 
+        });
+      } else {
+        logger.debug('[AI Chat Stream] No URLs detected in message', { 
+          message: message.slice(0, 100) 
         });
       }
 
