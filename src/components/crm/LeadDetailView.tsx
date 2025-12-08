@@ -1,14 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import { Lead } from "./CRMDashboard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,23 +28,118 @@ import {
   Calendar,
   Building2,
   Sparkles,
-  TrendingUp,
   MessageSquare,
   Tag,
   Edit,
   MoreVertical,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 interface LeadDetailViewProps {
   lead: Lead;
   formatDate: (date: Date | null) => string;
   formatCurrency: (cents: number) => string;
   onDelete?: (leadId: string) => void;
+  onUpdate?: (updatedLead: Lead) => void;
 }
 
-export default function LeadDetailView({ lead, formatDate, formatCurrency, onDelete }: LeadDetailViewProps) {
+// Phone number formatting helper
+function formatPhoneNumber(value: string): string {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+}
+
+export default function LeadDetailView({ lead, formatDate, formatCurrency, onDelete, onUpdate }: LeadDetailViewProps) {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: lead.name,
+    email: lead.email,
+    company: lead.company || "",
+    title: lead.title || "",
+    phone: lead.phone || "",
+    stage: lead.stage,
+    estimatedValue: lead.estimatedValue ? String(lead.estimatedValue) : "",
+    source: lead.source || "",
+    notes: lead.notes || "",
+  });
+
+  // Reset form when dialog opens
+  const handleOpenEditDialog = () => {
+    setEditForm({
+      name: lead.name,
+      email: lead.email,
+      company: lead.company || "",
+      title: lead.title || "",
+      phone: lead.phone || "",
+      stage: lead.stage,
+      estimatedValue: lead.estimatedValue ? String(lead.estimatedValue) : "",
+      source: lead.source || "",
+      notes: lead.notes || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editForm.name.trim() || !editForm.email.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/crm/prospects/${lead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editForm.name,
+          email: editForm.email,
+          company: editForm.company || null,
+          title: editForm.title || null,
+          phone: editForm.phone || null,
+          stage: editForm.stage,
+          estimatedValue: editForm.estimatedValue ? parseFloat(editForm.estimatedValue) : null,
+          source: editForm.source || null,
+          notes: editForm.notes || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update lead' }));
+        throw new Error(errorData.error || 'Failed to update lead');
+      }
+
+      const updatedData = await response.json();
+      
+      // Update local state through callback
+      if (onUpdate) {
+        onUpdate({
+          ...lead,
+          name: updatedData.name,
+          email: updatedData.email || '',
+          company: updatedData.company || '',
+          title: updatedData.title || '',
+          phone: updatedData.phone || '',
+          stage: updatedData.stage,
+          estimatedValue: updatedData.estimatedValue || 0,
+          source: updatedData.source || '',
+          notes: updatedData.notes || '',
+        });
+      }
+
+      toast.success("Lead updated successfully");
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to update lead");
+    } finally {
+      setIsSaving(false);
+    }
+  };
   const getScoreColor = (score: number) => {
     if (score >= 70) return "bg-red-50 text-red-700 border-red-200";
     if (score >= 50) return "bg-amber-50 text-amber-700 border-amber-200";
@@ -87,7 +193,13 @@ export default function LeadDetailView({ lead, formatDate, formatCurrency, onDel
           <div className="flex items-start justify-between gap-2 mb-1">
             <h2 className="text-base font-semibold text-slate-900">{lead.name}</h2>
             <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" aria-label="Edit lead">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-7 w-7 p-0" 
+                aria-label="Edit lead"
+                onClick={handleOpenEditDialog}
+              >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
               <DropdownMenu>
@@ -261,6 +373,155 @@ export default function LeadDetailView({ lead, formatDate, formatCurrency, onDel
           Schedule
         </Button>
       </div>
+
+      {/* Edit Lead Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Lead</DialogTitle>
+            <DialogDescription>
+              Update the lead&apos;s information
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900">Basic Information</h3>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-name">Full Name *</Label>
+                  <Input
+                    id="edit-lead-name"
+                    placeholder="John Doe"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-email">Email *</Label>
+                  <Input
+                    id="edit-lead-email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-company">Company</Label>
+                  <Input
+                    id="edit-lead-company"
+                    placeholder="Acme Inc."
+                    value={editForm.company}
+                    onChange={(e) => setEditForm({ ...editForm, company: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-title">Title</Label>
+                  <Input
+                    id="edit-lead-title"
+                    placeholder="Sales Manager"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-phone">Phone</Label>
+                  <Input
+                    id="edit-lead-phone"
+                    type="tel"
+                    placeholder="123-456-7890"
+                    value={editForm.phone}
+                    onChange={(e) => {
+                      const formatted = formatPhoneNumber(e.target.value);
+                      setEditForm({ ...editForm, phone: formatted });
+                    }}
+                    maxLength={12}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Lead Details */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900">Lead Details</h3>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-stage">Stage</Label>
+                  <select
+                    id="edit-lead-stage"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    value={editForm.stage}
+                    onChange={(e) => setEditForm({ ...editForm, stage: e.target.value })}
+                    aria-label="Lead stage"
+                  >
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="qualified">Qualified</option>
+                    <option value="proposal">Proposal</option>
+                    <option value="negotiation">Negotiation</option>
+                    <option value="won">Won</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-value">Estimated Value ($)</Label>
+                  <Input
+                    id="edit-lead-value"
+                    type="number"
+                    placeholder="50000"
+                    value={editForm.estimatedValue}
+                    onChange={(e) => setEditForm({ ...editForm, estimatedValue: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-source">Source</Label>
+                  <Input
+                    id="edit-lead-source"
+                    placeholder="Website, Referral, etc."
+                    value={editForm.source}
+                    onChange={(e) => setEditForm({ ...editForm, source: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lead-notes">Notes</Label>
+                  <Textarea
+                    id="edit-lead-notes"
+                    placeholder="Add any notes about this lead..."
+                    value={editForm.notes}
+                    onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1334,11 +1334,38 @@ export default function KnowledgeBaseDashboard({
                       {viewingDocument.description || 'Document preview not available'}
                     </p>
                     <div className="flex gap-2">
-                      <Button aria-label="Open document">
+                      <Button 
+                        aria-label="Open document"
+                        onClick={() => {
+                          if (viewingDocument.url) {
+                            window.open(viewingDocument.url, '_blank', 'noopener,noreferrer');
+                          } else {
+                            toast.error('Document URL not available');
+                          }
+                        }}
+                        disabled={!viewingDocument.url}
+                      >
                         <ArrowRight className="h-4 w-4 mr-2" />
                         Open Document
                       </Button>
-                      <Button variant="outline" aria-label="Download">
+                      <Button 
+                        variant="outline" 
+                        aria-label="Download"
+                        onClick={() => {
+                          if (viewingDocument.url) {
+                            const link = document.createElement('a');
+                            link.href = viewingDocument.url;
+                            link.download = viewingDocument.name || 'document';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            toast.success('Download started');
+                          } else {
+                            toast.error('Download not available');
+                          }
+                        }}
+                        disabled={!viewingDocument.url}
+                      >
                         <Download className="h-4 w-4 mr-2" />
                         Download
                       </Button>

@@ -166,6 +166,14 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 8, 2025):**
+- 🐛 **Taylor's Feedback Bug Fixes** - All 4 reported issues resolved:
+  - Library: Documents can now be opened and downloaded (added onClick handlers)
+  - Leads: Full edit dialog with PATCH API endpoint for updating lead info
+  - Creator: Fixed JSON parsing error by creating `/api/assistant/simple` non-streaming endpoint
+  - Creator: Document title is now editable in Save to Collections dialog
+- 🔐 **Google OAuth Fresh Setup** - New GalaxyCo AI Platform project in Google Cloud:
+  - Fresh OAuth credentials with Gmail and Calendar APIs enabled
+  - Test users configured for immediate access
 - 🎛️ **Mission Control Admin Dashboard** - Complete admin panel improvements:
   - Fixed admin access for `dev@galaxyco.ai` (sidebar link visibility + server-side authorization)
   - Added Users page (`/admin/users`) with user list, stats cards, and avatars

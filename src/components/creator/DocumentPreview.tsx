@@ -83,6 +83,7 @@ export default function DocumentPreview({
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [saveTitle, setSaveTitle] = useState(""); // Custom title for save dialog
   
   // Gamma integration state
   const [isGammaAvailable, setIsGammaAvailable] = useState(false);
@@ -360,6 +361,14 @@ export default function DocumentPreview({
   // Save to collections - calls real API
   const handleSave = async () => {
     if (!document) return;
+    
+    // Use custom title from save dialog, fall back to document title
+    const titleToSave = saveTitle.trim() || document.title;
+    
+    if (!titleToSave) {
+      toast.error("Please enter a title");
+      return;
+    }
 
     setIsSaving(true);
     
@@ -368,7 +377,7 @@ export default function DocumentPreview({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: document.title,
+          title: titleToSave,
           type: document.type,
           content: { sections: document.sections },
           metadata: document.metadata,
@@ -385,10 +394,11 @@ export default function DocumentPreview({
 
       const data = await response.json();
       
-      // Update local document with saved ID
+      // Update local document with saved ID and new title
       const savedDocument = {
         ...document,
         id: data.item.id,
+        title: titleToSave,
       };
       
       onSaveToCollections(savedDocument);
@@ -396,7 +406,7 @@ export default function DocumentPreview({
       setShowSaveDialog(false);
       
       toast.success("Saved to Collections!", {
-        description: `"${document.title}" has been saved`,
+        description: `"${titleToSave}" has been saved`,
       });
     } catch (error) {
       setIsSaving(false);
@@ -771,7 +781,16 @@ export default function DocumentPreview({
       </div>
 
       {/* Save Dialog */}
-      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+      <Dialog 
+        open={showSaveDialog} 
+        onOpenChange={(open) => {
+          setShowSaveDialog(open);
+          // Initialize save title when opening dialog
+          if (open && document) {
+            setSaveTitle(document.title);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -785,10 +804,16 @@ export default function DocumentPreview({
 
           <div className="py-4 space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label htmlFor="save-document-title" className="text-sm font-medium text-gray-700 mb-1 block">
                 Document Title
               </label>
-              <Input value={document.title} readOnly className="bg-gray-50" />
+              <Input 
+                id="save-document-title"
+                value={saveTitle} 
+                onChange={(e) => setSaveTitle(e.target.value)}
+                placeholder="Enter document title"
+                className="bg-white"
+              />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">
@@ -810,7 +835,7 @@ export default function DocumentPreview({
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || !saveTitle.trim()}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
               {isSaving ? (

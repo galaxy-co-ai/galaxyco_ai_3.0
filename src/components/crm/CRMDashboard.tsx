@@ -2424,6 +2424,14 @@ Be helpful, proactive, and use CRM tools when needed.`;
                 handleDeleteLead(id);
                 setShowLeadDetailDialog(false);
               }}
+              onUpdate={(updatedLead) => {
+                // Update lead in local state
+                setLeads(prevLeads => 
+                  prevLeads.map(l => l.id === updatedLead.id ? updatedLead : l)
+                );
+                // Update the selected lead data as well
+                setSelectedLeadData(updatedLead);
+              }}
             />
           )}
         </DialogContent>

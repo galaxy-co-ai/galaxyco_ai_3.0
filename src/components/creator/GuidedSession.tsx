@@ -117,14 +117,14 @@ export default function GuidedSession({
       }
 
       try {
-        // Call Neptune assistant for a real acknowledgment
+        // Call Neptune simple assistant for a quick acknowledgment (non-streaming)
         setIsTyping(true);
 
-        const response = await fetch("/api/assistant/chat", {
+        const response = await fetch("/api/assistant/simple", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: userInput,
+            message: `User provided this for "${currentRequirement?.label || 'content'}": ${userInput}`,
             context: {
               workspace: "Creator",
               feature: "content",
