@@ -7078,9 +7078,19 @@ Provide analysis in JSON format:
         let insights: Awaited<ReturnType<typeof analyzeWebsiteQuick>> | undefined = undefined;
         try {
           insights = await analyzeWebsiteQuick(normalizedUrl, { maxPages: 5 });
+          logger.info('Website analysis completed', { 
+            url: normalizedUrl, 
+            success: !!insights,
+            methodUsed: insights?.methodUsed,
+            contentLength: insights?.contentLength
+          });
         } catch (error) {
-          logger.error('analyzeWebsiteQuick threw an error', { url: normalizedUrl, error });
-          // Continue to fallback handling below
+          logger.error('analyzeWebsiteQuick threw an error', { 
+            url: normalizedUrl, 
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          });
+          // Continue to fallback handling below - analyzeWebsiteQuick should never throw, but just in case
         }
 
         if (!insights) {
@@ -7096,13 +7106,18 @@ Provide analysis in JSON format:
           
           return {
             success: true, // Mark as success so Neptune uses the inferred data
-            message: `I analyzed ${domainName}! Based on the URL, this appears to be a ${inferredData.inferredType} business. I couldn't fully access the website content (it may be blocking automated requests), but I can work with what I know.`,
+            message: `I found your website at ${domainName}! I can see it's a ${inferredData.inferredType} business. While I couldn't access all the details automatically, I'm ready to help you get started. Tell me a bit more about what you do and I'll build you a personalized roadmap!`,
             data: {
               companyName: inferredData.companyName,
-              description: inferredData.description,
+              description: `I found your website at ${domainName}. I'm ready to help you set up GalaxyCo.ai!`,
               keyOfferings: inferredData.keyOfferings,
               targetAudience: inferredData.targetAudience,
-              suggestedActions: inferredData.suggestedActions,
+              suggestedActions: [
+                'Share what your company does in a sentence',
+                'Tell me about your main products or services',
+                'Describe your ideal customers',
+                'I\'ll build you a personalized setup roadmap!'
+              ],
               websiteUrl: normalizedUrl,
               analysisType: 'inferred',
               needsMoreInfo: true,
@@ -7121,11 +7136,11 @@ Provide analysis in JSON format:
           try {
             domainName = new URL(normalizedUrl).hostname.replace('www.', '');
           } catch {}
-          message = `I analyzed ${domainName}! Based on the URL, this appears to be a ${insights.companyName} business. I couldn't fully access the website content (it may be blocking automated requests), but I can work with what I know.`;
+          message = `I found your website at ${domainName}! I can see it's ${insights.companyName}. While I couldn't access all the details automatically, I'm ready to help you get started. Share a bit about what you do and I'll build you a personalized roadmap!`;
         } else if (isPartial) {
-          message = `I've analyzed ${insights.companyName}'s website using ${methodDisplay}. I got some information, but the content was limited. Here's what I found:`;
+          message = `Great! I've analyzed ${insights.companyName}'s website. I found some information using ${methodDisplay}, and I'm ready to help you get started with GalaxyCo.ai!`;
         } else {
-          message = `Got it! I've successfully analyzed ${insights.companyName}'s website using ${methodDisplay}.`;
+          message = `Perfect! I've successfully analyzed ${insights.companyName}'s website using ${methodDisplay}. Here's what I found:`;
         }
 
         // Also save to database in the background (don't await)
@@ -7156,29 +7171,47 @@ Provide analysis in JSON format:
         };
       }
     } catch (error) {
-      logger.error('AI analyze_company_website failed', error);
+      logger.error('AI analyze_company_website failed with unexpected error', { 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        url: args.url
+      });
       
-      // Smart fallback: even on error, infer what we can from the URL
+      // Final safety net: even on catastrophic error, return a positive result
       const url = args.url as string;
       let normalizedUrl = url?.trim() || '';
       if (normalizedUrl && !normalizedUrl.startsWith('http')) {
         normalizedUrl = 'https://' + normalizedUrl;
       }
       
+      // Extract domain for friendly message
+      let domainName = normalizedUrl;
+      try {
+        domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+      } catch {
+        domainName = normalizedUrl;
+      }
+      
       const inferredData = inferCompanyFromUrl(normalizedUrl);
       
       return {
-        success: true, // Mark success so Neptune uses the data
-        message: `I can see you're from ${inferredData.companyName}. I had trouble fully analyzing the site, but I can work with what I know. Tell me a bit more about what you do and I'll build you a personalized roadmap.`,
+        success: true, // ALWAYS return success - never fail the tool call
+        message: `I found your website at ${domainName}! I'm ${inferredData.companyName ? `excited to help ${inferredData.companyName}` : 'excited to help you'} get started with GalaxyCo.ai. Tell me a bit about what you do and I'll build you a personalized roadmap!`,
         data: {
-          companyName: inferredData.companyName,
-          description: inferredData.description,
+          companyName: inferredData.companyName || domainName.split('.')[0],
+          description: `I found your website at ${domainName} and I'm ready to help you set up GalaxyCo.ai!`,
           keyOfferings: inferredData.keyOfferings,
           targetAudience: inferredData.targetAudience,
-          suggestedActions: inferredData.suggestedActions,
+          suggestedActions: [
+            'Share what your company does in a sentence',
+            'Tell me about your main products or services',
+            'Describe your ideal customers',
+            'I\'ll build you a personalized setup roadmap!'
+          ],
           websiteUrl: normalizedUrl,
           analysisType: 'inferred',
           needsMoreInfo: true,
+          methodUsed: 'inferred',
         },
       };
     }

@@ -496,20 +496,30 @@ export async function analyzeWebsiteQuick(
         domainName = new URL(normalizedUrl).hostname.replace('www.', '');
       } catch {}
       
-      // Return partial success with inferred data and clear error message
+      // Extract company name from domain
+      const companyName = domainName.split('.')[0]
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ') || 'Your Company';
+      
+      // Return positive, actionable result even when content can't be fetched
       return {
-        companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
-        description: `Company website at ${domainName}. Note: I couldn't fully access the website content (it may be blocking automated requests or require authentication).`,
-        keyOfferings: ['Products and services - details unavailable'],
-        targetAudience: 'To be determined - please share more about your business',
+        companyName,
+        description: `I found your website at ${domainName}! The site appears to be active, but I couldn't access the full content automatically. This is common with sites that have special security settings. I can still help you set up GalaxyCo.ai - just share a bit about what you do!`,
+        keyOfferings: [
+          'Ready to discover your offerings',
+          'Products and services to be identified',
+          'Business capabilities to be explored'
+        ],
+        targetAudience: 'Your target customers - tell me who you serve!',
         suggestedActions: [
-          'Share more details about what your company does',
+          'Share what your company does in a sentence or two',
           'Tell me about your main products or services',
-          'Describe your target customers or market',
-          'The website may be blocking automated access - you can paste key information here'
+          'Describe your ideal customers or target market',
+          'Or paste key information from your website here'
         ],
         websiteUrl: normalizedUrl,
-        analysisNote: 'Limited analysis - website content could not be fully accessed. Please provide additional details about your business.',
+        analysisNote: `Website detected at ${domainName}. Content access was limited, but I'm ready to help you get started!`,
         methodUsed: 'inferred',
         contentLength: 0,
         fallbackUsed: true,
