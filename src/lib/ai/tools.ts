@@ -7106,22 +7106,40 @@ Provide analysis in JSON format:
               websiteUrl: normalizedUrl,
               analysisType: 'inferred',
               needsMoreInfo: true,
+              methodUsed: 'inferred',
             },
           };
         }
 
+        // Determine success level and message based on method used
+        const isPartial = insights.methodUsed === 'inferred' || insights.fallbackUsed || (insights.contentLength || 0) < 500;
+        const methodDisplay = insights.methodUsed?.replace('+', ' + ') || 'unknown';
+        
+        let message = '';
+        if (isPartial && insights.methodUsed === 'inferred') {
+          let domainName = normalizedUrl;
+          try {
+            domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+          } catch {}
+          message = `I analyzed ${domainName}! Based on the URL, this appears to be a ${insights.companyName} business. I couldn't fully access the website content (it may be blocking automated requests), but I can work with what I know.`;
+        } else if (isPartial) {
+          message = `I've analyzed ${insights.companyName}'s website using ${methodDisplay}. I got some information, but the content was limited. Here's what I found:`;
+        } else {
+          message = `Got it! I've successfully analyzed ${insights.companyName}'s website using ${methodDisplay}.`;
+        }
+
         // Also save to database in the background (don't await)
         analyzeWebsiteFull(normalizedUrl, {
-          maxPages: 15,
+          maxPages: 50, // Deep crawl for background
           saveToDb: true,
           workspaceId: context.workspaceId,
-        }).catch(() => {
-          // Silent fail for background save
+        }).catch((err) => {
+          logger.warn('Background website analysis save failed', { url: normalizedUrl, error: err });
         });
 
         return {
           success: true,
-          message: `Got it! I've analyzed ${insights.companyName}'s website.`,
+          message,
           data: {
             companyName: insights.companyName,
             description: insights.description,
@@ -7129,7 +7147,11 @@ Provide analysis in JSON format:
             targetAudience: insights.targetAudience,
             suggestedActions: insights.suggestedActions,
             websiteUrl: normalizedUrl,
-            analysisType: 'quick',
+            analysisType: isPartial ? 'partial' : 'quick',
+            methodUsed: insights.methodUsed,
+            contentLength: insights.contentLength,
+            needsMoreInfo: isPartial,
+            analysisNote: insights.analysisNote,
           },
         };
       }

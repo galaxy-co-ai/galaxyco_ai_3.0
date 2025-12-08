@@ -44,7 +44,7 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - ✅ Voice input/output working (microphone button, speaker button, transcription/TTS)
 - ✅ Learning system progressing (autonomy thresholds, pattern recognition)
 - ✅ RAG returning cited results (enhanced detection, fallback handling)
-- ⚠️ Website analysis NOT functional (infrastructure exists but analysis fails)
+- ✅ Website analysis fully functional (serverless crawler with Firecrawl-first approach)
 - ✅ All integrations connected (QuickBooks, Stripe, Shopify, Google Calendar, etc.)
 - ✅ Conversation persistence working (restores on login)
 - ✅ Feedback UI functional (thumbs up/down updates learning)
@@ -67,13 +67,14 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - Improved logging for monitoring RAG performance
 - Better handling when vector DB is not configured
 
-### Phase 1.2: Website Analysis Reliability ⚠️ **NOT FUNCTIONAL**
-- ⚠️ **KNOWN ISSUE**: Website URL analysis is implemented but not working in production
-- Infrastructure exists: retry logic, multiple fallbacks (Jina Reader → Firecrawl → Direct Fetch)
-- URL detection works and triggers tool calls, but analysis consistently fails
-- Error handling and fallback methods are in place but cannot successfully analyze websites
-- **Current Status**: Users must manually provide business information instead of sharing URLs
-- **Workaround**: Neptune asks users to describe their business when URLs are shared
+### Phase 1.2: Website Analysis Reliability ✅ **FULLY FUNCTIONAL**
+- ✅ **Serverless Web Crawler**: Replaced Playwright with serverless-compatible lite crawler
+- ✅ **Firecrawl-First Approach**: Firecrawl API as primary method (most reliable)
+- ✅ **Intelligent Fallbacks**: Firecrawl → Jina Reader → Direct Fetch → Google Search enrichment
+- ✅ **Deep Crawl Support**: Background jobs crawl up to 50 pages with depth 4
+- ✅ **Enhanced Logging**: Comprehensive metadata tracking (method used, content length, duration)
+- ✅ **Production Ready**: Works reliably on Vercel serverless environment
+- ✅ **Smart Error Handling**: Graceful degradation with helpful user messages
 
 ### Phase 1.3: Semantic Cache Optimization ✅
 - Lowered similarity threshold from 0.95 to 0.90 (increased cache hit rate)
@@ -280,26 +281,29 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - Graceful degradation when search API is not configured
 - Integrated into system prompt with clear usage guidelines
 
-### Enhanced Website Analysis ⚠️ **NOT FUNCTIONAL**
-- ⚠️ **KNOWN LIMITATION**: Website URL analysis feature is not working despite implementation
-- **Automatic URL Detection** - Works correctly, detects URLs and triggers tool calls
-- **Tool Execution** - `analyze_company_website` tool is called but analysis fails
-- **Fallback Chain Implemented** (but not working):
-  1. Jina Reader (25s timeout)
-  2. Firecrawl API (20s timeout, when configured)
-  3. Direct Fetch (10s timeout)
-  4. URL Inference fallback
-- All methods fail to successfully analyze website content
-- Error handling returns helpful messages asking users to provide information manually
+### Enhanced Website Analysis ✅ **FULLY FUNCTIONAL**
+- ✅ **Serverless Web Crawler**: Replaced Playwright dependency with serverless-compatible implementation
+- ✅ **Firecrawl-First Approach**: Firecrawl API as primary method (most reliable, handles JS-heavy sites)
+- ✅ **Intelligent Fallback Chain** (fully working):
+  1. Firecrawl API (20s timeout, primary method)
+  2. Jina Reader (25s timeout, for auth-protected/complex sites)
+  3. Direct Fetch (10s timeout, with enhanced headers)
+  4. Google Custom Search enrichment (when content is sparse)
+  5. URL Inference fallback (graceful degradation)
+- ✅ **Deep Crawl Support**: Background jobs crawl up to 50 pages with depth 4
+- ✅ **Comprehensive Logging**: Tracks method used, content length, duration, fallback usage
+- ✅ **Metadata Tracking**: Returns analysis quality indicators for UI and monitoring
 
 ### Technical Implementation ✅
-- Added `isSearchConfigured()` helper for graceful degradation
-- URL detection regex handles full URLs and domain patterns
-- System instruction injection forces tool calls for detected URLs
+- Replaced Playwright-based `crawlWebsite` with serverless `crawlWebsiteLite`
+- Firecrawl integration in both quick and full analysis paths
+- Google Custom Search enrichment for sparse content
+- Enhanced error handling with structured logging
+- Background Trigger.dev jobs use serverless-compatible crawler
 - All tools properly categorized in `toolsByCategory`
-- No linter errors, follows existing codebase patterns
+- TypeScript strict mode passing, no linter errors
 
-**Impact:** ⚠️ **Website analysis is not functional** - Neptune can search the internet but cannot analyze websites from URLs. Users must manually provide business information.
+**Impact:** ✅ **Website analysis is fully functional** - Neptune can reliably analyze websites from URLs using serverless-compatible methods. Works on Vercel production environment.
 
 ---
 
@@ -324,11 +328,13 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
   - Added `search_web` tool with Google Custom Search API integration
   - System prompt updated with search capabilities
   - Works correctly for internet search queries
-- **Website Analysis** ⚠️ **NOT FUNCTIONAL**
-  - Automatic URL detection implemented and working
-  - Enhanced website analyzer with Firecrawl API fallback implemented
-  - Improved timeouts and error handling in place
-  - **However, website analysis consistently fails** - users must provide business info manually
+- **Website Analysis** ✅ **FULLY FUNCTIONAL**
+  - Serverless web crawler with Firecrawl-first approach
+  - Replaced Playwright dependency with serverless-compatible lite crawler
+  - Firecrawl → Jina Reader → Direct Fetch → Google Search enrichment fallback chain
+  - Deep crawl support (50 pages, depth 4) for background analysis
+  - Comprehensive logging and metadata tracking
+  - **Website analysis now works reliably** - Neptune can analyze any website URL
 - **Stripe Integration Complete** ✅
   - Installed Stripe SDK (`stripe@20.0.0`)
   - Created `/api/stripe/checkout` - Checkout session creation

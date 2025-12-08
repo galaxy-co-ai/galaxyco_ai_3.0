@@ -23,6 +23,7 @@ export interface CrawlOptions {
   maxDepth?: number;
   timeout?: number;
   useJinaReader?: boolean;
+  useFirecrawl?: boolean; // Use Firecrawl for better content extraction
   abortSignal?: AbortSignal;
 }
 
@@ -100,6 +101,48 @@ function shouldCrawlUrl(url: string): boolean {
     return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
   } catch {
     return false;
+  }
+}
+
+// ============================================================================
+// FIRECRAWL API (for reliable content extraction)
+// ============================================================================
+
+async function fetchWithFirecrawl(url: string): Promise<string | null> {
+  if (!process.env.FIRECRAWL_API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v0/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        pageOptions: {
+          onlyMainContent: true,
+        },
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    
+    if (!response.ok) {
+      logger.warn('Firecrawl request failed', { url, status: response.status });
+      return null;
+    }
+    
+    const data = await response.json();
+    if (data.data?.markdown || data.data?.content) {
+      return data.data.markdown || data.data.content;
+    }
+    
+    return null;
+  } catch (error) {
+    logger.warn('Firecrawl error', { url, error });
+    return null;
   }
 }
 
@@ -221,6 +264,7 @@ export async function crawlWebsiteLite(
     maxDepth = 2,
     timeout = 10000,
     useJinaReader = false,
+    useFirecrawl = true, // Default to true if Firecrawl is available
   } = options;
   
   const baseUrl = normalizeUrl(startUrl);
@@ -228,7 +272,13 @@ export async function crawlWebsiteLite(
   const visitedUrls = new Set<string>();
   const urlQueue: Array<{ url: string; depth: number }> = [{ url: baseUrl, depth: 0 }];
   
-  logger.info('Starting lightweight website crawl', { url: baseUrl, maxPages, maxDepth });
+  logger.info('Starting lightweight website crawl', { 
+    url: baseUrl, 
+    maxPages, 
+    maxDepth,
+    useFirecrawl: useFirecrawl && !!process.env.FIRECRAWL_API_KEY,
+    useJinaReader 
+  });
   
   while (urlQueue.length > 0 && crawledPages.length < maxPages) {
     const { url: currentUrl, depth } = urlQueue.shift()!;
@@ -245,57 +295,77 @@ export async function crawlWebsiteLite(
       
       let pageData: Omit<CrawledPage, 'depth'> | null = null;
       
-      // Try standard fetch first
-      try {
-        const response = await fetch(currentUrl, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; GalaxyCoBot/1.0; +https://galaxyco.ai)',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          },
-          signal: AbortSignal.timeout(timeout),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+      // PRIORITY 1: Try Firecrawl first if enabled (most reliable)
+      if (useFirecrawl && process.env.FIRECRAWL_API_KEY && depth === 0) {
+        // Use Firecrawl for homepage and key pages
+        const firecrawlContent = await fetchWithFirecrawl(currentUrl);
+        if (firecrawlContent && firecrawlContent.length > 200) {
+          // Extract basic metadata from URL
+          const urlObj = new URL(currentUrl);
+          pageData = {
+            url: currentUrl,
+            title: urlObj.hostname.replace('www.', ''),
+            content: firecrawlContent.slice(0, 15000),
+            meta: {},
+            links: [], // Firecrawl doesn't return links, we'll extract from HTML if needed
+          };
+          logger.info('Got content from Firecrawl', { url: currentUrl, length: firecrawlContent.length });
         }
-        
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('text/html')) {
-          logger.warn('Skipping non-HTML page', { url: currentUrl, contentType });
-          continue;
-        }
-        
-        const html = await response.text();
-        pageData = extractContent(html, currentUrl);
-        
-        // Check if content is too sparse (likely JS-rendered)
-        if (pageData.content.length < 200 && useJinaReader) {
-          logger.info('Content sparse, trying Jina Reader', { url: currentUrl });
-          const jinaContent = await fetchWithJinaReader(currentUrl);
-          if (jinaContent && jinaContent.length > pageData.content.length) {
-            pageData.content = jinaContent.slice(0, 15000);
+      }
+      
+      // PRIORITY 2: Try standard fetch if Firecrawl didn't work
+      if (!pageData) {
+        try {
+          const response = await fetch(currentUrl, {
+            method: 'GET',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; GalaxyCoBot/1.0; +https://galaxyco.ai)',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            },
+            signal: AbortSignal.timeout(timeout),
+          });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
           }
-        }
-      } catch (fetchError) {
-        // Fallback to Jina Reader on fetch failure
-        if (useJinaReader) {
-          logger.info('Fetch failed, trying Jina Reader', { url: currentUrl });
-          const jinaContent = await fetchWithJinaReader(currentUrl);
-          if (jinaContent) {
-            pageData = {
-              url: currentUrl,
-              title: currentUrl.split('/').pop() || 'Page',
-              content: jinaContent.slice(0, 15000),
-              meta: {},
-              links: [],
-            };
+          
+          const contentType = response.headers.get('content-type') || '';
+          if (!contentType.includes('text/html')) {
+            logger.warn('Skipping non-HTML page', { url: currentUrl, contentType });
+            continue;
           }
-        }
-        
-        if (!pageData) {
-          logger.warn('Failed to crawl page', { url: currentUrl, error: fetchError });
-          continue;
+          
+          const html = await response.text();
+          pageData = extractContent(html, currentUrl);
+          
+          // Check if content is too sparse (likely JS-rendered)
+          if (pageData.content.length < 200 && useJinaReader) {
+            logger.info('Content sparse, trying Jina Reader', { url: currentUrl });
+            const jinaContent = await fetchWithJinaReader(currentUrl);
+            if (jinaContent && jinaContent.length > pageData.content.length) {
+              pageData.content = jinaContent.slice(0, 15000);
+            }
+          }
+        } catch (fetchError) {
+          // Fallback to Jina Reader on fetch failure
+          if (useJinaReader) {
+            logger.info('Fetch failed, trying Jina Reader', { url: currentUrl });
+            const jinaContent = await fetchWithJinaReader(currentUrl);
+            if (jinaContent) {
+              pageData = {
+                url: currentUrl,
+                title: currentUrl.split('/').pop() || 'Page',
+                content: jinaContent.slice(0, 15000),
+                meta: {},
+                links: [],
+              };
+            }
+          }
+          
+          if (!pageData) {
+            logger.warn('Failed to crawl page', { url: currentUrl, error: fetchError });
+            continue;
+          }
         }
       }
       

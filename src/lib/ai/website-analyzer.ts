@@ -42,6 +42,9 @@ export interface QuickWebsiteInsights {
   suggestedActions: string[];
   websiteUrl: string;
   analysisNote?: string; // Optional note about analysis quality or limitations
+  methodUsed?: string; // Which method succeeded: 'firecrawl', 'jina', 'direct_fetch', 'google_search', 'inferred'
+  contentLength?: number; // Length of content retrieved
+  fallbackUsed?: boolean; // Whether fallback methods were used
 }
 
 // ============================================================================
@@ -225,13 +228,18 @@ async function retryWithBackoff<T>(
 
 /**
  * Quick website analysis for immediate Neptune responses.
- * Uses multiple methods with short timeouts to ensure fast response.
- * Includes retry logic with exponential backoff for reliability.
+ * Uses Firecrawl-first approach with multiple fallbacks for reliability.
+ * Includes Google Custom Search enrichment when content is sparse.
  */
 export async function analyzeWebsiteQuick(
   websiteUrl: string,
   options?: { maxPages?: number }
 ): Promise<QuickWebsiteInsights> {
+  const startTime = Date.now();
+  let methodUsed = '';
+  let contentSummary = '';
+  let fallbackUsed = false;
+  
   try {
     logger.info('Starting quick website analysis', { url: websiteUrl });
     
@@ -246,7 +254,6 @@ export async function analyzeWebsiteQuick(
       new URL(normalizedUrl);
     } catch {
       logger.warn('Invalid URL format', { url: normalizedUrl });
-      // Return partial result instead of null
       const domainName = normalizedUrl.split('/')[0].replace('www.', '');
       return {
         companyName: domainName.split('.')[0]?.charAt(0).toUpperCase() + domainName.split('.')[0]?.slice(1) || 'Unknown',
@@ -256,57 +263,17 @@ export async function analyzeWebsiteQuick(
         suggestedActions: ['Please provide a valid website URL starting with http:// or https://'],
         websiteUrl: normalizedUrl,
         analysisNote: 'Invalid URL format provided',
+        methodUsed: 'invalid',
+        contentLength: 0,
+        fallbackUsed: false,
       };
     }
-    
-    let contentSummary = '';
-    let methodUsed = '';
   
-  // Try Jina Reader FIRST - it handles auth-protected and JS-heavy sites best
-  // With retry logic
-  const jinaResult = await retryWithBackoff(async () => {
-    logger.info('Trying Jina Reader', { url: normalizedUrl });
-    const jinaUrl = `https://r.jina.ai/${normalizedUrl}`;
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout (increased from 15s)
-    
-    try {
-      const jinaResponse = await fetch(jinaUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'text/plain',
-          'X-No-Cache': 'true',
-        },
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (jinaResponse.ok) {
-        const jinaContent = await jinaResponse.text();
-        if (jinaContent && jinaContent.length > 200) {
-          return { content: jinaContent.slice(0, 6000), method: 'jina' };
-        }
-      }
-      throw new Error(`Jina returned status ${jinaResponse.status}`);
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
-  }, 2, 1000); // 2 retries with 1s initial delay
-  
-  if (jinaResult) {
-    contentSummary = jinaResult.content;
-    methodUsed = jinaResult.method;
-    logger.info('Got content from Jina Reader', { url: normalizedUrl, length: contentSummary.length });
-  }
-  
-  // Fallback to Firecrawl API if Jina failed (if configured)
-  if (!contentSummary || contentSummary.length < 200) {
+    // PRIORITY 1: Try Firecrawl FIRST (most reliable, configured)
     if (process.env.FIRECRAWL_API_KEY) {
+      const firecrawlStart = Date.now();
       const firecrawlResult = await retryWithBackoff(async () => {
-        logger.info('Trying Firecrawl API as fallback', { url: normalizedUrl });
+        logger.info('Trying Firecrawl API (primary)', { url: normalizedUrl });
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -334,7 +301,7 @@ export async function analyzeWebsiteQuick(
             if (firecrawlData.data?.markdown || firecrawlData.data?.content) {
               const content = firecrawlData.data.markdown || firecrawlData.data.content;
               if (content && content.length > 200) {
-                return { content: content.slice(0, 6000), method: 'firecrawl' };
+                return { content: content.slice(0, 8000), method: 'firecrawl' };
               }
             }
           }
@@ -343,113 +310,223 @@ export async function analyzeWebsiteQuick(
           clearTimeout(timeoutId);
           throw error;
         }
-      }, 1, 1000); // 1 retry with 1s delay
+      }, 2, 1000); // 2 retries with 1s initial delay
       
       if (firecrawlResult) {
         contentSummary = firecrawlResult.content;
         methodUsed = firecrawlResult.method;
-        logger.info('Got content from Firecrawl', { url: normalizedUrl, length: contentSummary.length });
-      }
-    }
-  }
-
-  // Fallback to direct fetch if previous methods failed
-  if (!contentSummary || contentSummary.length < 200) {
-    const fetchResult = await retryWithBackoff(async () => {
-      logger.info('Trying direct fetch as fallback', { url: normalizedUrl });
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased from 8s to 10s
-      
-      try {
-        const response = await fetch(normalizedUrl, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'text/html',
-          },
-          signal: controller.signal,
-          redirect: 'follow', // Follow redirects but limit depth
+        const duration = Date.now() - firecrawlStart;
+        logger.info('Got content from Firecrawl', { 
+          url: normalizedUrl, 
+          length: contentSummary.length,
+          duration: `${duration}ms`
         });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok || response.status === 200) {
-          const html = await response.text();
-          
-          // Quick extraction
-          const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-          const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
-          
-          const textContent = html
-            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-            .replace(/<[^>]+>/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim()
-            .slice(0, 5000);
-          
-          if (textContent.length > 100) {
-            return {
-              content: `Title: ${titleMatch?.[1] || 'Unknown'}\nDescription: ${descMatch?.[1] || ''}\n\nContent:\n${textContent}`,
-              method: 'direct_fetch'
-            };
-          }
-        }
-        throw new Error(`Direct fetch returned status ${response.status}`);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        throw error;
       }
-    }, 2, 500); // 2 retries with 500ms initial delay
-    
-    if (fetchResult) {
-      contentSummary = fetchResult.content;
-      methodUsed = fetchResult.method;
-      logger.info('Got content from direct fetch', { url: normalizedUrl, length: contentSummary.length });
     }
-  }
   
-  // If we still have no content, try URL inference as last resort
-  if (!contentSummary || contentSummary.length < 100) {
-    logger.warn('Could not fetch website content, using URL inference', { 
-      url: websiteUrl,
-      methodsAttempted: ['jina', process.env.FIRECRAWL_API_KEY ? 'firecrawl' : null, 'direct_fetch'].filter(Boolean)
-    });
-    
-    // Extract domain name for basic inference
-    let domainName = normalizedUrl;
+    // PRIORITY 2: Fallback to Jina Reader if Firecrawl failed
+    if (!contentSummary || contentSummary.length < 200) {
+      fallbackUsed = true;
+      const jinaStart = Date.now();
+      const jinaResult = await retryWithBackoff(async () => {
+        logger.info('Trying Jina Reader (fallback)', { url: normalizedUrl });
+        const jinaUrl = `https://r.jina.ai/${normalizedUrl}`;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+        
+        try {
+          const jinaResponse = await fetch(jinaUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'text/plain',
+              'X-No-Cache': 'true',
+            },
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (jinaResponse.ok) {
+            const jinaContent = await jinaResponse.text();
+            if (jinaContent && jinaContent.length > 200) {
+              return { content: jinaContent.slice(0, 8000), method: 'jina' };
+            }
+          }
+          throw new Error(`Jina returned status ${jinaResponse.status}`);
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
+      }, 2, 1000);
+      
+      if (jinaResult) {
+        contentSummary = jinaResult.content;
+        methodUsed = jinaResult.method;
+        const duration = Date.now() - jinaStart;
+        logger.info('Got content from Jina Reader', { 
+          url: normalizedUrl, 
+          length: contentSummary.length,
+          duration: `${duration}ms`
+        });
+      }
+    }
+
+    // PRIORITY 3: Fallback to direct fetch if previous methods failed
+    if (!contentSummary || contentSummary.length < 200) {
+      const fetchStart = Date.now();
+      const fetchResult = await retryWithBackoff(async () => {
+        logger.info('Trying direct fetch (fallback)', { url: normalizedUrl });
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        try {
+          const response = await fetch(normalizedUrl, {
+            method: 'GET',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.9',
+            },
+            signal: controller.signal,
+            redirect: 'follow',
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok || response.status === 200) {
+            const html = await response.text();
+            
+            // Quick extraction
+            const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+            const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i);
+            
+            const textContent = html
+              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+              .slice(0, 5000);
+            
+            if (textContent.length > 100) {
+              return {
+                content: `Title: ${titleMatch?.[1] || 'Unknown'}\nDescription: ${descMatch?.[1] || ''}\n\nContent:\n${textContent}`,
+                method: 'direct_fetch'
+              };
+            }
+          }
+          throw new Error(`Direct fetch returned status ${response.status}`);
+        } catch (error) {
+          clearTimeout(timeoutId);
+          throw error;
+        }
+      }, 2, 500);
+      
+      if (fetchResult) {
+        contentSummary = fetchResult.content;
+        methodUsed = fetchResult.method;
+        const duration = Date.now() - fetchStart;
+        logger.info('Got content from direct fetch', { 
+          url: normalizedUrl, 
+          length: contentSummary.length,
+          duration: `${duration}ms`
+        });
+      }
+    }
+
+    // PRIORITY 4: Google Custom Search enrichment if content is sparse
+    if ((!contentSummary || contentSummary.length < 500) && process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
+      try {
+        logger.info('Content sparse, enriching with Google Search', { url: normalizedUrl });
+        const { searchCompanyInfo } = await import('@/lib/search');
+        let domainName = normalizedUrl;
+        try {
+          domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+        } catch {}
+        
+        const searchResults = await searchCompanyInfo(domainName.split('.')[0]);
+        if (searchResults && searchResults.length > 0) {
+          const searchSnippets = searchResults
+            .slice(0, 3)
+            .map(r => `${r.title}: ${r.snippet}`)
+            .join('\n\n');
+          
+          if (contentSummary) {
+            contentSummary += `\n\n--- Additional Information from Web Search ---\n${searchSnippets}`;
+          } else {
+            contentSummary = `--- Information from Web Search ---\n${searchSnippets}`;
+          }
+          
+          if (!methodUsed) {
+            methodUsed = 'google_search';
+          } else {
+            methodUsed += '+google_search';
+          }
+          
+          logger.info('Enriched content with Google Search', { 
+            url: normalizedUrl, 
+            resultsCount: searchResults.length,
+            totalLength: contentSummary.length
+          });
+        }
+      } catch (searchError) {
+        logger.warn('Google Search enrichment failed', { url: normalizedUrl, error: searchError });
+        // Continue without search enrichment
+      }
+    }
+  
+    // If we still have no content, try URL inference as last resort
+    if (!contentSummary || contentSummary.length < 100) {
+      logger.warn('Could not fetch website content, using URL inference', { 
+        url: websiteUrl,
+        methodsAttempted: [
+          process.env.FIRECRAWL_API_KEY ? 'firecrawl' : null,
+          'jina',
+          'direct_fetch',
+          process.env.GOOGLE_CUSTOM_SEARCH_API_KEY ? 'google_search' : null
+        ].filter(Boolean),
+        duration: `${Date.now() - startTime}ms`
+      });
+      
+      // Extract domain name for basic inference
+      let domainName = normalizedUrl;
+      try {
+        domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+      } catch {}
+      
+      // Return partial success with inferred data and clear error message
+      return {
+        companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
+        description: `Company website at ${domainName}. Note: I couldn't fully access the website content (it may be blocking automated requests or require authentication).`,
+        keyOfferings: ['Products and services - details unavailable'],
+        targetAudience: 'To be determined - please share more about your business',
+        suggestedActions: [
+          'Share more details about what your company does',
+          'Tell me about your main products or services',
+          'Describe your target customers or market',
+          'The website may be blocking automated access - you can paste key information here'
+        ],
+        websiteUrl: normalizedUrl,
+        analysisNote: 'Limited analysis - website content could not be fully accessed. Please provide additional details about your business.',
+        methodUsed: 'inferred',
+        contentLength: 0,
+        fallbackUsed: true,
+      };
+    }
+  
+    // Use GPT-4o for analysis
+    const aiStart = Date.now();
     try {
-      domainName = new URL(normalizedUrl).hostname.replace('www.', '');
-    } catch {}
-    
-    // Return partial success with inferred data and clear error message
-    return {
-      companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
-      description: `Company website at ${domainName}. Note: I couldn't fully access the website content (it may be blocking automated requests or require authentication).`,
-      keyOfferings: ['Products and services - details unavailable'],
-      targetAudience: 'To be determined - please share more about your business',
-      suggestedActions: [
-        'Share more details about what your company does',
-        'Tell me about your main products or services',
-        'Describe your target customers or market',
-        'The website may be blocking automated access - you can paste key information here'
-      ],
-      websiteUrl: normalizedUrl,
-      analysisNote: 'Limited analysis - website content could not be fully accessed. Please provide additional details about your business.',
-    };
-  }
-  
-  // Use GPT-4o for analysis
-  try {
-    const openai = getOpenAI();
-    
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `Analyze this website content and extract business information. Output JSON only:
+      const openai = getOpenAI();
+      
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `Analyze this website content and extract business information. Output JSON only:
 {
   "companyName": "company name",
   "description": "one sentence about what they do",
@@ -457,58 +534,84 @@ export async function analyzeWebsiteQuick(
   "targetAudience": "who they serve",
   "suggestedActions": ["action 1 to help them grow", "action 2", "action 3"]
 }`,
-        },
-        {
-          role: 'user',
-          content: `URL: ${websiteUrl}\n\n${contentSummary}`,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 400,
-      response_format: { type: 'json_object' },
-    });
-    
-    const analysisText = response.choices[0]?.message?.content;
-    if (!analysisText) {
-      throw new Error('No AI response');
+          },
+          {
+            role: 'user',
+            content: `URL: ${websiteUrl}\n\n${contentSummary}`,
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 600,
+        response_format: { type: 'json_object' },
+      });
+      
+      const analysisText = response.choices[0]?.message?.content;
+      if (!analysisText) {
+        throw new Error('No AI response');
+      }
+      
+      const analysis = JSON.parse(analysisText) as Omit<QuickWebsiteInsights, 'websiteUrl' | 'methodUsed' | 'contentLength' | 'fallbackUsed'>;
+      const totalDuration = Date.now() - startTime;
+      const aiDuration = Date.now() - aiStart;
+      
+      logger.info('Website analysis complete', { 
+        url: websiteUrl, 
+        companyName: analysis.companyName,
+        method: methodUsed || 'unknown',
+        contentLength: contentSummary.length,
+        fallbackUsed,
+        totalDuration: `${totalDuration}ms`,
+        aiDuration: `${aiDuration}ms`
+      });
+      
+      return { 
+        ...analysis, 
+        websiteUrl,
+        methodUsed: methodUsed || 'unknown',
+        contentLength: contentSummary.length,
+        fallbackUsed,
+      };
+    } catch (aiError) {
+      logger.error('AI analysis failed', { 
+        url: websiteUrl, 
+        error: aiError, 
+        methodUsed,
+        contentLength: contentSummary.length,
+        duration: `${Date.now() - startTime}ms`
+      });
+      
+      // Return a helpful error response instead of null
+      let domainName = normalizedUrl;
+      try {
+        domainName = new URL(normalizedUrl).hostname.replace('www.', '');
+      } catch {}
+      
+      return {
+        companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
+        description: `I encountered an error analyzing ${domainName}. The website may be blocking automated access, require authentication, or have connectivity issues.`,
+        keyOfferings: ['Unable to determine - website analysis failed'],
+        targetAudience: 'Unable to determine - please share details',
+        suggestedActions: [
+          'The website could not be analyzed automatically',
+          'Please share key information about your business',
+          'Tell me about your products, services, and target customers',
+          'Check if the website requires authentication or blocks bots'
+        ],
+        websiteUrl: normalizedUrl,
+        analysisNote: `Analysis failed: ${aiError instanceof Error ? aiError.message : 'Unknown error'}. Please provide business details manually.`,
+        methodUsed: methodUsed || 'failed',
+        contentLength: contentSummary.length,
+        fallbackUsed: true,
+      };
     }
-    
-    const analysis = JSON.parse(analysisText) as Omit<QuickWebsiteInsights, 'websiteUrl'>;
-    
-    logger.info('Website analysis complete', { 
-      url: websiteUrl, 
-      companyName: analysis.companyName,
-      method: methodUsed || 'unknown'
-    });
-    
-    return { ...analysis, websiteUrl };
-  } catch (aiError) {
-    logger.error('AI analysis failed', { url: websiteUrl, error: aiError, methodUsed });
-    
-    // Return a helpful error response instead of null
-    let domainName = normalizedUrl;
-    try {
-      domainName = new URL(normalizedUrl).hostname.replace('www.', '');
-    } catch {}
-    
-    return {
-      companyName: domainName.split('.')[0].charAt(0).toUpperCase() + domainName.split('.')[0].slice(1),
-      description: `I encountered an error analyzing ${domainName}. The website may be blocking automated access, require authentication, or have connectivity issues.`,
-      keyOfferings: ['Unable to determine - website analysis failed'],
-      targetAudience: 'Unable to determine - please share details',
-      suggestedActions: [
-        'The website could not be analyzed automatically',
-        'Please share key information about your business',
-        'Tell me about your products, services, and target customers',
-        'Check if the website requires authentication or blocks bots'
-      ],
-      websiteUrl: normalizedUrl,
-      analysisNote: `Analysis failed: ${aiError instanceof Error ? aiError.message : 'Unknown error'}. Please provide business details manually.`,
-    };
-  }
   } catch (outerError) {
     // Catch any unexpected errors and return a helpful response
-    logger.error('Unexpected error in analyzeWebsiteQuick', { url: websiteUrl, error: outerError });
+    const totalDuration = Date.now() - startTime;
+    logger.error('Unexpected error in analyzeWebsiteQuick', { 
+      url: websiteUrl, 
+      error: outerError,
+      duration: `${totalDuration}ms`
+    });
     
     let domainName = websiteUrl;
     try {
@@ -528,6 +631,9 @@ export async function analyzeWebsiteQuick(
       ],
       websiteUrl: websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`,
       analysisNote: `Unexpected error: ${outerError instanceof Error ? outerError.message : 'Unknown error'}`,
+      methodUsed: 'error',
+      contentLength: 0,
+      fallbackUsed: true,
     };
   }
 }
@@ -535,30 +641,55 @@ export async function analyzeWebsiteQuick(
 /**
  * Full website analysis with crawling and database storage.
  * Use this for background processing or detailed analysis.
+ * Uses serverless-compatible lite crawler with deep crawl settings.
  */
 export async function analyzeWebsiteFull(
   websiteUrl: string,
   options?: { maxPages?: number; saveToDb?: boolean; workspaceId?: string }
 ): Promise<WebsiteAnalysis | null> {
-  const maxPages = options?.maxPages || 20;
+  const startTime = Date.now();
+  const maxPages = options?.maxPages || 50; // Deep crawl default
+  const maxDepth = 4; // Deep crawl depth
   
-  logger.info('Starting full website analysis', { url: websiteUrl, maxPages });
+  logger.info('Starting full website analysis', { 
+    url: websiteUrl, 
+    maxPages,
+    maxDepth,
+    workspaceId: options?.workspaceId 
+  });
   
   try {
-    // Use lightweight crawler
-    const { pages } = await crawlWebsiteLite(websiteUrl, {
+    // Normalize URL
+    let normalizedUrl = websiteUrl.trim();
+    if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+      normalizedUrl = 'https://' + normalizedUrl;
+    }
+    
+    // Use lightweight crawler (serverless-compatible)
+    const crawlResult = await crawlWebsiteLite(normalizedUrl, {
       maxPages,
-      maxDepth: 2,
-      useJinaReader: true,
+      maxDepth,
+      timeout: 15000, // 15s per page
+      useFirecrawl: true, // Use Firecrawl for better content extraction
+      useJinaReader: true, // Enable Jina fallback for JS-heavy sites
     });
     
-    if (pages.length === 0) {
-      logger.warn('No pages crawled', { url: websiteUrl });
+    if (crawlResult.pages.length === 0) {
+      logger.warn('No pages crawled', { 
+        url: websiteUrl,
+        totalPages: crawlResult.totalPages
+      });
       return null;
     }
     
+    logger.info('Website crawl complete', {
+      url: websiteUrl,
+      pagesCrawled: crawlResult.pages.length,
+      duration: `${Date.now() - startTime}ms`
+    });
+    
     // Use full analysis
-    const analysis = await analyzeWebsiteContent(pages, websiteUrl);
+    const analysis = await analyzeWebsiteContent(crawlResult.pages, normalizedUrl);
     
     // Optionally save to database
     if (options?.saveToDb && options?.workspaceId) {
@@ -581,7 +712,7 @@ export async function analyzeWebsiteFull(
         brandVoice: analysis.brandVoice,
         contactInfo: analysis.contactInfo,
         socialLinks: analysis.socialLinks,
-        websiteUrl,
+        websiteUrl: normalizedUrl,
         websiteAnalyzedAt: new Date(),
         lastUpdated: new Date(),
       };
@@ -600,12 +731,19 @@ export async function analyzeWebsiteFull(
       logger.info('Saved website analysis to database', { 
         workspaceId: options.workspaceId,
         companyName: analysis.companyName,
+        pagesCrawled: crawlResult.pages.length,
+        totalDuration: `${Date.now() - startTime}ms`
       });
     }
     
     return analysis;
   } catch (error) {
-    logger.error('Full website analysis failed', { url: websiteUrl, error });
+    logger.error('Full website analysis failed', { 
+      url: websiteUrl, 
+      error,
+      duration: `${Date.now() - startTime}ms`,
+      workspaceId: options?.workspaceId
+    });
     return null;
   }
 }
