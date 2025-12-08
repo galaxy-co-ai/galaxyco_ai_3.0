@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { ReadingProgressBar } from '@/components/launchpad/ReadingProgressBar';
 import { BookmarkButton } from '@/components/launchpad/BookmarkButton';
+import { ScrollTracker } from '@/components/launchpad/ScrollTracker';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -153,7 +154,9 @@ export default async function ArticlePage({ params }: PageProps) {
       {/* Reading Progress Bar */}
       <ReadingProgressBar postId={post.id} />
       
-      <article className="container py-8">
+      {/* Scroll Tracking */}
+      <ScrollTracker postId={post.id}>
+        <article className="container py-8">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <Link href="/launchpad" className="hover:text-foreground transition-colors">
@@ -362,6 +365,7 @@ export default async function ArticlePage({ params }: PageProps) {
         </section>
       )}
     </article>
+      </ScrollTracker>
     </>
   );
 }
