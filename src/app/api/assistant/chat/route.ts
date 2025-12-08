@@ -348,7 +348,7 @@ export async function POST(request: Request) {
             lastMessageAt: new Date(),
             messageCount: 0,
             context: {
-              page: context?.page,
+              page: context?.page || undefined,
               timestamp: new Date().toISOString(),
             },
           })
