@@ -166,6 +166,11 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 8, 2025):**
+- 🎯 **Avatar Dropdown Navigation** - Cleaner sidebar with user menu:
+  - Moved Settings, Connectors, and Mission Control (admin) to avatar dropdown
+  - Added Sign Out option with Clerk integration
+  - Sidebar now focused on core workflows (Launchpad & Neptune in secondary)
+  - Avatar is now clickable with keyboard accessible dropdown menu
 - 🐛 **Taylor's Feedback Bug Fixes** - All 4 reported issues resolved:
   - Library: Documents can now be opened and downloaded (added onClick handlers)
   - Leads: Full edit dialog with PATCH API endpoint for updating lead info

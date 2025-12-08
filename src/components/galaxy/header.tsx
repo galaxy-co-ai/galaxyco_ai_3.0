@@ -2,13 +2,31 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bell, Search, Command, Rocket } from "lucide-react";
-import { OrganizationSwitcher } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { Search, Command, Rocket, Settings, Plug, Gauge, LogOut } from "lucide-react";
+import { OrganizationSwitcher, useUser, useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAnalytics } from "@/hooks/useAnalytics";
+
+/**
+ * System admin email whitelist (client-side mirror of server-side list)
+ * Keep in sync with src/lib/auth.ts SYSTEM_ADMIN_EMAILS
+ */
+const SYSTEM_ADMIN_EMAILS: string[] = [
+  'dev@galaxyco.ai',
+];
 
 export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   title?: string;
@@ -36,10 +54,32 @@ export function Header({
   className,
   ...props
 }: HeaderProps) {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const { trackEvent } = useAnalytics({ trackPageViews: false });
   const searchSubmittedRef = React.useRef(false); // Prevent duplicate tracking
+  const { user: clerkUser } = useUser();
+  const { signOut } = useClerk();
+
+  // Check if user is system admin (by metadata OR email whitelist)
+  const isSystemAdmin = React.useMemo(() => {
+    if (!clerkUser) return false;
+    
+    // Check Clerk metadata first (most secure)
+    const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
+    if (metadata?.isSystemAdmin === true) {
+      return true;
+    }
+    
+    // Check email whitelist (case-insensitive)
+    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
+    if (primaryEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === primaryEmail)) {
+      return true;
+    }
+    
+    return false;
+  }, [clerkUser]);
 
   const getInitials = (name: string) => {
     return name
@@ -51,6 +91,15 @@ export function Header({
   };
 
   const userInitials = user?.initials || (user?.name ? getInitials(user.name) : "JD");
+
+  const handleSignOut = async () => {
+    trackEvent({
+      eventType: 'click',
+      eventName: 'sign_out',
+      metadata: { source: 'avatar_dropdown' }
+    });
+    await signOut(() => router.push('/'));
+  };
 
   return (
     <header
@@ -176,14 +225,89 @@ export function Header({
             }}
           />
 
-          {/* User Avatar */}
+          {/* User Avatar with Dropdown */}
           {user && (
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="relative h-8 w-8 rounded-full p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  aria-label="Open user menu"
+                >
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem asChild>
+                    <Link 
+                      href="/settings" 
+                      className="flex items-center cursor-pointer"
+                      onClick={() => trackEvent({
+                        eventType: 'click',
+                        eventName: 'avatar_dropdown_settings',
+                        metadata: { destination: '/settings' }
+                      })}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link 
+                      href="/connected-apps" 
+                      className="flex items-center cursor-pointer"
+                      onClick={() => trackEvent({
+                        eventType: 'click',
+                        eventName: 'avatar_dropdown_connectors',
+                        metadata: { destination: '/connected-apps' }
+                      })}
+                    >
+                      <Plug className="mr-2 h-4 w-4" />
+                      <span>Connectors</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  {isSystemAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link 
+                        href="/admin" 
+                        className="flex items-center cursor-pointer"
+                        onClick={() => trackEvent({
+                          eventType: 'click',
+                          eventName: 'avatar_dropdown_mission_control',
+                          metadata: { destination: '/admin' }
+                        })}
+                      >
+                        <Gauge className="mr-2 h-4 w-4" />
+                        <span>Mission Control</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={handleSignOut}
+                  className="cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Sign out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>

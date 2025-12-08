@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   Palette,
@@ -12,19 +11,15 @@ import {
   Megaphone,
   FlaskConical,
   Sparkles,
-  Plug,
-  Settings,
   Bot,
   PanelLeftClose,
   PanelLeftOpen,
   TrendingUp,
   MessageSquare,
   Rocket,
-  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { trackClick } from "@/lib/analytics";
 import {
   Tooltip,
@@ -32,14 +27,6 @@ import {
   TooltipTrigger,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-
-/**
- * System admin email whitelist (client-side mirror of server-side list)
- * Keep in sync with src/lib/auth.ts SYSTEM_ADMIN_EMAILS
- */
-const SYSTEM_ADMIN_EMAILS: string[] = [
-  'dev@galaxyco.ai',
-];
 
 // Main navigation items
 const mainNavItems = [
@@ -54,29 +41,20 @@ const mainNavItems = [
   { icon: FlaskConical, label: "Lunar Labs", href: "/lunar-labs", id: "lunar-labs" },
 ];
 
-// Secondary navigation items
+// Secondary navigation items (Settings, Connectors, Mission Control moved to avatar dropdown)
 const secondaryNavItems = [
   { icon: Rocket, label: "Launchpad", href: "/launchpad", id: "launchpad" },
   { icon: Sparkles, label: "Neptune", href: "/assistant", id: "assistant" },
-  { icon: Plug, label: "Connectors", href: "/connected-apps", id: "connected-apps" },
-  { icon: Settings, label: "Settings", href: "/settings", id: "settings" },
 ];
 
 interface SidebarProps {
   className?: string;
-  user?: {
-    name: string;
-    email: string;
-    avatar?: string;
-    initials?: string;
-  };
 }
 
-export function Sidebar({ className, user }: SidebarProps) {
+export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [isManuallyControlled, setIsManuallyControlled] = React.useState(false);
-  const { user: clerkUser } = useUser();
   
   // Auto-collapse sidebar on smaller screens
   React.useEffect(() => {
@@ -97,25 +75,6 @@ export function Sidebar({ className, user }: SidebarProps) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [isManuallyControlled]);
-  
-  // Check if user is system admin (by metadata OR email whitelist)
-  const isSystemAdmin = React.useMemo(() => {
-    if (!clerkUser) return false;
-    
-    // Check Clerk metadata first (most secure)
-    const metadata = clerkUser.publicMetadata as { isSystemAdmin?: boolean } | undefined;
-    if (metadata?.isSystemAdmin === true) {
-      return true;
-    }
-    
-    // Check email whitelist (case-insensitive)
-    const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress?.toLowerCase();
-    if (primaryEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === primaryEmail)) {
-      return true;
-    }
-    
-    return false;
-  }, [clerkUser]);
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -300,74 +259,6 @@ export function Sidebar({ className, user }: SidebarProps) {
         </div>
       </TooltipProvider>
 
-      {/* Mission Control (Admin Only) */}
-      {isSystemAdmin && (
-        <>
-          <Separator className="mt-auto" />
-          <TooltipProvider delayDuration={0}>
-            <div className="px-2 py-3">
-              {!isCollapsed && (
-                <div className="px-2 mb-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Admin
-                  </p>
-                </div>
-              )}
-              <Link 
-                href="/admin"
-                onClick={() => trackClick('sidebar_mission_control', { section: 'admin', label: 'Mission Control' })}
-              >
-                {isCollapsed ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "w-full h-9 rounded-lg transition-all duration-200",
-                          "flex items-center gap-2.5",
-                          "justify-center px-0",
-                          isActive("/admin")
-                            ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-indigo-600"
-                            : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
-                          "font-normal"
-                        )}
-                        aria-label="Mission Control"
-                        aria-current={isActive("/admin") ? "page" : undefined}
-                      >
-                        <Gauge className="h-4 w-4 shrink-0" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="right"
-                      align="center"
-                      className="bg-white/95 backdrop-blur-xl border border-gray-200/60 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-gray-900 font-medium px-3 py-1.5 rounded-lg"
-                    >
-                      Mission Control
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full h-9 rounded-lg transition-all duration-200",
-                      "flex items-center gap-2.5",
-                      "justify-start px-2.5",
-                      isActive("/admin")
-                        ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-indigo-600"
-                        : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
-                      "font-normal"
-                    )}
-                    aria-current={isActive("/admin") ? "page" : undefined}
-                  >
-                    <Gauge className="h-4 w-4 shrink-0" />
-                    <span className="text-xs font-normal whitespace-nowrap">Mission Control</span>
-                  </Button>
-                )}
-              </Link>
-            </div>
-          </TooltipProvider>
-        </>
-      )}
     </aside>
   );
 }

@@ -40,7 +40,7 @@ export function AppLayout({
           {/* Content Area with Floating Sidebar */}
           <div className="flex flex-1 overflow-hidden">
             {/* Floating Sidebar */}
-            {showSidebar && <Sidebar user={user} />}
+            {showSidebar && <Sidebar />}
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto bg-background">
