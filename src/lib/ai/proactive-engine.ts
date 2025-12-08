@@ -14,7 +14,7 @@ import {
   deals,
   proactiveInsights,
 } from '@/db/schema';
-import { eq, and, lt, gte, lte, desc } from 'drizzle-orm';
+import { eq, and, lt, gte, lte, desc, sql, or } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
 
@@ -387,6 +387,58 @@ export async function generateProactiveInsights(
 
   } catch (error) {
     logger.error('[Proactive Engine] Failed to generate insights', error);
+    return [];
+  }
+}
+
+/**
+ * Get active (non-dismissed) insights for a workspace
+ */
+export async function getActiveInsights(
+  workspaceId: string,
+  userId: string,
+  limit: number = 10
+): Promise<Array<{
+  id: string;
+  type: ProactiveInsight['type'];
+  category: ProactiveInsight['category'];
+  title: string;
+  description: string;
+  priority: number;
+  suggestedActions?: Array<{ action: string; args?: Record<string, unknown> }>;
+  createdAt: Date;
+}>> {
+  try {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Get recent, non-dismissed insights
+    const insights = await db.query.proactiveInsights.findMany({
+      where: and(
+        eq(proactiveInsights.workspaceId, workspaceId),
+        gte(proactiveInsights.createdAt, sevenDaysAgo),
+        sql`${proactiveInsights.dismissedAt} IS NULL`,
+        or(
+          eq(proactiveInsights.userId, userId),
+          sql`${proactiveInsights.userId} IS NULL` // Workspace-wide insights
+        )!
+      ),
+      orderBy: [desc(proactiveInsights.priority), desc(proactiveInsights.createdAt)],
+      limit,
+    });
+
+    return insights.map(i => ({
+      id: i.id,
+      type: i.type as ProactiveInsight['type'],
+      category: i.category as ProactiveInsight['category'],
+      title: i.title,
+      description: i.description,
+      priority: i.priority,
+      suggestedActions: i.suggestedActions as Array<{ action: string; args?: Record<string, unknown> }> || [],
+      createdAt: i.createdAt,
+    }));
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to get active insights', error);
     return [];
   }
 }
