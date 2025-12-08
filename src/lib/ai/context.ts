@@ -704,8 +704,8 @@ async function getFinanceContext(workspaceId: string): Promise<FinanceContext> {
           });
           recentInvoices = allInvoices.slice(0, 10).map(inv => ({
             id: inv.id,
-            number: inv.number || inv.id,
-            customer: inv.customerName || 'Unknown',
+            number: inv.invoiceNumber || inv.id,
+            customer: inv.customer?.name || 'Unknown',
             amount: inv.total,
             status: inv.status === 'paid' ? 'paid' : inv.dueDate && new Date(inv.dueDate) < now ? 'overdue' : 'unpaid',
             dueDate: inv.dueDate || new Date().toISOString(),
