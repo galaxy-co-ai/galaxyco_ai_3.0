@@ -21,7 +21,7 @@ import {
   workspaceIntelligence,
   proactiveInsights,
 } from '@/db/schema';
-import { eq, and, desc, gte, lte, count, sql } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, count, sql, or } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
