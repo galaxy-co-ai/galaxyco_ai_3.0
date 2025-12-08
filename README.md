@@ -97,7 +97,7 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 
 **December 7, 2025** - Critical reliability improvements:
 - ✅ **Enhanced RAG Detection** - 50+ question patterns, better fallback handling
-- ✅ **Robust Website Analysis** - Retry logic, multiple fallbacks, graceful degradation
+- ⚠️ **Website Analysis** - Implemented but not functional - URL analysis fails in production
 - ✅ **Optimized Semantic Cache** - 0.90 similarity threshold, smarter skip patterns
 - ✅ **Real Finance Data** - Connected to QuickBooks/Stripe/Shopify for actual financial context
 
@@ -105,7 +105,7 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 
 **December 7, 2025** - All tools now work with real data:
 - ✅ **Finance Tools** - flag_anomalies, project_cash_flow, send_payment_reminders, get_overdue_invoices all use real data
-- ✅ **Marketing Tools** - optimize_campaign stores A/B tests, segment_audience creates database segments, analyze_competitor uses website analyzer
+- ✅ **Marketing Tools** - optimize_campaign stores A/B tests, segment_audience creates database segments, analyze_competitor (website analyzer not functional)
 - ✅ **Operations Tools** - prioritize_tasks updates database, batch_similar_tasks tags tasks, book_meeting_rooms creates tasks
 - ✅ **Analytics Tools** - Already implemented with real data
 
@@ -221,16 +221,11 @@ Neptune is now a fully-featured, production-ready AI assistant with:
   - Standardized all AI calls to use gpt-4o consistently
   - Better context retention: conversation history increased from 15 → 25 messages
   - Full audit report available in `NEPTUNE_BACKEND_AUDIT.md`
-- 🌐 **Instant Website Analysis** - Neptune now analyzes websites immediately when you share a URL:
-  - No more "please wait 1-2 minutes" - analysis happens instantly
-  - Uses lightweight fetch + cheerio crawler (works in serverless)
-  - Jina AI Reader fallback for JavaScript-heavy sites (25s timeout)
-  - Firecrawl API fallback for enhanced crawling (when configured)
-  - Multiple retry attempts with exponential backoff
-  - Provides personalized business insights and growth recommendations
-  - Automatically extracts company info, products, services, and target audience
-  - Neptune suggests specific next actions tailored to your business
-  - Automatic URL detection - just paste a URL and Neptune analyzes it
+- 🌐 **Website Analysis** - ⚠️ **CURRENTLY NOT FUNCTIONAL** - Website URL analysis is implemented but not working:
+  - URL detection and tool infrastructure exists
+  - Multiple fallback methods implemented (Jina Reader, Firecrawl, Direct Fetch)
+  - However, Neptune cannot successfully analyze websites when URLs are provided
+  - Users should manually share business information instead of relying on URL analysis
 - 🔍 **Internet Search Capability** - Neptune can now search the web for current information:
   - Google Custom Search API integration for real-time web search
   - Search for news, current events, research, and any topic
@@ -416,13 +411,12 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - Works seamlessly - just ask "What's the latest news about X?"
 - Graceful fallback when search API is not configured
 
-**🌐 Website Analysis**
-- Instantly analyze any company website when you share a URL
-- Automatic URL detection - just paste a URL and Neptune analyzes it
-- Multiple crawling methods: Jina Reader → Firecrawl → Direct Fetch
-- Extracts business info, products, services, target audience
-- Provides personalized growth recommendations
-- Handles JavaScript-heavy sites and authentication-protected pages
+**🌐 Website Analysis** ⚠️ **NOT FUNCTIONAL**
+- ⚠️ **LIMITATION**: Neptune cannot currently analyze websites from URLs
+- The website analysis feature is implemented but not working in production
+- When users share URLs, Neptune will ask for manual business information instead
+- Infrastructure exists (Jina Reader, Firecrawl, Direct Fetch) but analysis fails
+- **Workaround**: Users should manually describe their business, products, and services
 
 **🎨 Professional Document Creation (Gamma.app)**
 - Generate polished presentations and pitch decks
@@ -529,11 +523,11 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - "Find recent articles about [company]"
 - "What are the latest trends in [industry]?"
 
-🌐 Website Analysis
-- "https://example.com" (just paste URL - auto-detected)
-- "Analyze https://acme.com"
-- "Tell me about stripe.com"
-- Neptune automatically extracts company info, products, services
+🌐 Website Analysis ⚠️ **NOT FUNCTIONAL**
+- ⚠️ **URL analysis is not working** - Neptune cannot analyze websites from URLs
+- Instead, manually share: "I run a SaaS company that helps teams collaborate"
+- Or describe: "My company sells marketing automation tools to small businesses"
+- Neptune will work with the information you provide directly
 
 🧠 Proactive Intelligence
 - Neptune automatically suggests: "You have 3 stalled deals - want me to draft follow-ups?"

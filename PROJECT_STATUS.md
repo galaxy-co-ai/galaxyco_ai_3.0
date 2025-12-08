@@ -44,7 +44,7 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - ✅ Voice input/output working (microphone button, speaker button, transcription/TTS)
 - ✅ Learning system progressing (autonomy thresholds, pattern recognition)
 - ✅ RAG returning cited results (enhanced detection, fallback handling)
-- ✅ Website analysis reliable (retry logic, multiple fallbacks)
+- ⚠️ Website analysis NOT functional (infrastructure exists but analysis fails)
 - ✅ All integrations connected (QuickBooks, Stripe, Shopify, Google Calendar, etc.)
 - ✅ Conversation persistence working (restores on login)
 - ✅ Feedback UI functional (thumbs up/down updates learning)
@@ -67,15 +67,13 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - Improved logging for monitoring RAG performance
 - Better handling when vector DB is not configured
 
-### Phase 1.2: Website Analysis Reliability ✅
-- Added retry logic with exponential backoff (2 retries per method)
-- Improved fallback chain: Jina Reader → Firecrawl API → Direct Fetch → URL Inference
-- Increased Jina Reader timeout from 15s to 25s for better reliability
-- Added Firecrawl API as optional fallback (when FIRECRAWL_API_KEY configured)
-- Increased direct fetch timeout from 8s to 10s
-- Better error handling with partial success responses and detailed failure messages
-- Timeout configuration and graceful degradation
-- Automatic URL detection in chat messages - forces tool execution
+### Phase 1.2: Website Analysis Reliability ⚠️ **NOT FUNCTIONAL**
+- ⚠️ **KNOWN ISSUE**: Website URL analysis is implemented but not working in production
+- Infrastructure exists: retry logic, multiple fallbacks (Jina Reader → Firecrawl → Direct Fetch)
+- URL detection works and triggers tool calls, but analysis consistently fails
+- Error handling and fallback methods are in place but cannot successfully analyze websites
+- **Current Status**: Users must manually provide business information instead of sharing URLs
+- **Workaround**: Neptune asks users to describe their business when URLs are shared
 
 ### Phase 1.3: Semantic Cache Optimization ✅
 - Lowered similarity threshold from 0.95 to 0.90 (increased cache hit rate)
@@ -282,17 +280,17 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - Graceful degradation when search API is not configured
 - Integrated into system prompt with clear usage guidelines
 
-### Enhanced Website Analysis ✅
-- **Automatic URL Detection** - Programmatic URL detection in chat messages
-- Forces `analyze_company_website` tool execution when URLs are detected
-- No more relying solely on AI judgment - URLs are detected and processed automatically
-- **Improved Fallback Chain:**
-  1. Jina Reader (25s timeout, increased from 15s)
+### Enhanced Website Analysis ⚠️ **NOT FUNCTIONAL**
+- ⚠️ **KNOWN LIMITATION**: Website URL analysis feature is not working despite implementation
+- **Automatic URL Detection** - Works correctly, detects URLs and triggers tool calls
+- **Tool Execution** - `analyze_company_website` tool is called but analysis fails
+- **Fallback Chain Implemented** (but not working):
+  1. Jina Reader (25s timeout)
   2. Firecrawl API (20s timeout, when configured)
-  3. Direct Fetch (10s timeout, increased from 8s)
-  4. URL Inference with helpful error messages
-- Better error messages explaining why analysis failed
-- Returns partial results instead of null on failures
+  3. Direct Fetch (10s timeout)
+  4. URL Inference fallback
+- All methods fail to successfully analyze website content
+- Error handling returns helpful messages asking users to provide information manually
 
 ### Technical Implementation ✅
 - Added `isSearchConfigured()` helper for graceful degradation
@@ -301,7 +299,7 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 - All tools properly categorized in `toolsByCategory`
 - No linter errors, follows existing codebase patterns
 
-**Impact:** Neptune can now search the internet for current information and reliably analyze websites with automatic URL detection and multiple fallback methods.
+**Impact:** ⚠️ **Website analysis is not functional** - Neptune can search the internet but cannot analyze websites from URLs. Users must manually provide business information.
 
 ---
 
@@ -322,12 +320,15 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Overall** | ✅ 100% Production-Ready |
 
 **Latest Updates (December 7, 2025):**
-- **Web Search & Enhanced Website Analysis** ✅
+- **Web Search** ✅
   - Added `search_web` tool with Google Custom Search API integration
-  - Automatic URL detection in chat messages
-  - Enhanced website analyzer with Firecrawl API fallback
-  - Improved timeouts and error handling
   - System prompt updated with search capabilities
+  - Works correctly for internet search queries
+- **Website Analysis** ⚠️ **NOT FUNCTIONAL**
+  - Automatic URL detection implemented and working
+  - Enhanced website analyzer with Firecrawl API fallback implemented
+  - Improved timeouts and error handling in place
+  - **However, website analysis consistently fails** - users must provide business info manually
 - **Stripe Integration Complete** ✅
   - Installed Stripe SDK (`stripe@20.0.0`)
   - Created `/api/stripe/checkout` - Checkout session creation
