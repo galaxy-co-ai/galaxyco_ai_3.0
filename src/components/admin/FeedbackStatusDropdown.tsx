@@ -25,6 +25,7 @@ type FeedbackStatus = 'new' | 'in_review' | 'planned' | 'in_progress' | 'done' |
 interface FeedbackStatusDropdownProps {
   feedbackId: string;
   currentStatus: FeedbackStatus;
+  onStatusChange?: (newStatus: FeedbackStatus) => void;
 }
 
 const statusConfig: Record<FeedbackStatus, {
@@ -87,7 +88,8 @@ const statusConfig: Record<FeedbackStatus, {
 
 export default function FeedbackStatusDropdown({ 
   feedbackId, 
-  currentStatus 
+  currentStatus,
+  onStatusChange 
 }: FeedbackStatusDropdownProps) {
   const [status, setStatus] = useState<FeedbackStatus>(currentStatus);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -115,6 +117,9 @@ export default function FeedbackStatusDropdown({
         throw new Error('Failed to update status');
       }
 
+      // Notify parent of status change
+      onStatusChange?.(newStatus);
+      
       toast.success(`Status updated to ${statusConfig[newStatus].label}`);
     } catch (error) {
       // Revert on error
