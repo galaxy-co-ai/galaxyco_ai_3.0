@@ -3,12 +3,14 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { blogPosts, blogCategories } from '@/db/schema';
 import { eq, desc, and, gte } from 'drizzle-orm';
-import { Clock, ArrowRight, TrendingUp, Sparkles, BookOpen, Zap } from 'lucide-react';
+import { Rocket } from 'lucide-react';
+import { Clock, ArrowRight, Sparkles, BookOpen, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { NewsletterSignup } from '@/components/launchpad/NewsletterSignup';
 import { LaunchpadHero } from '@/components/launchpad/LaunchpadHero';
+import { LaunchpadSidebar } from '@/components/launchpad/LaunchpadSidebar';
 
 export const metadata: Metadata = {
   title: 'Launchpad | GalaxyCo.ai',
@@ -167,12 +169,44 @@ async function getPublishedPosts() {
         categoryName: blogCategories.name,
         categorySlug: blogCategories.slug,
         categoryColor: blogCategories.color,
+        contentType: blogPosts.contentType,
       })
       .from(blogPosts)
       .leftJoin(blogCategories, eq(blogPosts.categoryId, blogCategories.id))
       .where(eq(blogPosts.status, 'published'))
       .orderBy(desc(blogPosts.publishedAt))
       .limit(20);
+  } catch {
+    return [];
+  }
+}
+
+// Get tool spotlight posts
+async function getToolSpotlightPosts() {
+  try {
+    return await db
+      .select({
+        id: blogPosts.id,
+        title: blogPosts.title,
+        slug: blogPosts.slug,
+        excerpt: blogPosts.excerpt,
+        featuredImage: blogPosts.featuredImage,
+        readingTimeMinutes: blogPosts.readingTimeMinutes,
+        publishedAt: blogPosts.publishedAt,
+        categoryName: blogCategories.name,
+        categorySlug: blogCategories.slug,
+        categoryColor: blogCategories.color,
+      })
+      .from(blogPosts)
+      .leftJoin(blogCategories, eq(blogPosts.categoryId, blogCategories.id))
+      .where(
+        and(
+          eq(blogPosts.status, 'published'),
+          eq(blogPosts.contentType, 'tool-spotlight')
+        )
+      )
+      .orderBy(desc(blogPosts.publishedAt))
+      .limit(4);
   } catch {
     return [];
   }
@@ -235,7 +269,7 @@ function PostCard({ post, isDemo = false }: {
     featuredImage: string | null;
     readingTimeMinutes: number | null;
     publishedAt: Date | null;
-    featured: boolean;
+    featured?: boolean;
     categoryName: string | null;
     categorySlug: string | null;
     categoryColor: string | null;
@@ -318,10 +352,11 @@ function PostCard({ post, isDemo = false }: {
 }
 
 export default async function LaunchpadHomePage() {
-  const [posts, categories, trending] = await Promise.all([
+  const [posts, categories, trending, toolSpotlights] = await Promise.all([
     getPublishedPosts(),
     getCategories(),
     getTrendingPosts(),
+    getToolSpotlightPosts(),
   ]);
 
   // Use real content if available, otherwise show demo
@@ -329,7 +364,8 @@ export default async function LaunchpadHomePage() {
   const displayCategories = categories.length > 0 ? categories : DEMO_CATEGORIES;
   const displayFeatured = hasContent ? posts.filter(p => p.featured).slice(0, 2) : DEMO_FEATURED_POSTS;
   const displayTrending = trending.length > 0 ? trending : DEMO_TRENDING;
-  const displayPosts = hasContent ? posts.filter(p => !p.featured) : DEMO_POSTS;
+  const displayPosts = hasContent ? posts.filter(p => !p.featured && p.contentType !== 'tool-spotlight') : DEMO_POSTS;
+  const displayToolSpotlights = toolSpotlights.length > 0 ? toolSpotlights : [];
 
   return (
     <div className="min-h-screen">
@@ -350,6 +386,23 @@ export default async function LaunchpadHomePage() {
               Create your first post in Mission Control to see real content here.
             </p>
           </div>
+        )}
+
+        {/* AI Tools Spotlight */}
+        {displayToolSpotlights.length > 0 && (
+          <section className="mb-14">
+            <div className="flex items-center gap-2.5 mb-6">
+              <div className="p-1.5 rounded-lg bg-purple-500/10">
+                <Rocket className="h-4 w-4 text-purple-500" />
+              </div>
+              <h2 className="text-lg font-semibold">AI Tools Spotlight</h2>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2">
+              {displayToolSpotlights.map((post) => (
+                <PostCard key={post.id} post={post} isDemo={false} />
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Featured Posts */}
@@ -387,81 +440,11 @@ export default async function LaunchpadHomePage() {
           </section>
 
           {/* Sidebar */}
-          <aside className="space-y-8">
-            {/* Trending This Week */}
-            <div>
-              <div className="flex items-center gap-2.5 mb-4">
-                <div className="p-1.5 rounded-lg bg-green-500/10">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                </div>
-                <h3 className="text-lg font-semibold">Trending</h3>
-              </div>
-              <Card className="shadow-soft">
-                <CardContent className="py-2 px-0">
-                  <div className="divide-y">
-                    {displayTrending.map((post, index) => (
-                      <Link 
-                        key={post.id} 
-                        href={hasContent ? `/launchpad/${post.slug}` : '#'}
-                        className={`flex items-start gap-3 px-4 py-3 transition-colors ${
-                          hasContent ? 'hover:bg-muted/50' : 'cursor-default opacity-75'
-                        }`}
-                      >
-                        <span className="text-base font-bold text-muted-foreground/40 w-5 shrink-0 tabular-nums">
-                          {index + 1}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium leading-snug line-clamp-2">
-                            {post.title}
-                          </p>
-                          {post.categoryName && (
-                            <span 
-                              className="text-xs mt-1 inline-block"
-                              style={{ color: post.categoryColor || undefined }}
-                            >
-                              {post.categoryName}
-                            </span>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Browse by Topic */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Browse by Topic</h3>
-              <div className="space-y-2">
-                {displayCategories.slice(0, 6).map((category) => (
-                  <Link 
-                    key={category.id} 
-                    href={hasContent ? `/launchpad/category/${category.slug}` : '#'}
-                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
-                      hasContent ? 'hover:bg-muted/50 hover:border-primary/20 hover:shadow-soft' : 'opacity-75 cursor-default'
-                    }`}
-                  >
-                    <div 
-                      className="p-2 rounded-lg"
-                      style={{ backgroundColor: `${category.color}12` }}
-                    >
-                      <BookOpen 
-                        className="h-4 w-4" 
-                        style={{ color: category.color || undefined }} 
-                      />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">{category.name}</p>
-                      {category.description && (
-                        <p className="text-xs text-muted-foreground">{category.description}</p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </aside>
+          <LaunchpadSidebar 
+            trending={displayTrending}
+            categories={displayCategories}
+            hasContent={hasContent}
+          />
         </div>
 
         {/* Newsletter CTA */}

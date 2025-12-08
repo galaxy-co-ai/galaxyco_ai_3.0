@@ -166,9 +166,10 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 8, 2025):**
+- 📚 **Launchpad Tab Restructure** - Replaced category-based navigation with intent-based tabs (Discover, Learn, Docs, Saved). Added AI Tools Spotlight section for curated tool breakdowns. New Learn page with filtered tutorial content and category filter chips. Extracted sidebar into reusable component.
 - 🌐 **Web Search Fixed** - Perplexity-first with Google CSE fallback now returns live results; `search_web` is marked low-risk and auto-executes in autonomy learning.
 - 🧠 **Creator Guided Flow is Neptune-Powered** - GuidedSession now calls `/api/assistant/chat` for real acknowledgments/questions and still advances even on error.
-- ✨ **Section-Level AI Edits** - New `/api/creator/ai-edit` endpoint rewrites a single section with audience/goal-aware prompts; DocumentPreview calls it from the inline “AI edit with Neptune” pill.
+- ✨ **Section-Level AI Edits** - New `/api/creator/ai-edit` endpoint rewrites a single section with audience/goal-aware prompts; DocumentPreview calls it from the inline "AI edit with Neptune" pill.
 - 🔧 **Env Template Sync** - `.env.example` aligned with `.env.local` (no secrets) to prevent missing-variable errors.
 
 **Recent Updates (December 7, 2025):**
@@ -352,6 +353,9 @@ Deployment:   ████████████████████ 100% 
 - ✅ Conversations/Communications Hub with Team Chat
 - ✅ Finance HQ Dashboard with QuickBooks/Stripe/Shopify services
 - ✅ Launchpad Blog Platform with analytics
+  - Intent-based tab navigation (Discover, Learn, Docs, Saved)
+  - AI Tools Spotlight section for curated tool breakdowns
+  - Learn page with filtered tutorial content
 - ✅ Mission Control Admin Dashboard
 - ✅ My Agents page with Laboratory (agent creation wizard)
 - ✅ **Marketing campaigns fully wired to APIs** ← NEW

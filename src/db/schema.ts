@@ -234,6 +234,11 @@ export const blogPostStatusEnum = pgEnum('blog_post_status', [
   'archived',
 ]);
 
+export const blogPostContentTypeEnum = pgEnum('blog_post_content_type', [
+  'article',
+  'tool-spotlight',
+]);
+
 export const blogReactionTypeEnum = pgEnum('blog_reaction_type', [
   'helpful',
   'insightful',
@@ -3346,6 +3351,7 @@ export const blogPosts = pgTable(
     
     // Categorization
     categoryId: uuid('category_id').references(() => blogCategories.id),
+    contentType: blogPostContentTypeEnum('content_type').notNull().default('article'),
     
     // Authorship
     authorId: uuid('author_id').references(() => users.id),

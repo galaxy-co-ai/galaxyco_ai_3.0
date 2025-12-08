@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Zap } from 'lucide-react';
 
@@ -125,6 +126,25 @@ function NavStarField() {
 }
 
 export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
+  const pathname = usePathname();
+  
+  // Determine active tab based on current route
+  const getActiveTab = () => {
+    if (pathname === '/launchpad/learn') return 'learn';
+    if (pathname === '/launchpad/bookmarks') return 'saved';
+    if (pathname.startsWith('/launchpad/')) return 'discover';
+    return 'discover'; // default to discover
+  };
+  
+  const activeTab = getActiveTab();
+  
+  const tabs = [
+    { id: 'discover', label: 'Discover', href: '/launchpad' },
+    { id: 'learn', label: 'Learn', href: '/launchpad/learn' },
+    { id: 'docs', label: 'Docs', href: '/docs', external: true },
+    { id: 'saved', label: 'Saved', href: '/launchpad/bookmarks' },
+  ];
+  
   return (
     <>
       {/* Hero Section - with overflow hidden for orbs */}
@@ -237,21 +257,34 @@ export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
             transition={{ duration: 0.5, delay: 0.4 }}
           >
             <div className="inline-flex items-center gap-1 p-1.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-              <Link href="/launchpad">
-                <button className="px-4 py-2 text-sm font-medium rounded-lg bg-white text-slate-900 shadow-lg transition-all hover:bg-indigo-50">
-                  All
-                </button>
-              </Link>
-              {categories.slice(0, 5).map((category) => (
-                <Link 
-                  key={category.id} 
-                  href={hasContent ? `/launchpad/category/${category.slug}` : '#'}
-                >
-                  <button className="px-4 py-2 text-sm font-medium rounded-lg text-indigo-200/80 hover:text-white hover:bg-white/10 transition-all">
-                    {category.name}
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                const TabButton = (
+                  <button 
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                      isActive 
+                        ? 'bg-white text-slate-900 shadow-lg hover:bg-indigo-50' 
+                        : 'text-indigo-200/80 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {tab.label}
                   </button>
-                </Link>
-              ))}
+                );
+                
+                if (tab.external) {
+                  return (
+                    <Link key={tab.id} href={tab.href} target="_blank" rel="noopener noreferrer">
+                      {TabButton}
+                    </Link>
+                  );
+                }
+                
+                return (
+                  <Link key={tab.id} href={tab.href}>
+                    {TabButton}
+                  </Link>
+                );
+              })}
             </div>
           </motion.div>
         </div>
