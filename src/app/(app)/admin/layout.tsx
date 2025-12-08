@@ -52,7 +52,8 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Double-check admin access (middleware should have already checked)
+  // Verify admin access - this is the authoritative check
+  // Middleware only ensures authentication, this layout verifies authorization
   const isAdmin = await isSystemAdmin();
   
   if (!isAdmin) {

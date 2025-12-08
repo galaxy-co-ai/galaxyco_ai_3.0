@@ -37,14 +37,18 @@ const SYSTEM_ADMIN_EMAILS: string[] = [
 export async function isSystemAdmin(): Promise<boolean> {
   try {
     const user = await currentUser();
+    console.log('[isSystemAdmin] currentUser:', user ? 'exists' : 'null');
     
     if (!user) {
+      console.log('[isSystemAdmin] No user, returning false');
       return false;
     }
     
     // Check Clerk metadata first (most secure)
     const metadata = user.publicMetadata as { isSystemAdmin?: boolean } | undefined;
+    console.log('[isSystemAdmin] publicMetadata:', metadata);
     if (metadata?.isSystemAdmin === true) {
+      console.log('[isSystemAdmin] Admin via metadata');
       return true;
     }
     
@@ -52,14 +56,19 @@ export async function isSystemAdmin(): Promise<boolean> {
     const primaryEmail = user.emailAddresses.find(
       e => e.id === user.primaryEmailAddressId
     )?.emailAddress?.toLowerCase();
+    console.log('[isSystemAdmin] primaryEmail:', primaryEmail);
+    console.log('[isSystemAdmin] whitelist:', SYSTEM_ADMIN_EMAILS);
     
     if (primaryEmail && SYSTEM_ADMIN_EMAILS.some(email => email.toLowerCase() === primaryEmail)) {
+      console.log('[isSystemAdmin] Admin via email whitelist');
       return true;
     }
     
+    console.log('[isSystemAdmin] Not admin, returning false');
     return false;
   } catch (error) {
     logger.error('Error checking system admin status', { error });
+    console.log('[isSystemAdmin] Error:', error);
     return false;
   }
 }
