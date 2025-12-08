@@ -39,6 +39,7 @@ export function Header({
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const { trackEvent } = useAnalytics({ trackPageViews: false });
+  const searchSubmittedRef = React.useRef(false); // Prevent duplicate tracking
 
   const getInitials = (name: string) => {
     return name
@@ -99,12 +100,14 @@ export function Header({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && searchQuery.trim()) {
+                      searchSubmittedRef.current = true; // Mark as submitted to prevent duplicate onBlur tracking
                       trackEvent({
                         eventType: 'search',
                         eventName: 'global_search',
                         metadata: {
                           searchQuery: searchQuery.trim(),
-                          source: 'header'
+                          source: 'header',
+                          method: 'enter'
                         }
                       });
                       // TODO: Navigate to search results or perform search
@@ -113,16 +116,19 @@ export function Header({
                     }
                   }}
                   onBlur={() => {
-                    if (searchQuery.trim()) {
+                    // Only track on blur if not already tracked via Enter key
+                    if (searchQuery.trim() && !searchSubmittedRef.current) {
                       trackEvent({
                         eventType: 'search',
                         eventName: 'global_search',
                         metadata: {
                           searchQuery: searchQuery.trim(),
-                          source: 'header'
+                          source: 'header',
+                          method: 'blur'
                         }
                       });
                     }
+                    searchSubmittedRef.current = false; // Reset for next search
                     setSearchOpen(false);
                     setSearchQuery("");
                   }}
