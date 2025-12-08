@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Button, ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { trackClick } from "@/lib/analytics";
+
+type ButtonProps = React.ComponentProps<typeof Button>;
 
 interface TrackedButtonProps extends ButtonProps {
   /** Unique identifier for analytics tracking */
