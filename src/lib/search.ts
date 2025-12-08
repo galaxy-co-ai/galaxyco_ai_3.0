@@ -105,6 +105,9 @@ async function searchWebWithPerplexity(
     throw new Error('PERPLEXITY_API_KEY not configured');
   }
 
+  const { logger } = await import('@/lib/logger');
+  logger.info('Using Perplexity AI for web search', { query, numResults: options?.numResults });
+
   // Build query with optional site restriction
   let searchQuery = query;
   if (options?.siteSearch) {
@@ -124,15 +127,17 @@ async function searchWebWithPerplexity(
   }
 
   // Use Perplexity's chat completions API for web search
-  // Using the "online" model for real-time web browsing
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
+  // Try "sonar-pro" first (best quality), fall back to "sonar" if not available
+  let model = 'sonar-pro'; // Online model for real-time web browsing
+  
+  let response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-sonar-large-128k-online', // Online model for real-time web browsing
+      model,
       messages: [
         {
           role: 'user',
@@ -147,6 +152,36 @@ async function searchWebWithPerplexity(
     }),
   });
 
+  // If sonar-pro fails (e.g., not available on free tier), try sonar
+  if (!response.ok && model === 'sonar-pro') {
+    const errorData = await response.json().catch(() => ({}));
+    // If it's a model not found error, try the regular sonar model
+    if (response.status === 400 || response.status === 404) {
+      model = 'sonar';
+      response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'user',
+              content: searchQuery,
+            },
+          ],
+          return_citations: true,
+          return_related_questions: false,
+          search_domain_filter: options?.siteSearch ? [options.siteSearch] : undefined,
+          search_recency_filter: searchRecencyFilter,
+          temperature: 0.2,
+        }),
+      });
+    }
+  }
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
@@ -154,30 +189,37 @@ async function searchWebWithPerplexity(
 
   const data = await response.json();
   
-  // Extract the answer and citations from Perplexity response
+  // Extract the answer and search results from Perplexity response
+  // Perplexity uses search_results array, not citations
   const answer = data.choices?.[0]?.message?.content || '';
-  const citations = data.citations || [];
+  const searchResults = data.search_results || [];
   
-  // Convert Perplexity citations to our SearchResult format
-  const results: SearchResult[] = citations
+  logger.info('Perplexity search completed', { 
+    model,
+    answerLength: answer.length,
+    searchResultsCount: searchResults.length 
+  });
+  
+  // Convert Perplexity search_results to our SearchResult format
+  const results: SearchResult[] = searchResults
     .slice(0, options?.numResults || 5)
-    .map((citation: any, index: number) => {
+    .map((source: any, index: number) => {
       try {
-        const url = citation.url || citation.link || '';
+        const url = source.url || source.link || '';
         return {
-          title: citation.title || citation.name || `Source ${index + 1}`,
+          title: source.title || `Source ${index + 1}`,
           link: url,
-          snippet: citation.snippet || citation.text || citation.description || answer.substring(0, 200),
+          snippet: source.snippet || source.text || source.description || answer.substring(0, 200),
           displayLink: url ? new URL(url).hostname : 'perplexity.ai',
           formattedUrl: url,
         };
       } catch {
         return {
-          title: citation.title || `Source ${index + 1}`,
-          link: citation.url || '',
-          snippet: citation.snippet || answer.substring(0, 200),
+          title: source.title || `Source ${index + 1}`,
+          link: source.url || '',
+          snippet: answer.substring(0, 200),
           displayLink: 'perplexity.ai',
-          formattedUrl: citation.url || '',
+          formattedUrl: source.url || '',
         };
       }
     });
