@@ -89,10 +89,25 @@ export default function AdminTabs({ counts = {} }: AdminTabsProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
+    // Exact match for overview
     if (href === '/admin') {
       return pathname === '/admin';
     }
-    return pathname.startsWith(href);
+    
+    // For nested routes like /admin/content/categories, 
+    // check exact match or if followed by a slash (for further nested paths)
+    // But NOT if it's a parent of another tab's path
+    if (pathname === href || pathname.startsWith(href + '/')) {
+      // Check if there's a more specific tab that matches
+      const moreSpecificMatch = tabs.some(
+        tab => tab.href !== href && 
+               tab.href.startsWith(href) && 
+               (pathname === tab.href || pathname.startsWith(tab.href + '/'))
+      );
+      return !moreSpecificMatch;
+    }
+    
+    return false;
   };
 
   return (
