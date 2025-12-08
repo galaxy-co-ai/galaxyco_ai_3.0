@@ -318,7 +318,7 @@ export async function POST(request: Request) {
 
       // Gather AI context
       const aiContext = await gatherAIContext(workspaceId, clerkUserId);
-      const systemPrompt = generateSystemPrompt(aiContext, feature || context?.feature);
+      const systemPrompt = generateSystemPrompt(aiContext, feature || context?.feature || undefined);
 
       // Get or create conversation
       let conversation;
