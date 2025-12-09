@@ -240,11 +240,11 @@ export default function TeamsListClient({
           <div className="flex items-center gap-4">
             <Link href="/orchestration">
               <Button
-                variant="ghost"
                 size="sm"
+                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 aria-label="Back to orchestration dashboard"
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
+                <ChevronLeft className="h-4 w-4" />
                 Back
               </Button>
             </Link>
@@ -265,28 +265,24 @@ export default function TeamsListClient({
                   </linearGradient>
                 </defs>
               </svg>
-              <div>
-                <h1 
-                  className="branded-page-title text-2xl uppercase"
-                  style={{ 
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-                  }}
-                >
-                  <span className="hidden sm:inline">A G E N T &nbsp; T E A M S</span>
-                  <span className="sm:hidden">AGENT TEAMS</span>
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Create and manage AI agent teams for department automation
-                </p>
-              </div>
+              <h1 
+                className="branded-page-title text-2xl uppercase"
+                style={{ 
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                }}
+              >
+                <span className="hidden sm:inline">A G E N T &nbsp; T E A M S</span>
+                <span className="sm:hidden">AGENT TEAMS</span>
+              </h1>
             </div>
           </div>
           <Button
+            size="sm"
             onClick={() => setShowWizard(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
             aria-label="Create new team"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             New Team
           </Button>
         </div>

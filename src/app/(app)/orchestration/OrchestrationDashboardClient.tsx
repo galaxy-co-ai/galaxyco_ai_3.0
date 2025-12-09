@@ -93,37 +93,34 @@ export default function OrchestrationDashboardClient({
                 </linearGradient>
               </defs>
             </svg>
-            <div>
-              <h1 
-                className="branded-page-title text-2xl uppercase"
-                style={{ 
-                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-                }}
-              >
-                <span className="hidden sm:inline">O R C H E S T R A T I O N</span>
-                <span className="sm:hidden">ORCHESTRATION</span>
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                Multi-agent orchestration for autonomous business operations
-              </p>
-            </div>
+            <h1 
+              className="branded-page-title text-2xl uppercase"
+              style={{ 
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+              }}
+            >
+              <span className="hidden sm:inline">O R C H E S T R A T I O N</span>
+              <span className="sm:hidden">ORCHESTRATION</span>
+            </h1>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/orchestration/teams">
               <Button
-                className="bg-violet-600 hover:bg-violet-700 text-white"
+                size="sm"
+                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 aria-label="Create new team"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4" />
                 New Team
               </Button>
             </Link>
             <Link href="/orchestration/workflows">
               <Button
-                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 aria-label="Create new workflow"
               >
-                <Workflow className="h-4 w-4 mr-2" />
+                <Workflow className="h-4 w-4" />
                 New Workflow
               </Button>
             </Link>

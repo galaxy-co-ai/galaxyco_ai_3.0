@@ -318,11 +318,11 @@ export default function TeamDetailClient({
           <div className="flex items-center gap-4">
             <Link href="/orchestration/teams">
               <Button
-                variant="ghost"
                 size="sm"
+                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 aria-label="Back to teams"
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
+                <ChevronLeft className="h-4 w-4" />
                 Back
               </Button>
             </Link>
@@ -359,20 +359,22 @@ export default function TeamDetailClient({
             {isEditing ? (
               <>
                 <Button
-                  variant="outline"
+                  size="sm"
                   onClick={() => setIsEditing(false)}
+                  className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 >
                   Cancel
                 </Button>
                 <Button
+                  size="sm"
                   onClick={saveChanges}
                   disabled={isSaving}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 >
                   {isSaving ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-4 w-4" />
                   )}
                   Save
                 </Button>
@@ -380,37 +382,38 @@ export default function TeamDetailClient({
             ) : (
               <>
                 <Button
-                  variant="outline"
+                  size="sm"
                   onClick={() => setIsEditing(true)}
+                  className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 >
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="h-4 w-4" />
                   Edit
                 </Button>
                 {team.status === "active" ? (
                   <Button
-                    variant="outline"
+                    size="sm"
                     onClick={() => updateStatus("paused")}
-                    className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                    className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                   >
-                    <Pause className="h-4 w-4 mr-2" />
+                    <Pause className="h-4 w-4" />
                     Pause
                   </Button>
                 ) : (
                   <Button
-                    variant="outline"
+                    size="sm"
                     onClick={() => updateStatus("active")}
-                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                   >
-                    <Play className="h-4 w-4 mr-2" />
+                    <Play className="h-4 w-4" />
                     Activate
                   </Button>
                 )}
                 <Button
-                  variant="outline"
+                  size="sm"
                   onClick={deleteTeam}
-                  className="border-red-300 text-red-600 hover:bg-red-50"
+                  className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-4 w-4" />
                   Delete
                 </Button>
               </>

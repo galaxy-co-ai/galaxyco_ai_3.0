@@ -1151,7 +1151,7 @@ Be creative, engaging, and write content that resonates!`;
   return (
     <div className="h-full bg-gray-50/50 overflow-hidden flex flex-col">
       {/* Header Section - Matching CRM */}
-      <div className="max-w-7xl mx-auto px-6 py-4 space-y-4 shrink-0">
+      <div className="px-6 py-4 space-y-4 shrink-0">
         {/* Header */}
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-3">
@@ -1172,15 +1172,13 @@ Be creative, engaging, and write content that resonates!`;
               </defs>
             </svg>
             <h1 
-              className="text-2xl uppercase"
+              className="branded-page-title text-2xl uppercase"
               style={{ 
-                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
-                fontWeight: 700,
-                letterSpacing: '0.25em',
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
               }}
             >
-              Marketing
+              <span className="hidden sm:inline">M A R K E T I N G</span>
+              <span className="sm:hidden">MARKETING</span>
             </h1>
           </div>
 

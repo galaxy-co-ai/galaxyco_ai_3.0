@@ -295,11 +295,11 @@ export default function WorkflowsListClient({
           <div className="flex items-center gap-4">
             <Link href="/orchestration">
               <Button
-                variant="ghost"
                 size="sm"
+                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 aria-label="Back to orchestration dashboard"
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
+                <ChevronLeft className="h-4 w-4" />
                 Back
               </Button>
             </Link>
@@ -320,28 +320,24 @@ export default function WorkflowsListClient({
                   </linearGradient>
                 </defs>
               </svg>
-              <div>
-                <h1 
-                  className="branded-page-title text-2xl uppercase"
-                  style={{ 
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-                  }}
-                >
-                  <span className="hidden sm:inline">W O R K F L O W S</span>
-                  <span className="sm:hidden">WORKFLOWS</span>
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Build and manage multi-agent workflows
-                </p>
-              </div>
+              <h1 
+                className="branded-page-title text-2xl uppercase"
+                style={{ 
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                }}
+              >
+                <span className="hidden sm:inline">W O R K F L O W S</span>
+                <span className="sm:hidden">WORKFLOWS</span>
+              </h1>
             </div>
           </div>
           <Button
+            size="sm"
             onClick={() => setShowCreateModal(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
             aria-label="Create new workflow"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             New Workflow
           </Button>
         </div>

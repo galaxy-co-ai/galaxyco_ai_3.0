@@ -35,11 +35,11 @@ export default function ApprovalsPageClient({
           <div className="flex items-center gap-4">
             <Link href="/orchestration">
               <Button
-                variant="ghost"
                 size="sm"
+                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 aria-label="Back to orchestration dashboard"
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
+                <ChevronLeft className="h-4 w-4" />
                 Back
               </Button>
             </Link>
@@ -60,28 +60,23 @@ export default function ApprovalsPageClient({
                   </linearGradient>
                 </defs>
               </svg>
-              <div>
-                <h1 
-                  className="branded-page-title text-2xl uppercase"
-                  style={{ 
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-                  }}
-                >
-                  <span className="hidden sm:inline">A P P R O V A L S</span>
-                  <span className="sm:hidden">APPROVALS</span>
-                </h1>
-                <p className="text-muted-foreground text-sm">
-                  Review and process pending autonomous actions
-                </p>
-              </div>
+              <h1 
+                className="branded-page-title text-2xl uppercase"
+                style={{ 
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                }}
+              >
+                <span className="hidden sm:inline">A P P R O V A L S</span>
+                <span className="sm:hidden">APPROVALS</span>
+              </h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {teamId && (
               <Link href="/orchestration/approvals">
                 <Button
-                  variant="outline"
                   size="sm"
+                  className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
                 >
                   Clear Filter
                 </Button>
@@ -89,8 +84,8 @@ export default function ApprovalsPageClient({
             )}
             <Link href="/orchestration">
               <Button
-                variant="outline"
                 size="sm"
+                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
               >
                 View Dashboard
               </Button>
