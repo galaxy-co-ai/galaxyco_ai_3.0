@@ -9,13 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ChevronLeft,
   Settings,
   Users,
-  Activity,
   Play,
   Pause,
   Trash2,
@@ -24,17 +22,12 @@ import {
   Crown,
   Shield,
   Wrench,
-  RefreshCw,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
   Loader2,
   Save,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -117,15 +110,14 @@ interface Team {
 interface TeamDetailClientProps {
   team: Team;
   availableAgents: Array<{ id: string; name: string; type: string; status: string }>;
-  workspaceId: string;
 }
 
 export default function TeamDetailClient({
   team: initialTeam,
   availableAgents,
-  workspaceId,
 }: TeamDetailClientProps) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("overview");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
@@ -138,7 +130,7 @@ export default function TeamDetailClient({
   const [isAddingMember, setIsAddingMember] = useState(false);
 
   // Fetch team data with SWR
-  const { data: teamData, mutate } = useSWR(
+  const { data: teamData, mutate } = useSWR<{ team: Team }>(
     `/api/orchestration/teams/${initialTeam.id}`,
     fetcher,
     {
@@ -147,7 +139,7 @@ export default function TeamDetailClient({
     }
   );
 
-  const team = teamData?.team || initialTeam;
+  const team: Team = teamData?.team || initialTeam;
   const dept = departmentConfig[team.department] || departmentConfig.general;
   const status = statusConfig[team.status] || statusConfig.active;
 
@@ -434,7 +426,7 @@ export default function TeamDetailClient({
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-gray-900/50 border border-white/10">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="members">
@@ -499,11 +491,14 @@ export default function TeamDetailClient({
             <Card className="p-6 bg-gray-900/50 border-white/10">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-white">Team Members</h3>
-                <Link href="#" onClick={() => document.querySelector('[data-value="members"]')?.dispatchEvent(new Event('click', { bubbles: true }))}>
-                  <Button variant="ghost" size="sm" className="text-blue-400 hover:text-blue-300">
-                    View All
-                  </Button>
-                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setActiveTab("members")}
+                  className="text-blue-400 hover:text-blue-300"
+                >
+                  View All
+                </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {team.members.slice(0, 4).map((member) => {

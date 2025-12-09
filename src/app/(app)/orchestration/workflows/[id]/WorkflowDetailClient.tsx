@@ -21,7 +21,6 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertTriangle,
   RefreshCw,
   Zap,
   Calendar,
@@ -146,14 +145,12 @@ interface WorkflowDetailClientProps {
   workflow: Workflow;
   executions: Execution[];
   availableAgents: Array<{ id: string; name: string; type: string; status: string }>;
-  workspaceId: string;
 }
 
 export default function WorkflowDetailClient({
   workflow: initialWorkflow,
   executions: initialExecutions,
   availableAgents,
-  workspaceId,
 }: WorkflowDetailClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -174,15 +171,10 @@ export default function WorkflowDetailClient({
     }
   );
 
-  // Fetch executions
-  const { data: executionsData, mutate: mutateExecutions } = useSWR(
-    `/api/orchestration/workflows/executions?workflowId=${initialWorkflow.id}`,
-    fetcher,
-    {
-      fallbackData: { executions: initialExecutions },
-      refreshInterval: 10000,
-    }
-  );
+  // Use initial executions (fetched server-side) - no separate API call needed
+  // Executions are already loaded from the page.tsx server component
+  const executionsData = { executions: initialExecutions };
+  const mutateExecutions = mutate; // Reuse the workflow mutate to refresh
 
   const workflow = workflowData?.workflow || initialWorkflow;
   const executions = executionsData?.executions || initialExecutions;
@@ -293,8 +285,16 @@ export default function WorkflowDetailClient({
 
   // Handle workflow save from builder
   const handleWorkflowSave = useCallback(
-    async (savedWorkflow: { id: string; name: string; steps: WorkflowStep[] }) => {
+    async (savedWorkflow: { 
+      name: string; 
+      description: string;
+      triggerType: string;
+      triggerConfig: Record<string, unknown>;
+      steps: WorkflowStep[];
+    }) => {
       setEditedSteps(savedWorkflow.steps);
+      setEditedName(savedWorkflow.name);
+      setEditedDescription(savedWorkflow.description);
       toast.success("Workflow saved");
       mutate();
     },
@@ -457,12 +457,11 @@ export default function WorkflowDetailClient({
               )}
               <WorkflowBuilder
                 workflowId={workflow.id}
-                initialWorkflow={{
-                  id: workflow.id,
-                  name: workflow.name,
-                  steps: workflow.steps,
-                }}
-                availableAgents={availableAgents}
+                initialName={workflow.name}
+                initialDescription={workflow.description || ""}
+                initialTriggerType={workflow.triggerType as "manual" | "event" | "schedule" | "agent_request"}
+                initialSteps={workflow.steps}
+                agents={availableAgents}
                 onSave={handleWorkflowSave}
               />
             </Card>
@@ -483,7 +482,6 @@ export default function WorkflowDetailClient({
                 </Button>
                 <WorkflowExecutionMonitor
                   executionId={selectedExecutionId}
-                  workflowSteps={workflow.steps}
                   onClose={() => setSelectedExecutionId(null)}
                 />
               </div>

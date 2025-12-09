@@ -115,7 +115,6 @@ export default async function WorkflowDetailPage({
           workflow={workflowData}
           executions={executionsData}
           availableAgents={agentsData}
-          workspaceId={workspaceId}
         />
       </ErrorBoundary>
     );

@@ -118,7 +118,6 @@ export default async function TeamDetailPage({
         <TeamDetailClient
           team={teamData}
           availableAgents={agentsNotInTeam}
-          workspaceId={workspaceId}
         />
       </ErrorBoundary>
     );
