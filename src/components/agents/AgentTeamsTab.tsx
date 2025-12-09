@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import TeamCard, { type Team, type TeamMember } from "./TeamCard";
 import TeamCreationWizard from "./TeamCreationWizard";
+import TeamConfigModal from "./TeamConfigModal";
 import type { AgentDepartment } from "@/lib/orchestration/types";
 
 // Fetcher for SWR
@@ -105,6 +106,8 @@ export default function AgentTeamsTab({ neptuneOpen = false }: AgentTeamsTabProp
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [showWizard, setShowWizard] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [configTeamId, setConfigTeamId] = useState<string | null>(null);
   const [runningTeams, setRunningTeams] = useState<Set<string>>(new Set());
   const [objectiveInput, setObjectiveInput] = useState("");
 
@@ -270,7 +273,8 @@ export default function AgentTeamsTab({ neptuneOpen = false }: AgentTeamsTabProp
   );
 
   const handleConfigureTeam = useCallback((teamId: string) => {
-    toast.info("Team configuration coming soon!");
+    setConfigTeamId(teamId);
+    setShowConfigModal(true);
   }, []);
 
   const handleWizardComplete = useCallback(
@@ -592,6 +596,17 @@ export default function AgentTeamsTab({ neptuneOpen = false }: AgentTeamsTabProp
           existingAgents={existingAgents}
         />
       )}
+
+      {/* Team Configuration Modal */}
+      <TeamConfigModal
+        open={showConfigModal}
+        onOpenChange={setShowConfigModal}
+        teamId={configTeamId}
+        onSuccess={() => {
+          mutateTeams();
+          setConfigTeamId(null);
+        }}
+      />
     </div>
   );
 }

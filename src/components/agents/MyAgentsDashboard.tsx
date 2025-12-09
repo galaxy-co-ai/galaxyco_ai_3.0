@@ -31,6 +31,7 @@ import AgentMessagesTab from "./AgentMessagesTab";
 import AgentLaboratoryTab from "./AgentLaboratoryTab";
 import AgentTeamsTab from "./AgentTeamsTab";
 import { AgentWorkflowsTab } from "@/components/orchestration";
+import { AgentConfigModal } from "./AgentConfigModal";
 
 // Fetcher for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -137,6 +138,8 @@ export default function MyAgentsDashboard({
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [isLive, setIsLive] = useState(true);
   const [isUpdatingAgent, setIsUpdatingAgent] = useState<string | null>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [configAgent, setConfigAgent] = useState<Agent | null>(null);
   const [showNeptune, setShowNeptune] = useState(false);
 
   // Fetch agents from API
@@ -251,8 +254,8 @@ export default function MyAgentsDashboard({
 
   // Handle agent configuration
   const handleConfigureAgent = useCallback((agent: Agent) => {
-    toast.info(`Opening configuration for ${agent.name}...`);
-    // TODO: Navigate to agent configuration or open modal
+    setConfigAgent(agent);
+    setShowConfigModal(true);
   }, []);
 
   // Handle retry
@@ -499,6 +502,23 @@ export default function MyAgentsDashboard({
           </>
         )}
       </div>
+
+      {/* Agent Configuration Modal */}
+      <AgentConfigModal
+        open={showConfigModal}
+        onOpenChange={setShowConfigModal}
+        agent={configAgent ? {
+          id: configAgent.id,
+          name: configAgent.name,
+          description: configAgent.description,
+          type: configAgent.type,
+          status: configAgent.status,
+        } : null}
+        onSuccess={() => {
+          mutateAgents();
+          setConfigAgent(null);
+        }}
+      />
     </div>
   );
 }
