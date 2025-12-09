@@ -8536,18 +8536,25 @@ Provide analysis in JSON format:
         };
         const template = templates[templateType];
         if (template) {
-          workflowSteps = template.steps.map((step, i) => ({
-            id: `step_${i + 1}`,
-            ...step,
-            agentId: '', // Will need to be mapped to actual agents
-          }));
+          workflowSteps = template.steps.map((step, i) => {
+            // Spread step first, then override id and agentId
+            const { id: _existingId, ...stepRest } = step;
+            return {
+              ...stepRest,
+              id: `step_${i + 1}`,
+              agentId: '', // Will need to be mapped to actual agents
+            };
+          });
           templateInfo = `Using the "${template.name}" template with ${template.steps.length} steps.`;
         }
       } else if (steps && steps.length > 0) {
-        workflowSteps = steps.map((step, i) => ({
-          id: `step_${i + 1}`,
-          ...step,
-        }));
+        workflowSteps = steps.map((step, i) => {
+          const { id: _existingId, ...stepRest } = step as Record<string, unknown>;
+          return {
+            ...stepRest,
+            id: `step_${i + 1}`,
+          };
+        });
       }
 
       // Create the workflow
