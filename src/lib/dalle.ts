@@ -29,10 +29,10 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
   const openai = getOpenAI();
 
   try {
-    logger.info('Generating image with DALL-E 3', {
+      logger.info('Generating image with DALL-E 3', {
       promptLength: params.prompt.length,
       size: params.size || '1024x1024',
-      quality: params.quality || 'standard',
+      quality: params.quality || 'hd',
       style: params.style || 'vivid',
     });
 
@@ -40,7 +40,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       model: 'dall-e-3',
       prompt: params.prompt,
       size: params.size || '1024x1024',
-      quality: params.quality || 'standard',
+      quality: params.quality || 'hd',
       style: params.style || 'vivid',
       n: 1,
     });
@@ -64,7 +64,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
         url: imageUrl,
         revisedPrompt,
         size: params.size || '1024x1024',
-        quality: params.quality || 'standard',
+        quality: params.quality || 'hd',
       };
     }
 
@@ -93,7 +93,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
       url: blobResult.url,
       revisedPrompt,
       size: params.size || '1024x1024',
-      quality: params.quality || 'standard',
+      quality: params.quality || 'hd',
     };
   } catch (error) {
     logger.error('DALL-E image generation failed', error);

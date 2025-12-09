@@ -31,6 +31,7 @@ import { logger } from "@/lib/logger";
 import QuickActions from "./QuickActions";
 import { useNeptune, type Attachment } from "@/contexts/neptune-context";
 import type { Conversation } from "./ConversationsDashboard";
+import { NeptuneMessage } from "@/components/neptune/NeptuneMessage";
 
 // Wrapper component for fullscreen variant to add card styling
 function NeptuneCardWrapper({
@@ -650,25 +651,19 @@ export default function NeptuneAssistPanel({
                     </div>
                   )}
 
-                  {msg.content && (
-                    <p className="text-sm whitespace-pre-wrap">
-                      {msg.content}
-                      {msg.isStreaming && (
-                        <span className="inline-flex items-center gap-1 ml-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "0ms" }} />
-                          <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" style={{ animationDelay: "300ms" }} />
-                        </span>
-                      )}
-                    </p>
-                  )}
-                  {!msg.content && msg.isStreaming && (
+                  {msg.content ? (
+                    <NeptuneMessage
+                      content={msg.content}
+                      isStreaming={msg.isStreaming}
+                      metadata={msg.metadata}
+                    />
+                  ) : msg.isStreaming ? (
                     <span className="inline-flex items-center gap-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
                       <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
                       <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
                     </span>
-                  )}
+                  ) : null}
 
                   {/* Gamma Document Display */}
                   {msg.metadata?.functionCalls?.some(

@@ -166,6 +166,17 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 8, 2025):**
+- ✨ **Neptune Rich Response Rendering** - Polished, structured AI responses:
+  - Full markdown support (headers, bullet points, bold, code blocks, tables)
+  - Syntax highlighting for code with copy button
+  - Link preview cards with thumbnails, titles, and descriptions
+  - Search results displayed as visual cards when `search_web` is used
+  - DALL-E default quality upgraded from `standard` to `hd` for better images
+  - New `/api/link-preview` endpoint with SSRF protection and Redis caching
+- 💬 **Feedback in Sidebar** - Moved feedback to sidebar navigation:
+  - Feedback link at bottom of Main section
+  - Removed floating feedback button from bottom-right corner
+  - Uses context-based panel for consistent UX
 - 🎯 **Avatar Dropdown Navigation** - Cleaner sidebar with user menu:
   - Moved Settings, Connectors, and Mission Control (admin) to avatar dropdown
   - Added Sign Out option with Clerk integration
