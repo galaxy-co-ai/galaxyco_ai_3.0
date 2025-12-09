@@ -8106,9 +8106,25 @@ Provide analysis in JSON format:
       }
       const department = departmentArg as DepartmentType;
 
-      // Get template if specified
-      let teamConfig: Record<string, unknown> = {
-        autonomyLevel,
+      // Validate autonomy level
+      const validAutonomyLevels = ['supervised', 'semi_autonomous', 'autonomous'] as const;
+      type AutonomyLevelType = typeof validAutonomyLevels[number];
+      const validatedAutonomyLevel: AutonomyLevelType = validAutonomyLevels.includes(autonomyLevel as AutonomyLevelType) 
+        ? (autonomyLevel as AutonomyLevelType) 
+        : 'supervised';
+
+      // Define config with proper type matching schema
+      type TeamConfigType = {
+        autonomyLevel: AutonomyLevelType;
+        approvalRequired: string[];
+        maxConcurrentTasks: number;
+        workingHours?: { start: string; end: string; timezone: string };
+        escalationRules?: Array<{ condition: string; action: 'notify' | 'escalate' | 'pause'; target?: string }>;
+        capabilities?: string[];
+      };
+
+      let teamConfig: TeamConfigType = {
+        autonomyLevel: validatedAutonomyLevel,
         approvalRequired: [],
         maxConcurrentTasks: 5,
       };
@@ -8116,8 +8132,15 @@ Provide analysis in JSON format:
       let templateInfo: string | null = null;
       if (templateId) {
         const template = getTeamTemplate(templateId);
-        if (template) {
-          teamConfig = { ...teamConfig, ...template.config };
+        if (template && template.config) {
+          // Merge template config with proper typing
+          teamConfig = {
+            ...teamConfig,
+            autonomyLevel: (template.config.autonomyLevel as AutonomyLevelType) || teamConfig.autonomyLevel,
+            approvalRequired: template.config.approvalRequired || teamConfig.approvalRequired,
+            maxConcurrentTasks: template.config.maxConcurrentTasks || teamConfig.maxConcurrentTasks,
+            capabilities: template.config.capabilities,
+          };
           templateInfo = `Using the ${template.name} template with ${template.agents.length} recommended agent roles.`;
         }
       }
