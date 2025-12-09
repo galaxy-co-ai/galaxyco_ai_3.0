@@ -386,6 +386,69 @@ export const dealPriorityEnum = pgEnum('deal_priority', [
 ]);
 
 // ============================================================================
+// AGENT ORCHESTRATION ENUMS
+// ============================================================================
+
+export const agentDepartmentEnum = pgEnum('agent_department', [
+  'sales',
+  'marketing',
+  'support',
+  'operations',
+  'finance',
+  'product',
+  'general',
+]);
+
+export const agentTeamRoleEnum = pgEnum('agent_team_role', [
+  'coordinator',
+  'specialist',
+  'support',
+]);
+
+export const agentMessageTypeEnum = pgEnum('agent_message_type', [
+  'task',
+  'result',
+  'context',
+  'handoff',
+  'status',
+  'query',
+]);
+
+export const memoryTierEnum = pgEnum('memory_tier', [
+  'short_term',
+  'medium_term',
+  'long_term',
+]);
+
+export const orchestrationWorkflowStatusEnum = pgEnum('orchestration_workflow_status', [
+  'active',
+  'paused',
+  'archived',
+  'draft',
+]);
+
+export const orchestrationWorkflowTriggerTypeEnum = pgEnum('orchestration_workflow_trigger_type', [
+  'manual',
+  'event',
+  'schedule',
+  'agent_request',
+]);
+
+export const orchestrationExecutionStatusEnum = pgEnum('orchestration_execution_status', [
+  'running',
+  'completed',
+  'failed',
+  'paused',
+  'cancelled',
+]);
+
+export const teamAutonomyLevelEnum = pgEnum('team_autonomy_level', [
+  'supervised',
+  'semi_autonomous',
+  'autonomous',
+]);
+
+// ============================================================================
 // WORKSPACES (Tenant Boundary)
 // ============================================================================
 
@@ -912,6 +975,388 @@ export const agentSchedules = pgTable(
 );
 
 // ============================================================================
+// AGENT ORCHESTRATION SYSTEM
+// Multi-agent teams, inter-agent communication, and workflow coordination
+// ============================================================================
+
+/**
+ * Agent Teams - Department-level agent groups
+ * Enables grouping agents by department for coordinated automation
+ */
+export const agentTeams = pgTable(
+  'agent_teams',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Team info
+    name: text('name').notNull(),
+    department: agentDepartmentEnum('department').notNull(),
+    description: text('description'),
+
+    // Coordinator agent (optional - can be null if no coordinator assigned)
+    coordinatorAgentId: uuid('coordinator_agent_id').references(() => agents.id, {
+      onDelete: 'set null',
+    }),
+
+    // Team configuration
+    config: jsonb('config')
+      .$type<{
+        autonomyLevel: 'supervised' | 'semi_autonomous' | 'autonomous';
+        approvalRequired: string[]; // Action types requiring human approval
+        workingHours?: { start: string; end: string; timezone: string };
+        maxConcurrentTasks: number;
+        escalationRules?: Array<{
+          condition: string;
+          action: 'notify' | 'escalate' | 'pause';
+          target?: string;
+        }>;
+        capabilities?: string[];
+      }>()
+      .notNull()
+      .default({
+        autonomyLevel: 'supervised',
+        approvalRequired: [],
+        maxConcurrentTasks: 5,
+      }),
+
+    // Status
+    status: text('status').notNull().default('active'), // 'active' | 'paused' | 'archived'
+
+    // Metrics
+    totalExecutions: integer('total_executions').notNull().default(0),
+    successfulExecutions: integer('successful_executions').notNull().default(0),
+    lastActiveAt: timestamp('last_active_at'),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('agent_team_tenant_idx').on(table.workspaceId),
+    departmentIdx: index('agent_team_department_idx').on(table.department),
+    statusIdx: index('agent_team_status_idx').on(table.status),
+    coordinatorIdx: index('agent_team_coordinator_idx').on(table.coordinatorAgentId),
+  }),
+);
+
+/**
+ * Agent Team Members - Agent membership in teams
+ * Links agents to teams with specific roles
+ */
+export const agentTeamMembers = pgTable(
+  'agent_team_members',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // References
+    teamId: uuid('team_id')
+      .notNull()
+      .references(() => agentTeams.id, { onDelete: 'cascade' }),
+    agentId: uuid('agent_id')
+      .notNull()
+      .references(() => agents.id, { onDelete: 'cascade' }),
+
+    // Role and priority
+    role: agentTeamRoleEnum('role').notNull(),
+    priority: integer('priority').notNull().default(0), // Execution order within team
+
+    // Member configuration
+    config: jsonb('config')
+      .$type<{
+        specializations?: string[]; // What this agent specializes in within the team
+        fallbackFor?: string[]; // Agent IDs this agent can substitute for
+        maxConcurrentTasks?: number;
+      }>()
+      .default({}),
+
+    // Metadata
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    teamAgentIdx: uniqueIndex('agent_team_member_team_agent_idx').on(table.teamId, table.agentId),
+    roleIdx: index('agent_team_member_role_idx').on(table.role),
+  }),
+);
+
+/**
+ * Agent Messages - Inter-agent communication
+ * Message bus for agent-to-agent and agent-to-team communication
+ */
+export const agentMessages = pgTable(
+  'agent_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Routing
+    fromAgentId: uuid('from_agent_id').references(() => agents.id, { onDelete: 'set null' }),
+    toAgentId: uuid('to_agent_id').references(() => agents.id, { onDelete: 'set null' }),
+    teamId: uuid('team_id').references(() => agentTeams.id, { onDelete: 'set null' }),
+
+    // Message type and content
+    messageType: agentMessageTypeEnum('message_type').notNull(),
+    content: jsonb('content')
+      .$type<{
+        subject: string;
+        body: string;
+        data?: Record<string, unknown>;
+        priority: 'low' | 'normal' | 'high' | 'urgent';
+        taskId?: string;
+        workflowExecutionId?: string;
+      }>()
+      .notNull(),
+
+    // Threading
+    parentMessageId: uuid('parent_message_id'),
+    threadId: uuid('thread_id'), // Groups related messages
+
+    // Status
+    status: text('status').notNull().default('pending'), // 'pending' | 'delivered' | 'read' | 'processed'
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    deliveredAt: timestamp('delivered_at'),
+    readAt: timestamp('read_at'),
+    processedAt: timestamp('processed_at'),
+  },
+  (table) => ({
+    tenantIdx: index('agent_message_tenant_idx').on(table.workspaceId),
+    fromAgentIdx: index('agent_message_from_agent_idx').on(table.fromAgentId),
+    toAgentIdx: index('agent_message_to_agent_idx').on(table.toAgentId),
+    teamIdx: index('agent_message_team_idx').on(table.teamId),
+    statusIdx: index('agent_message_status_idx').on(table.status),
+    threadIdx: index('agent_message_thread_idx').on(table.threadId),
+    createdAtIdx: index('agent_message_created_at_idx').on(table.createdAt),
+  }),
+);
+
+/**
+ * Agent Workflows - Multi-agent workflow definitions
+ * Defines sequences of agent actions that can be triggered and executed
+ */
+export const agentWorkflows = pgTable(
+  'agent_workflows',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Optional team association
+    teamId: uuid('team_id').references(() => agentTeams.id, { onDelete: 'set null' }),
+
+    // Workflow info
+    name: text('name').notNull(),
+    description: text('description'),
+    category: text('category'), // 'sales', 'marketing', 'support', 'operations', etc.
+
+    // Trigger configuration
+    triggerType: orchestrationWorkflowTriggerTypeEnum('trigger_type').notNull(),
+    triggerConfig: jsonb('trigger_config')
+      .$type<{
+        eventType?: string; // For event triggers
+        cron?: string; // For schedule triggers
+        webhookSecret?: string; // For webhook triggers
+        conditions?: Array<{ field: string; operator: string; value: unknown }>;
+      }>()
+      .default({}),
+
+    // Workflow steps (the actual workflow definition)
+    steps: jsonb('steps')
+      .$type<
+        Array<{
+          id: string;
+          name: string;
+          agentId: string;
+          action: string;
+          inputs: Record<string, unknown>;
+          conditions?: Array<{ field: string; operator: string; value: unknown }>;
+          onSuccess?: string; // Next step ID
+          onFailure?: string; // Fallback step ID
+          timeout?: number; // Seconds
+          retryConfig?: {
+            maxAttempts: number;
+            backoffMs: number;
+          };
+        }>
+      >()
+      .notNull()
+      .default([]),
+
+    // Status
+    status: orchestrationWorkflowStatusEnum('status').notNull().default('draft'),
+
+    // Metrics
+    totalExecutions: integer('total_executions').notNull().default(0),
+    successfulExecutions: integer('successful_executions').notNull().default(0),
+    avgDurationMs: integer('avg_duration_ms'),
+    lastExecutedAt: timestamp('last_executed_at'),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('agent_workflow_tenant_idx').on(table.workspaceId),
+    teamIdx: index('agent_workflow_team_idx').on(table.teamId),
+    statusIdx: index('agent_workflow_status_idx').on(table.status),
+    triggerIdx: index('agent_workflow_trigger_idx').on(table.triggerType),
+    categoryIdx: index('agent_workflow_category_idx').on(table.category),
+  }),
+);
+
+/**
+ * Agent Workflow Executions - Workflow execution tracking
+ * Tracks the execution state and results of workflow runs
+ */
+export const agentWorkflowExecutions = pgTable(
+  'agent_workflow_executions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Workflow reference
+    workflowId: uuid('workflow_id')
+      .notNull()
+      .references(() => agentWorkflows.id, { onDelete: 'cascade' }),
+
+    // Execution state
+    status: orchestrationExecutionStatusEnum('status').notNull().default('running'),
+    currentStepId: text('current_step_id'),
+    currentStepIndex: integer('current_step_index').notNull().default(0),
+
+    // Step results (maps step ID to result)
+    stepResults: jsonb('step_results')
+      .$type<
+        Record<
+          string,
+          {
+            status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+            output: unknown;
+            error?: string;
+            startedAt?: string;
+            completedAt?: string;
+            durationMs?: number;
+          }
+        >
+      >()
+      .default({}),
+
+    // Shared context (passed between steps)
+    context: jsonb('context').$type<Record<string, unknown>>().default({}),
+
+    // Trigger info
+    triggeredBy: uuid('triggered_by').references(() => users.id, { onDelete: 'set null' }),
+    triggerType: text('trigger_type'), // 'manual' | 'event' | 'schedule' | 'agent_request'
+    triggerData: jsonb('trigger_data').$type<Record<string, unknown>>(),
+
+    // Timestamps
+    startedAt: timestamp('started_at').notNull().defaultNow(),
+    completedAt: timestamp('completed_at'),
+    pausedAt: timestamp('paused_at'),
+
+    // Performance metrics
+    durationMs: integer('duration_ms'),
+    totalSteps: integer('total_steps').notNull().default(0),
+    completedSteps: integer('completed_steps').notNull().default(0),
+
+    // Error info
+    error: jsonb('error').$type<{
+      message: string;
+      step?: string;
+      details?: unknown;
+      stack?: string;
+    }>(),
+  },
+  (table) => ({
+    tenantIdx: index('agent_workflow_execution_tenant_idx').on(table.workspaceId),
+    workflowIdx: index('agent_workflow_execution_workflow_idx').on(table.workflowId),
+    statusIdx: index('agent_workflow_execution_status_idx').on(table.status),
+    startedAtIdx: index('agent_workflow_execution_started_at_idx').on(table.startedAt),
+    triggeredByIdx: index('agent_workflow_execution_triggered_by_idx').on(table.triggeredBy),
+  }),
+);
+
+/**
+ * Agent Shared Memory - Three-tier memory system
+ * Stores context, patterns, and knowledge that agents can share
+ */
+export const agentSharedMemory = pgTable(
+  'agent_shared_memory',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Scope (team-wide or agent-specific)
+    teamId: uuid('team_id').references(() => agentTeams.id, { onDelete: 'cascade' }),
+    agentId: uuid('agent_id').references(() => agents.id, { onDelete: 'cascade' }),
+
+    // Memory classification
+    memoryTier: memoryTierEnum('memory_tier').notNull(),
+    category: text('category').notNull(), // 'context' | 'pattern' | 'preference' | 'knowledge' | 'relationship'
+
+    // Key-value storage
+    key: text('key').notNull(),
+    value: jsonb('value').$type<unknown>().notNull(),
+
+    // Metadata for relevance and management
+    metadata: jsonb('metadata')
+      .$type<{
+        source?: string; // Where this memory came from
+        confidence?: number; // 0-100, how reliable this memory is
+        lastAccessed?: string; // ISO timestamp of last access
+        accessCount?: number; // Number of times accessed
+        relatedMemoryIds?: string[]; // Links to related memories
+        tags?: string[];
+      }>()
+      .default({}),
+
+    // Memory management
+    importance: integer('importance').notNull().default(50), // 0-100, for prioritization
+    expiresAt: timestamp('expires_at'), // For short-term memory auto-cleanup
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('agent_shared_memory_tenant_idx').on(table.workspaceId),
+    teamIdx: index('agent_shared_memory_team_idx').on(table.teamId),
+    agentIdx: index('agent_shared_memory_agent_idx').on(table.agentId),
+    tierIdx: index('agent_shared_memory_tier_idx').on(table.memoryTier),
+    categoryIdx: index('agent_shared_memory_category_idx').on(table.category),
+    keyIdx: index('agent_shared_memory_key_idx').on(table.key),
+    expiresAtIdx: index('agent_shared_memory_expires_at_idx').on(table.expiresAt),
+    importanceIdx: index('agent_shared_memory_importance_idx').on(table.importance),
+  }),
+);
+
+// ============================================================================
 // KNOWLEDGE BASE (Wisebase-like Document Management)
 // ============================================================================
 
@@ -1109,6 +1554,12 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
   }),
   executions: many(agentExecutions),
   schedule: one(agentSchedules),
+  // Orchestration relations
+  teamMemberships: many(agentTeamMembers),
+  coordinatedTeams: many(agentTeams),
+  sentMessages: many(agentMessages, { relationName: 'sentMessages' }),
+  receivedMessages: many(agentMessages, { relationName: 'receivedMessages' }),
+  sharedMemory: many(agentSharedMemory),
 }));
 
 export const agentExecutionsRelations = relations(agentExecutions, ({ one }) => ({
@@ -1141,6 +1592,112 @@ export const agentLogsRelations = relations(agentLogs, ({ one }) => ({
   workspace: one(workspaces, {
     fields: [agentLogs.workspaceId],
     references: [workspaces.id],
+  }),
+}));
+
+// ============================================================================
+// AGENT ORCHESTRATION RELATIONS
+// ============================================================================
+
+export const agentTeamsRelations = relations(agentTeams, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [agentTeams.workspaceId],
+    references: [workspaces.id],
+  }),
+  coordinator: one(agents, {
+    fields: [agentTeams.coordinatorAgentId],
+    references: [agents.id],
+  }),
+  creator: one(users, {
+    fields: [agentTeams.createdBy],
+    references: [users.id],
+  }),
+  members: many(agentTeamMembers),
+  messages: many(agentMessages),
+  workflows: many(agentWorkflows),
+  sharedMemory: many(agentSharedMemory),
+}));
+
+export const agentTeamMembersRelations = relations(agentTeamMembers, ({ one }) => ({
+  team: one(agentTeams, {
+    fields: [agentTeamMembers.teamId],
+    references: [agentTeams.id],
+  }),
+  agent: one(agents, {
+    fields: [agentTeamMembers.agentId],
+    references: [agents.id],
+  }),
+}));
+
+export const agentMessagesRelations = relations(agentMessages, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [agentMessages.workspaceId],
+    references: [workspaces.id],
+  }),
+  fromAgent: one(agents, {
+    fields: [agentMessages.fromAgentId],
+    references: [agents.id],
+    relationName: 'sentMessages',
+  }),
+  toAgent: one(agents, {
+    fields: [agentMessages.toAgentId],
+    references: [agents.id],
+    relationName: 'receivedMessages',
+  }),
+  team: one(agentTeams, {
+    fields: [agentMessages.teamId],
+    references: [agentTeams.id],
+  }),
+  parentMessage: one(agentMessages, {
+    fields: [agentMessages.parentMessageId],
+    references: [agentMessages.id],
+    relationName: 'messageThread',
+  }),
+}));
+
+export const agentWorkflowsRelations = relations(agentWorkflows, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [agentWorkflows.workspaceId],
+    references: [workspaces.id],
+  }),
+  team: one(agentTeams, {
+    fields: [agentWorkflows.teamId],
+    references: [agentTeams.id],
+  }),
+  creator: one(users, {
+    fields: [agentWorkflows.createdBy],
+    references: [users.id],
+  }),
+  executions: many(agentWorkflowExecutions),
+}));
+
+export const agentWorkflowExecutionsRelations = relations(agentWorkflowExecutions, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [agentWorkflowExecutions.workspaceId],
+    references: [workspaces.id],
+  }),
+  workflow: one(agentWorkflows, {
+    fields: [agentWorkflowExecutions.workflowId],
+    references: [agentWorkflows.id],
+  }),
+  triggeredByUser: one(users, {
+    fields: [agentWorkflowExecutions.triggeredBy],
+    references: [users.id],
+  }),
+}));
+
+export const agentSharedMemoryRelations = relations(agentSharedMemory, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [agentSharedMemory.workspaceId],
+    references: [workspaces.id],
+  }),
+  team: one(agentTeams, {
+    fields: [agentSharedMemory.teamId],
+    references: [agentTeams.id],
+  }),
+  agent: one(agents, {
+    fields: [agentSharedMemory.agentId],
+    references: [agents.id],
   }),
 }));
 

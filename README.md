@@ -633,6 +633,32 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - AI-powered summarization
 - Multi-format support (PDF, TXT, MD, DOCX)
 
+### 🎯 Agent Orchestration System 🆕
+
+**Multi-Agent Coordination for Autonomous Business Operations**
+
+Inspired by The General Intelligence Company's "Cofounder" approach, our orchestration system enables department-level automation with coordinated agent teams.
+
+#### Core Components:
+- **Agent Teams** - Group agents by department (Sales, Marketing, Support, Operations, Finance)
+- **Agent-to-Agent Communication** - Message bus for task delegation and context sharing
+- **Multi-Agent Workflows** - Chain agents together for complex business processes
+- **Three-Tier Memory System** - Short-term, medium-term, and long-term context storage
+
+#### Features:
+- **Department Automation** - Run entire departments with coordinated agent teams
+- **Task Routing** - Automatically route tasks to the most capable agent
+- **Task Delegation** - Agents can delegate subtasks to specialized teammates
+- **Context Sharing** - Agents share context and learnings via shared memory
+- **Workflow Execution** - Execute multi-step workflows with conditional branching
+- **Autonomy Levels** - Supervised, semi-autonomous, and fully autonomous modes
+
+#### Use Cases:
+- "Create a sales team with lead qualifier and proposal writer"
+- "Run the marketing team to handle this week's social content"
+- "Set up a workflow for support ticket resolution"
+- "Have the operations team prioritize and batch similar tasks"
+
 ### 🤝 CRM
 - Contact, project, and deal management
 - AI-powered lead scoring
