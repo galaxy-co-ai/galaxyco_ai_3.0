@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -12,7 +12,10 @@ import {
   Loader2,
   Image as ImageIcon,
   Settings2,
-  Sparkles
+  Sparkles,
+  Upload,
+  Link as LinkIcon,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { TiptapEditor } from './TiptapEditor';
+import { TiptapEditor, InsertImageFunction, CitationData } from './TiptapEditor';
+import { AIImageModal } from './ArticleStudio/AIImageModal';
 import { toast } from 'sonner';
 import readingTime from 'reading-time';
 import slugify from 'slugify';
@@ -65,6 +69,21 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
   const [metaTitle, setMetaTitle] = useState(initialData?.metaTitle || '');
   const [metaDescription, setMetaDescription] = useState(initialData?.metaDescription || '');
   
+  // AI Image Modal state
+  const [isAIImageModalOpen, setIsAIImageModalOpen] = useState(false);
+  const [aiImageContext, setAIImageContext] = useState('');
+  const [aiImageInitialPrompt, setAIImageInitialPrompt] = useState('');
+  const [aiImageMode, setAIImageMode] = useState<'featured' | 'inline'>('featured');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  
+  // Editor insert function ref (will be set by TiptapEditor)
+  const insertImageRef = useRef<((url: string, alt?: string) => void) | null>(null);
+  
+  // File input ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   // Auto-generate slug from title
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle);
@@ -77,6 +96,98 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
   // Calculate reading time
   const stats = readingTime(content.replace(/<[^>]*>/g, '')); // Strip HTML
   const readingTimeMinutes = Math.ceil(stats.minutes);
+
+  // Handle AI image selection (for featured image or inline)
+  const handleAIImageSelect = useCallback((url: string, altText?: string) => {
+    if (aiImageMode === 'featured') {
+      setFeaturedImage(url);
+    } else if (aiImageMode === 'inline' && insertImageRef.current) {
+      // Insert image into editor at cursor position
+      insertImageRef.current(url, altText);
+    }
+    setIsAIImageModalOpen(false);
+    setAIImageInitialPrompt('');
+  }, [aiImageMode]);
+
+  // Open AI Image modal with context from article (for featured image)
+  const handleOpenAIImageModal = useCallback(() => {
+    // Build context from title, excerpt, and content
+    const context = [
+      title ? `Title: ${title}` : '',
+      excerpt ? `Excerpt: ${excerpt}` : '',
+      content ? `Content: ${content.replace(/<[^>]*>/g, '').substring(0, 2000)}` : '',
+    ].filter(Boolean).join('\n\n');
+    
+    setAIImageContext(context);
+    setAIImageMode('featured');
+    setAIImageInitialPrompt('');
+    setIsAIImageModalOpen(true);
+  }, [title, excerpt, content]);
+
+  // Handle in-article image suggestion from TiptapEditor
+  const handleSuggestImage = useCallback((sectionContext: string) => {
+    setAIImageContext(sectionContext);
+    setAIImageMode('inline');
+    setAIImageInitialPrompt('');
+    setIsAIImageModalOpen(true);
+  }, []);
+
+  // Handle editor ready callback to get insert functions
+  const handleEditorReady = useCallback((insertCitation: (citation: CitationData) => void, insertImage: InsertImageFunction) => {
+    insertImageRef.current = insertImage;
+  }, []);
+
+  // Handle file upload
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/admin/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      setFeaturedImage(data.url);
+      toast.success('Image uploaded!');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, []);
+
+  // Handle URL paste
+  const handleUrlSubmit = useCallback(() => {
+    if (!urlInput.trim()) {
+      toast.error('Please enter a valid URL');
+      return;
+    }
+    // Basic URL validation
+    try {
+      new URL(urlInput);
+      setFeaturedImage(urlInput.trim());
+      setUrlInput('');
+      setShowUrlInput(false);
+      toast.success('Image URL added!');
+    } catch {
+      toast.error('Please enter a valid URL');
+    }
+  }, [urlInput]);
 
   // Save as draft
   const handleSave = async () => {
@@ -256,6 +367,13 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
             content={content}
             onChange={setContent}
             placeholder="Start writing your article... Use the toolbar above or markdown shortcuts."
+            enableAI={true}
+            articleContext={{
+              title,
+              targetAudience: 'general',
+            }}
+            onSuggestImage={handleSuggestImage}
+            onEditorReady={handleEditorReady}
           />
         </div>
 
@@ -324,7 +442,7 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
             </CardHeader>
             <CardContent>
               {featuredImage ? (
-                <div className="relative">
+                <div className="relative group">
                   <img 
                     src={featuredImage} 
                     alt="Featured" 
@@ -333,23 +451,97 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="absolute top-2 right-2"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                     onClick={() => setFeaturedImage('')}
+                    aria-label="Remove featured image"
                   >
-                    Remove
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Input
-                    value={featuredImage}
-                    onChange={(e) => setFeaturedImage(e.target.value)}
-                    placeholder="Image URL..."
-                    className="text-sm"
+                <div className="space-y-3">
+                  {/* Action buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenAIImageModal}
+                      className="flex items-center gap-1.5 text-violet-600 border-violet-200 hover:bg-violet-50 hover:border-violet-300"
+                      aria-label="Generate image with AI"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span className="text-xs">AI Generate</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingImage}
+                      className="flex items-center gap-1.5"
+                      aria-label="Upload image from computer"
+                    >
+                      {isUploadingImage ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Upload className="h-3.5 w-3.5" />
+                      )}
+                      <span className="text-xs">Upload</span>
+                    </Button>
+                  </div>
+                  
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    aria-label="Select image file"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Enter an image URL or upload to Vercel Blob
-                  </p>
+                  
+                  {/* URL input toggle */}
+                  {showUrlInput ? (
+                    <div className="flex gap-1">
+                      <Input
+                        value={urlInput}
+                        onChange={(e) => setUrlInput(e.target.value)}
+                        placeholder="Paste image URL..."
+                        className="text-xs h-8"
+                        onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+                        aria-label="Image URL"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleUrlSubmit}
+                        className="h-8 px-2"
+                        aria-label="Add URL"
+                      >
+                        <LinkIcon className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setShowUrlInput(false);
+                          setUrlInput('');
+                        }}
+                        className="h-8 px-2"
+                        aria-label="Cancel URL input"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowUrlInput(true)}
+                      className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                      aria-label="Enter image URL instead"
+                    >
+                      <LinkIcon className="h-3 w-3" />
+                      Or paste URL
+                    </button>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -397,6 +589,18 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
           </Card>
         </div>
       </div>
+
+      {/* AI Image Modal */}
+      <AIImageModal
+        isOpen={isAIImageModalOpen}
+        onClose={() => {
+          setIsAIImageModalOpen(false);
+          setAIImageInitialPrompt('');
+        }}
+        onSelectImage={handleAIImageSelect}
+        initialPrompt={aiImageInitialPrompt}
+        context={aiImageContext}
+      />
     </div>
   );
 }

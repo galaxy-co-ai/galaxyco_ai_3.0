@@ -60,6 +60,9 @@ export interface CitationData {
   publication: string | null;
 }
 
+// Function to insert an image at cursor position
+export type InsertImageFunction = (url: string, alt?: string) => void;
+
 interface TiptapEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -74,7 +77,7 @@ interface TiptapEditorProps {
   };
   onFindSource?: (selectedText: string) => void;
   onSuggestImage?: (context: string) => void;
-  onEditorReady?: (insertCitation: (citation: CitationData) => void) => void;
+  onEditorReady?: (insertCitation: (citation: CitationData) => void, insertImage: InsertImageFunction) => void;
 }
 
 export function TiptapEditor({ 
@@ -231,12 +234,25 @@ export function TiptapEditor({
     toast.success('Citation inserted');
   }, [editor]);
 
+  // Insert image function
+  const insertImage: InsertImageFunction = useCallback((url: string, alt?: string) => {
+    if (!editor) return;
+
+    editor
+      .chain()
+      .focus()
+      .setImage({ src: url, alt: alt || 'Article image' })
+      .run();
+
+    toast.success('Image inserted');
+  }, [editor]);
+
   // Notify parent when editor is ready
   useEffect(() => {
     if (editor && onEditorReady) {
-      onEditorReady(insertCitation);
+      onEditorReady(insertCitation, insertImage);
     }
-  }, [editor, onEditorReady, insertCitation]);
+  }, [editor, onEditorReady, insertCitation, insertImage]);
 
   // Handle AI Continue
   function handleAIContinue(editorContent: string, cursorPosition: number) {

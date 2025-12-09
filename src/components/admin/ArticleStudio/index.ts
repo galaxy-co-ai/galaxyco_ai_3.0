@@ -6,4 +6,6 @@ export type { OutlineSection, OutlineData } from './OutlineEditor';
 export { SourcePanel } from './SourcePanel';
 export type { ArticleSource, FoundSource } from './SourcePanel';
 export { PrePublishVerification } from './PrePublishVerification';
+export { AIImageModal } from './AIImageModal';
+export type { ImageStyle, ImageSize, GeneratedImage } from './AIImageModal';
 

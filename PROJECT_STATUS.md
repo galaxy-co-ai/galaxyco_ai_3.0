@@ -5,9 +5,9 @@
 
 ---
 
-## 📝 Article Studio - Phase 5 Complete ✅
+## 📝 Article Studio - Phase 6 Complete ✅
 
-**December 9, 2025** - Article Studio Phases 1-5 complete with database schema, topic generation, brainstorming, layout templates, outline editor, AI-assisted writing, and source verification system.
+**December 9, 2025** - Article Studio Phases 1-6 complete with database schema, topic generation, brainstorming, layout templates, outline editor, AI-assisted writing, source verification system, and image generation/upload.
 
 ### Phase 1: Database Schema and Topic Bank ✅
 
@@ -406,8 +406,84 @@
 - `src/components/admin/ArticleStudio/index.ts` - Export new components
 - `src/components/admin/TiptapEditor/index.tsx` - Source integration props
 
+---
+
+### Phase 6: Image Generation and Upload ✅
+
+**December 9, 2025** - AI image generation with DALL-E 3 and upload capabilities for Article Studio.
+
+#### Components (`src/components/admin/ArticleStudio/`):
+
+**AIImageModal.tsx:**
+- ✅ Full-featured modal for AI image generation
+- ✅ Text description input with "Suggest from content" button
+- ✅ Style selector with 5 options (Professional, Illustrative, Minimalist, Abstract, Photorealistic)
+- ✅ Size selector (Square 1024×1024, Landscape 1792×1024, Portrait 1024×1792)
+- ✅ Generates 4 image variations using DALL-E 3
+- ✅ Image preview grid with selection state and checkmark indicator
+- ✅ Loading states during generation with progress indicator
+- ✅ Download button on hover for each generated image
+- ✅ Revised prompt display for selected image
+- ✅ Full WCAG compliance (ARIA labels, keyboard navigation, focus management)
+
+#### Enhanced PostEditorClient.tsx:
+
+**Featured Image Section:**
+- ✅ "Generate with AI" button opening AIImageModal (violet-themed)
+- ✅ "Upload" button for local file upload to Vercel Blob
+- ✅ URL paste option with toggle input field
+- ✅ Preview with remove button (hover reveal)
+- ✅ Hidden file input with type validation (jpg, png, gif, webp)
+- ✅ Loading state during upload
+- ✅ All image options persist to Vercel Blob storage
+
+**In-Article Image Insertion:**
+- ✅ "Suggest image here" command in AICommandPalette now functional
+- ✅ Opens AIImageModal with article context as the prompt basis
+- ✅ AI suggests relevant image prompt based on surrounding content
+- ✅ Selected image inserted at cursor position in editor
+- ✅ TiptapEditor exposes `insertImage` function via `onEditorReady` callback
+
+#### API Endpoints:
+
+**Image Generation:**
+- ✅ `POST /api/admin/ai/image` - AI image generation and prompt suggestion
+  - Action: `generate` - Generates image with DALL-E 3
+    - Accepts prompt, size, style, variation parameters
+    - Style-specific prompt enhancements for each style type
+    - Variation hints for creating diverse images
+    - HD quality by default
+    - Downloads generated image and uploads to Vercel Blob for persistence
+    - Returns permanent URL (not temporary OpenAI URL)
+  - Action: `suggest` - Suggests image prompt based on article context
+    - Uses GPT-4o to analyze content and suggest relevant image prompt
+    - Focuses on visual elements, avoids text in images
+    - Returns concise but descriptive prompt (50-150 words)
+  - Proper error handling for content policy, billing, rate limits
+
+**Image Upload:**
+- ✅ `POST /api/admin/upload/image` - Direct image upload to Vercel Blob
+  - Accepts multipart form data with file
+  - Validates file type (jpg, png, gif, webp)
+  - Validates file size (max 10MB)
+  - Sanitizes filename for storage
+  - Returns permanent URL with metadata
+
+#### Files Created:
+- `src/components/admin/ArticleStudio/AIImageModal.tsx`
+- `src/app/api/admin/ai/image/route.ts`
+- `src/app/api/admin/upload/image/route.ts`
+
+#### Files Modified:
+- `src/components/admin/ArticleStudio/index.ts` - Export AIImageModal
+- `src/components/admin/PostEditorClient.tsx` - Enhanced featured image section
+- `src/components/admin/TiptapEditor/index.tsx` - Added insertImage function
+
+#### Environment Variables:
+- `OPENAI_API_KEY` - Required for DALL-E 3 (already configured)
+- `BLOB_READ_WRITE_TOKEN` - Required for persistent storage (already configured)
+
 #### Remaining Phases:
-- Phase 6: Image Generation and Upload
 - Phase 7: Blog Intelligence (adaptive learning)
 - Phase 8: Pre-Publish Review
 - Phase 9: Final Integration and Testing
