@@ -189,6 +189,10 @@ Neptune is now a fully-featured, production-ready AI assistant with:
   - Public `/shared/[token]` page for viewing without authentication
   - ShareDocumentDialog with expiry options, password protection, existing shares list
   - Access count tracking and revoke functionality
+- 🐛 **Bug Fix** - Marketing Channels graceful error handling:
+  - Fixed `TypeError: Cannot read properties of undefined (reading 'map')` crash
+  - API now returns empty array if `marketingChannels` table doesn't exist
+  - Frontend uses optional chaining and nullish coalescing for resilience
 - 🔐 **Clerk Production Deployment** - Authentication system now production-ready:
   - Migrated from Development to Production instance in Clerk Dashboard
   - Configured DNS records (Frontend API, Account Portal, Email DKIM)

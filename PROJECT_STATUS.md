@@ -122,6 +122,18 @@
 - ✅ README.md updated with new features and API endpoints
 - ✅ PROJECT_STATUS.md updated with implementation details
 
+### Bug Fixes (Post-Deployment) 🐛
+
+**December 9, 2025** - Fixed production crash after Vercel deployment.
+
+#### Issue:
+- `TypeError: Cannot read properties of undefined (reading 'map')` on Marketing page
+- `/api/marketing/channels` returning 500 error due to missing table
+
+#### Fixes Applied:
+- ✅ **Frontend** (`MarketingDashboard.tsx`): Added optional chaining `channelsData?.channels?.map()` and nullish coalescing `?? initialChannels`
+- ✅ **API** (`/api/marketing/channels/route.ts`): Returns empty `{ channels: [], total: 0 }` if table doesn't exist instead of 500 error
+
 ---
 
 ## 🎉 Agent Orchestration System - COMPLETE (All 7 Phases) ✅
