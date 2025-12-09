@@ -166,6 +166,13 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 9, 2025):**
+- 🔐 **Clerk Production Deployment** - Authentication system now production-ready:
+  - Migrated from Development to Production instance in Clerk Dashboard
+  - Configured DNS records (Frontend API, Account Portal, Email DKIM)
+  - All 5 CNAME records verified on Namecheap
+  - Production API keys deployed (`pk_live_`, `sk_live_`)
+  - Custom domain: `clerk.galaxyco.ai`, `accounts.galaxyco.ai`
+  - Verification emails now sent from `@galaxyco.ai`
 - 🚀 **Neptune 10-Point Enhancement** - Major feature upgrade:
   - **DALL-E Fix** - Image generation now available from dashboard (added to tools)
   - **User Text Color** - User messages now display in white for better readability
