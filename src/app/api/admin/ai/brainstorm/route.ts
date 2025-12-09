@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { brainstormSessions, users } from '@/db/schema';
+import { brainstormSessions } from '@/db/schema';
 import { isSystemAdmin, getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { getOpenAI } from '@/lib/ai-providers';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
+import { getWorkspaceVoiceProfile, getVoicePromptSection } from '@/lib/ai/voice-profile';
 
 // Validation schema for brainstorm request
 const brainstormSchema = z.object({
@@ -14,8 +15,8 @@ const brainstormSchema = z.object({
   sessionId: z.string().uuid().optional(),
 });
 
-// System prompt for brainstorming
-const BRAINSTORM_SYSTEM_PROMPT = `You are an expert content strategist helping someone brainstorm article ideas. Your role is to:
+// Base system prompt for brainstorming
+const BRAINSTORM_BASE_PROMPT = `You are an expert content strategist helping someone brainstorm article ideas. Your role is to:
 
 1. **Listen and clarify** - Ask thoughtful questions to understand their topic better
 2. **Don't jump to conclusions** - Explore the idea before suggesting a final direction
@@ -39,6 +40,18 @@ QUESTIONS TO EXPLORE:
 When you've identified a clear direction, say something like: "I think we've found your angle: [describe it clearly]"
 
 Remember: You're brainstorming WITH them, not telling them what to write.`;
+
+// Build system prompt with optional voice profile
+function buildBrainstormSystemPrompt(voicePromptSection: string): string {
+  let prompt = BRAINSTORM_BASE_PROMPT;
+  
+  if (voicePromptSection) {
+    prompt += `\n\nWhen suggesting angles or directions, keep in mind the blog's established voice:
+${voicePromptSection}`;
+  }
+  
+  return prompt;
+}
 
 // POST - Streaming brainstorm conversation
 export async function POST(request: NextRequest) {
@@ -113,9 +126,20 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     };
 
+    // Get voice profile for the workspace
+    const voiceProfile = await getWorkspaceVoiceProfile(context.workspace.id);
+    const voicePromptSection = getVoicePromptSection(voiceProfile, {
+      includeTone: true,
+      includeExamples: true,
+      includeAvoid: false, // Not needed for brainstorming
+      includeSentenceLength: false,
+      includeStructure: false,
+    });
+    const systemPrompt = buildBrainstormSystemPrompt(voicePromptSection);
+
     // Build messages for OpenAI
     const openaiMessages = [
-      { role: 'system' as const, content: BRAINSTORM_SYSTEM_PROMPT },
+      { role: 'system' as const, content: systemPrompt },
       ...messageHistory.map(msg => ({
         role: msg.role as 'user' | 'assistant',
         content: msg.content,

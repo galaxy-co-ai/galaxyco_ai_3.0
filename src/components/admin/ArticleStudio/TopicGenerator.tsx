@@ -9,8 +9,9 @@ import {
   ArrowRight,
   RefreshCw,
   FileText,
-  Check,
-  X
+  AlertTriangle,
+  Target,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,22 @@ interface GeneratedTopic {
   category: string;
   generatedBy?: 'ai' | 'user';
   aiPrompt?: string;
+  similarExisting?: string[];
+  isFillsGap?: boolean;
+}
+
+// Type for content gap
+interface ContentGap {
+  topic: string;
+  reason: string;
+  suggestedAngle: string;
+}
+
+// Type for similarity warning
+interface SimilarityWarning {
+  newTopic: string;
+  existingPosts: string[];
+  similarityReason: string;
 }
 
 // Type for a saved topic from the database
@@ -74,6 +91,9 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
   const [savedTopics, setSavedTopics] = useState<SavedTopic[]>([]);
   const [isSavingId, setIsSavingId] = useState<number | null>(null);
   const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+  const [contentGaps, setContentGaps] = useState<ContentGap[]>([]);
+  const [warnings, setWarnings] = useState<SimilarityWarning[]>([]);
+  const [postsAnalyzed, setPostsAnalyzed] = useState(0);
 
   // Load saved topics from database
   const loadSavedTopics = useCallback(async () => {
@@ -99,6 +119,8 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
 
     setIsGenerating(true);
     setGeneratedTopics([]);
+    setContentGaps([]);
+    setWarnings([]);
 
     try {
       const response = await fetch('/api/admin/ai/topics/generate', {
@@ -107,6 +129,7 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
         body: JSON.stringify({
           prompt: prompt.trim(),
           count: 5,
+          analyzeGaps: true,
         }),
       });
 
@@ -117,7 +140,12 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
 
       const data = await response.json();
       setGeneratedTopics(data.topics || []);
-      toast.success(`Generated ${data.topics?.length || 0} topic ideas`);
+      setContentGaps(data.contentGaps || []);
+      setWarnings(data.warnings || []);
+      setPostsAnalyzed(data.existingPostsAnalyzed || 0);
+      
+      const gapsCount = data.contentGaps?.length || 0;
+      toast.success(`Generated ${data.topics?.length || 0} topic ideas${gapsCount > 0 ? ` (${gapsCount} content gaps identified)` : ''}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to generate topics');
     } finally {
@@ -239,6 +267,39 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
         </CardContent>
       </Card>
 
+      {/* Content Gaps Section */}
+      {contentGaps.length > 0 && (
+        <Card className="border-green-200 bg-green-50/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-green-800">
+              <Target className="h-5 w-5" />
+              Content Gaps Identified
+            </CardTitle>
+            <CardDescription className="text-green-700">
+              Based on {postsAnalyzed} published posts, these topics would fill gaps in your content
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {contentGaps.map((gap, index) => (
+                <div
+                  key={index}
+                  className="p-3 rounded-lg bg-white border border-green-200"
+                >
+                  <h4 className="font-medium text-green-900">{gap.topic}</h4>
+                  <p className="text-sm text-green-700 mt-1">{gap.reason}</p>
+                  {gap.suggestedAngle && (
+                    <p className="text-xs text-green-600 mt-2 italic">
+                      Suggested angle: {gap.suggestedAngle}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Generated Topics */}
       {generatedTopics.length > 0 && (
         <Card>
@@ -263,11 +324,14 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
               {generatedTopics.map((topic, index) => (
                 <div
                   key={index}
-                  className="group p-4 rounded-lg border bg-card hover:shadow-sm transition-all"
+                  className={cn(
+                    "group p-4 rounded-lg border bg-card hover:shadow-sm transition-all",
+                    topic.similarExisting && topic.similarExisting.length > 0 && "border-amber-200 bg-amber-50/30"
+                  )}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <h3 className="font-medium text-base line-clamp-1">
                           {topic.title}
                         </h3>
@@ -277,10 +341,27 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
                         >
                           {topic.suggestedLayout.replace('-', ' ')}
                         </Badge>
+                        {topic.isFillsGap && (
+                          <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Fills Gap
+                          </Badge>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                         {topic.description}
                       </p>
+                      
+                      {/* Similarity warning */}
+                      {topic.similarExisting && topic.similarExisting.length > 0 && (
+                        <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-100 rounded p-2 mb-2">
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          <span>
+                            Similar to: {topic.similarExisting.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                      
                       <div className="flex items-center gap-2 text-xs">
                         <Badge variant="secondary" className="text-xs">
                           {topic.category}
@@ -321,6 +402,41 @@ export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGenerator
                       {topic.whyItWorks}
                     </p>
                   </details>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Similarity Warnings */}
+      {warnings.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2 text-amber-800">
+              <AlertTriangle className="h-5 w-5" />
+              Content Overlap Warnings
+            </CardTitle>
+            <CardDescription className="text-amber-700">
+              Some suggested topics may overlap with existing content
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {warnings.map((warning, index) => (
+                <div
+                  key={index}
+                  className="p-3 rounded-lg bg-white border border-amber-200"
+                >
+                  <h4 className="font-medium text-amber-900">{warning.newTopic}</h4>
+                  <p className="text-sm text-amber-700 mt-1">
+                    {warning.similarityReason}
+                  </p>
+                  {warning.existingPosts.length > 0 && (
+                    <p className="text-xs text-amber-600 mt-2">
+                      Related posts: {warning.existingPosts.join(', ')}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

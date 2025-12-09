@@ -4,9 +4,7 @@ import { getOpenAI } from '@/lib/ai-providers';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
-import { db } from '@/lib/db';
-import { blogVoiceProfiles } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { getWorkspaceVoiceProfile, getVoicePromptSection } from '@/lib/ai/voice-profile';
 
 // Validation schema for continue writing request
 const continueSchema = z.object({
@@ -58,15 +56,15 @@ export async function POST(request: NextRequest) {
     const { content, cursorPosition, context } = validationResult.data;
 
     // Get voice profile for the workspace
-    let voiceProfile = null;
-    try {
-      voiceProfile = await db.query.blogVoiceProfiles.findFirst({
-        where: eq(blogVoiceProfiles.workspaceId, workspaceContext.workspace.id),
-      });
-    } catch {
-      // Voice profile not found, continue without it
-      logger.debug('Voice profile not found for workspace', { workspaceId: workspaceContext.workspace.id });
-    }
+    const voiceProfile = await getWorkspaceVoiceProfile(workspaceContext.workspace.id);
+    const voicePromptSection = getVoicePromptSection(voiceProfile, {
+      includeTone: true,
+      includeExamples: true,
+      includeAvoid: true,
+      includeSentenceLength: true,
+      includeStructure: false,
+      maxExamples: 5,
+    });
 
     // Build system prompt with voice profile
     let systemPrompt = `You are a skilled content writer helping to continue an article. Your task is to seamlessly continue writing from where the user left off.
@@ -80,27 +78,7 @@ GUIDELINES:
 - Be concise and valuable - every sentence should add meaning`;
 
     // Add voice profile context if available
-    if (voiceProfile) {
-      const toneDescriptors = voiceProfile.toneDescriptors || [];
-      const examplePhrases = voiceProfile.examplePhrases || [];
-      const avoidPhrases = voiceProfile.avoidPhrases || [];
-      
-      if (toneDescriptors.length > 0 || examplePhrases.length > 0) {
-        systemPrompt += `\n\nVOICE PROFILE:`;
-        if (toneDescriptors.length > 0) {
-          systemPrompt += `\n- Tone: ${toneDescriptors.join(', ')}`;
-        }
-        if (examplePhrases.length > 0) {
-          systemPrompt += `\n- Example phrases to emulate: ${examplePhrases.slice(0, 5).join(' | ')}`;
-        }
-        if (avoidPhrases.length > 0) {
-          systemPrompt += `\n- Phrases to avoid: ${avoidPhrases.join(', ')}`;
-        }
-        if (voiceProfile.avgSentenceLength) {
-          systemPrompt += `\n- Target sentence length: ~${voiceProfile.avgSentenceLength} words`;
-        }
-      }
-    }
+    systemPrompt += voicePromptSection;
 
     // Add article context if available
     if (context) {

@@ -4,9 +4,7 @@ import { getOpenAI } from '@/lib/ai-providers';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
-import { db } from '@/lib/db';
-import { blogVoiceProfiles } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { getWorkspaceVoiceProfile, getVoicePromptSection } from '@/lib/ai/voice-profile';
 
 // Rewrite modes
 const rewriteModeEnum = z.enum(['improve', 'simplify', 'expand', 'shorten', 'rephrase', 'formal', 'casual']);
@@ -71,15 +69,18 @@ export async function POST(request: NextRequest) {
 
     const { text, mode, context } = validationResult.data;
 
-    // Get voice profile for the workspace
-    let voiceProfile = null;
-    try {
-      voiceProfile = await db.query.blogVoiceProfiles.findFirst({
-        where: eq(blogVoiceProfiles.workspaceId, workspaceContext.workspace.id),
-      });
-    } catch {
-      logger.debug('Voice profile not found for workspace', { workspaceId: workspaceContext.workspace.id });
-    }
+    // Get voice profile for the workspace (skip for formal/casual modes that override voice)
+    const voiceProfile = !['formal', 'casual'].includes(mode)
+      ? await getWorkspaceVoiceProfile(workspaceContext.workspace.id)
+      : null;
+    
+    const voicePromptSection = getVoicePromptSection(voiceProfile, {
+      includeTone: true,
+      includeExamples: false, // Not needed for rewrite
+      includeAvoid: true,
+      includeSentenceLength: false, // Keep original flow
+      includeStructure: false,
+    });
 
     // Build system prompt
     let systemPrompt = `You are a skilled editor helping to rewrite content. Your task is to ${modePrompts[mode]}
@@ -91,12 +92,7 @@ GUIDELINES:
 - Keep the voice consistent with the original unless the mode specifically changes tone`;
 
     // Add voice profile context if available
-    if (voiceProfile && !['formal', 'casual'].includes(mode)) {
-      const toneDescriptors = voiceProfile.toneDescriptors || [];
-      if (toneDescriptors.length > 0) {
-        systemPrompt += `\n\nVOICE GUIDELINES: ${toneDescriptors.join(', ')}`;
-      }
-    }
+    systemPrompt += voicePromptSection;
 
     // Add article context if available
     if (context) {

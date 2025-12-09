@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { blogPosts, topicIdeas } from '@/db/schema';
+import { blogPosts } from '@/db/schema';
 import { isSystemAdmin, getCurrentWorkspace } from '@/lib/auth';
 import { getOpenAI } from '@/lib/ai-providers';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Validation schema for topic generation request
 const generateTopicsSchema = z.object({
@@ -13,6 +14,7 @@ const generateTopicsSchema = z.object({
   count: z.number().min(1).max(10).default(5),
   category: z.string().optional(),
   avoidSimilarTo: z.array(z.string()).optional(), // Existing post titles to avoid
+  analyzeGaps: z.boolean().default(true), // Whether to include content gap analysis
 });
 
 // Type for generated topic
@@ -22,6 +24,22 @@ interface GeneratedTopic {
   whyItWorks: string;
   suggestedLayout: 'standard' | 'how-to' | 'listicle' | 'case-study' | 'tool-review' | 'news' | 'opinion';
   category: string;
+  similarExisting?: string[]; // Titles of similar existing posts
+  isFillsGap?: boolean; // Whether this topic fills an identified gap
+}
+
+// Type for content gap
+interface ContentGap {
+  topic: string;
+  reason: string;
+  suggestedAngle: string;
+}
+
+// Type for similarity warning
+interface SimilarityWarning {
+  newTopic: string;
+  existingPosts: string[];
+  similarityReason: string;
 }
 
 // POST - Generate topic ideas with AI
@@ -47,6 +65,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Rate limit
+    const rateLimitResult = await rateLimit(`topic-generate:${context.workspace.id}`, 20, 60);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait a moment.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const validationResult = generateTopicsSchema.safeParse(body);
 
@@ -57,20 +84,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { prompt, count, category, avoidSimilarTo } = validationResult.data;
+    const { prompt, count, category, avoidSimilarTo, analyzeGaps } = validationResult.data;
 
-    // Get existing posts to avoid repetition
+    // Get existing posts for analysis
     const existingPosts = await db
-      .select({ title: blogPosts.title, excerpt: blogPosts.excerpt })
+      .select({ 
+        title: blogPosts.title, 
+        excerpt: blogPosts.excerpt,
+        content: blogPosts.content,
+        categoryId: blogPosts.categoryId,
+        layoutTemplate: blogPosts.layoutTemplate,
+        status: blogPosts.status,
+        viewCount: blogPosts.viewCount,
+        publishedAt: blogPosts.publishedAt,
+      })
       .from(blogPosts)
       .orderBy(desc(blogPosts.createdAt))
-      .limit(20);
+      .limit(30);
 
+    const publishedPosts = existingPosts.filter(p => p.status === 'published');
     const existingTitles = existingPosts.map(p => p.title);
     const titlesToAvoid = [...existingTitles, ...(avoidSimilarTo || [])];
 
-    // Build the AI prompt
-    const systemPrompt = `You are an expert content strategist and editor for a professional blog. Your job is to generate compelling, unique article topic ideas that will engage readers and drive traffic.
+    // Build the AI prompt with gap analysis
+    let systemPrompt = `You are an expert content strategist and editor for a professional blog. Your job is to generate compelling, unique article topic ideas that will engage readers and drive traffic.
 
 For each topic idea, provide:
 1. A compelling title that would make someone want to read the article
@@ -86,23 +123,73 @@ Guidelines:
 - Avoid clickbait - be genuine and informative
 - Consider current trends and timeless content needs`;
 
-    const userPrompt = `Generate ${count} unique article topic ideas based on this request: "${prompt}"
+    // Add gap analysis instructions
+    if (analyzeGaps && publishedPosts.length > 0) {
+      systemPrompt += `
 
-${category ? `Focus on the category: ${category}` : ''}
+CONTENT GAP ANALYSIS:
+Based on the existing blog content provided, also identify:
+1. Topics that would complement existing content
+2. Gaps in coverage that readers might expect
+3. Topics similar to existing content (flag these as potential duplicates)
 
-${titlesToAvoid.length > 0 ? `
-IMPORTANT: Avoid topics that are too similar to these existing articles:
-${titlesToAvoid.slice(0, 10).map(t => `- ${t}`).join('\n')}
-` : ''}
+For each topic, include:
+- "similarExisting": array of existing post titles that cover similar ground (empty if unique)
+- "isFillsGap": true if this topic fills an identified gap in the blog's coverage`;
+    }
 
-Respond with a JSON array of topic objects. Each object should have these exact fields:
-- title (string): The article title
-- description (string): 2-3 sentence description
-- whyItWorks (string): Why this topic is compelling
-- suggestedLayout (string): One of "standard", "how-to", "listicle", "case-study", "tool-review", "news", "opinion"
-- category (string): Topic category
+    let userPrompt = `Generate ${count} unique article topic ideas based on this request: "${prompt}"
 
-Return ONLY the JSON array, no other text.`;
+${category ? `Focus on the category: ${category}` : ''}`;
+
+    // Add existing content analysis
+    if (publishedPosts.length > 0) {
+      userPrompt += `\n\nEXISTING BLOG CONTENT TO ANALYZE:
+${publishedPosts.slice(0, 15).map(p => `- "${p.title}"${p.excerpt ? `: ${p.excerpt.substring(0, 100)}` : ''}`).join('\n')}
+
+Total published posts: ${publishedPosts.length}
+
+IMPORTANT: 
+- Avoid topics that are too similar to existing articles
+- Identify content gaps that would benefit readers
+- Flag any suggested topics that might overlap with existing content`;
+    }
+
+    if (titlesToAvoid.length > 0 && titlesToAvoid.length > publishedPosts.length) {
+      userPrompt += `\n\nAdditional titles to avoid:
+${titlesToAvoid.slice(publishedPosts.length, publishedPosts.length + 5).map(t => `- ${t}`).join('\n')}`;
+    }
+
+    userPrompt += `\n\nRespond with a JSON object containing:
+{
+  "topics": [
+    {
+      "title": "Article title",
+      "description": "2-3 sentence description",
+      "whyItWorks": "Why this topic is compelling",
+      "suggestedLayout": "standard|how-to|listicle|case-study|tool-review|news|opinion",
+      "category": "Topic category",
+      "similarExisting": ["title1", "title2"],
+      "isFillsGap": true/false
+    }
+  ],
+  "contentGaps": [
+    {
+      "topic": "Gap area",
+      "reason": "Why this is a gap",
+      "suggestedAngle": "How to approach it"
+    }
+  ],
+  "warnings": [
+    {
+      "newTopic": "Suggested topic title",
+      "existingPosts": ["Similar existing post"],
+      "similarityReason": "Why they might overlap"
+    }
+  ]
+}
+
+Return ONLY valid JSON.`;
 
     const openai = getOpenAI();
     
@@ -113,7 +200,7 @@ Return ONLY the JSON array, no other text.`;
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.8,
-      max_tokens: 2000,
+      max_tokens: 3000,
       response_format: { type: 'json_object' },
     });
 
@@ -123,15 +210,23 @@ Return ONLY the JSON array, no other text.`;
     }
 
     // Parse the response
-    let topics: GeneratedTopic[];
+    let parsed: {
+      topics?: GeneratedTopic[];
+      ideas?: GeneratedTopic[];
+      contentGaps?: ContentGap[];
+      warnings?: SimilarityWarning[];
+    };
     try {
-      const parsed = JSON.parse(content);
-      // Handle both direct array and object with topics property
-      topics = Array.isArray(parsed) ? parsed : (parsed.topics || parsed.ideas || []);
+      parsed = JSON.parse(content);
     } catch (parseError) {
       logger.error('Failed to parse AI response', parseError, { content });
       throw new Error('Failed to parse AI response');
     }
+
+    // Extract topics array
+    const topics = Array.isArray(parsed) 
+      ? parsed 
+      : (parsed.topics || parsed.ideas || []);
 
     // Validate and sanitize topics
     const validLayouts = ['standard', 'how-to', 'listicle', 'case-study', 'tool-review', 'news', 'opinion'] as const;
@@ -146,18 +241,56 @@ Return ONLY the JSON array, no other text.`;
       category: String(topic.category || category || 'General').slice(0, 100),
       generatedBy: 'ai' as const,
       aiPrompt: prompt,
+      similarExisting: Array.isArray(topic.similarExisting) 
+        ? topic.similarExisting.filter((s): s is string => typeof s === 'string').slice(0, 3)
+        : [],
+      isFillsGap: Boolean(topic.isFillsGap),
     }));
 
-    logger.info('Generated topic ideas', { 
+    // Sanitize content gaps
+    const contentGaps = (parsed.contentGaps || [])
+      .filter((gap): gap is ContentGap => 
+        typeof gap === 'object' && 
+        gap !== null && 
+        typeof gap.topic === 'string'
+      )
+      .map(gap => ({
+        topic: String(gap.topic).slice(0, 200),
+        reason: String(gap.reason || '').slice(0, 500),
+        suggestedAngle: String(gap.suggestedAngle || '').slice(0, 500),
+      }))
+      .slice(0, 5);
+
+    // Sanitize warnings
+    const warnings = (parsed.warnings || [])
+      .filter((warning): warning is SimilarityWarning => 
+        typeof warning === 'object' && 
+        warning !== null && 
+        typeof warning.newTopic === 'string'
+      )
+      .map(warning => ({
+        newTopic: String(warning.newTopic).slice(0, 200),
+        existingPosts: Array.isArray(warning.existingPosts)
+          ? warning.existingPosts.filter((s): s is string => typeof s === 'string').slice(0, 3)
+          : [],
+        similarityReason: String(warning.similarityReason || '').slice(0, 500),
+      }))
+      .slice(0, 5);
+
+    logger.info('Generated topic ideas with gap analysis', { 
       count: sanitizedTopics.length,
       prompt,
-      workspaceId: context.workspace.id 
+      workspaceId: context.workspace.id,
+      contentGaps: contentGaps.length,
+      warnings: warnings.length,
     });
 
     return NextResponse.json({
       topics: sanitizedTopics,
       prompt,
-      existingPostsAnalyzed: existingPosts.length,
+      existingPostsAnalyzed: publishedPosts.length,
+      contentGaps: analyzeGaps ? contentGaps : [],
+      warnings: analyzeGaps ? warnings : [],
     });
   } catch (error) {
     logger.error('Failed to generate topics', error);

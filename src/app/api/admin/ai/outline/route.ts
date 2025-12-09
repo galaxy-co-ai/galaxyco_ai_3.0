@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { topicIdeas, blogPosts } from '@/db/schema';
+import { topicIdeas } from '@/db/schema';
 import { isSystemAdmin, getCurrentWorkspace } from '@/lib/auth';
 import { getOpenAI } from '@/lib/ai-providers';
 import { eq, and } from 'drizzle-orm';
@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { getLayout, type LayoutTemplate } from '@/lib/ai/article-layouts';
+import { getWorkspaceVoiceProfile, getVoicePromptSection } from '@/lib/ai/voice-profile';
 
 // Validation schema for outline generation request
 const outlineRequestSchema = z.object({
@@ -69,8 +70,18 @@ export async function POST(request: NextRequest) {
     // Get the layout template
     const layout = getLayout(layoutId);
 
+    // Get voice profile for the workspace
+    const voiceProfile = await getWorkspaceVoiceProfile(context.workspace.id);
+    const voicePromptSection = getVoicePromptSection(voiceProfile, {
+      includeTone: true,
+      includeExamples: true,
+      includeAvoid: true,
+      includeSentenceLength: false, // Not relevant for outline
+      includeStructure: true, // Structure is relevant for outline
+    });
+
     // Build the AI prompt
-    const systemPrompt = buildSystemPrompt(layout);
+    const systemPrompt = buildSystemPrompt(layout, voicePromptSection);
     const userPrompt = buildUserPrompt({
       title,
       description,
@@ -147,7 +158,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Build system prompt for outline generation
-function buildSystemPrompt(layout: LayoutTemplate): string {
+function buildSystemPrompt(layout: LayoutTemplate, voicePromptSection: string = ''): string {
   const sectionDescriptions = layout.sections
     .map((s, i) => `${i + 1}. ${s.title} (${s.type}): ${s.description} [~${s.suggestedWordCount} words]`)
     .join('\n');
@@ -170,6 +181,7 @@ GUIDELINES:
 
 RECOMMENDED ELEMENTS: ${layout.recommendedElements.join(', ')}
 BEST FOR: ${layout.bestFor.join(', ')}
+${voicePromptSection}
 
 Return a JSON object with this exact structure:
 {

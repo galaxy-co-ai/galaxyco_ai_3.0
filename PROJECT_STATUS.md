@@ -5,9 +5,9 @@
 
 ---
 
-## 📝 Article Studio - Phase 6 Complete ✅
+## 📝 Article Studio - Phase 7 Complete ✅
 
-**December 9, 2025** - Article Studio Phases 1-6 complete with database schema, topic generation, brainstorming, layout templates, outline editor, AI-assisted writing, source verification system, and image generation/upload.
+**December 9, 2025** - Article Studio Phases 1-7 complete with database schema, topic generation, brainstorming, layout templates, outline editor, AI-assisted writing, source verification system, image generation/upload, and blog intelligence (voice profile analyzer, voice-aware AI generation, content gap analysis).
 
 ### Phase 1: Database Schema and Topic Bank ✅
 
@@ -483,8 +483,113 @@
 - `OPENAI_API_KEY` - Required for DALL-E 3 (already configured)
 - `BLOB_READ_WRITE_TOKEN` - Required for persistent storage (already configured)
 
+---
+
+### Phase 7: Blog Intelligence (Adaptive Learning) ✅
+
+**December 9, 2025** - AI learning system that adapts to your blog's voice and identifies content gaps.
+
+#### Voice Profile System (`src/lib/ai/voice-profile.ts`):
+
+**Helper Functions:**
+- ✅ `getWorkspaceVoiceProfile()` - Fetch voice profile from database
+- ✅ `getVoicePromptSection()` - Build AI prompt section from voice profile
+- ✅ `getVoicePromptSectionForWorkspace()` - Combined fetch + build helper
+- ✅ `hasVoiceProfileContent()` - Check if profile has meaningful content
+- ✅ `formatVoiceProfileSummary()` - Format profile for UI display
+
+**Configurable Options:**
+- `includeTone` - Add tone descriptors to prompt
+- `includeExamples` - Add example phrases to emulate
+- `includeAvoid` - Add phrases to avoid
+- `includeSentenceLength` - Add target sentence length
+- `includeStructure` - Add structure preferences
+
+#### Voice Profile Analyzer API (`/api/admin/blog-profile/analyze`):
+
+- ✅ `POST /api/admin/blog-profile/analyze` - Analyze published posts
+  - Analyzes up to 20 most recent published posts
+  - Extracts: tone descriptors, example phrases, avoid phrases
+  - Calculates: average sentence length
+  - Identifies: structure preferences (intro/conclusion style, subheadings, bullets, CTA)
+  - Updates workspace voice profile with analysis results
+  - Returns before/after comparison when updating existing profile
+  - Rate limited (5 requests per hour)
+
+#### VoiceProfileSettings Component (`src/components/admin/ArticleStudio/VoiceProfileSettings.tsx`):
+
+- ✅ "Analyze My Blog" button with loading state
+- ✅ Before/after comparison display after analysis
+- ✅ Tag inputs for:
+  - Tone descriptors (max 10)
+  - Example phrases (max 20)
+  - Phrases to avoid (max 20)
+- ✅ Average sentence length input
+- ✅ Structure preferences toggles (subheadings, bullets, CTA)
+- ✅ Intro/conclusion style text inputs
+- ✅ Save changes button with loading state
+- ✅ Full WCAG compliance (ARIA labels, keyboard navigation)
+
+#### Voice-Aware AI Generation:
+
+**Updated APIs to inject voice profile:**
+- ✅ `/api/admin/ai/continue` - Voice profile for continue writing
+- ✅ `/api/admin/ai/rewrite` - Voice profile for rewrite (except formal/casual modes)
+- ✅ `/api/admin/ai/outline` - Voice profile with structure preferences
+- ✅ `/api/admin/ai/brainstorm` - Voice profile for brainstorming context
+
+#### Content Gap Analysis (`/api/admin/ai/topics/generate`):
+
+**Enhanced Topic Generation:**
+- ✅ Analyzes up to 30 existing posts (including content samples)
+- ✅ Identifies content gaps in blog coverage
+- ✅ Flags similar existing content for each topic
+- ✅ Returns `contentGaps` array with:
+  - `topic` - Gap area description
+  - `reason` - Why this is a gap
+  - `suggestedAngle` - How to approach it
+- ✅ Returns `warnings` array with:
+  - `newTopic` - Suggested topic
+  - `existingPosts` - Similar posts
+  - `similarityReason` - Why they overlap
+- ✅ Topics include:
+  - `similarExisting` - Titles of similar posts
+  - `isFillsGap` - Whether topic fills identified gap
+
+#### TopicGenerator Component Updates:
+
+- ✅ "Content Gaps Identified" card (green themed)
+  - Shows gap areas with reasons and suggested angles
+  - Displays count of posts analyzed
+- ✅ "Fills Gap" badge on topics that address gaps
+- ✅ Similarity warnings inline on topics with overlap
+- ✅ "Content Overlap Warnings" card (amber themed)
+  - Shows detailed warnings for overlapping topics
+
+#### Voice Profile Settings Page (`/admin/settings/voice-profile`):
+
+- ✅ Dedicated page for voice profile configuration
+- ✅ Back navigation to settings
+- ✅ Full VoiceProfileSettings component
+- ✅ Link from main settings page (Article Studio section)
+
+#### Files Created:
+- `src/lib/ai/voice-profile.ts` - Voice profile helpers
+- `src/app/api/admin/blog-profile/analyze/route.ts` - Analyzer API
+- `src/components/admin/ArticleStudio/VoiceProfileSettings.tsx` - Settings UI
+- `src/app/(app)/admin/settings/voice-profile/page.tsx` - Settings page
+
+#### Files Modified:
+- `src/app/api/admin/ai/continue/route.ts` - Added voice profile
+- `src/app/api/admin/ai/rewrite/route.ts` - Added voice profile
+- `src/app/api/admin/ai/outline/route.ts` - Added voice profile
+- `src/app/api/admin/ai/brainstorm/route.ts` - Added voice profile
+- `src/app/api/admin/ai/topics/generate/route.ts` - Added content gap analysis
+- `src/components/admin/ArticleStudio/TopicGenerator.tsx` - Gap display
+- `src/components/admin/ArticleStudio/index.ts` - Export VoiceProfileSettings
+- `src/app/(app)/admin/settings/page.tsx` - Link to voice profile
+
 #### Remaining Phases:
-- Phase 7: Blog Intelligence (adaptive learning)
 - Phase 8: Pre-Publish Review
 - Phase 9: Final Integration and Testing
 
