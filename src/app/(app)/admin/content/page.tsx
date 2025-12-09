@@ -11,7 +11,8 @@ import {
   MoreHorizontal,
   Search,
   Filter,
-  Folder
+  Folder,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,12 +129,20 @@ export default async function ContentStudioPage() {
             Create and manage Launchpad articles
           </p>
         </div>
-        <Link href="/admin/content/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Post
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/content/article-studio">
+            <Button variant="outline" className="gap-2">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              Article Studio
+            </Button>
+          </Link>
+          <Link href="/admin/content/new">
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Post
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Bar - Centered badges */}

@@ -897,6 +897,8 @@ src/
 /api/admin/topics                     GET/POST     List/create topic ideas
 /api/admin/topics/[id]                GET/PATCH/DELETE  Manage topic idea
 /api/admin/ai/topics/generate         POST         Generate AI topic suggestions
+/api/admin/ai/brainstorm              POST         Streaming brainstorm conversation
+/api/admin/ai/outline/from-conversation POST       Generate outline from brainstorm
 /api/admin/blog-profile               GET/POST     Get/update workspace voice profile
 ```
 

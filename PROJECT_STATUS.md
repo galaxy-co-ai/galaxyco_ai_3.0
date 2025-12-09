@@ -82,7 +82,6 @@
 - `src/scripts/seed.ts` - Voice profile seeding
 
 #### Remaining Phases:
-- Phase 2: Topic Generator and Brainstorm Mode (UI components)
 - Phase 3: Layout Templates and Outline Editor
 - Phase 4: AI-Assisted Writing (Tiptap extensions)
 - Phase 5: Source Verification System
@@ -90,6 +89,69 @@
 - Phase 7: Blog Intelligence (adaptive learning)
 - Phase 8: Pre-Publish Review
 - Phase 9: Final Integration and Testing
+
+---
+
+### Phase 2: Topic Generator and Brainstorm Mode ✅
+
+**December 9, 2025** - AI-assisted ideation components implemented.
+
+#### Components (`src/components/admin/ArticleStudio/`):
+
+**TopicGenerator.tsx:**
+- ✅ Input field with quick suggestions for topic prompts
+- ✅ Generate Ideas button calling `/api/admin/ai/topics/generate`
+- ✅ Display 3-5 topic suggestions with title, description, why it works
+- ✅ Layout badges (how-to, listicle, case-study, etc.)
+- ✅ Save to bank / Start writing actions per topic
+- ✅ Saved topics list with status indicators
+- ✅ Empty state with helpful guidance
+
+**BrainstormChat.tsx:**
+- ✅ Real-time streaming chat interface
+- ✅ AI asks clarifying questions (not immediately writing)
+- ✅ Key insights extraction displayed as badges
+- ✅ Generate Outline from Conversation button
+- ✅ Conversation persistence via `brainstormSessions` table
+- ✅ Clear conversation functionality
+- ✅ Auto-scroll and auto-resize textarea
+
+#### API Endpoints:
+
+**Streaming Brainstorm:**
+- ✅ `POST /api/admin/ai/brainstorm` - Conversational brainstorming
+  - Server-sent events streaming
+  - Session persistence (creates/updates brainstormSessions)
+  - Key insights extraction
+  - Rate limited (30 req/min)
+
+**Outline from Conversation:**
+- ✅ `POST /api/admin/ai/outline/from-conversation` - Convert brainstorm to outline
+  - Takes sessionId and optional layout
+  - Generates structured outline with sections
+  - Creates topicIdea and links to session
+  - Returns title, description, sections, angle, audience
+
+#### Article Studio Page (`src/app/(app)/admin/content/article-studio/`):
+
+- ✅ Mode selection screen (Topic Generator vs Brainstorm)
+- ✅ Visual cards explaining each approach
+- ✅ Seamless switching between modes
+- ✅ Outline preview modal after brainstorm
+- ✅ Navigation to editor with generated content
+- ✅ Link added to Content Studio header
+
+#### Files Created:
+- `src/components/admin/ArticleStudio/TopicGenerator.tsx`
+- `src/components/admin/ArticleStudio/BrainstormChat.tsx`
+- `src/components/admin/ArticleStudio/index.ts`
+- `src/app/api/admin/ai/brainstorm/route.ts`
+- `src/app/api/admin/ai/outline/from-conversation/route.ts`
+- `src/app/(app)/admin/content/article-studio/page.tsx`
+- `src/app/(app)/admin/content/article-studio/ArticleStudioClient.tsx`
+
+#### Files Modified:
+- `src/app/(app)/admin/content/page.tsx` - Added Article Studio button
 
 ---
 
