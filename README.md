@@ -784,6 +784,21 @@ src/
 ... and 120+ more!
 ```
 
+**Agent Orchestration** 🆕
+```
+/api/orchestration/teams              GET/POST     List/create agent teams
+/api/orchestration/teams/[id]         GET/PATCH/DELETE  Manage team
+/api/orchestration/teams/[id]/run     POST         Run team with objective
+/api/orchestration/teams/[id]/members GET/POST/DELETE  Manage team members
+/api/orchestration/workflows          GET/POST     List/create workflows
+/api/orchestration/workflows/[id]     GET/PATCH/DELETE  Manage workflow
+/api/orchestration/workflows/[id]/execute POST     Execute workflow
+/api/orchestration/messages           GET/POST     Agent-to-agent messaging
+/api/orchestration/route              POST         Route task to best agent
+/api/orchestration/delegate           POST         Delegate task between agents
+/api/orchestration/memory             GET/POST/DELETE  Shared memory system
+```
+
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 
 ---
