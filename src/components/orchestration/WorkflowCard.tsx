@@ -6,10 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Play,
   Pause,
-  Settings,
-  MoreVertical,
   Trash2,
-  Copy,
   Edit,
   CheckCircle2,
   Clock,
@@ -58,35 +55,39 @@ interface WorkflowCardProps {
 }
 
 // ============================================================================
-// STATUS CONFIG
+// STATUS CONFIG - Light Theme
 // ============================================================================
 
 const statusConfig: Record<
   WorkflowStatus,
-  { label: string; color: string; bgColor: string; icon: React.ReactNode }
+  { label: string; color: string; bgColor: string; borderColor: string; icon: React.ReactNode }
 > = {
   active: {
     label: "Active",
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   paused: {
     label: "Paused",
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/20",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
     icon: <Pause className="h-3 w-3" />,
   },
   draft: {
     label: "Draft",
-    color: "text-gray-400",
-    bgColor: "bg-gray-500/20",
+    color: "text-gray-600",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
     icon: <Clock className="h-3 w-3" />,
   },
   archived: {
     label: "Archived",
     color: "text-gray-500",
-    bgColor: "bg-gray-600/20",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
     icon: <AlertCircle className="h-3 w-3" />,
   },
 };
@@ -112,8 +113,6 @@ export default function WorkflowCard({
   onRun,
   onEdit,
   onDelete,
-  onDuplicate,
-  onToggleStatus,
   isRunning = false,
 }: WorkflowCardProps) {
   const status = statusConfig[workflow.status];
@@ -128,10 +127,10 @@ export default function WorkflowCard({
   return (
     <Card
       className={cn(
-        "p-4 transition-all cursor-pointer hover:border-white/20",
+        "p-4 transition-all cursor-pointer",
         isSelected
-          ? "border-violet-500 bg-violet-500/5"
-          : "border-white/10 bg-gray-900/50",
+          ? "border-violet-300 bg-violet-50/50"
+          : "hover:border-gray-300",
         "focus-within:ring-2 focus-within:ring-violet-500"
       )}
       onClick={onSelect}
@@ -148,26 +147,27 @@ export default function WorkflowCard({
             className={cn(
               "p-2 rounded-lg shrink-0",
               workflow.status === "active"
-                ? "bg-violet-500/20"
-                : "bg-gray-700/50"
+                ? "bg-violet-100"
+                : "bg-gray-100"
             )}
           >
             <Workflow
               className={cn(
                 "h-5 w-5",
-                workflow.status === "active" ? "text-violet-400" : "text-gray-400"
+                workflow.status === "active" ? "text-violet-600" : "text-gray-500"
               )}
             />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-medium text-white truncate">{workflow.name}</h3>
+              <h3 className="font-medium truncate">{workflow.name}</h3>
               <Badge
                 className={cn(
                   "text-xs",
                   status.bgColor,
                   status.color,
-                  "border-0"
+                  "border",
+                  status.borderColor
                 )}
               >
                 <span className="mr-1">{status.icon}</span>
@@ -175,7 +175,7 @@ export default function WorkflowCard({
               </Badge>
             </div>
             {workflow.description && (
-              <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 {workflow.description}
               </p>
             )}
@@ -183,20 +183,20 @@ export default function WorkflowCard({
               {/* Trigger type */}
               <Badge
                 variant="outline"
-                className="text-xs border-gray-600 text-gray-400"
+                className="text-xs"
               >
                 <span className="mr-1">{trigger.icon}</span>
                 {trigger.label}
               </Badge>
               {/* Step count */}
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-muted-foreground">
                 {workflow.stepCount} step{workflow.stepCount !== 1 ? "s" : ""}
               </span>
               {/* Team */}
               {workflow.teamName && (
                 <Badge
                   variant="outline"
-                  className="text-xs border-blue-500/50 text-blue-400"
+                  className="text-xs border-blue-200 text-blue-700"
                 >
                   {workflow.teamName}
                 </Badge>
@@ -219,8 +219,8 @@ export default function WorkflowCard({
               className={cn(
                 "h-8 w-8 p-0",
                 isRunning
-                  ? "text-violet-400 animate-pulse"
-                  : "text-green-400 hover:bg-green-500/10"
+                  ? "text-violet-600 animate-pulse"
+                  : "text-green-600 hover:bg-green-50"
               )}
               aria-label={isRunning ? "Running" : "Run workflow"}
             >
@@ -239,7 +239,7 @@ export default function WorkflowCard({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+              className="h-8 w-8 p-0"
               aria-label="Edit workflow"
             >
               <Edit className="h-4 w-4" />
@@ -253,7 +253,7 @@ export default function WorkflowCard({
                 e.stopPropagation();
                 onDelete();
               }}
-              className="h-8 w-8 p-0 text-gray-400 hover:text-red-400"
+              className="h-8 w-8 p-0 hover:text-red-600"
               aria-label="Delete workflow"
             >
               <Trash2 className="h-4 w-4" />
@@ -263,10 +263,10 @@ export default function WorkflowCard({
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-white/5">
+      <div className="flex items-center gap-4 mt-4 pt-3 border-t">
         <div className="flex items-center gap-1.5">
-          <Activity className="h-3.5 w-3.5 text-gray-500" />
-          <span className="text-xs text-gray-400">
+          <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">
             {workflow.totalExecutions} run
             {workflow.totalExecutions !== 1 ? "s" : ""}
           </span>
@@ -277,20 +277,20 @@ export default function WorkflowCard({
               className={cn(
                 "h-3.5 w-3.5",
                 successRate >= 80
-                  ? "text-green-400"
+                  ? "text-green-600"
                   : successRate >= 50
-                  ? "text-yellow-400"
-                  : "text-red-400"
+                  ? "text-yellow-600"
+                  : "text-red-600"
               )}
             />
             <span
               className={cn(
                 "text-xs",
                 successRate >= 80
-                  ? "text-green-400"
+                  ? "text-green-600"
                   : successRate >= 50
-                  ? "text-yellow-400"
-                  : "text-red-400"
+                  ? "text-yellow-600"
+                  : "text-red-600"
               )}
             >
               {successRate}% success
@@ -299,8 +299,8 @@ export default function WorkflowCard({
         )}
         {workflow.lastExecutedAt && (
           <div className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-gray-500" />
-            <span className="text-xs text-gray-400">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
               {formatDistanceToNow(workflow.lastExecutedAt, { addSuffix: true })}
             </span>
           </div>
@@ -309,4 +309,3 @@ export default function WorkflowCard({
     </Card>
   );
 }
-

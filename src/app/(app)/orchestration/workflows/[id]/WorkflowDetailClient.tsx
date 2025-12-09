@@ -35,73 +35,81 @@ import WorkflowExecutionMonitor from "@/components/orchestration/WorkflowExecuti
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-// Trigger type configuration
+// Trigger type configuration - light theme
 const triggerConfig: Record<
   string,
-  { icon: React.ReactNode; label: string; color: string; bgColor: string }
+  { icon: React.ReactNode; label: string; color: string; bgColor: string; borderColor: string }
 > = {
   manual: {
     icon: <Play className="h-4 w-4" />,
     label: "Manual",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/20",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
   },
   event: {
     icon: <Zap className="h-4 w-4" />,
     label: "Event",
-    color: "text-purple-400",
-    bgColor: "bg-purple-500/20",
+    color: "text-purple-700",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
   },
   schedule: {
     icon: <Calendar className="h-4 w-4" />,
     label: "Scheduled",
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
   },
   agent_request: {
     icon: <Bot className="h-4 w-4" />,
     label: "Agent Request",
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/20",
+    color: "text-orange-700",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-200",
   },
 };
 
-// Status configuration
-const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
-  active: { label: "Active", color: "text-green-400", bgColor: "bg-green-500/20" },
-  paused: { label: "Paused", color: "text-yellow-400", bgColor: "bg-yellow-500/20" },
-  draft: { label: "Draft", color: "text-gray-400", bgColor: "bg-gray-500/20" },
-  archived: { label: "Archived", color: "text-gray-500", bgColor: "bg-gray-500/20" },
+// Status configuration - light theme
+const statusConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  active: { label: "Active", color: "text-green-700", bgColor: "bg-green-50", borderColor: "border-green-200" },
+  paused: { label: "Paused", color: "text-yellow-700", bgColor: "bg-yellow-50", borderColor: "border-yellow-200" },
+  draft: { label: "Draft", color: "text-gray-600", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
+  archived: { label: "Archived", color: "text-gray-500", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
 };
 
-// Execution status configuration
+// Execution status configuration - light theme
 const executionStatusConfig: Record<
   string,
-  { icon: React.ReactNode; label: string; color: string; bgColor: string }
+  { icon: React.ReactNode; label: string; color: string; bgColor: string; borderColor: string }
 > = {
   running: {
     icon: <Loader2 className="h-4 w-4 animate-spin" />,
     label: "Running",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/20",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
   },
   completed: {
     icon: <CheckCircle2 className="h-4 w-4" />,
     label: "Completed",
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
   },
   failed: {
     icon: <XCircle className="h-4 w-4" />,
     label: "Failed",
-    color: "text-red-400",
-    bgColor: "bg-red-500/20",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200",
   },
   paused: {
     icon: <Pause className="h-4 w-4" />,
     label: "Paused",
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/20",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
   },
 };
 
@@ -172,9 +180,8 @@ export default function WorkflowDetailClient({
   );
 
   // Use initial executions (fetched server-side) - no separate API call needed
-  // Executions are already loaded from the page.tsx server component
   const executionsData = { executions: initialExecutions };
-  const mutateExecutions = mutate; // Reuse the workflow mutate to refresh
+  const mutateExecutions = mutate;
 
   const workflow = workflowData?.workflow || initialWorkflow;
   const executions = executionsData?.executions || initialExecutions;
@@ -302,135 +309,130 @@ export default function WorkflowDetailClient({
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+    <div className="flex h-full flex-col bg-gray-50/50">
       {/* Header */}
-      <div className="border-b border-white/5 bg-gray-950/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Link href="/orchestration/workflows">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white"
-                  aria-label="Back to workflows"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-              </Link>
-              <div className="flex items-center gap-3">
-                <div className={cn("p-3 rounded-xl", trigger.bgColor)}>
-                  <span className={trigger.color}>{trigger.icon}</span>
-                </div>
-                <div>
-                  {isEditing ? (
-                    <Input
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      className="text-xl font-bold bg-gray-800 border-gray-700 text-white"
-                      aria-label="Workflow name"
-                    />
-                  ) : (
-                    <h1 className="text-2xl font-bold text-white">{workflow.name}</h1>
-                  )}
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className={cn(trigger.bgColor, trigger.color, "border-0")}>
-                      {trigger.label}
-                    </Badge>
-                    <Badge className={cn(status.bgColor, status.color, "border-0")}>
-                      {status.label}
-                    </Badge>
-                    <span className="text-gray-500 text-sm">
-                      {workflow.steps.length} steps
-                    </span>
-                  </div>
+      <div className="border-b bg-background px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
+          <div className="flex items-center gap-4">
+            <Link href="/orchestration/workflows">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Back to workflows"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <div className="flex items-center gap-3">
+              <div className={cn("p-3 rounded-xl", trigger.bgColor)}>
+                <span className={trigger.color}>{trigger.icon}</span>
+              </div>
+              <div>
+                {isEditing ? (
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="text-xl font-bold"
+                    aria-label="Workflow name"
+                  />
+                ) : (
+                  <h1 className="text-2xl font-bold">{workflow.name}</h1>
+                )}
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge className={cn(trigger.bgColor, trigger.color, "border", trigger.borderColor)}>
+                    {trigger.label}
+                  </Badge>
+                  <Badge className={cn(status.bgColor, status.color, "border", status.borderColor)}>
+                    {status.label}
+                  </Badge>
+                  <span className="text-muted-foreground text-sm">
+                    {workflow.steps.length} steps
+                  </span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {isEditing ? (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(false)}
-                    className="border-gray-700 text-gray-300"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={saveChanges}
-                    disabled={isSaving}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4 mr-2" />
-                    )}
-                    Save
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                    className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  {workflow.status === "active" ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => updateStatus("paused")}
-                      className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
-                    >
-                      <Pause className="h-4 w-4 mr-2" />
-                      Pause
-                    </Button>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveChanges}
+                  disabled={isSaving}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Button
-                      variant="outline"
-                      onClick={() => updateStatus("active")}
-                      className="border-green-500/50 text-green-400 hover:bg-green-500/10"
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Activate
-                    </Button>
+                    <Save className="h-4 w-4 mr-2" />
                   )}
-                  <Button
-                    onClick={executeWorkflow}
-                    disabled={isExecuting || workflow.status !== "active"}
-                    className="bg-purple-600 hover:bg-purple-700 text-white"
-                  >
-                    {isExecuting ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-2" />
-                    )}
-                    Run
-                  </Button>
+                  Save
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                {workflow.status === "active" ? (
                   <Button
                     variant="outline"
-                    onClick={deleteWorkflow}
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                    onClick={() => updateStatus("paused")}
+                    className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
+                    <Pause className="h-4 w-4 mr-2" />
+                    Pause
                   </Button>
-                </>
-              )}
-            </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => updateStatus("active")}
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Activate
+                  </Button>
+                )}
+                <Button
+                  onClick={executeWorkflow}
+                  disabled={isExecuting || workflow.status !== "active"}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  {isExecuting ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4 mr-2" />
+                  )}
+                  Run
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={deleteWorkflow}
+                  className="border-red-300 text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <div className="flex-1 overflow-auto px-6 py-6">
         <Tabs defaultValue="builder" className="space-y-6">
-          <TabsList className="bg-gray-900/50 border border-white/10">
+          <TabsList>
             <TabsTrigger value="builder">Workflow Builder</TabsTrigger>
             <TabsTrigger value="executions">
               Executions ({executions.length})
@@ -440,17 +442,17 @@ export default function WorkflowDetailClient({
 
           {/* Workflow Builder Tab */}
           <TabsContent value="builder" className="space-y-6">
-            <Card className="p-6 bg-gray-900/50 border-white/10">
+            <Card className="p-6">
               {isEditing && (
                 <div className="mb-4">
-                  <label htmlFor="workflow-description" className="block text-sm text-gray-400 mb-1">
+                  <label htmlFor="workflow-description" className="block text-sm text-muted-foreground mb-1">
                     Description
                   </label>
                   <textarea
                     id="workflow-description"
                     value={editedDescription}
                     onChange={(e) => setEditedDescription(e.target.value)}
-                    className="w-full h-20 p-3 rounded-lg bg-gray-800 border border-gray-700 text-white resize-none"
+                    className="w-full h-20 p-3 rounded-lg border bg-background resize-none"
                     placeholder="What does this workflow do?"
                   />
                 </div>
@@ -475,7 +477,6 @@ export default function WorkflowDetailClient({
                   variant="ghost"
                   size="sm"
                   onClick={() => setSelectedExecutionId(null)}
-                  className="text-gray-400 hover:text-white"
                 >
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Back to Executions
@@ -488,12 +489,11 @@ export default function WorkflowDetailClient({
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-white">Recent Executions</h3>
+                  <h3 className="font-semibold">Recent Executions</h3>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => mutateExecutions()}
-                    className="text-gray-400 hover:text-white"
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
@@ -501,10 +501,10 @@ export default function WorkflowDetailClient({
                 </div>
 
                 {executions.length === 0 ? (
-                  <Card className="p-12 bg-gray-900/50 border-white/10 text-center">
-                    <Clock className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No Executions Yet</h3>
-                    <p className="text-gray-400 mb-6">
+                  <Card className="p-12 text-center">
+                    <Clock className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No Executions Yet</h3>
+                    <p className="text-muted-foreground mb-6">
                       Run this workflow to see execution history and results.
                     </p>
                     <Button
@@ -526,8 +526,8 @@ export default function WorkflowDetailClient({
                         <Card
                           key={execution.id}
                           className={cn(
-                            "p-4 bg-gray-900/50 border-white/10 cursor-pointer transition-all",
-                            "hover:border-purple-500/30"
+                            "p-4 cursor-pointer transition-all",
+                            "hover:border-purple-300 hover:shadow-md"
                           )}
                           onClick={() => setSelectedExecutionId(execution.id)}
                           role="button"
@@ -543,20 +543,22 @@ export default function WorkflowDetailClient({
                               </div>
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-white">
+                                  <span className="font-medium">
                                     Execution #{execution.id.slice(0, 8)}
                                   </span>
                                   <Badge
                                     className={cn(
                                       execStatus.bgColor,
                                       execStatus.color,
-                                      "border-0 text-xs"
+                                      "border",
+                                      execStatus.borderColor,
+                                      "text-xs"
                                     )}
                                   >
                                     {execStatus.label}
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-muted-foreground">
                                   Started{" "}
                                   {formatDistanceToNow(new Date(execution.startedAt), {
                                     addSuffix: true,
@@ -564,10 +566,10 @@ export default function WorkflowDetailClient({
                                 </p>
                               </div>
                             </div>
-                            <ArrowRight className="h-5 w-5 text-gray-500" />
+                            <ArrowRight className="h-5 w-5 text-muted-foreground" />
                           </div>
                           {execution.error && (
-                            <div className="mt-3 p-2 rounded bg-red-500/10 text-red-400 text-sm">
+                            <div className="mt-3 p-2 rounded bg-red-50 text-red-700 text-sm border border-red-200">
                               {execution.error.message}
                             </div>
                           )}
@@ -582,54 +584,54 @@ export default function WorkflowDetailClient({
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
-            <Card className="p-6 bg-gray-900/50 border-white/10">
-              <h3 className="font-semibold text-white mb-4">Workflow Configuration</h3>
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Workflow Configuration</h3>
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-white/5">
+                <div className="flex justify-between items-center py-3 border-b">
                   <div>
-                    <p className="text-white">Trigger Type</p>
-                    <p className="text-sm text-gray-400">How the workflow is triggered</p>
+                    <p className="font-medium">Trigger Type</p>
+                    <p className="text-sm text-muted-foreground">How the workflow is triggered</p>
                   </div>
-                  <Badge className={cn(trigger.bgColor, trigger.color, "border-0")}>
+                  <Badge className={cn(trigger.bgColor, trigger.color, "border", trigger.borderColor)}>
                     {trigger.label}
                   </Badge>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/5">
+                <div className="flex justify-between items-center py-3 border-b">
                   <div>
-                    <p className="text-white">Steps</p>
-                    <p className="text-sm text-gray-400">Number of steps in workflow</p>
+                    <p className="font-medium">Steps</p>
+                    <p className="text-sm text-muted-foreground">Number of steps in workflow</p>
                   </div>
-                  <span className="text-white font-medium">{workflow.steps.length}</span>
+                  <span className="font-medium">{workflow.steps.length}</span>
                 </div>
                 {workflow.teamName && (
-                  <div className="flex justify-between items-center py-3 border-b border-white/5">
+                  <div className="flex justify-between items-center py-3 border-b">
                     <div>
-                      <p className="text-white">Associated Team</p>
-                      <p className="text-sm text-gray-400">Team that runs this workflow</p>
+                      <p className="font-medium">Associated Team</p>
+                      <p className="text-sm text-muted-foreground">Team that runs this workflow</p>
                     </div>
                     <Link
                       href={`/orchestration/teams/${workflow.teamId}`}
-                      className="text-purple-400 hover:text-purple-300"
+                      className="text-purple-600 hover:text-purple-700"
                     >
                       {workflow.teamName}
                     </Link>
                   </div>
                 )}
-                <div className="flex justify-between items-center py-3 border-b border-white/5">
+                <div className="flex justify-between items-center py-3 border-b">
                   <div>
-                    <p className="text-white">Created</p>
-                    <p className="text-sm text-gray-400">When workflow was created</p>
+                    <p className="font-medium">Created</p>
+                    <p className="text-sm text-muted-foreground">When workflow was created</p>
                   </div>
-                  <span className="text-white font-medium">
+                  <span className="font-medium">
                     {format(new Date(workflow.createdAt), "PPP")}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-3">
                   <div>
-                    <p className="text-white">Last Updated</p>
-                    <p className="text-sm text-gray-400">When workflow was last modified</p>
+                    <p className="font-medium">Last Updated</p>
+                    <p className="text-sm text-muted-foreground">When workflow was last modified</p>
                   </div>
-                  <span className="text-white font-medium">
+                  <span className="font-medium">
                     {formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}
                   </span>
                 </div>
@@ -637,19 +639,19 @@ export default function WorkflowDetailClient({
             </Card>
 
             {/* Danger Zone */}
-            <Card className="p-6 bg-red-950/30 border-red-500/20">
-              <h3 className="font-semibold text-red-400 mb-4">Danger Zone</h3>
+            <Card className="p-6 border-red-200 bg-red-50/50">
+              <h3 className="font-semibold text-red-700 mb-4">Danger Zone</h3>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white">Delete Workflow</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="font-medium">Delete Workflow</p>
+                  <p className="text-sm text-muted-foreground">
                     Permanently delete this workflow and all execution history
                   </p>
                 </div>
                 <Button
                   variant="outline"
                   onClick={deleteWorkflow}
-                  className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                  className="border-red-300 text-red-600 hover:bg-red-100"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Workflow
@@ -662,4 +664,3 @@ export default function WorkflowDetailClient({
     </div>
   );
 }
-

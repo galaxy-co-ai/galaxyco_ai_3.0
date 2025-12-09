@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,17 +13,13 @@ import {
   Save,
   GripVertical,
   ArrowRight,
-  ArrowDownRight,
-  Settings,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
   Loader2,
   Bot,
   Workflow,
   Zap,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -163,7 +159,6 @@ export default function WorkflowBuilder({
   const addStep = useCallback(() => {
     setSteps((prev) => {
       const newStep = createEmptyStep(prev.length);
-      // Set previous step's onSuccess to new step
       if (prev.length > 0) {
         const updated = [...prev];
         updated[updated.length - 1] = {
@@ -181,8 +176,6 @@ export default function WorkflowBuilder({
     setSteps((prev) => {
       const removed = prev[index];
       const updated = prev.filter((_, i) => i !== index);
-
-      // Update references to removed step
       return updated.map((step) => ({
         ...step,
         onSuccess: step.onSuccess === removed.id ? undefined : step.onSuccess,
@@ -325,7 +318,7 @@ export default function WorkflowBuilder({
         })),
       });
       toast.success(workflowId ? "Workflow updated" : "Workflow created");
-    } catch (error) {
+    } catch {
       toast.error("Failed to save workflow");
     } finally {
       setIsSaving(false);
@@ -385,16 +378,16 @@ export default function WorkflowBuilder({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-violet-500/20">
-            <Workflow className="h-5 w-5 text-violet-400" />
+          <div className="p-2 rounded-lg bg-violet-100">
+            <Workflow className="h-5 w-5 text-violet-600" />
           </div>
           <div>
-            <h2 className="font-semibold text-white">
+            <h2 className="font-semibold">
               {workflowId ? "Edit Workflow" : "Create Workflow"}
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Build multi-agent workflows with visual editor
             </p>
           </div>
@@ -404,7 +397,6 @@ export default function WorkflowBuilder({
             <Button
               variant="ghost"
               onClick={onCancel}
-              className="text-gray-400 hover:text-white"
             >
               Cancel
             </Button>
@@ -413,7 +405,7 @@ export default function WorkflowBuilder({
             <Button
               variant="outline"
               onClick={handleTest}
-              className="border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+              className="border-violet-300 text-violet-700 hover:bg-violet-50"
             >
               <Play className="h-4 w-4 mr-2" />
               Test
@@ -436,11 +428,11 @@ export default function WorkflowBuilder({
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Basic Info */}
-        <Card className="p-4 bg-gray-900/50 border-white/10">
-          <h3 className="font-medium text-white mb-4">Workflow Details</h3>
+        <Card className="p-4">
+          <h3 className="font-medium mb-4">Workflow Details</h3>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name" className="text-gray-300">
+              <Label htmlFor="name">
                 Name
               </Label>
               <Input
@@ -448,12 +440,12 @@ export default function WorkflowBuilder({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Lead Qualification Pipeline"
-                className="mt-1 bg-gray-800 border-gray-700 text-white"
+                className="mt-1"
                 aria-label="Workflow name"
               />
             </div>
             <div>
-              <Label htmlFor="description" className="text-gray-300">
+              <Label htmlFor="description">
                 Description
               </Label>
               <Input
@@ -461,7 +453,7 @@ export default function WorkflowBuilder({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What does this workflow do?"
-                className="mt-1 bg-gray-800 border-gray-700 text-white"
+                className="mt-1"
                 aria-label="Workflow description"
               />
             </div>
@@ -469,8 +461,8 @@ export default function WorkflowBuilder({
         </Card>
 
         {/* Trigger */}
-        <Card className="p-4 bg-gray-900/50 border-white/10">
-          <h3 className="font-medium text-white mb-4">Trigger</h3>
+        <Card className="p-4">
+          <h3 className="font-medium mb-4">Trigger</h3>
           <div className="grid grid-cols-2 gap-3">
             {triggerOptions.map((option) => (
               <button
@@ -479,8 +471,8 @@ export default function WorkflowBuilder({
                 className={cn(
                   "p-3 rounded-lg border text-left transition-all",
                   triggerType === option.value
-                    ? "border-violet-500 bg-violet-500/10"
-                    : "border-white/10 hover:border-white/20 bg-gray-800/50"
+                    ? "border-violet-300 bg-violet-50"
+                    : "hover:border-gray-300"
                 )}
                 aria-label={`Select ${option.label} trigger`}
                 aria-pressed={triggerType === option.value}
@@ -489,8 +481,8 @@ export default function WorkflowBuilder({
                   <span
                     className={cn(
                       triggerType === option.value
-                        ? "text-violet-400"
-                        : "text-gray-400"
+                        ? "text-violet-600"
+                        : "text-muted-foreground"
                     )}
                   >
                     {option.icon}
@@ -499,14 +491,14 @@ export default function WorkflowBuilder({
                     className={cn(
                       "font-medium",
                       triggerType === option.value
-                        ? "text-violet-400"
-                        : "text-white"
+                        ? "text-violet-700"
+                        : ""
                     )}
                   >
                     {option.label}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">{option.description}</p>
+                <p className="text-xs text-muted-foreground">{option.description}</p>
               </button>
             ))}
           </div>
@@ -514,7 +506,7 @@ export default function WorkflowBuilder({
           {/* Trigger Config */}
           {triggerType === "event" && (
             <div className="mt-4">
-              <Label htmlFor="eventType" className="text-gray-300">
+              <Label htmlFor="eventType">
                 Event Type
               </Label>
               <Input
@@ -527,7 +519,7 @@ export default function WorkflowBuilder({
                   }))
                 }
                 placeholder="e.g., lead.created, ticket.updated"
-                className="mt-1 bg-gray-800 border-gray-700 text-white"
+                className="mt-1"
                 aria-label="Event type"
               />
             </div>
@@ -535,7 +527,7 @@ export default function WorkflowBuilder({
 
           {triggerType === "schedule" && (
             <div className="mt-4">
-              <Label htmlFor="cron" className="text-gray-300">
+              <Label htmlFor="cron">
                 Cron Expression
               </Label>
               <Input
@@ -545,7 +537,7 @@ export default function WorkflowBuilder({
                   setTriggerConfig((prev) => ({ ...prev, cron: e.target.value }))
                 }
                 placeholder="e.g., 0 9 * * MON (every Monday at 9am)"
-                className="mt-1 bg-gray-800 border-gray-700 text-white"
+                className="mt-1"
                 aria-label="Cron expression"
               />
             </div>
@@ -555,14 +547,14 @@ export default function WorkflowBuilder({
         {/* Steps */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-white">
+            <h3 className="font-medium">
               Workflow Steps ({steps.length})
             </h3>
             <Button
               variant="outline"
               size="sm"
               onClick={addStep}
-              className="border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+              className="border-violet-300 text-violet-700 hover:bg-violet-50"
               aria-label="Add workflow step"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -571,9 +563,9 @@ export default function WorkflowBuilder({
           </div>
 
           {steps.length === 0 ? (
-            <Card className="p-8 bg-gray-900/50 border-white/10 text-center">
-              <Workflow className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 mb-4">No steps yet</p>
+            <Card className="p-8 text-center">
+              <Workflow className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">No steps yet</p>
               <Button
                 onClick={addStep}
                 className="bg-violet-600 hover:bg-violet-700 text-white"
@@ -596,7 +588,7 @@ export default function WorkflowBuilder({
                     draggedStep === index && "opacity-50"
                   )}
                 >
-                  <Card className="bg-gray-900/50 border-white/10 overflow-hidden">
+                  <Card className="overflow-hidden">
                     {/* Step Header */}
                     <div
                       className="flex items-center gap-3 p-3 cursor-pointer"
@@ -607,19 +599,19 @@ export default function WorkflowBuilder({
                       aria-expanded={step.isExpanded}
                       aria-label={`Toggle step ${index + 1}: ${step.name}`}
                     >
-                      <GripVertical className="h-4 w-4 text-gray-500 cursor-grab" />
-                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-500/20 text-violet-400 text-xs font-medium">
+                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 text-violet-600 text-xs font-medium">
                         {index + 1}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-white">
+                          <span className="font-medium">
                             {step.name || `Step ${index + 1}`}
                           </span>
                           {step.agentId && (
                             <Badge
                               variant="outline"
-                              className="border-blue-500/50 text-blue-400"
+                              className="border-blue-200 text-blue-700"
                             >
                               {agents.find((a) => a.id === step.agentId)?.name ||
                                 "Unknown Agent"}
@@ -627,7 +619,7 @@ export default function WorkflowBuilder({
                           )}
                         </div>
                         {step.action && (
-                          <p className="text-xs text-gray-500">{step.action}</p>
+                          <p className="text-xs text-muted-foreground">{step.action}</p>
                         )}
                       </div>
                       <Button
@@ -637,38 +629,38 @@ export default function WorkflowBuilder({
                           e.stopPropagation();
                           removeStep(index);
                         }}
-                        className="text-gray-500 hover:text-red-400"
+                        className="hover:text-red-600"
                         aria-label={`Remove step ${index + 1}`}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                       {step.isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-gray-500" />
+                        <ChevronUp className="h-4 w-4 text-muted-foreground" />
                       ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       )}
                     </div>
 
                     {/* Step Content (Expanded) */}
                     {step.isExpanded && (
-                      <div className="p-4 border-t border-white/10 space-y-4">
+                      <div className="p-4 border-t space-y-4">
                         {/* Name */}
                         <div>
-                          <Label className="text-gray-300">Step Name</Label>
+                          <Label>Step Name</Label>
                           <Input
                             value={step.name}
                             onChange={(e) =>
                               updateStep(index, { name: e.target.value })
                             }
                             placeholder="e.g., Qualify Lead"
-                            className="mt-1 bg-gray-800 border-gray-700 text-white"
+                            className="mt-1"
                             aria-label="Step name"
                           />
                         </div>
 
                         {/* Agent */}
                         <div>
-                          <Label className="text-gray-300">Agent</Label>
+                          <Label>Agent</Label>
                           <select
                             value={step.agentId || ""}
                             onChange={(e) =>
@@ -676,7 +668,7 @@ export default function WorkflowBuilder({
                                 agentId: e.target.value || null,
                               })
                             }
-                            className="mt-1 w-full p-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                            className="mt-1 w-full p-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-violet-500"
                             aria-label="Select agent"
                           >
                             <option value="">Select an agent</option>
@@ -690,21 +682,21 @@ export default function WorkflowBuilder({
 
                         {/* Action */}
                         <div>
-                          <Label className="text-gray-300">Action</Label>
+                          <Label>Action</Label>
                           <Input
                             value={step.action}
                             onChange={(e) =>
                               updateStep(index, { action: e.target.value })
                             }
                             placeholder="e.g., qualify_lead, generate_proposal"
-                            className="mt-1 bg-gray-800 border-gray-700 text-white"
+                            className="mt-1"
                             aria-label="Action"
                           />
                         </div>
 
                         {/* Timeout */}
                         <div>
-                          <Label className="text-gray-300">
+                          <Label>
                             Timeout (seconds)
                           </Label>
                           <Input
@@ -715,7 +707,7 @@ export default function WorkflowBuilder({
                                 timeout: parseInt(e.target.value) || 300,
                               })
                             }
-                            className="mt-1 bg-gray-800 border-gray-700 text-white w-32"
+                            className="mt-1 w-32"
                             aria-label="Timeout"
                           />
                         </div>
@@ -723,7 +715,7 @@ export default function WorkflowBuilder({
                         {/* Routing */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <Label className="text-gray-300">
+                            <Label>
                               On Success → Next Step
                             </Label>
                             <select
@@ -733,7 +725,7 @@ export default function WorkflowBuilder({
                                   onSuccess: e.target.value || undefined,
                                 })
                               }
-                              className="mt-1 w-full p-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                              className="mt-1 w-full p-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-green-500"
                               aria-label="On success routing"
                             >
                               <option value="">Next in sequence</option>
@@ -747,7 +739,7 @@ export default function WorkflowBuilder({
                             </select>
                           </div>
                           <div>
-                            <Label className="text-gray-300">
+                            <Label>
                               On Failure → Fallback Step
                             </Label>
                             <select
@@ -757,7 +749,7 @@ export default function WorkflowBuilder({
                                   onFailure: e.target.value || undefined,
                                 })
                               }
-                              className="mt-1 w-full p-2 rounded-md bg-gray-800 border border-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                              className="mt-1 w-full p-2 rounded-md border bg-background focus:outline-none focus:ring-2 focus:ring-red-500"
                               aria-label="On failure routing"
                             >
                               <option value="">Workflow fails</option>
@@ -775,14 +767,14 @@ export default function WorkflowBuilder({
                         {/* Conditions */}
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <Label className="text-gray-300">
+                            <Label>
                               Conditions (all must be met)
                             </Label>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => addCondition(index)}
-                              className="text-violet-400 hover:text-violet-300"
+                              className="text-violet-600 hover:text-violet-700"
                               aria-label="Add condition"
                             >
                               <Plus className="h-3 w-3 mr-1" />
@@ -794,7 +786,7 @@ export default function WorkflowBuilder({
                               {step.conditions.map((condition, ci) => (
                                 <div
                                   key={ci}
-                                  className="flex items-center gap-2 p-2 bg-gray-800/50 rounded"
+                                  className="flex items-center gap-2 p-2 bg-gray-50 rounded"
                                 >
                                   <Input
                                     value={condition.field}
@@ -804,7 +796,7 @@ export default function WorkflowBuilder({
                                       })
                                     }
                                     placeholder="Field"
-                                    className="flex-1 h-8 bg-gray-700 border-gray-600 text-white text-sm"
+                                    className="flex-1 h-8 text-sm"
                                     aria-label="Condition field"
                                   />
                                   <select
@@ -814,7 +806,7 @@ export default function WorkflowBuilder({
                                         operator: e.target.value as WorkflowStepCondition["operator"],
                                       })
                                     }
-                                    className="h-8 px-2 rounded bg-gray-700 border border-gray-600 text-white text-sm"
+                                    className="h-8 px-2 rounded border bg-background text-sm"
                                     aria-label="Condition operator"
                                   >
                                     {conditionOperators.map((op) => (
@@ -831,14 +823,14 @@ export default function WorkflowBuilder({
                                       })
                                     }
                                     placeholder="Value"
-                                    className="flex-1 h-8 bg-gray-700 border-gray-600 text-white text-sm"
+                                    className="flex-1 h-8 text-sm"
                                     aria-label="Condition value"
                                   />
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => removeCondition(index, ci)}
-                                    className="h-8 w-8 p-0 text-gray-500 hover:text-red-400"
+                                    className="h-8 w-8 p-0 hover:text-red-600"
                                     aria-label="Remove condition"
                                   >
                                     <Trash2 className="h-3 w-3" />
@@ -847,7 +839,7 @@ export default function WorkflowBuilder({
                               ))}
                             </div>
                           ) : (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                               No conditions - step will always execute
                             </p>
                           )}
@@ -859,7 +851,7 @@ export default function WorkflowBuilder({
                   {/* Arrow to next step */}
                   {index < steps.length - 1 && (
                     <div className="flex justify-center py-1">
-                      <ArrowRight className="h-4 w-4 text-gray-600" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   )}
                 </div>
@@ -871,4 +863,3 @@ export default function WorkflowBuilder({
     </div>
   );
 }
-

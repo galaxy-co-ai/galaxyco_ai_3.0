@@ -55,41 +55,46 @@ interface StepInfo {
 }
 
 // ============================================================================
-// STATUS CONFIG
+// STATUS CONFIG - Light Theme
 // ============================================================================
 
 const executionStatusConfig: Record<
   ExecutionStatus,
-  { label: string; color: string; bgColor: string; icon: React.ReactNode }
+  { label: string; color: string; bgColor: string; borderColor: string; icon: React.ReactNode }
 > = {
   running: {
     label: "Running",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/20",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
     icon: <Loader2 className="h-4 w-4 animate-spin" />,
   },
   completed: {
     label: "Completed",
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
     icon: <CheckCircle2 className="h-4 w-4" />,
   },
   failed: {
     label: "Failed",
-    color: "text-red-400",
-    bgColor: "bg-red-500/20",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200",
     icon: <XCircle className="h-4 w-4" />,
   },
   paused: {
     label: "Paused",
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/20",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
     icon: <Pause className="h-4 w-4" />,
   },
   cancelled: {
     label: "Cancelled",
-    color: "text-gray-400",
-    bgColor: "bg-gray-500/20",
+    color: "text-gray-600",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
     icon: <XCircle className="h-4 w-4" />,
   },
 };
@@ -100,27 +105,27 @@ const stepStatusConfig: Record<
 > = {
   pending: {
     label: "Pending",
-    color: "text-gray-400",
+    color: "text-gray-500",
     icon: <Clock className="h-3 w-3" />,
   },
   running: {
     label: "Running",
-    color: "text-blue-400",
+    color: "text-blue-600",
     icon: <Loader2 className="h-3 w-3 animate-spin" />,
   },
   completed: {
     label: "Completed",
-    color: "text-green-400",
+    color: "text-green-600",
     icon: <CheckCircle2 className="h-3 w-3" />,
   },
   failed: {
     label: "Failed",
-    color: "text-red-400",
+    color: "text-red-600",
     icon: <XCircle className="h-3 w-3" />,
   },
   skipped: {
     label: "Skipped",
-    color: "text-yellow-400",
+    color: "text-yellow-600",
     icon: <AlertTriangle className="h-3 w-3" />,
   },
 };
@@ -155,7 +160,7 @@ export default function WorkflowExecutionMonitor({
       agents: Array<{ id: string; name: string }>;
     };
   }>(`/api/orchestration/workflows/executions/${executionId}`, fetcher, {
-    refreshInterval: 3000, // Poll every 3 seconds while running
+    refreshInterval: 3000,
     revalidateOnFocus: true,
   });
 
@@ -224,7 +229,7 @@ export default function WorkflowExecutionMonitor({
       await onPause();
       mutate();
       toast.success("Workflow paused");
-    } catch (error) {
+    } catch {
       toast.error("Failed to pause workflow");
     } finally {
       setIsActionLoading(false);
@@ -239,7 +244,7 @@ export default function WorkflowExecutionMonitor({
       await onResume();
       mutate();
       toast.success("Workflow resumed");
-    } catch (error) {
+    } catch {
       toast.error("Failed to resume workflow");
     } finally {
       setIsActionLoading(false);
@@ -254,7 +259,7 @@ export default function WorkflowExecutionMonitor({
       await onCancel();
       mutate();
       toast.success("Workflow cancelled");
-    } catch (error) {
+    } catch {
       toast.error("Failed to cancel workflow");
     } finally {
       setIsActionLoading(false);
@@ -270,7 +275,7 @@ export default function WorkflowExecutionMonitor({
         await onRetry(stepId);
         mutate();
         toast.success("Retrying step");
-      } catch (error) {
+      } catch {
         toast.error("Failed to retry step");
       } finally {
         setIsActionLoading(false);
@@ -282,7 +287,7 @@ export default function WorkflowExecutionMonitor({
   // Loading state
   if (isLoading) {
     return (
-      <Card className="p-6 bg-gray-900/50 border-white/10">
+      <Card className="p-6">
         <div className="space-y-4">
           <Skeleton className="h-8 w-2/3" />
           <Skeleton className="h-4 w-1/2" />
@@ -295,18 +300,18 @@ export default function WorkflowExecutionMonitor({
   // Error state
   if (error || !execution) {
     return (
-      <Card className="p-6 bg-gray-900/50 border-white/10">
+      <Card className="p-6">
         <div className="text-center">
-          <XCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h3 className="font-medium text-white mb-2">Execution Not Found</h3>
-          <p className="text-gray-400 text-sm">
+          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="font-medium mb-2">Execution Not Found</h3>
+          <p className="text-muted-foreground text-sm">
             Unable to load execution details
           </p>
           {onClose && (
             <Button
               variant="outline"
               onClick={onClose}
-              className="mt-4 border-gray-600"
+              className="mt-4"
             >
               Close
             </Button>
@@ -323,21 +328,21 @@ export default function WorkflowExecutionMonitor({
       : 0;
 
   return (
-    <Card className="bg-gray-900/50 border-white/10 overflow-hidden">
+    <Card className="overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-4 border-b">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-medium text-white">
+              <h3 className="font-medium">
                 {workflow?.name || "Workflow Execution"}
               </h3>
-              <Badge className={cn(statusInfo.bgColor, statusInfo.color, "border-0")}>
+              <Badge className={cn(statusInfo.bgColor, statusInfo.color, "border", statusInfo.borderColor)}>
                 <span className="mr-1">{statusInfo.icon}</span>
                 {statusInfo.label}
               </Badge>
             </div>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               Started{" "}
               {formatDistanceToNow(new Date(execution.startedAt), {
                 addSuffix: true,
@@ -351,7 +356,7 @@ export default function WorkflowExecutionMonitor({
                 size="sm"
                 onClick={handlePause}
                 disabled={isActionLoading}
-                className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                 aria-label="Pause workflow"
               >
                 <Pause className="h-4 w-4 mr-1" />
@@ -364,7 +369,7 @@ export default function WorkflowExecutionMonitor({
                 size="sm"
                 onClick={handleResume}
                 disabled={isActionLoading}
-                className="border-green-500/50 text-green-400 hover:bg-green-500/10"
+                className="border-green-300 text-green-700 hover:bg-green-50"
                 aria-label="Resume workflow"
               >
                 <Play className="h-4 w-4 mr-1" />
@@ -378,7 +383,7 @@ export default function WorkflowExecutionMonitor({
                   size="sm"
                   onClick={handleCancel}
                   disabled={isActionLoading}
-                  className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                  className="border-red-300 text-red-600 hover:bg-red-50"
                   aria-label="Cancel workflow"
                 >
                   <XCircle className="h-4 w-4 mr-1" />
@@ -389,7 +394,6 @@ export default function WorkflowExecutionMonitor({
               variant="ghost"
               size="sm"
               onClick={() => mutate()}
-              className="text-gray-400 hover:text-white"
               aria-label="Refresh"
             >
               <RefreshCw className="h-4 w-4" />
@@ -400,8 +404,8 @@ export default function WorkflowExecutionMonitor({
         {/* Progress */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-sm mb-1">
-            <span className="text-gray-400">Progress</span>
-            <span className="text-gray-300">
+            <span className="text-muted-foreground">Progress</span>
+            <span>
               {execution.completedSteps}/{execution.totalSteps} steps
             </span>
           </div>
@@ -414,7 +418,7 @@ export default function WorkflowExecutionMonitor({
 
         {/* Duration */}
         {execution.durationMs && (
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Duration: {Math.round(execution.durationMs / 1000)}s
           </p>
         )}
@@ -422,7 +426,7 @@ export default function WorkflowExecutionMonitor({
 
       {/* Steps */}
       <div className="p-4">
-        <h4 className="font-medium text-white mb-3">Steps</h4>
+        <h4 className="font-medium mb-3">Steps</h4>
         <div className="space-y-2">
           {steps.map((step, index) => {
             const stepStatus = stepStatusConfig[step.status];
@@ -438,12 +442,12 @@ export default function WorkflowExecutionMonitor({
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-lg border transition-colors",
                     step.status === "running"
-                      ? "border-blue-500/50 bg-blue-500/5"
+                      ? "border-blue-200 bg-blue-50/50"
                       : step.status === "completed"
-                      ? "border-green-500/30 bg-green-500/5"
+                      ? "border-green-200 bg-green-50/50"
                       : step.status === "failed"
-                      ? "border-red-500/30 bg-red-500/5"
-                      : "border-white/10 bg-gray-800/30"
+                      ? "border-red-200 bg-red-50/50"
+                      : "border bg-gray-50/50"
                   )}
                 >
                   {/* Step number */}
@@ -451,12 +455,12 @@ export default function WorkflowExecutionMonitor({
                     className={cn(
                       "flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium shrink-0",
                       step.status === "completed"
-                        ? "bg-green-500/20 text-green-400"
+                        ? "bg-green-100 text-green-700"
                         : step.status === "running"
-                        ? "bg-blue-500/20 text-blue-400"
+                        ? "bg-blue-100 text-blue-700"
                         : step.status === "failed"
-                        ? "bg-red-500/20 text-red-400"
-                        : "bg-gray-700 text-gray-400"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-600"
                     )}
                   >
                     {step.status === "completed" ? (
@@ -473,7 +477,7 @@ export default function WorkflowExecutionMonitor({
                   {/* Step info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-white truncate">
+                      <span className="font-medium truncate">
                         {step.name}
                       </span>
                       <Badge
@@ -485,7 +489,7 @@ export default function WorkflowExecutionMonitor({
                       </Badge>
                     </div>
                     {step.agentName && (
-                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-0.5">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
                         <Bot className="h-3 w-3" />
                         {step.agentName}
                       </div>
@@ -500,7 +504,7 @@ export default function WorkflowExecutionMonitor({
                         size="sm"
                         onClick={() => handleRetryStep(step.id)}
                         disabled={isActionLoading}
-                        className="h-7 w-7 p-0 text-yellow-400 hover:bg-yellow-500/10"
+                        className="h-7 w-7 p-0 text-yellow-600 hover:bg-yellow-50"
                         aria-label="Retry step"
                       >
                         <RotateCcw className="h-3 w-3" />
@@ -511,7 +515,7 @@ export default function WorkflowExecutionMonitor({
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleStep(step.id)}
-                        className="h-7 w-7 p-0 text-gray-400 hover:text-white"
+                        className="h-7 w-7 p-0"
                         aria-label={isExpanded ? "Collapse" : "Expand"}
                         aria-expanded={isExpanded}
                       >
@@ -527,40 +531,40 @@ export default function WorkflowExecutionMonitor({
 
                 {/* Step details (expanded) */}
                 {isExpanded && step.result && (
-                  <div className="ml-9 mt-2 p-3 rounded-lg bg-gray-800/50 border border-white/5">
+                  <div className="ml-9 mt-2 p-3 rounded-lg bg-gray-50 border">
                     {step.result.startedAt && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Started:{" "}
                         {format(new Date(step.result.startedAt), "HH:mm:ss")}
                       </p>
                     )}
                     {step.result.completedAt && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Completed:{" "}
                         {format(new Date(step.result.completedAt), "HH:mm:ss")}
                       </p>
                     )}
                     {step.result.durationMs !== undefined && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Duration: {step.result.durationMs}ms
                       </p>
                     )}
                     {step.result.error && (
-                      <div className="mt-2 p-2 rounded bg-red-500/10 border border-red-500/20">
-                        <p className="text-xs text-red-400 font-medium">
+                      <div className="mt-2 p-2 rounded bg-red-50 border border-red-200">
+                        <p className="text-xs text-red-700 font-medium">
                           Error:
                         </p>
-                        <p className="text-xs text-red-300 mt-1">
+                        <p className="text-xs text-red-600 mt-1">
                           {step.result.error}
                         </p>
                       </div>
                     )}
                     {step.result.output !== null && step.result.output !== undefined ? (
                       <div className="mt-2">
-                        <p className="text-xs text-gray-500 font-medium mb-1">
+                        <p className="text-xs text-muted-foreground font-medium mb-1">
                           Output:
                         </p>
-                        <pre className="text-xs text-gray-300 bg-gray-900/50 p-2 rounded overflow-x-auto">
+                        <pre className="text-xs bg-white p-2 rounded overflow-x-auto border">
                           {typeof step.result.output === "string"
                             ? step.result.output
                             : JSON.stringify(step.result.output, null, 2)}
@@ -573,7 +577,7 @@ export default function WorkflowExecutionMonitor({
                 {/* Arrow to next step */}
                 {index < steps.length - 1 && (
                   <div className="flex justify-center py-1">
-                    <ArrowRight className="h-3 w-3 text-gray-600" />
+                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
                   </div>
                 )}
               </div>
@@ -584,18 +588,18 @@ export default function WorkflowExecutionMonitor({
 
       {/* Error */}
       {execution.error && (
-        <div className="p-4 border-t border-white/10 bg-red-500/5">
+        <div className="p-4 border-t bg-red-50">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-400">
+              <p className="text-sm font-medium text-red-700">
                 Execution Error
               </p>
-              <p className="text-sm text-red-300 mt-1">
+              <p className="text-sm text-red-600 mt-1">
                 {execution.error.message}
               </p>
               {execution.error.step && (
-                <p className="text-xs text-red-400/70 mt-1">
+                <p className="text-xs text-red-500 mt-1">
                   Failed at step: {execution.error.step}
                 </p>
               )}
@@ -606,4 +610,3 @@ export default function WorkflowExecutionMonitor({
     </Card>
   );
 }
-

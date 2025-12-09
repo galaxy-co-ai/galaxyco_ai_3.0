@@ -1463,10 +1463,20 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Neptune AI** | ✅ **100% Complete** - All 6 phases implemented |
 | **Overall** | ✅ 100% Production-Ready |
 
-**Latest Updates (December 8, 2025):**
+**Latest Updates (December 9, 2025):**
+- **Orchestration UI Theme Conversion** ✅ **COMPLETE** - All orchestration pages now match the site-wide light theme:
+  - Converted 6 page-level client components from dark theme to light theme
+  - Updated 6 orchestration components with consistent light theme styling
+  - Applied branded header pattern with SVG gradient icons
+  - Updated all badge/status colors to use light theme palette (e.g., `bg-green-50 text-green-700 border-green-200`)
+  - Consistent `bg-gray-50/50` backgrounds, `bg-background` headers, `text-foreground`/`text-muted-foreground` text
+  - Files converted: OrchestrationDashboardClient, TeamsListClient, TeamDetailClient, WorkflowsListClient, WorkflowDetailClient, ApprovalsPageClient
+  - Components updated: DepartmentDashboard, ApprovalQueue, WorkflowExecutionMonitor, WorkflowCard, AgentWorkflowsTab, WorkflowBuilder
+
+**Previous Updates (December 8, 2025):**
 - **Web Search** ✅ **LIVE** (Perplexity-first, Google CSE fallback; `search_web` marked low-risk so it auto-executes and returns real news/results).
 - **Creator Guided Flow** ✅ Neptune-powered acknowledgments/questions via `/api/assistant/chat`; flow continues even on errors with friendly toasts.
-- **Creator AI Edit** ✅ New `/api/creator/ai-edit` endpoint rewrites single sections with audience/goal-aware prompt; DocumentPreview uses it for the “AI edit with Neptune” pill.
+- **Creator AI Edit** ✅ New `/api/creator/ai-edit` endpoint rewrites single sections with audience/goal-aware prompt; DocumentPreview uses it for the "AI edit with Neptune" pill.
 - **Env Template Sync** ✅ `.env.example` updated to match `.env.local` placeholders (no secrets) to prevent missing-var errors.
 
 **Previous Updates (December 7, 2025):**

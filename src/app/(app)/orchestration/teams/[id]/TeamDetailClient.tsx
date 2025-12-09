@@ -31,44 +31,44 @@ import { formatDistanceToNow } from "date-fns";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-// Department configuration
+// Department configuration - light theme
 const departmentConfig: Record<
   string,
-  { icon: string; label: string; color: string; bgColor: string }
+  { icon: string; label: string; color: string; bgColor: string; borderColor: string }
 > = {
-  sales: { icon: "💰", label: "Sales", color: "text-emerald-600", bgColor: "bg-emerald-50" },
-  marketing: { icon: "📢", label: "Marketing", color: "text-blue-600", bgColor: "bg-blue-50" },
-  support: { icon: "🎧", label: "Support", color: "text-purple-600", bgColor: "bg-purple-50" },
-  operations: { icon: "⚙️", label: "Operations", color: "text-amber-600", bgColor: "bg-amber-50" },
-  finance: { icon: "💳", label: "Finance", color: "text-teal-600", bgColor: "bg-teal-50" },
-  product: { icon: "🚀", label: "Product", color: "text-indigo-600", bgColor: "bg-indigo-50" },
-  general: { icon: "🤖", label: "General", color: "text-gray-600", bgColor: "bg-gray-50" },
+  sales: { icon: "💰", label: "Sales", color: "text-emerald-700", bgColor: "bg-emerald-50", borderColor: "border-emerald-200" },
+  marketing: { icon: "📢", label: "Marketing", color: "text-blue-700", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
+  support: { icon: "🎧", label: "Support", color: "text-purple-700", bgColor: "bg-purple-50", borderColor: "border-purple-200" },
+  operations: { icon: "⚙️", label: "Operations", color: "text-amber-700", bgColor: "bg-amber-50", borderColor: "border-amber-200" },
+  finance: { icon: "💳", label: "Finance", color: "text-teal-700", bgColor: "bg-teal-50", borderColor: "border-teal-200" },
+  product: { icon: "🚀", label: "Product", color: "text-indigo-700", bgColor: "bg-indigo-50", borderColor: "border-indigo-200" },
+  general: { icon: "🤖", label: "General", color: "text-gray-700", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
 };
 
-// Role icons and labels
+// Role icons and labels - light theme
 const roleConfig: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   coordinator: {
     icon: <Crown className="h-4 w-4" />,
     label: "Coordinator",
-    color: "text-yellow-400",
+    color: "text-yellow-600",
   },
   specialist: {
     icon: <Wrench className="h-4 w-4" />,
     label: "Specialist",
-    color: "text-blue-400",
+    color: "text-blue-600",
   },
   support: {
     icon: <Shield className="h-4 w-4" />,
     label: "Support",
-    color: "text-green-400",
+    color: "text-green-600",
   },
 };
 
-// Status configuration
-const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
-  active: { label: "Active", color: "text-green-400", bgColor: "bg-green-500/20" },
-  paused: { label: "Paused", color: "text-yellow-400", bgColor: "bg-yellow-500/20" },
-  archived: { label: "Archived", color: "text-gray-400", bgColor: "bg-gray-500/20" },
+// Status configuration - light theme
+const statusConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  active: { label: "Active", color: "text-green-700", bgColor: "bg-green-50", borderColor: "border-green-200" },
+  paused: { label: "Paused", color: "text-yellow-700", bgColor: "bg-yellow-50", borderColor: "border-yellow-200" },
+  archived: { label: "Archived", color: "text-gray-600", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
 };
 
 interface TeamMember {
@@ -311,123 +311,118 @@ export default function TeamDetailClient({
   }, [team.id, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+    <div className="flex h-full flex-col bg-gray-50/50">
       {/* Header */}
-      <div className="border-b border-white/5 bg-gray-950/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Link href="/orchestration/teams">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white"
-                  aria-label="Back to teams"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-              </Link>
-              <div className="flex items-center gap-3">
-                <div
-                  className={cn("p-3 rounded-xl text-2xl", dept.bgColor)}
-                  aria-hidden="true"
-                >
-                  {dept.icon}
-                </div>
-                <div>
-                  {isEditing ? (
-                    <Input
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      className="text-xl font-bold bg-gray-800 border-gray-700 text-white"
-                      aria-label="Team name"
-                    />
-                  ) : (
-                    <h1 className="text-2xl font-bold text-white">{team.name}</h1>
-                  )}
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className={cn(dept.bgColor, dept.color, "border-0")}>
-                      {dept.label}
-                    </Badge>
-                    <Badge className={cn(status.bgColor, status.color, "border-0")}>
-                      {status.label}
-                    </Badge>
-                  </div>
+      <div className="border-b bg-background px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
+          <div className="flex items-center gap-4">
+            <Link href="/orchestration/teams">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Back to teams"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <div className="flex items-center gap-3">
+              <div
+                className={cn("p-3 rounded-xl text-2xl", dept.bgColor)}
+                aria-hidden="true"
+              >
+                {dept.icon}
+              </div>
+              <div>
+                {isEditing ? (
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="text-xl font-bold"
+                    aria-label="Team name"
+                  />
+                ) : (
+                  <h1 className="text-2xl font-bold">{team.name}</h1>
+                )}
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge className={cn(dept.bgColor, dept.color, "border", dept.borderColor)}>
+                    {dept.label}
+                  </Badge>
+                  <Badge className={cn(status.bgColor, status.color, "border", status.borderColor)}>
+                    {status.label}
+                  </Badge>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {isEditing ? (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(false)}
-                    className="border-gray-700 text-gray-300"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={saveChanges}
-                    disabled={isSaving}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {isSaving ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="h-4 w-4 mr-2" />
-                    )}
-                    Save
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                    className="border-gray-700 text-gray-300 hover:bg-gray-800"
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Edit
-                  </Button>
-                  {team.status === "active" ? (
-                    <Button
-                      variant="outline"
-                      onClick={() => updateStatus("paused")}
-                      className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
-                    >
-                      <Pause className="h-4 w-4 mr-2" />
-                      Pause
-                    </Button>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={saveChanges}
+                  disabled={isSaving}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {isSaving ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
-                    <Button
-                      variant="outline"
-                      onClick={() => updateStatus("active")}
-                      className="border-green-500/50 text-green-400 hover:bg-green-500/10"
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Activate
-                    </Button>
+                    <Save className="h-4 w-4 mr-2" />
                   )}
+                  Save
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+                {team.status === "active" ? (
                   <Button
                     variant="outline"
-                    onClick={deleteTeam}
-                    className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                    onClick={() => updateStatus("paused")}
+                    className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
+                    <Pause className="h-4 w-4 mr-2" />
+                    Pause
                   </Button>
-                </>
-              )}
-            </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => updateStatus("active")}
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Activate
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={deleteTeam}
+                  className="border-red-300 text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <div className="flex-1 overflow-auto px-6 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-gray-900/50 border border-white/10">
+          <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="members">
               Members ({team.members.length})
@@ -440,46 +435,46 @@ export default function TeamDetailClient({
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Description Card */}
-              <Card className="lg:col-span-2 p-6 bg-gray-900/50 border-white/10">
-                <h3 className="font-semibold text-white mb-3">Description</h3>
+              <Card className="lg:col-span-2 p-6">
+                <h3 className="font-semibold mb-3">Description</h3>
                 {isEditing ? (
                   <textarea
                     value={editedDescription}
                     onChange={(e) => setEditedDescription(e.target.value)}
-                    className="w-full h-24 p-3 rounded-lg bg-gray-800 border border-gray-700 text-white resize-none"
+                    className="w-full h-24 p-3 rounded-lg border bg-background resize-none"
                     placeholder="Describe what this team does..."
                     aria-label="Team description"
                   />
                 ) : (
-                  <p className="text-gray-400">
+                  <p className="text-muted-foreground">
                     {team.description || "No description provided."}
                   </p>
                 )}
               </Card>
 
               {/* Stats Card */}
-              <Card className="p-6 bg-gray-900/50 border-white/10">
-                <h3 className="font-semibold text-white mb-3">Team Stats</h3>
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Team Stats</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Members</span>
-                    <span className="text-white font-medium">{team.members.length}</span>
+                    <span className="text-muted-foreground">Members</span>
+                    <span className="font-medium">{team.members.length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Autonomy Level</span>
-                    <span className="text-white font-medium capitalize">
+                    <span className="text-muted-foreground">Autonomy Level</span>
+                    <span className="font-medium capitalize">
                       {(team.config?.autonomyLevel || "semi_autonomous").replace("_", "-")}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Created</span>
-                    <span className="text-white font-medium">
+                    <span className="text-muted-foreground">Created</span>
+                    <span className="font-medium">
                       {formatDistanceToNow(new Date(team.createdAt), { addSuffix: true })}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Updated</span>
-                    <span className="text-white font-medium">
+                    <span className="text-muted-foreground">Updated</span>
+                    <span className="font-medium">
                       {formatDistanceToNow(new Date(team.updatedAt), { addSuffix: true })}
                     </span>
                   </div>
@@ -488,14 +483,14 @@ export default function TeamDetailClient({
             </div>
 
             {/* Quick Member Overview */}
-            <Card className="p-6 bg-gray-900/50 border-white/10">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-white">Team Members</h3>
+                <h3 className="font-semibold">Team Members</h3>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setActiveTab("members")}
-                  className="text-blue-400 hover:text-blue-300"
+                  className="text-blue-600 hover:text-blue-700"
                 >
                   View All
                 </Button>
@@ -506,18 +501,18 @@ export default function TeamDetailClient({
                   return (
                     <div
                       key={member.id}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-gray-50"
                     >
-                      <div className="p-2 rounded-lg bg-violet-500/20">
-                        <Bot className="h-4 w-4 text-violet-400" />
+                      <div className="p-2 rounded-lg bg-violet-100">
+                        <Bot className="h-4 w-4 text-violet-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
+                        <p className="text-sm font-medium truncate">
                           {member.agent?.name || "Unknown Agent"}
                         </p>
                         <div className="flex items-center gap-1 text-xs">
                           <span className={role.color}>{role.icon}</span>
-                          <span className="text-gray-500">{role.label}</span>
+                          <span className="text-muted-foreground">{role.label}</span>
                         </div>
                       </div>
                     </div>
@@ -530,7 +525,7 @@ export default function TeamDetailClient({
           {/* Members Tab */}
           <TabsContent value="members" className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-white">Team Members</h3>
+              <h3 className="font-semibold">Team Members</h3>
               <Button
                 onClick={() => setShowAddMember(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -542,10 +537,10 @@ export default function TeamDetailClient({
             </div>
 
             {team.members.length === 0 ? (
-              <Card className="p-12 bg-gray-900/50 border-white/10 text-center">
-                <Users className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No Members Yet</h3>
-                <p className="text-gray-400 mb-6">
+              <Card className="p-12 text-center">
+                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No Members Yet</h3>
+                <p className="text-muted-foreground mb-6">
                   Add agents to your team to get started with orchestration.
                 </p>
                 <Button
@@ -563,32 +558,29 @@ export default function TeamDetailClient({
                   const role = roleConfig[member.role] || roleConfig.specialist;
                   const agentStatus =
                     member.agent?.status === "active"
-                      ? { color: "text-green-400", bg: "bg-green-400" }
-                      : { color: "text-gray-400", bg: "bg-gray-400" };
+                      ? { color: "text-green-600", bg: "bg-green-500" }
+                      : { color: "text-gray-500", bg: "bg-gray-400" };
 
                   return (
-                    <Card
-                      key={member.id}
-                      className="p-4 bg-gray-900/50 border-white/10"
-                    >
+                    <Card key={member.id} className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-3 rounded-lg bg-violet-500/20">
-                            <Bot className="h-6 w-6 text-violet-400" />
+                          <div className="p-3 rounded-lg bg-violet-100">
+                            <Bot className="h-6 w-6 text-violet-600" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-white">
+                            <h4 className="font-medium">
                               {member.agent?.name || "Unknown Agent"}
                             </h4>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge
                                 className={cn(
-                                  "border-0 text-xs",
+                                  "text-xs border",
                                   member.role === "coordinator"
-                                    ? "bg-yellow-500/20 text-yellow-400"
+                                    ? "bg-yellow-50 text-yellow-700 border-yellow-200"
                                     : member.role === "support"
-                                    ? "bg-green-500/20 text-green-400"
-                                    : "bg-blue-500/20 text-blue-400"
+                                    ? "bg-green-50 text-green-700 border-green-200"
+                                    : "bg-blue-50 text-blue-700 border-blue-200"
                                 )}
                               >
                                 {role.icon}
@@ -609,7 +601,7 @@ export default function TeamDetailClient({
                               </div>
                             </div>
                             {member.agent?.type && (
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 Type: {member.agent.type}
                               </p>
                             )}
@@ -619,14 +611,14 @@ export default function TeamDetailClient({
                           variant="ghost"
                           size="sm"
                           onClick={() => removeMember(member.id)}
-                          className="text-red-400 hover:bg-red-500/10"
+                          className="text-red-600 hover:bg-red-50"
                           aria-label={`Remove ${member.agent?.name || "agent"} from team`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                       {member.agent?.description && (
-                        <p className="text-sm text-gray-400 mt-3 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
                           {member.agent.description}
                         </p>
                       )}
@@ -639,20 +631,20 @@ export default function TeamDetailClient({
             {/* Add Member Modal */}
             {showAddMember && (
               <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                <Card className="w-full max-w-md p-6 bg-gray-900 border-white/10">
-                  <h3 className="text-lg font-semibold text-white mb-4">
+                <Card className="w-full max-w-md p-6">
+                  <h3 className="text-lg font-semibold mb-4">
                     Add Team Member
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="agent-select" className="text-gray-400">
+                      <Label htmlFor="agent-select">
                         Select Agent
                       </Label>
                       <select
                         id="agent-select"
                         value={selectedAgentId}
                         onChange={(e) => setSelectedAgentId(e.target.value)}
-                        className="w-full mt-1 px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white"
+                        className="w-full mt-1 px-3 py-2 rounded-md border bg-background"
                       >
                         <option value="">Choose an agent...</option>
                         {availableAgents.map((agent) => (
@@ -663,14 +655,14 @@ export default function TeamDetailClient({
                       </select>
                     </div>
                     <div>
-                      <Label htmlFor="role-select" className="text-gray-400">
+                      <Label htmlFor="role-select">
                         Role
                       </Label>
                       <select
                         id="role-select"
                         value={selectedRole}
                         onChange={(e) => setSelectedRole(e.target.value)}
-                        className="w-full mt-1 px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white"
+                        className="w-full mt-1 px-3 py-2 rounded-md border bg-background"
                       >
                         <option value="coordinator">Coordinator - Leads the team</option>
                         <option value="specialist">Specialist - Domain expert</option>
@@ -681,7 +673,6 @@ export default function TeamDetailClient({
                       <Button
                         variant="outline"
                         onClick={() => setShowAddMember(false)}
-                        className="border-gray-700 text-gray-300"
                       >
                         Cancel
                       </Button>
@@ -706,21 +697,21 @@ export default function TeamDetailClient({
 
           {/* Run Team Tab */}
           <TabsContent value="run" className="space-y-6">
-            <Card className="p-6 bg-gray-900/50 border-white/10">
-              <h3 className="font-semibold text-white mb-4">Run Team with Objective</h3>
-              <p className="text-gray-400 text-sm mb-4">
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Run Team with Objective</h3>
+              <p className="text-muted-foreground text-sm mb-4">
                 Give your team a high-level objective and they&apos;ll coordinate to accomplish it.
               </p>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="objective" className="text-gray-400">
+                  <Label htmlFor="objective">
                     Objective
                   </Label>
                   <textarea
                     id="objective"
                     value={objective}
                     onChange={(e) => setObjective(e.target.value)}
-                    className="w-full mt-1 h-24 p-3 rounded-lg bg-gray-800 border border-gray-700 text-white resize-none"
+                    className="w-full mt-1 h-24 p-3 rounded-lg border bg-background resize-none"
                     placeholder="e.g., Follow up with all stalled leads from this week..."
                   />
                 </div>
@@ -737,16 +728,16 @@ export default function TeamDetailClient({
                   Run Team
                 </Button>
                 {team.status !== "active" && (
-                  <p className="text-yellow-400 text-sm">
-                    ⚠️ Team must be active to run. Currently: {team.status}
+                  <p className="text-yellow-600 text-sm">
+                    Team must be active to run. Currently: {team.status}
                   </p>
                 )}
               </div>
             </Card>
 
             {/* Example Objectives */}
-            <Card className="p-6 bg-gray-900/50 border-white/10">
-              <h3 className="font-semibold text-white mb-4">Example Objectives</h3>
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Example Objectives</h3>
               <div className="space-y-3">
                 {[
                   "Follow up with all leads that haven't been contacted in 7 days",
@@ -757,7 +748,7 @@ export default function TeamDetailClient({
                   <button
                     key={index}
                     onClick={() => setObjective(example)}
-                    className="w-full text-left p-3 rounded-lg bg-gray-800/50 hover:bg-gray-800 text-gray-300 hover:text-white transition-colors text-sm"
+                    className="w-full text-left p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors text-sm"
                   >
                     {example}
                   </button>
@@ -768,40 +759,40 @@ export default function TeamDetailClient({
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
-            <Card className="p-6 bg-gray-900/50 border-white/10">
-              <h3 className="font-semibold text-white mb-4">Team Configuration</h3>
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4">Team Configuration</h3>
               <div className="space-y-4">
-                <div className="flex justify-between items-center py-3 border-b border-white/5">
+                <div className="flex justify-between items-center py-3 border-b">
                   <div>
-                    <p className="text-white">Autonomy Level</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="font-medium">Autonomy Level</p>
+                    <p className="text-sm text-muted-foreground">
                       Controls how much human oversight is required
                     </p>
                   </div>
-                  <Badge className="bg-blue-500/20 text-blue-400 border-0 capitalize">
+                  <Badge className="bg-blue-50 text-blue-700 border border-blue-200 capitalize">
                     {(team.config?.autonomyLevel || "semi_autonomous").replace("_", "-")}
                   </Badge>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/5">
+                <div className="flex justify-between items-center py-3 border-b">
                   <div>
-                    <p className="text-white">Max Concurrent Tasks</p>
-                    <p className="text-sm text-gray-400">
+                    <p className="font-medium">Max Concurrent Tasks</p>
+                    <p className="text-sm text-muted-foreground">
                       Maximum tasks the team can handle simultaneously
                     </p>
                   </div>
-                  <span className="text-white font-medium">
+                  <span className="font-medium">
                     {team.config?.maxConcurrentTasks || 5}
                   </span>
                 </div>
                 {team.config?.workingHours && (
-                  <div className="flex justify-between items-center py-3 border-b border-white/5">
+                  <div className="flex justify-between items-center py-3 border-b">
                     <div>
-                      <p className="text-white">Working Hours</p>
-                      <p className="text-sm text-gray-400">
+                      <p className="font-medium">Working Hours</p>
+                      <p className="text-sm text-muted-foreground">
                         When the team is active
                       </p>
                     </div>
-                    <span className="text-white font-medium">
+                    <span className="font-medium">
                       {team.config.workingHours.start} - {team.config.workingHours.end}{" "}
                       ({team.config.workingHours.timezone})
                     </span>
@@ -811,19 +802,19 @@ export default function TeamDetailClient({
             </Card>
 
             {/* Danger Zone */}
-            <Card className="p-6 bg-red-950/30 border-red-500/20">
-              <h3 className="font-semibold text-red-400 mb-4">Danger Zone</h3>
+            <Card className="p-6 border-red-200 bg-red-50/50">
+              <h3 className="font-semibold text-red-700 mb-4">Danger Zone</h3>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-white">Delete Team</p>
-                  <p className="text-sm text-gray-400">
+                  <p className="font-medium">Delete Team</p>
+                  <p className="text-sm text-muted-foreground">
                     Permanently delete this team and remove all member associations
                   </p>
                 </div>
                 <Button
                   variant="outline"
                   onClick={deleteTeam}
-                  className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                  className="border-red-300 text-red-600 hover:bg-red-100"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Team
@@ -836,4 +827,3 @@ export default function TeamDetailClient({
     </div>
   );
 }
-

@@ -54,67 +54,76 @@ interface ApprovalResponse {
 }
 
 // ============================================================================
-// RISK LEVEL CONFIG
+// RISK LEVEL CONFIG - Light Theme
 // ============================================================================
 
 const riskLevelConfig: Record<
   ActionRiskLevel,
-  { label: string; color: string; bgColor: string; icon: React.ReactNode }
+  { label: string; color: string; bgColor: string; borderColor: string; icon: React.ReactNode }
 > = {
   low: {
     label: "Low Risk",
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
     icon: <ShieldCheck className="h-4 w-4" />,
   },
   medium: {
     label: "Medium Risk",
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/20",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
     icon: <Shield className="h-4 w-4" />,
   },
   high: {
     label: "High Risk",
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/20",
+    color: "text-orange-700",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-200",
     icon: <ShieldAlert className="h-4 w-4" />,
   },
   critical: {
     label: "Critical",
-    color: "text-red-400",
-    bgColor: "bg-red-500/20",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200",
     icon: <ShieldX className="h-4 w-4" />,
   },
 };
 
 const statusConfig: Record<
   ApprovalStatus,
-  { label: string; color: string; bgColor: string }
+  { label: string; color: string; bgColor: string; borderColor: string }
 > = {
   pending: {
     label: "Pending",
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/20",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-200",
   },
   approved: {
     label: "Approved",
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
   },
   rejected: {
     label: "Rejected",
-    color: "text-red-400",
-    bgColor: "bg-red-500/20",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+    borderColor: "border-red-200",
   },
   expired: {
     label: "Expired",
-    color: "text-gray-400",
-    bgColor: "bg-gray-500/20",
+    color: "text-gray-600",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
   },
   auto_approved: {
     label: "Auto Approved",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/20",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
   },
 };
 
@@ -151,7 +160,7 @@ export default function ApprovalQueue({
     queryUrl,
     fetcher,
     {
-      refreshInterval: 10000, // Refresh every 10 seconds
+      refreshInterval: 10000,
       revalidateOnFocus: true,
     }
   );
@@ -294,7 +303,7 @@ export default function ApprovalQueue({
   // Loading state
   if (isLoading) {
     return (
-      <Card className="p-6 bg-gray-900/50 border-white/10">
+      <Card className="p-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Skeleton className="h-8 w-48" />
@@ -311,17 +320,16 @@ export default function ApprovalQueue({
   // Error state
   if (error) {
     return (
-      <Card className="p-6 bg-gray-900/50 border-white/10">
+      <Card className="p-6">
         <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h3 className="font-medium text-white mb-2">Failed to Load Approvals</h3>
-          <p className="text-gray-400 text-sm mb-4">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="font-medium mb-2">Failed to Load Approvals</h3>
+          <p className="text-muted-foreground text-sm mb-4">
             Unable to fetch pending approvals
           </p>
           <Button
             variant="outline"
             onClick={() => mutate()}
-            className="border-gray-600"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry
@@ -336,16 +344,16 @@ export default function ApprovalQueue({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Clock className="h-5 w-5 text-yellow-400" />
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Clock className="h-5 w-5 text-yellow-600" />
             Approval Queue
             {pendingCount > 0 && (
-              <Badge className="bg-yellow-500/20 text-yellow-400 border-0">
+              <Badge className="bg-yellow-50 text-yellow-700 border border-yellow-200">
                 {pendingCount} pending
               </Badge>
             )}
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Review and process pending autonomous actions
           </p>
         </div>
@@ -353,7 +361,6 @@ export default function ApprovalQueue({
           variant="ghost"
           size="sm"
           onClick={() => mutate()}
-          className="text-gray-400 hover:text-white"
           aria-label="Refresh approvals"
         >
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -362,27 +369,27 @@ export default function ApprovalQueue({
       </div>
 
       {/* Filters */}
-      <Card className="p-4 bg-gray-900/50 border-white/10">
+      <Card className="p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by action, description, or agent..."
-              className="pl-10 bg-gray-800 border-gray-700 text-white"
+              className="pl-10"
               aria-label="Search approvals"
             />
           </div>
 
           {/* Status Filter */}
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
+            <Filter className="h-4 w-4 text-muted-foreground" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as ApprovalStatus | "all")}
-              className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              className="px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
               aria-label="Filter by status"
             >
               <option value="all">All Status</option>
@@ -397,7 +404,7 @@ export default function ApprovalQueue({
           <select
             value={riskFilter}
             onChange={(e) => setRiskFilter(e.target.value as ActionRiskLevel | "all")}
-            className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
             aria-label="Filter by risk level"
           >
             <option value="all">All Risk Levels</option>
@@ -411,20 +418,20 @@ export default function ApprovalQueue({
 
       {/* Bulk Actions */}
       {statusFilter === "pending" && filteredActions.length > 0 && (
-        <Card className="p-3 bg-gray-900/50 border-white/10">
+        <Card className="p-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {/* Select All */}
             <button
               onClick={toggleSelectAll}
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               aria-label={selectedIds.size === filteredActions.length ? "Deselect all" : "Select all"}
             >
               {selectedIds.size === 0 ? (
                 <Square className="h-4 w-4" />
               ) : selectedIds.size === filteredActions.length ? (
-                <CheckSquare className="h-4 w-4 text-violet-400" />
+                <CheckSquare className="h-4 w-4 text-violet-600" />
               ) : (
-                <Minus className="h-4 w-4 text-violet-400" />
+                <Minus className="h-4 w-4 text-violet-600" />
               )}
               {selectedIds.size === filteredActions.length
                 ? "Deselect All"
@@ -433,8 +440,8 @@ export default function ApprovalQueue({
 
             {selectedIds.size > 0 && (
               <>
-                <div className="hidden sm:block h-4 w-px bg-gray-700" />
-                <span className="text-sm text-gray-400">
+                <div className="hidden sm:block h-4 w-px bg-border" />
+                <span className="text-sm text-muted-foreground">
                   {selectedIds.size} selected
                 </span>
                 <div className="flex-1" />
@@ -444,7 +451,7 @@ export default function ApprovalQueue({
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   placeholder="Review notes (optional)"
-                  className="w-full sm:w-48 bg-gray-800 border-gray-700 text-white text-sm"
+                  className="w-full sm:w-48 text-sm"
                   aria-label="Review notes"
                 />
 
@@ -470,7 +477,7 @@ export default function ApprovalQueue({
                   variant="outline"
                   onClick={() => processBulkApproval(false)}
                   disabled={isProcessing}
-                  className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                  className="border-red-300 text-red-600 hover:bg-red-50"
                   aria-label="Reject selected"
                 >
                   {isProcessing ? (
@@ -488,14 +495,14 @@ export default function ApprovalQueue({
 
       {/* Actions List */}
       {filteredActions.length === 0 ? (
-        <Card className="p-8 bg-gray-900/50 border-white/10 text-center">
-          <Clock className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-          <h3 className="font-medium text-white mb-2">
+        <Card className="p-8 text-center">
+          <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-medium mb-2">
             {statusFilter === "pending"
               ? "No Pending Approvals"
               : "No Matching Actions"}
           </h3>
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             {statusFilter === "pending"
               ? "All actions have been processed"
               : "Try adjusting your filters"}
@@ -515,8 +522,8 @@ export default function ApprovalQueue({
               <Card
                 key={action.id}
                 className={cn(
-                  "bg-gray-900/50 border-white/10 overflow-hidden transition-all",
-                  isSelected && "ring-1 ring-violet-500/50"
+                  "overflow-hidden transition-all",
+                  isSelected && "ring-1 ring-violet-300"
                 )}
               >
                 {/* Action Header */}
@@ -530,9 +537,9 @@ export default function ApprovalQueue({
                         aria-label={isSelected ? "Deselect action" : "Select action"}
                       >
                         {isSelected ? (
-                          <CheckSquare className="h-5 w-5 text-violet-400" />
+                          <CheckSquare className="h-5 w-5 text-violet-600" />
                         ) : (
-                          <Square className="h-5 w-5 text-gray-500 hover:text-gray-300" />
+                          <Square className="h-5 w-5 text-muted-foreground hover:text-foreground" />
                         )}
                       </button>
                     )}
@@ -550,14 +557,16 @@ export default function ApprovalQueue({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-white truncate">
+                        <span className="font-medium truncate">
                           {action.actionType}
                         </span>
                         <Badge
                           className={cn(
                             riskConfig.bgColor,
                             riskConfig.color,
-                            "border-0 text-xs"
+                            "border",
+                            riskConfig.borderColor,
+                            "text-xs"
                           )}
                         >
                           {riskConfig.label}
@@ -566,18 +575,20 @@ export default function ApprovalQueue({
                           className={cn(
                             status.bgColor,
                             status.color,
-                            "border-0 text-xs"
+                            "border",
+                            status.borderColor,
+                            "text-xs"
                           )}
                         >
                           {status.label}
                         </Badge>
                       </div>
 
-                      <p className="text-sm text-gray-300 mt-1 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {action.description}
                       </p>
 
-                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500">
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
                         {action.agentName && (
                           <span className="flex items-center gap-1">
                             <Bot className="h-3 w-3" />
@@ -601,8 +612,8 @@ export default function ApprovalQueue({
                             className={cn(
                               "flex items-center gap-1",
                               expirationText === "Expired"
-                                ? "text-red-400"
-                                : "text-yellow-400"
+                                ? "text-red-600"
+                                : "text-yellow-600"
                             )}
                           >
                             <AlertTriangle className="h-3 w-3" />
@@ -634,7 +645,7 @@ export default function ApprovalQueue({
                             variant="outline"
                             onClick={() => processApproval(action.id, false)}
                             disabled={isProcessing}
-                            className="border-red-500/50 text-red-400 hover:bg-red-500/10"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
                             aria-label="Reject action"
                           >
                             {isProcessing ? (
@@ -649,7 +660,6 @@ export default function ApprovalQueue({
                         size="sm"
                         variant="ghost"
                         onClick={() => toggleExpand(action.id)}
-                        className="text-gray-400 hover:text-white"
                         aria-label={isExpanded ? "Collapse details" : "Expand details"}
                         aria-expanded={isExpanded}
                       >
@@ -665,14 +675,14 @@ export default function ApprovalQueue({
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-white/5 pt-3 mt-2">
+                  <div className="px-4 pb-4 border-t pt-3 mt-2">
                     {/* Risk Reasons */}
                     {action.riskReasons && action.riskReasons.length > 0 && (
                       <div className="mb-3">
-                        <p className="text-xs font-medium text-gray-400 mb-1">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
                           Risk Factors:
                         </p>
-                        <ul className="list-disc list-inside text-xs text-gray-500 space-y-0.5">
+                        <ul className="list-disc list-inside text-xs text-muted-foreground space-y-0.5">
                           {action.riskReasons.map((reason, i) => (
                             <li key={i}>{reason}</li>
                           ))}
@@ -684,10 +694,10 @@ export default function ApprovalQueue({
                     {action.actionData &&
                       Object.keys(action.actionData).length > 0 && (
                         <div className="mb-3">
-                          <p className="text-xs font-medium text-gray-400 mb-1">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">
                             Action Data:
                           </p>
-                          <pre className="text-xs text-gray-300 bg-gray-800/50 p-2 rounded overflow-x-auto max-h-32">
+                          <pre className="text-xs bg-gray-50 p-2 rounded overflow-x-auto max-h-32 border">
                             {JSON.stringify(action.actionData, null, 2)}
                           </pre>
                         </div>
@@ -695,7 +705,7 @@ export default function ApprovalQueue({
 
                     {/* Review Info (for processed actions) */}
                     {action.reviewedBy && (
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         <p>
                           Reviewed by: {action.reviewerName || action.reviewedBy}
                         </p>
@@ -716,7 +726,7 @@ export default function ApprovalQueue({
                       <div className="mt-3 flex items-center gap-2">
                         <Input
                           placeholder="Add review notes..."
-                          className="flex-1 h-8 text-sm bg-gray-800 border-gray-700 text-white"
+                          className="flex-1 h-8 text-sm"
                           onKeyDown={(e) => {
                             if (e.key === "Enter") {
                               const value = e.currentTarget.value;
@@ -726,7 +736,7 @@ export default function ApprovalQueue({
                           }}
                           aria-label="Review notes for this action"
                         />
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           Press Enter to approve with notes
                         </span>
                       </div>
@@ -741,4 +751,3 @@ export default function ApprovalQueue({
     </div>
   );
 }
-

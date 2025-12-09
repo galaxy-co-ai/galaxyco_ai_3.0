@@ -20,7 +20,6 @@ import {
   Pause,
   Trash2,
   Settings,
-  Clock,
   Zap,
   Calendar,
   Bot,
@@ -28,8 +27,6 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -37,43 +34,47 @@ import { formatDistanceToNow } from "date-fns";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-// Trigger type configuration
+// Trigger type configuration - light theme
 const triggerConfig: Record<
   string,
-  { icon: React.ReactNode; label: string; color: string; bgColor: string }
+  { icon: React.ReactNode; label: string; color: string; bgColor: string; borderColor: string }
 > = {
   manual: {
     icon: <Play className="h-4 w-4" />,
     label: "Manual",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/20",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
   },
   event: {
     icon: <Zap className="h-4 w-4" />,
     label: "Event",
-    color: "text-purple-400",
-    bgColor: "bg-purple-500/20",
+    color: "text-purple-700",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
   },
   schedule: {
     icon: <Calendar className="h-4 w-4" />,
     label: "Scheduled",
-    color: "text-green-400",
-    bgColor: "bg-green-500/20",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+    borderColor: "border-green-200",
   },
   agent_request: {
     icon: <Bot className="h-4 w-4" />,
     label: "Agent Request",
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/20",
+    color: "text-orange-700",
+    bgColor: "bg-orange-50",
+    borderColor: "border-orange-200",
   },
 };
 
-// Status configuration
-const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
-  active: { label: "Active", color: "text-green-400", bgColor: "bg-green-500/20" },
-  paused: { label: "Paused", color: "text-yellow-400", bgColor: "bg-yellow-500/20" },
-  draft: { label: "Draft", color: "text-gray-400", bgColor: "bg-gray-500/20" },
-  archived: { label: "Archived", color: "text-gray-500", bgColor: "bg-gray-500/20" },
+// Status configuration - light theme
+const statusConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  active: { label: "Active", color: "text-green-700", bgColor: "bg-green-50", borderColor: "border-green-200" },
+  paused: { label: "Paused", color: "text-yellow-700", bgColor: "bg-yellow-50", borderColor: "border-yellow-200" },
+  draft: { label: "Draft", color: "text-gray-600", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
+  archived: { label: "Archived", color: "text-gray-500", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
 };
 
 interface WorkflowItem {
@@ -287,72 +288,89 @@ export default function WorkflowsListClient({
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+    <div className="flex h-full flex-col bg-gray-50/50">
       {/* Header */}
-      <div className="border-b border-white/5 bg-gray-950/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Link href="/orchestration">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white"
-                  aria-label="Back to orchestration dashboard"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-              </Link>
+      <div className="border-b bg-background px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
+          <div className="flex items-center gap-4">
+            <Link href="/orchestration">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Back to orchestration dashboard"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <div className="flex items-center gap-3">
+              <Workflow 
+                className="w-7 h-7"
+                style={{
+                  stroke: 'url(#icon-gradient-workflows)',
+                  strokeWidth: 2,
+                  filter: 'drop-shadow(0 2px 4px rgba(147, 51, 234, 0.15))'
+                }}
+              />
+              <svg width="0" height="0" className="absolute">
+                <defs>
+                  <linearGradient id="icon-gradient-workflows" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9333ea" />
+                    <stop offset="100%" stopColor="#3b82f6" />
+                  </linearGradient>
+                </defs>
+              </svg>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
-                  <Workflow className="h-8 w-8 text-purple-400" />
-                  <span className="tracking-wide">
-                    <span className="hidden sm:inline">W O R K F L O W S</span>
-                    <span className="sm:hidden">WORKFLOWS</span>
-                  </span>
+                <h1 
+                  className="branded-page-title text-2xl uppercase"
+                  style={{ 
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                  }}
+                >
+                  <span className="hidden sm:inline">W O R K F L O W S</span>
+                  <span className="sm:hidden">WORKFLOWS</span>
                 </h1>
-                <p className="text-gray-400 mt-1 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Build and manage multi-agent workflows
                 </p>
               </div>
             </div>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              aria-label="Create new workflow"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Workflow
-            </Button>
           </div>
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+            aria-label="Create new workflow"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Workflow
+          </Button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      <div className="flex-1 overflow-auto px-6 py-6 space-y-6">
         {/* Filters */}
-        <Card className="p-4 bg-gray-900/50 border-white/10">
+        <Card className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search workflows..."
-                className="pl-10 bg-gray-800 border-gray-700 text-white"
+                className="pl-10"
                 aria-label="Search workflows"
               />
             </div>
 
             {/* Trigger Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
+              <Filter className="h-4 w-4 text-muted-foreground" />
               <select
                 value={triggerFilter}
                 onChange={(e) => setTriggerFilter(e.target.value)}
-                className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                 aria-label="Filter by trigger type"
               >
                 <option value="all">All Triggers</option>
@@ -368,7 +386,7 @@ export default function WorkflowsListClient({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               aria-label="Filter by status"
             >
               <option value="all">All Status</option>
@@ -384,7 +402,6 @@ export default function WorkflowsListClient({
               variant="ghost"
               size="sm"
               onClick={() => mutate()}
-              className="text-gray-400 hover:text-white"
               aria-label="Refresh workflows list"
             >
               <RefreshCw className="h-4 w-4" />
@@ -400,10 +417,10 @@ export default function WorkflowsListClient({
             ))}
           </div>
         ) : filteredWorkflows.length === 0 ? (
-          <Card className="p-12 bg-gray-900/50 border-white/10 text-center">
-            <Workflow className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Workflows Found</h3>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+          <Card className="p-12 text-center">
+            <Workflow className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Workflows Found</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               {searchQuery || triggerFilter !== "all" || statusFilter !== "all"
                 ? "No workflows match your search criteria. Try adjusting your filters."
                 : "Create your first workflow to chain agents together for complex automation."}
@@ -428,8 +445,8 @@ export default function WorkflowsListClient({
                 <Card
                   key={workflow.id}
                   className={cn(
-                    "bg-gray-900/50 border-white/10 transition-all duration-200",
-                    "hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5"
+                    "transition-all duration-200",
+                    "hover:border-purple-300 hover:shadow-md"
                   )}
                 >
                   {/* Card Header */}
@@ -440,15 +457,15 @@ export default function WorkflowsListClient({
                           <span className={trigger.color}>{trigger.icon}</span>
                         </div>
                         <div>
-                          <h3 className="font-semibold text-white">{workflow.name}</h3>
+                          <h3 className="font-semibold">{workflow.name}</h3>
                           <div className="flex items-center gap-2 mt-0.5">
                             <Badge
-                              className={cn(trigger.bgColor, trigger.color, "border-0 text-xs")}
+                              className={cn(trigger.bgColor, trigger.color, "border", trigger.borderColor, "text-xs")}
                             >
                               {trigger.label}
                             </Badge>
                             <Badge
-                              className={cn(status.bgColor, status.color, "border-0 text-xs")}
+                              className={cn(status.bgColor, status.color, "border", status.borderColor, "text-xs")}
                             >
                               {status.label}
                             </Badge>
@@ -459,7 +476,6 @@ export default function WorkflowsListClient({
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleExpand(workflow.id)}
-                        className="text-gray-400 hover:text-white"
                         aria-expanded={isExpanded}
                         aria-label={isExpanded ? "Collapse details" : "Expand details"}
                       >
@@ -473,13 +489,13 @@ export default function WorkflowsListClient({
 
                     {/* Description */}
                     {workflow.description && (
-                      <p className="text-sm text-gray-400 mt-3 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
                         {workflow.description}
                       </p>
                     )}
 
                     {/* Stats */}
-                    <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+                    <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Workflow className="h-4 w-4" />
                         {workflow.stepCount} steps
@@ -495,9 +511,9 @@ export default function WorkflowsListClient({
 
                   {/* Expanded Content */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-white/5 pt-3 space-y-3">
+                    <div className="px-4 pb-4 border-t pt-3 space-y-3">
                       {/* Last Updated */}
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Updated {formatDistanceToNow(new Date(workflow.updatedAt), { addSuffix: true })}
                       </p>
 
@@ -507,7 +523,6 @@ export default function WorkflowsListClient({
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
                           >
                             <Settings className="h-3 w-3 mr-1" />
                             Edit
@@ -519,7 +534,7 @@ export default function WorkflowsListClient({
                             variant="outline"
                             onClick={() => updateWorkflowStatus(workflow.id, "paused")}
                             disabled={isProcessing}
-                            className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                            className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                           >
                             <Pause className="h-3 w-3 mr-1" />
                             Pause
@@ -530,7 +545,7 @@ export default function WorkflowsListClient({
                             variant="outline"
                             onClick={() => updateWorkflowStatus(workflow.id, "active")}
                             disabled={isProcessing}
-                            className="border-green-500/50 text-green-400 hover:bg-green-500/10"
+                            className="border-green-300 text-green-700 hover:bg-green-50"
                           >
                             <Play className="h-3 w-3 mr-1" />
                             Activate
@@ -541,7 +556,7 @@ export default function WorkflowsListClient({
                           variant="outline"
                           onClick={() => executeWorkflow(workflow.id)}
                           disabled={isProcessing || workflow.status !== "active"}
-                          className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                          className="border-purple-300 text-purple-700 hover:bg-purple-50"
                         >
                           {isProcessing ? (
                             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
@@ -555,7 +570,7 @@ export default function WorkflowsListClient({
                           variant="ghost"
                           onClick={() => deleteWorkflow(workflow.id)}
                           disabled={isProcessing}
-                          className="text-red-400 hover:bg-red-500/10"
+                          className="text-red-600 hover:bg-red-50"
                           aria-label="Delete workflow"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -565,7 +580,7 @@ export default function WorkflowsListClient({
                       {/* View Details Link */}
                       <Link
                         href={`/orchestration/workflows/${workflow.id}`}
-                        className="flex items-center text-sm text-purple-400 hover:text-purple-300"
+                        className="flex items-center text-sm text-purple-600 hover:text-purple-700"
                       >
                         View workflow details
                         <ArrowRight className="h-3 w-3 ml-1" />
@@ -580,26 +595,26 @@ export default function WorkflowsListClient({
 
         {/* Workflow Stats Summary */}
         {workflows.length > 0 && (
-          <Card className="p-4 bg-gray-900/50 border-white/10">
+          <Card className="p-4">
             <div className="flex flex-wrap items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-400" />
-                <span className="text-gray-400">Active:</span>
-                <span className="text-white font-medium">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-muted-foreground">Active:</span>
+                <span className="font-medium">
                   {workflows.filter((w: WorkflowItem) => w.status === "active").length}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-yellow-400" />
-                <span className="text-gray-400">Paused:</span>
-                <span className="text-white font-medium">
+                <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                <span className="text-muted-foreground">Paused:</span>
+                <span className="font-medium">
                   {workflows.filter((w: WorkflowItem) => w.status === "paused").length}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-gray-400" />
-                <span className="text-gray-400">Total:</span>
-                <span className="text-white font-medium">{workflows.length}</span>
+                <span className="text-muted-foreground">Total:</span>
+                <span className="font-medium">{workflows.length}</span>
               </div>
             </div>
           </Card>
@@ -609,11 +624,11 @@ export default function WorkflowsListClient({
       {/* Create Workflow Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <Card className="w-full max-w-md p-6 bg-gray-900 border-white/10">
-            <h3 className="text-lg font-semibold text-white mb-4">Create New Workflow</h3>
+          <Card className="w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold mb-4">Create New Workflow</h3>
             <div className="space-y-4">
               <div>
-                <label htmlFor="workflow-name" className="block text-sm text-gray-400 mb-1">
+                <label htmlFor="workflow-name" className="block text-sm text-muted-foreground mb-1">
                   Workflow Name
                 </label>
                 <Input
@@ -621,11 +636,10 @@ export default function WorkflowsListClient({
                   value={newWorkflowName}
                   onChange={(e) => setNewWorkflowName(e.target.value)}
                   placeholder="e.g., Lead Qualification Pipeline"
-                  className="bg-gray-800 border-gray-700 text-white"
                 />
               </div>
               <div>
-                <label htmlFor="workflow-description" className="block text-sm text-gray-400 mb-1">
+                <label htmlFor="workflow-description" className="block text-sm text-muted-foreground mb-1">
                   Description (optional)
                 </label>
                 <textarea
@@ -633,14 +647,13 @@ export default function WorkflowsListClient({
                   value={newWorkflowDescription}
                   onChange={(e) => setNewWorkflowDescription(e.target.value)}
                   placeholder="What does this workflow do?"
-                  className="w-full h-20 p-3 rounded-lg bg-gray-800 border border-gray-700 text-white resize-none"
+                  className="w-full h-20 p-3 rounded-lg border bg-background resize-none"
                 />
               </div>
               <div className="flex gap-2 justify-end">
                 <Button
                   variant="outline"
                   onClick={() => setShowCreateModal(false)}
-                  className="border-gray-700 text-gray-300"
                 >
                   Cancel
                 </Button>
@@ -664,4 +677,3 @@ export default function WorkflowsListClient({
     </div>
   );
 }
-

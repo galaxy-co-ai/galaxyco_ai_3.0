@@ -22,41 +22,35 @@ import {
   Trash2,
   Settings,
   Users,
-  CheckCircle2,
-  XCircle,
-  Clock,
   ArrowRight,
   ChevronDown,
   ChevronUp,
-  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
 import TeamCreationWizard from "@/components/agents/TeamCreationWizard";
-import type { AgentDepartment } from "@/lib/orchestration/types";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-// Department configuration
+// Department configuration - light theme colors
 const departmentConfig: Record<
   string,
-  { icon: string; label: string; color: string; bgColor: string }
+  { icon: string; label: string; color: string; bgColor: string; borderColor: string }
 > = {
-  sales: { icon: "💰", label: "Sales", color: "text-emerald-600", bgColor: "bg-emerald-50" },
-  marketing: { icon: "📢", label: "Marketing", color: "text-blue-600", bgColor: "bg-blue-50" },
-  support: { icon: "🎧", label: "Support", color: "text-purple-600", bgColor: "bg-purple-50" },
-  operations: { icon: "⚙️", label: "Operations", color: "text-amber-600", bgColor: "bg-amber-50" },
-  finance: { icon: "💳", label: "Finance", color: "text-teal-600", bgColor: "bg-teal-50" },
-  product: { icon: "🚀", label: "Product", color: "text-indigo-600", bgColor: "bg-indigo-50" },
-  general: { icon: "🤖", label: "General", color: "text-gray-600", bgColor: "bg-gray-50" },
+  sales: { icon: "💰", label: "Sales", color: "text-emerald-700", bgColor: "bg-emerald-50", borderColor: "border-emerald-200" },
+  marketing: { icon: "📢", label: "Marketing", color: "text-blue-700", bgColor: "bg-blue-50", borderColor: "border-blue-200" },
+  support: { icon: "🎧", label: "Support", color: "text-purple-700", bgColor: "bg-purple-50", borderColor: "border-purple-200" },
+  operations: { icon: "⚙️", label: "Operations", color: "text-amber-700", bgColor: "bg-amber-50", borderColor: "border-amber-200" },
+  finance: { icon: "💳", label: "Finance", color: "text-teal-700", bgColor: "bg-teal-50", borderColor: "border-teal-200" },
+  product: { icon: "🚀", label: "Product", color: "text-indigo-700", bgColor: "bg-indigo-50", borderColor: "border-indigo-200" },
+  general: { icon: "🤖", label: "General", color: "text-gray-700", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
 };
 
-// Status configuration
-const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
-  active: { label: "Active", color: "text-green-600", bgColor: "bg-green-500/20" },
-  paused: { label: "Paused", color: "text-yellow-600", bgColor: "bg-yellow-500/20" },
-  archived: { label: "Archived", color: "text-gray-500", bgColor: "bg-gray-500/20" },
+// Status configuration - light theme colors
+const statusConfig: Record<string, { label: string; color: string; bgColor: string; borderColor: string }> = {
+  active: { label: "Active", color: "text-green-700", bgColor: "bg-green-50", borderColor: "border-green-200" },
+  paused: { label: "Paused", color: "text-yellow-700", bgColor: "bg-yellow-50", borderColor: "border-yellow-200" },
+  archived: { label: "Archived", color: "text-gray-600", bgColor: "bg-gray-50", borderColor: "border-gray-200" },
 };
 
 interface Team {
@@ -239,72 +233,89 @@ export default function TeamsListClient({
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
+    <div className="flex h-full flex-col bg-gray-50/50">
       {/* Header */}
-      <div className="border-b border-white/5 bg-gray-950/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Link href="/orchestration">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-400 hover:text-white"
-                  aria-label="Back to orchestration dashboard"
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-              </Link>
+      <div className="border-b bg-background px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
+          <div className="flex items-center gap-4">
+            <Link href="/orchestration">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Back to orchestration dashboard"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back
+              </Button>
+            </Link>
+            <div className="flex items-center gap-3">
+              <UsersRound 
+                className="w-7 h-7"
+                style={{
+                  stroke: 'url(#icon-gradient-teams)',
+                  strokeWidth: 2,
+                  filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.15))'
+                }}
+              />
+              <svg width="0" height="0" className="absolute">
+                <defs>
+                  <linearGradient id="icon-gradient-teams" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+              </svg>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
-                  <UsersRound className="h-8 w-8 text-blue-400" />
-                  <span className="tracking-wide">
-                    <span className="hidden sm:inline">A G E N T &nbsp; T E A M S</span>
-                    <span className="sm:hidden">AGENT TEAMS</span>
-                  </span>
+                <h1 
+                  className="branded-page-title text-2xl uppercase"
+                  style={{ 
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                  }}
+                >
+                  <span className="hidden sm:inline">A G E N T &nbsp; T E A M S</span>
+                  <span className="sm:hidden">AGENT TEAMS</span>
                 </h1>
-                <p className="text-gray-400 mt-1 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Create and manage AI agent teams for department automation
                 </p>
               </div>
             </div>
-            <Button
-              onClick={() => setShowWizard(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              aria-label="Create new team"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Team
-            </Button>
           </div>
+          <Button
+            onClick={() => setShowWizard(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            aria-label="Create new team"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Team
+          </Button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      <div className="flex-1 overflow-auto px-6 py-6 space-y-6">
         {/* Filters */}
-        <Card className="p-4 bg-gray-900/50 border-white/10">
+        <Card className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search teams..."
-                className="pl-10 bg-gray-800 border-gray-700 text-white"
+                className="pl-10"
                 aria-label="Search teams"
               />
             </div>
 
             {/* Department Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
+              <Filter className="h-4 w-4 text-muted-foreground" />
               <select
                 value={departmentFilter}
                 onChange={(e) => setDepartmentFilter(e.target.value)}
-                className="px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Filter by department"
               >
                 <option value="all">All Departments</option>
@@ -321,7 +332,6 @@ export default function TeamsListClient({
               variant="ghost"
               size="sm"
               onClick={() => mutate()}
-              className="text-gray-400 hover:text-white"
               aria-label="Refresh teams list"
             >
               <RefreshCw className="h-4 w-4" />
@@ -337,10 +347,10 @@ export default function TeamsListClient({
             ))}
           </div>
         ) : filteredTeams.length === 0 ? (
-          <Card className="p-12 bg-gray-900/50 border-white/10 text-center">
-            <UsersRound className="h-16 w-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No Teams Found</h3>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+          <Card className="p-12 text-center">
+            <UsersRound className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Teams Found</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               {searchQuery || departmentFilter !== "all"
                 ? "No teams match your search criteria. Try adjusting your filters."
                 : "Create your first agent team to coordinate AI agents for department-level automation."}
@@ -366,8 +376,8 @@ export default function TeamsListClient({
                 <Card
                   key={team.id}
                   className={cn(
-                    "bg-gray-900/50 border-white/10 transition-all duration-200",
-                    "hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/5"
+                    "transition-all duration-200",
+                    "hover:border-blue-300 hover:shadow-md"
                   )}
                 >
                   {/* Card Header */}
@@ -384,13 +394,15 @@ export default function TeamsListClient({
                           {dept.icon}
                         </div>
                         <div>
-                          <h3 className="font-semibold text-white">{team.name}</h3>
+                          <h3 className="font-semibold">{team.name}</h3>
                           <div className="flex items-center gap-2 mt-0.5">
                             <Badge
                               className={cn(
                                 dept.bgColor,
                                 dept.color,
-                                "border-0 text-xs"
+                                "border",
+                                dept.borderColor,
+                                "text-xs"
                               )}
                             >
                               {dept.label}
@@ -399,7 +411,9 @@ export default function TeamsListClient({
                               className={cn(
                                 status.bgColor,
                                 status.color,
-                                "border-0 text-xs"
+                                "border",
+                                status.borderColor,
+                                "text-xs"
                               )}
                             >
                               {status.label}
@@ -411,7 +425,6 @@ export default function TeamsListClient({
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleExpand(team.id)}
-                        className="text-gray-400 hover:text-white"
                         aria-expanded={isExpanded}
                         aria-label={isExpanded ? "Collapse details" : "Expand details"}
                       >
@@ -425,13 +438,13 @@ export default function TeamsListClient({
 
                     {/* Description */}
                     {team.description && (
-                      <p className="text-sm text-gray-400 mt-3 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
                         {team.description}
                       </p>
                     )}
 
                     {/* Stats */}
-                    <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+                    <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
                         {team.memberCount} agents
@@ -447,14 +460,13 @@ export default function TeamsListClient({
 
                   {/* Expanded Content */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-white/5 pt-3 space-y-3">
+                    <div className="px-4 pb-4 border-t pt-3 space-y-3">
                       {/* Quick Actions */}
                       <div className="flex flex-wrap gap-2">
                         <Link href={`/orchestration/teams/${team.id}`}>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
                           >
                             <Settings className="h-3 w-3 mr-1" />
                             Manage
@@ -466,7 +478,7 @@ export default function TeamsListClient({
                             variant="outline"
                             onClick={() => updateTeamStatus(team.id, "paused")}
                             disabled={isProcessing}
-                            className="border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10"
+                            className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
                           >
                             <Pause className="h-3 w-3 mr-1" />
                             Pause
@@ -477,7 +489,7 @@ export default function TeamsListClient({
                             variant="outline"
                             onClick={() => updateTeamStatus(team.id, "active")}
                             disabled={isProcessing}
-                            className="border-green-500/50 text-green-400 hover:bg-green-500/10"
+                            className="border-green-300 text-green-700 hover:bg-green-50"
                           >
                             <Play className="h-3 w-3 mr-1" />
                             Activate
@@ -488,7 +500,7 @@ export default function TeamsListClient({
                           variant="outline"
                           onClick={() => runTeam(team.id, "Complete assigned tasks")}
                           disabled={isProcessing || team.status !== "active"}
-                          className="border-blue-500/50 text-blue-400 hover:bg-blue-500/10"
+                          className="border-blue-300 text-blue-700 hover:bg-blue-50"
                         >
                           <Play className="h-3 w-3 mr-1" />
                           Run
@@ -498,7 +510,7 @@ export default function TeamsListClient({
                           variant="ghost"
                           onClick={() => deleteTeam(team.id)}
                           disabled={isProcessing}
-                          className="text-red-400 hover:bg-red-500/10"
+                          className="text-red-600 hover:bg-red-50"
                           aria-label="Delete team"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -508,7 +520,7 @@ export default function TeamsListClient({
                       {/* View Details Link */}
                       <Link
                         href={`/orchestration/teams/${team.id}`}
-                        className="flex items-center text-sm text-blue-400 hover:text-blue-300"
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-700"
                       >
                         View team details
                         <ArrowRight className="h-3 w-3 ml-1" />
@@ -523,26 +535,26 @@ export default function TeamsListClient({
 
         {/* Team Stats Summary */}
         {teams.length > 0 && (
-          <Card className="p-4 bg-gray-900/50 border-white/10">
+          <Card className="p-4">
             <div className="flex flex-wrap items-center gap-6 text-sm">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-400" />
-                <span className="text-gray-400">Active:</span>
-                <span className="text-white font-medium">
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-muted-foreground">Active:</span>
+                <span className="font-medium">
                   {teams.filter((t: Team) => t.status === "active").length}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-yellow-400" />
-                <span className="text-gray-400">Paused:</span>
-                <span className="text-white font-medium">
+                <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                <span className="text-muted-foreground">Paused:</span>
+                <span className="font-medium">
                   {teams.filter((t: Team) => t.status === "paused").length}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-gray-400" />
-                <span className="text-gray-400">Total:</span>
-                <span className="text-white font-medium">{teams.length}</span>
+                <span className="text-muted-foreground">Total:</span>
+                <span className="font-medium">{teams.length}</span>
               </div>
             </div>
           </Card>
@@ -564,4 +576,3 @@ export default function TeamsListClient({
     </div>
   );
 }
-

@@ -17,9 +17,7 @@ import {
   Loader2,
   Play,
   RefreshCw,
-  Filter,
   Sparkles,
-  Clock,
   Zap,
   X,
 } from "lucide-react";
@@ -172,7 +170,6 @@ export default function AgentWorkflowsTab({
   // Create workflow from template
   const handleCreateFromTemplate = useCallback(
     async (template: WorkflowTemplate) => {
-      // Check if we have agents for the required types
       const agentMapping: Record<string, string> = {};
       const missingTypes: string[] = [];
 
@@ -194,7 +191,6 @@ export default function AgentWorkflowsTab({
         return;
       }
 
-      // Convert template steps to workflow steps
       const steps: WorkflowStep[] = template.steps.map((stepTemplate) => ({
         id: stepTemplate.id,
         name: stepTemplate.name,
@@ -380,7 +376,7 @@ export default function AgentWorkflowsTab({
         <Button
           variant="ghost"
           onClick={() => setActiveExecutionId(null)}
-          className="mb-4 text-gray-400 hover:text-white"
+          className="mb-4"
         >
           ← Back to Workflows
         </Button>
@@ -404,8 +400,8 @@ export default function AgentWorkflowsTab({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-white">Workflows</h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <h2 className="text-xl font-semibold">Workflows</h2>
+            <p className="text-sm text-muted-foreground mt-1">
               Multi-agent automation pipelines
             </p>
           </div>
@@ -413,7 +409,7 @@ export default function AgentWorkflowsTab({
             <Button
               variant="outline"
               onClick={() => setShowTemplates(true)}
-              className="border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+              className="border-violet-300 text-violet-700 hover:bg-violet-50"
             >
               <Sparkles className="h-4 w-4 mr-2" />
               Templates
@@ -430,51 +426,51 @@ export default function AgentWorkflowsTab({
 
         {/* Stats */}
         <div className="grid grid-cols-4 gap-4 mb-6">
-          <Card className="p-4 bg-gray-900/50 border-white/10">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-violet-500/20">
-                <Workflow className="h-5 w-5 text-violet-400" />
+              <div className="p-2 rounded-lg bg-violet-100">
+                <Workflow className="h-5 w-5 text-violet-600" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-white">{stats.total}</p>
-                <p className="text-xs text-gray-400">Total Workflows</p>
+                <p className="text-2xl font-semibold">{stats.total}</p>
+                <p className="text-xs text-muted-foreground">Total Workflows</p>
               </div>
             </div>
           </Card>
-          <Card className="p-4 bg-gray-900/50 border-white/10">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-500/20">
-                <CheckCircle2 className="h-5 w-5 text-green-400" />
+              <div className="p-2 rounded-lg bg-green-100">
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-white">{stats.active}</p>
-                <p className="text-xs text-gray-400">Active</p>
+                <p className="text-2xl font-semibold">{stats.active}</p>
+                <p className="text-xs text-muted-foreground">Active</p>
               </div>
             </div>
           </Card>
-          <Card className="p-4 bg-gray-900/50 border-white/10">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-500/20">
-                <Activity className="h-5 w-5 text-blue-400" />
+              <div className="p-2 rounded-lg bg-blue-100">
+                <Activity className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-white">
+                <p className="text-2xl font-semibold">
                   {stats.totalExecutions}
                 </p>
-                <p className="text-xs text-gray-400">Total Runs</p>
+                <p className="text-xs text-muted-foreground">Total Runs</p>
               </div>
             </div>
           </Card>
-          <Card className="p-4 bg-gray-900/50 border-white/10">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-emerald-500/20">
-                <Zap className="h-5 w-5 text-emerald-400" />
+              <div className="p-2 rounded-lg bg-emerald-100">
+                <Zap className="h-5 w-5 text-emerald-600" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-white">
+                <p className="text-2xl font-semibold">
                   {stats.successRate}%
                 </p>
-                <p className="text-xs text-gray-400">Success Rate</p>
+                <p className="text-xs text-muted-foreground">Success Rate</p>
               </div>
             </div>
           </Card>
@@ -483,12 +479,12 @@ export default function AgentWorkflowsTab({
         {/* Search and Filter */}
         <div className="flex items-center gap-4 mb-6">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search workflows..."
-              className="pl-10 bg-gray-900/50 border-white/10 text-white"
+              className="pl-10"
               aria-label="Search workflows"
             />
           </div>
@@ -502,7 +498,7 @@ export default function AgentWorkflowsTab({
                 className={cn(
                   categoryFilter === filter.value
                     ? "bg-violet-600 text-white"
-                    : "border-white/10 text-gray-400 hover:text-white"
+                    : ""
                 )}
               >
                 <span className="mr-1">{filter.icon}</span>
@@ -514,7 +510,6 @@ export default function AgentWorkflowsTab({
             variant="ghost"
             size="sm"
             onClick={() => mutateWorkflows()}
-            className="text-gray-400 hover:text-white"
             aria-label="Refresh"
           >
             <RefreshCw className="h-4 w-4" />
@@ -529,21 +524,21 @@ export default function AgentWorkflowsTab({
             ))}
           </div>
         ) : workflowsError ? (
-          <Card className="p-8 bg-gray-900/50 border-white/10 text-center">
-            <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <p className="text-gray-400">Failed to load workflows</p>
+          <Card className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <p className="text-muted-foreground">Failed to load workflows</p>
             <Button
               variant="outline"
               onClick={() => mutateWorkflows()}
-              className="mt-4 border-gray-600"
+              className="mt-4"
             >
               Retry
             </Button>
           </Card>
         ) : filteredWorkflows.length === 0 ? (
-          <Card className="p-8 bg-gray-900/50 border-white/10 text-center">
-            <Workflow className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 mb-4">
+          <Card className="p-8 text-center">
+            <Workflow className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground mb-4">
               {searchQuery || categoryFilter !== "all"
                 ? "No workflows match your search"
                 : "No workflows yet"}
@@ -552,7 +547,7 @@ export default function AgentWorkflowsTab({
               <Button
                 variant="outline"
                 onClick={() => setShowTemplates(true)}
-                className="border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                className="border-violet-300 text-violet-700 hover:bg-violet-50"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Use Template
@@ -595,12 +590,12 @@ export default function AgentWorkflowsTab({
 
       {/* Templates Modal */}
       {showTemplates && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-          <Card className="w-full max-w-3xl max-h-[80vh] overflow-y-auto bg-gray-900 border-white/10">
-            <div className="sticky top-0 bg-gray-900 p-4 border-b border-white/10 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <Card className="w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background p-4 border-b flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-white">Workflow Templates</h3>
-                <p className="text-sm text-gray-400">
+                <h3 className="font-semibold">Workflow Templates</h3>
+                <p className="text-sm text-muted-foreground">
                   Pre-built workflows ready to deploy
                 </p>
               </div>
@@ -608,7 +603,6 @@ export default function AgentWorkflowsTab({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowTemplates(false)}
-                className="text-gray-400 hover:text-white"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -617,24 +611,24 @@ export default function AgentWorkflowsTab({
               {workflowTemplates.map((template) => (
                 <Card
                   key={template.id}
-                  className="p-4 bg-gray-800/50 border-white/10 hover:border-violet-500/50 transition-colors"
+                  className="p-4 hover:border-violet-300 transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">{template.icon}</span>
-                        <h4 className="font-medium text-white">{template.name}</h4>
+                        <h4 className="font-medium">{template.name}</h4>
                         <Badge
                           variant="outline"
-                          className="border-violet-500/50 text-violet-400"
+                          className="border-violet-200 text-violet-700"
                         >
                           {template.department}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-400 mt-2">
+                      <p className="text-sm text-muted-foreground mt-2">
                         {template.description}
                       </p>
-                      <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
                         <span>{template.steps.length} steps</span>
                         <span>•</span>
                         <span>{template.estimatedDuration}</span>
@@ -644,7 +638,7 @@ export default function AgentWorkflowsTab({
                           <Badge
                             key={i}
                             variant="outline"
-                            className="text-xs border-gray-600 text-gray-400"
+                            className="text-xs"
                           >
                             {benefit}
                           </Badge>
@@ -668,14 +662,13 @@ export default function AgentWorkflowsTab({
 
       {/* Detail Panel */}
       {selectedWorkflow && !neptuneOpen && (
-        <div className="w-96 border-l border-white/10 bg-gray-900/30 p-4 overflow-y-auto hidden lg:block">
+        <div className="w-96 border-l bg-gray-50/50 p-4 overflow-y-auto hidden lg:block">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-white">Workflow Details</h3>
+            <h3 className="font-medium">Workflow Details</h3>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedWorkflowId(null)}
-              className="text-gray-400 hover:text-white"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -683,36 +676,36 @@ export default function AgentWorkflowsTab({
 
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-gray-500">Name</p>
-              <p className="text-white">{selectedWorkflow.name}</p>
+              <p className="text-xs text-muted-foreground">Name</p>
+              <p>{selectedWorkflow.name}</p>
             </div>
             {selectedWorkflow.description && (
               <div>
-                <p className="text-xs text-gray-500">Description</p>
-                <p className="text-gray-300 text-sm">
+                <p className="text-xs text-muted-foreground">Description</p>
+                <p className="text-sm">
                   {selectedWorkflow.description}
                 </p>
               </div>
             )}
             <div>
-              <p className="text-xs text-gray-500">Trigger</p>
-              <p className="text-white capitalize">{selectedWorkflow.triggerType}</p>
+              <p className="text-xs text-muted-foreground">Trigger</p>
+              <p className="capitalize">{selectedWorkflow.triggerType}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Steps</p>
+              <p className="text-xs text-muted-foreground">Steps</p>
               <div className="mt-2 space-y-2">
                 {(selectedWorkflow.steps as Array<{ id: string; name: string; action: string }>)?.map(
                   (step, index) => (
                     <div
                       key={step.id}
-                      className="flex items-center gap-2 p-2 bg-gray-800/50 rounded"
+                      className="flex items-center gap-2 p-2 bg-gray-100 rounded"
                     >
-                      <div className="w-5 h-5 rounded-full bg-violet-500/20 flex items-center justify-center text-xs text-violet-400">
+                      <div className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center text-xs text-violet-600">
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">{step.name}</p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-sm truncate">{step.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
                           {step.action}
                         </p>
                       </div>
@@ -722,7 +715,7 @@ export default function AgentWorkflowsTab({
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
+            <div className="pt-4 border-t">
               <Button
                 onClick={() => handleRunWorkflow(selectedWorkflow.id)}
                 disabled={
@@ -750,4 +743,3 @@ export default function AgentWorkflowsTab({
     </div>
   );
 }
-
