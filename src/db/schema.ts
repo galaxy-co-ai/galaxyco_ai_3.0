@@ -287,6 +287,12 @@ export const feedbackSentimentEnum = pgEnum('feedback_sentiment', [
   'very_positive',
 ]);
 
+// Document sharing enums
+export const sharePermissionEnum = pgEnum('share_permission', [
+  'view',
+  'comment',
+]);
+
 // Campaign recipient tracking enums
 export const campaignRecipientStatusEnum = pgEnum('campaign_recipient_status', [
   'pending',
@@ -4697,8 +4703,72 @@ export const blogCollectionsRelations = relations(blogCollections, ({ one, many 
 }));
 
 // ============================================================================
+// CREATOR - SHARED DOCUMENTS
+// ============================================================================
+
+export const sharedDocuments = pgTable(
+  'shared_documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Document reference
+    creatorItemId: uuid('creator_item_id')
+      .notNull()
+      .references(() => creatorItems.id, { onDelete: 'cascade' }),
+
+    // Share token (unique, used in public URL)
+    token: text('token').notNull().unique(),
+
+    // Permissions
+    permission: sharePermissionEnum('permission').notNull().default('view'),
+
+    // Security options
+    password: text('password'), // Hashed password if protected
+    expiresAt: timestamp('expires_at'), // Optional expiry
+
+    // Tracking
+    accessCount: integer('access_count').notNull().default(0),
+
+    // Relationships
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tokenIdx: uniqueIndex('shared_document_token_idx').on(table.token),
+    creatorItemIdx: index('shared_document_creator_item_idx').on(table.creatorItemId),
+    tenantIdx: index('shared_document_tenant_idx').on(table.workspaceId),
+    expiryIdx: index('shared_document_expiry_idx').on(table.expiresAt),
+  }),
+);
+
+// ============================================================================
 // CREATOR - RELATIONS
 // ============================================================================
+
+export const sharedDocumentsRelations = relations(sharedDocuments, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [sharedDocuments.workspaceId],
+    references: [workspaces.id],
+  }),
+  creatorItem: one(creatorItems, {
+    fields: [sharedDocuments.creatorItemId],
+    references: [creatorItems.id],
+  }),
+  createdByUser: one(users, {
+    fields: [sharedDocuments.createdBy],
+    references: [users.id],
+  }),
+}));
 
 export const creatorItemsRelations = relations(creatorItems, ({ one, many }) => ({
   workspace: one(workspaces, {

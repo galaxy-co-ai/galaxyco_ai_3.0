@@ -38,6 +38,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { type DocumentTypeConfig } from "./documentRequirements";
+import { ShareDocumentDialog } from "./ShareDocumentDialog";
 
 // Document section structure
 interface DocumentSection {
@@ -83,6 +84,8 @@ export default function DocumentPreview({
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showShareLinkDialog, setShowShareLinkDialog] = useState(false);
+  const [savedDocumentId, setSavedDocumentId] = useState<string | null>(null);
   const [saveTitle, setSaveTitle] = useState(""); // Custom title for save dialog
   
   // Gamma integration state
@@ -401,6 +404,7 @@ export default function DocumentPreview({
         title: titleToSave,
       };
       
+      setSavedDocumentId(data.item.id);
       onSaveToCollections(savedDocument);
       setIsSaving(false);
       setShowSaveDialog(false);
@@ -876,9 +880,17 @@ export default function DocumentPreview({
               <Download className="h-4 w-4 mr-2" />
               Download as Text File
             </Button>
-            <Button variant="outline" className="w-full justify-start" disabled>
+            <Button 
+              variant="outline" 
+              className="w-full justify-start" 
+              disabled={!savedDocumentId}
+              onClick={() => {
+                setShowShareDialog(false);
+                setShowShareLinkDialog(true);
+              }}
+            >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Get Shareable Link (Coming Soon)
+              {savedDocumentId ? 'Get Shareable Link' : 'Save First to Get Link'}
             </Button>
           </div>
 
@@ -889,6 +901,16 @@ export default function DocumentPreview({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Share Link Dialog */}
+      {savedDocumentId && (
+        <ShareDocumentDialog
+          open={showShareLinkDialog}
+          onOpenChange={setShowShareLinkDialog}
+          documentId={savedDocumentId}
+          documentTitle={document?.title || 'Untitled'}
+        />
+      )}
     </div>
   );
 }
