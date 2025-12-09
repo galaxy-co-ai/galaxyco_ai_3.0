@@ -5,9 +5,9 @@
 
 ---
 
-## 📝 Article Studio - Phase 3 Complete ✅
+## 📝 Article Studio - Phase 4 Complete ✅
 
-**December 9, 2025** - Article Studio Phases 1-3 complete with database schema, topic generation, brainstorming, layout templates, and outline editor.
+**December 9, 2025** - Article Studio Phases 1-4 complete with database schema, topic generation, brainstorming, layout templates, outline editor, and AI-assisted writing.
 
 ### Phase 1: Database Schema and Topic Bank ✅
 
@@ -80,15 +80,6 @@
 - `src/app/api/admin/ai/topics/generate/route.ts` - AI generation
 - `src/app/api/admin/blog-profile/route.ts` - Voice profile management
 - `src/scripts/seed.ts` - Voice profile seeding
-
-#### Remaining Phases:
-- Phase 3: Layout Templates and Outline Editor
-- Phase 4: AI-Assisted Writing (Tiptap extensions)
-- Phase 5: Source Verification System
-- Phase 6: Image Generation and Upload
-- Phase 7: Blog Intelligence (adaptive learning)
-- Phase 8: Pre-Publish Review
-- Phase 9: Final Integration and Testing
 
 ---
 
@@ -246,8 +237,92 @@
 - `src/components/admin/ArticleStudio/index.ts` - Export new components
 - `src/app/(app)/admin/content/new/page.tsx` - Use wizard instead of direct editor
 
+---
+
+### Phase 4: AI-Assisted Writing ✅
+
+**December 9, 2025** - AI writing capabilities integrated into the Tiptap editor with minimal UI.
+
+#### API Endpoints:
+
+**AI Continue Writing:**
+- ✅ `POST /api/admin/ai/continue` - Streaming AI continue from cursor
+  - Accepts content, cursorPosition, and article context
+  - Uses workspace voice profile for consistent style
+  - Returns SSE stream with progressive text generation
+  - Rate limited (30 req/min)
+
+**AI Rewrite:**
+- ✅ `POST /api/admin/ai/rewrite` - Rewrite text with specified mode
+  - 7 modes: improve, simplify, expand, shorten, rephrase, formal, casual
+  - Context-aware using article title, audience, and surrounding content
+  - Uses workspace voice profile (except formal/casual modes)
+  - Rate limited (40 req/min)
+
+#### Tiptap Extensions (`src/components/admin/TiptapEditor/extensions/`):
+
+**AIAutocomplete.ts:**
+- ✅ Commands: triggerAIAutocomplete, acceptAISuggestion, rejectAISuggestion
+- ✅ Keyboard shortcuts: Cmd/Ctrl+Enter to trigger, Tab to accept, Esc to dismiss
+- ✅ Ghost text decoration showing inline suggestions
+
+**AICommands.ts:**
+- ✅ Command palette trigger on `/` at line start or Cmd/Ctrl+J anywhere
+- ✅ Commands: openAICommandPalette, closeAICommandPalette
+- ✅ Keyboard navigation support
+
+**AISelectionMenu.ts:**
+- ✅ Floating menu on text selection
+- ✅ Commands: showAISelectionMenu, hideAISelectionMenu, getSelectedText
+- ✅ Auto-hide on Escape, Delete, Backspace, Enter
+
+#### UI Components (`src/components/admin/TiptapEditor/`):
+
+**AICommandPalette.tsx:**
+- ✅ 7 AI commands with icons and descriptions
+- ✅ Continue writing, Rephrase, Expand, Shorten, Find source, Suggest image, Brainstorm
+- ✅ Keyboard navigation (↑↓ to navigate, Enter to select, Esc to close)
+- ✅ Viewport-aware positioning
+- ✅ WCAG compliant with ARIA labels
+
+**AISelectionMenu.tsx:**
+- ✅ 4 action icons: Improve, Rephrase, Shorten, Source
+- ✅ Appears above text selection
+- ✅ Mobile-responsive (icons only on small screens)
+- ✅ Viewport-aware positioning
+
+**AIInlineSuggestion.tsx:**
+- ✅ Suggestion preview panel with loading state
+- ✅ Accept (Tab/button), Reject (Esc/button), Regenerate actions
+- ✅ Shows original text for rewrite mode (strikethrough)
+- ✅ Animated entrance with gradient header
+
+#### Enhanced TiptapEditor (`src/components/admin/TiptapEditor/index.tsx`):
+
+- ✅ Integrated all 3 AI extensions (optional via `enableAI` prop)
+- ✅ AI toolbar button with Sparkles icon (⌘J shortcut hint)
+- ✅ Article context support for voice-aware generation
+- ✅ Streaming response handling with abort support
+- ✅ Selection-based rewrite workflow
+- ✅ Toast notifications for user feedback
+- ✅ Placeholder for Phase 5 (Source) and Phase 6 (Image) commands
+
+#### Files Created:
+- `src/app/api/admin/ai/continue/route.ts` - Streaming continue API
+- `src/app/api/admin/ai/rewrite/route.ts` - Rewrite API with modes
+- `src/components/admin/TiptapEditor/extensions/AIAutocomplete.ts`
+- `src/components/admin/TiptapEditor/extensions/AICommands.ts`
+- `src/components/admin/TiptapEditor/extensions/AISelectionMenu.ts`
+- `src/components/admin/TiptapEditor/extensions/index.ts`
+- `src/components/admin/TiptapEditor/AICommandPalette.tsx`
+- `src/components/admin/TiptapEditor/AISelectionMenu.tsx`
+- `src/components/admin/TiptapEditor/AIInlineSuggestion.tsx`
+- `src/components/admin/TiptapEditor/index.tsx` - Enhanced editor with AI
+
+#### Files Deleted:
+- `src/components/admin/TiptapEditor.tsx` - Replaced by folder structure
+
 #### Remaining Phases:
-- Phase 4: AI-Assisted Writing (Tiptap extensions)
 - Phase 5: Source Verification System
 - Phase 6: Image Generation and Upload
 - Phase 7: Blog Intelligence (adaptive learning)

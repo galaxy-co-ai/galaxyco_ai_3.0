@@ -902,6 +902,8 @@ src/
 /api/admin/ai/outline                 POST         Generate outline from topic + layout
 /api/admin/ai/outline/section         POST         Regenerate section or get title variations
 /api/admin/blog-profile               GET/POST     Get/update workspace voice profile
+/api/admin/ai/continue                POST         Streaming AI continue writing from cursor
+/api/admin/ai/rewrite                 POST         Rewrite text (modes: improve|simplify|expand|shorten|rephrase|formal|casual)
 ```
 
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
