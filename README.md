@@ -50,6 +50,7 @@ This guide will walk you through:
 | **[ROADMAP.md](./ROADMAP.md)** | Visual timeline | Planning your work |
 | **[SITE_ASSESSMENT.md](./SITE_ASSESSMENT.md)** | Current state analysis | Understanding status |
 | **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** | API reference | Looking up endpoints |
+| **[ARTICLE_STUDIO_GUIDE.md](./ARTICLE_STUDIO_GUIDE.md)** | 📝 Article Studio user guide | Creating AI-assisted blog posts |
 | **[HANDOFF_REPORT.md](./HANDOFF_REPORT.md)** | Previous session notes | Understanding history |
 
 ---
