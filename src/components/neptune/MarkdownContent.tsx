@@ -3,7 +3,7 @@
 import * as React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Prism } from "prism-react-renderer";
+import { Highlight, themes } from "prism-react-renderer";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
@@ -92,14 +92,14 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
                       )}
                     </Button>
                   </div>
-                  <Prism
-                    language={language}
+                  <Highlight
+                    theme={themes.vsDark}
                     code={codeString}
-                    theme={undefined}
+                    language={language}
                   >
                     {({ className, style, tokens, getLineProps, getTokenProps }) => (
                       <pre
-                        className={cn(className, "!m-0 !bg-[#1e1e1e] p-4 overflow-x-auto")}
+                        className={cn(className, "!m-0 p-4 overflow-x-auto text-sm")}
                         style={style}
                       >
                         {tokens.map((line, i) => (
@@ -111,7 +111,7 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
                         ))}
                       </pre>
                     )}
-                  </Prism>
+                  </Highlight>
                 </div>
               );
             }
