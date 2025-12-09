@@ -175,6 +175,10 @@ Neptune is now a fully-featured, production-ready AI assistant with:
   - Verification emails now sent from `@galaxyco.ai`
   - **Google OAuth configured** with custom credentials for production
   - Account selector prompt enabled for multi-account users
+  - **Webhooks configured** for user & organization sync:
+    - `user.created`, `user.updated`, `user.deleted`
+    - `organization.created`, `organization.updated`, `organization.deleted`
+  - Webhook handler syncs Clerk data to database in real-time
 - 🚀 **Neptune 10-Point Enhancement** - Major feature upgrade:
   - **DALL-E Fix** - Image generation now available from dashboard (added to tools)
   - **User Text Color** - User messages now display in white for better readability
