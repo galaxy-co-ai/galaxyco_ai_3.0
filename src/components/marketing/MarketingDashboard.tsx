@@ -69,6 +69,7 @@ import CampaignCreateTab from "./CampaignCreateTab";
 import { logger } from "@/lib/logger";
 import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 import useSWR from 'swr';
+import { AddChannelDialog } from "./AddChannelDialog";
 
 // Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -147,6 +148,37 @@ export default function MarketingDashboard({
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [channelSearchQuery, setChannelSearchQuery] = useState("");
+  const [showAddChannelDialog, setShowAddChannelDialog] = useState(false);
+  
+  // Fetch channels from API
+  const { data: channelsData, mutate: mutateChannels } = useSWR<{
+    channels: Array<{
+      id: string;
+      name: string;
+      type: string;
+      status: string;
+      performance: number;
+      budget: number | null;
+      budgetDollars: number | null;
+      spentDollars: number;
+      impressions: number;
+      clicks: number;
+      conversions: number;
+      revenueDollars: number;
+    }>;
+    total: number;
+  }>('/api/marketing/channels', fetcher);
+  
+  // Use API channels if available, otherwise fall back to initial
+  const channels = channelsData?.channels.map(ch => ({
+    id: ch.id,
+    name: ch.name,
+    type: ch.type,
+    status: ch.status,
+    performance: ch.performance,
+    budget: ch.budgetDollars || 0,
+    reach: ch.impressions,
+  })) || initialChannels;
   const [selectedAnalyticsCampaign, setSelectedAnalyticsCampaign] = useState<Campaign | null>(null);
   const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState("");
   const [selectedAudience, setSelectedAudience] = useState<string>("high-value");
@@ -609,7 +641,7 @@ export default function MarketingDashboard({
   }, [initialContent, contentSearchQuery]);
 
   const filteredChannels = useMemo(() => {
-    let filtered = initialChannels;
+    let filtered = channels;
     if (channelSearchQuery) {
       const query = channelSearchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -619,7 +651,7 @@ export default function MarketingDashboard({
       );
     }
     return filtered;
-  }, [initialChannels, channelSearchQuery]);
+  }, [channels, channelSearchQuery]);
 
   const filteredAnalyticsCampaigns = useMemo(() => {
     let filtered = currentCampaigns;
@@ -2068,7 +2100,7 @@ Be creative, engaging, and write content that resonates!`;
                         </div>
                         <Button
                           size="icon"
-                          onClick={() => toast.info("Add channel dialog coming soon")}
+                          onClick={() => setShowAddChannelDialog(true)}
                           className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
                           aria-label="Add channel"
                         >
@@ -2150,7 +2182,11 @@ Be creative, engaging, and write content that resonates!`;
                           <p className="text-sm text-muted-foreground mb-4 max-w-[200px] mx-auto">
                             Link social media, email providers, and other platforms to distribute content.
                           </p>
-                          <Button size="sm" className="gap-2 bg-indigo-600 hover:bg-indigo-700">
+                          <Button 
+                            size="sm" 
+                            className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+                            onClick={() => setShowAddChannelDialog(true)}
+                          >
                             <Plus className="h-4 w-4" />
                             Add Channel
                           </Button>
@@ -2841,6 +2877,15 @@ Be creative, engaging, and write content that resonates!`;
           )}
         </AnimatePresence>
       </div>
+
+      {/* Add Channel Dialog */}
+      <AddChannelDialog
+        open={showAddChannelDialog}
+        onOpenChange={setShowAddChannelDialog}
+        onSuccess={() => {
+          mutateChannels();
+        }}
+      />
     </div>
   );
 }

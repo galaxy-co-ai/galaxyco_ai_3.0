@@ -159,6 +159,22 @@ export const campaignStatusEnum = pgEnum('campaign_status', [
   'paused',
   'completed',
 ]);
+
+// Marketing channel enums
+export const marketingChannelTypeEnum = pgEnum('marketing_channel_type', [
+  'email',
+  'social',
+  'ads',
+  'content',
+  'seo',
+  'affiliate',
+]);
+export const marketingChannelStatusEnum = pgEnum('marketing_channel_status', [
+  'active',
+  'paused',
+  'archived',
+]);
+
 export const prospectStageEnum = pgEnum('prospect_stage', [
   'new',
   'contacted',
@@ -2926,6 +2942,61 @@ export const expenses = pgTable(
 );
 
 // ============================================================================
+// BUSINESS - MARKETING CHANNELS
+// ============================================================================
+
+export const marketingChannels = pgTable(
+  'marketing_channels',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Channel info
+    name: text('name').notNull(),
+    type: marketingChannelTypeEnum('type').notNull(),
+    status: marketingChannelStatusEnum('status').notNull().default('active'),
+    description: text('description'),
+
+    // Configuration (platform-specific settings)
+    config: jsonb('config')
+      .$type<{
+        platformId?: string;
+        credentials?: Record<string, string>;
+        settings?: Record<string, unknown>;
+      }>()
+      .default({}),
+
+    // Budget and spending
+    budget: integer('budget'), // Monthly budget in cents
+    spent: integer('spent').default(0), // Current month spent in cents
+
+    // Performance metrics
+    impressions: integer('impressions').default(0),
+    clicks: integer('clicks').default(0),
+    conversions: integer('conversions').default(0),
+    revenue: integer('revenue').default(0), // In cents
+
+    // Relationships
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('marketing_channel_tenant_idx').on(table.workspaceId),
+    typeIdx: index('marketing_channel_type_idx').on(table.type),
+    statusIdx: index('marketing_channel_status_idx').on(table.status),
+  }),
+);
+
+// ============================================================================
 // BUSINESS - CAMPAIGNS
 // ============================================================================
 
@@ -4408,6 +4479,17 @@ export const campaignRecipientsRelations = relations(campaignRecipients, ({ one 
   prospect: one(prospects, {
     fields: [campaignRecipients.prospectId],
     references: [prospects.id],
+  }),
+}));
+
+export const marketingChannelsRelations = relations(marketingChannels, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [marketingChannels.workspaceId],
+    references: [workspaces.id],
+  }),
+  createdByUser: one(users, {
+    fields: [marketingChannels.createdBy],
+    references: [users.id],
   }),
 }));
 
