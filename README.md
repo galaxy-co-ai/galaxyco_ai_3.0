@@ -904,6 +904,10 @@ src/
 /api/admin/blog-profile               GET/POST     Get/update workspace voice profile
 /api/admin/ai/continue                POST         Streaming AI continue writing from cursor
 /api/admin/ai/rewrite                 POST         Rewrite text (modes: improve|simplify|expand|shorten|rephrase|formal|casual)
+/api/admin/ai/source                  POST         Find sources for a claim using AI + web search
+/api/admin/sources                    GET/POST     List/create article sources
+/api/admin/sources/[id]               GET/PATCH/DELETE  Manage article source
+/api/admin/sources/[id]/verify        POST         Verify source URL accessibility and relevance
 ```
 
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.

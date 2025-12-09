@@ -53,6 +53,13 @@ import { AIInlineSuggestion } from './AIInlineSuggestion';
 // Create lowlight instance with common languages
 const lowlight = createLowlight(common);
 
+// Citation format type
+export interface CitationData {
+  title: string;
+  url: string | null;
+  publication: string | null;
+}
+
 interface TiptapEditorProps {
   content: string;
   onChange: (content: string) => void;
@@ -65,6 +72,9 @@ interface TiptapEditorProps {
     layoutTemplate?: string;
     targetAudience?: string;
   };
+  onFindSource?: (selectedText: string) => void;
+  onSuggestImage?: (context: string) => void;
+  onEditorReady?: (insertCitation: (citation: CitationData) => void) => void;
 }
 
 export function TiptapEditor({ 
@@ -74,6 +84,9 @@ export function TiptapEditor({
   className,
   enableAI = true,
   articleContext,
+  onFindSource,
+  onSuggestImage,
+  onEditorReady,
 }: TiptapEditorProps) {
   // AI State
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -187,6 +200,43 @@ export function TiptapEditor({
       editor.commands.setContent(content);
     }
   }, [content, editor]);
+
+  // Insert citation function
+  const insertCitation = useCallback((citation: CitationData) => {
+    if (!editor) return;
+
+    const { title, url, publication } = citation;
+    
+    // Format citation text
+    let citationText: string;
+    if (url) {
+      // Create linked citation
+      if (publication) {
+        citationText = `According to <a href="${url}" target="_blank" rel="noopener noreferrer">${publication}</a>`;
+      } else {
+        citationText = `According to <a href="${url}" target="_blank" rel="noopener noreferrer">${title}</a>`;
+      }
+    } else {
+      // Plain text citation
+      citationText = publication ? `According to ${publication}` : `According to ${title}`;
+    }
+
+    // Insert at cursor position
+    editor
+      .chain()
+      .focus()
+      .insertContent(citationText + ', ')
+      .run();
+
+    toast.success('Citation inserted');
+  }, [editor]);
+
+  // Notify parent when editor is ready
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(insertCitation);
+    }
+  }, [editor, onEditorReady, insertCitation]);
 
   // Handle AI Continue
   function handleAIContinue(editorContent: string, cursorPosition: number) {
@@ -415,14 +465,41 @@ export function TiptapEditor({
   }, [editor]);
 
   const handleFindSource = useCallback(() => {
-    toast.info('Source verification coming in Phase 5');
+    if (editor) {
+      const { state } = editor;
+      const { from, to } = state.selection;
+      const text = state.doc.textBetween(from, to, ' ');
+      if (text.trim()) {
+        if (onFindSource) {
+          onFindSource(text.trim());
+        } else {
+          toast.info('Select text and use the Source Panel to find citations');
+        }
+      } else {
+        toast.error('Please select some text first');
+      }
+    }
     setCommandPaletteOpen(false);
-  }, []);
+  }, [editor, onFindSource]);
 
   const handleSuggestImage = useCallback(() => {
-    toast.info('Image suggestions coming in Phase 6');
+    if (editor && onSuggestImage) {
+      // Get surrounding context for image suggestion
+      const { state } = editor;
+      const { from } = state.selection;
+      const doc = state.doc;
+      
+      // Get text around cursor for context
+      const start = Math.max(0, from - 500);
+      const end = Math.min(doc.content.size, from + 500);
+      const context = doc.textBetween(start, end, ' ');
+      
+      onSuggestImage(context);
+    } else {
+      toast.info('Image generation coming in Phase 6');
+    }
     setCommandPaletteOpen(false);
-  }, []);
+  }, [editor, onSuggestImage]);
 
   const setLink = useCallback(() => {
     if (!editor) return;
@@ -723,8 +800,12 @@ export function TiptapEditor({
             onImprove={(text) => handleAIRewrite(text, 'improve')}
             onRephrase={(text) => handleAIRewrite(text, 'rephrase')}
             onShorten={(text) => handleAIRewrite(text, 'shorten')}
-            onFindSource={() => {
-              toast.info('Source verification coming in Phase 5');
+            onFindSource={(text) => {
+              if (onFindSource) {
+                onFindSource(text);
+              } else {
+                toast.info('Select text and use the Source Panel to find citations');
+              }
               setSelectionMenuVisible(false);
             }}
           />

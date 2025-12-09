@@ -5,9 +5,9 @@
 
 ---
 
-## 📝 Article Studio - Phase 4 Complete ✅
+## 📝 Article Studio - Phase 5 Complete ✅
 
-**December 9, 2025** - Article Studio Phases 1-4 complete with database schema, topic generation, brainstorming, layout templates, outline editor, and AI-assisted writing.
+**December 9, 2025** - Article Studio Phases 1-5 complete with database schema, topic generation, brainstorming, layout templates, outline editor, AI-assisted writing, and source verification system.
 
 ### Phase 1: Database Schema and Topic Bank ✅
 
@@ -322,8 +322,91 @@
 #### Files Deleted:
 - `src/components/admin/TiptapEditor.tsx` - Replaced by folder structure
 
+---
+
+### Phase 5: Source Verification System ✅
+
+**December 9, 2025** - Fact-checking and citation capabilities for Article Studio.
+
+#### Components (`src/components/admin/ArticleStudio/`):
+
+**SourcePanel.tsx:**
+- ✅ Sidebar panel for source management
+- ✅ List of sources attached to article with verification status badges
+- ✅ "Find Source" button for selected text using AI + web search
+- ✅ Manual source addition form with title, URL, publication, quote
+- ✅ Verification status indicators (verified/unverified/failed) with color coding
+- ✅ Insert citation button for each source
+- ✅ Delete and verify actions per source
+- ✅ Search results display with confidence scores
+- ✅ Unverified claim warnings
+- ✅ Full WCAG compliance (ARIA labels, keyboard navigation)
+
+**PrePublishVerification.tsx:**
+- ✅ Modal dialog for pre-publish verification check
+- ✅ Source summary showing verified/unverified/failed counts
+- ✅ Issue list for unverified claims with severity indicators
+- ✅ Acknowledgment checkboxes for each issue
+- ✅ Inline verify button for sources with URLs
+- ✅ External link to view sources
+- ✅ Publish blocked until all issues acknowledged (or explicit override)
+- ✅ Clean publish path when all sources verified
+
+#### API Endpoints:
+
+**Source Finding:**
+- ✅ `POST /api/admin/ai/source` - AI-powered source finding
+  - Uses GPT-4o to extract factual claims from text
+  - Web search via Perplexity/Google CSE for supporting sources
+  - AI analysis to score source relevance (0-1 confidence)
+  - Returns found sources with title, URL, publication, snippet, quote
+  - Handles opinion text gracefully (no sources needed)
+  - Warning returned if claim cannot be verified (NOT made-up sources)
+
+**Sources CRUD:**
+- ✅ `GET /api/admin/sources` - List sources for a post
+- ✅ `POST /api/admin/sources` - Create source with verification status
+- ✅ `GET /api/admin/sources/[id]` - Get single source
+- ✅ `PATCH /api/admin/sources/[id]` - Update source
+- ✅ `DELETE /api/admin/sources/[id]` - Delete source
+
+**Source Verification:**
+- ✅ `POST /api/admin/sources/[id]/verify` - Verify source URL
+  - Checks URL accessibility
+  - Fetches content and analyzes relevance
+  - Updates verification status (verified/failed)
+  - Stores verification notes
+
+#### TiptapEditor Integration:
+
+- ✅ `onFindSource` prop - Callback when user triggers source finding
+- ✅ `onEditorReady` prop - Provides `insertCitation` function to parent
+- ✅ Citation insertion with "According to [Source]" format
+- ✅ AI Command Palette "Find source for this" now functional
+- ✅ AI Selection Menu "Source" button now functional
+- ✅ Links inserted with proper attributes (target="_blank", rel="noopener noreferrer")
+
+#### Database Integration:
+
+- ✅ Uses existing `articleSources` table
+- ✅ Full CRUD operations with workspace authorization
+- ✅ Verification status tracking (verified/unverified/failed enum)
+- ✅ Verification method recording (web_search/manual/url_check)
+- ✅ Inline position support for citation placement
+
+#### Files Created:
+- `src/components/admin/ArticleStudio/SourcePanel.tsx`
+- `src/components/admin/ArticleStudio/PrePublishVerification.tsx`
+- `src/app/api/admin/ai/source/route.ts`
+- `src/app/api/admin/sources/route.ts`
+- `src/app/api/admin/sources/[id]/route.ts`
+- `src/app/api/admin/sources/[id]/verify/route.ts`
+
+#### Files Modified:
+- `src/components/admin/ArticleStudio/index.ts` - Export new components
+- `src/components/admin/TiptapEditor/index.tsx` - Source integration props
+
 #### Remaining Phases:
-- Phase 5: Source Verification System
 - Phase 6: Image Generation and Upload
 - Phase 7: Blog Intelligence (adaptive learning)
 - Phase 8: Pre-Publish Review
