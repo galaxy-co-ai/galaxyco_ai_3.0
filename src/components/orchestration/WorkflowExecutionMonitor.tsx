@@ -555,7 +555,7 @@ export default function WorkflowExecutionMonitor({
                         </p>
                       </div>
                     )}
-                    {step.result.output && (
+                    {step.result.output !== null && step.result.output !== undefined ? (
                       <div className="mt-2">
                         <p className="text-xs text-gray-500 font-medium mb-1">
                           Output:
@@ -566,7 +566,7 @@ export default function WorkflowExecutionMonitor({
                             : JSON.stringify(step.result.output, null, 2)}
                         </pre>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 )}
 
