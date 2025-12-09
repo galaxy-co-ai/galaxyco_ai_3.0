@@ -5,6 +5,145 @@
 
 ---
 
+## 🔐 Clerk Production Deployment (December 9, 2025) ✅
+
+**Authentication System: Migrated to Production**
+
+### Changes Made:
+- ✅ **Production Instance Created** - Migrated from Development to Production in Clerk Dashboard
+- ✅ **Custom Domain Configured** - Primary application domain: `www.galaxyco.ai`
+- ✅ **DNS Records Verified** - All 5 CNAME records added and verified on Namecheap:
+  - `clerk.galaxyco.ai` → `frontend-api.clerk.services` (Frontend API)
+  - `accounts.galaxyco.ai` → `accounts.clerk.services` (Account Portal)
+  - `clkmail.galaxyco.ai` → Clerk mail server (Verification Emails)
+  - `clk._domainkey.galaxyco.ai` → DKIM1 record (Email Authentication)
+  - `clk2._domainkey.galaxyco.ai` → DKIM2 record (Email Authentication)
+- ✅ **Production API Keys Deployed** - Updated Vercel environment variables:
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` → `pk_live_...`
+  - `CLERK_SECRET_KEY` → `sk_live_...`
+- ✅ **Email Branding** - Verification emails now sent from `@galaxyco.ai`
+
+### Benefits:
+- Production-grade authentication for real users
+- Custom domain branding (no more `clerk.dev` URLs)
+- Email verification from branded domain
+- Unlimited users (vs 500 user limit in Development)
+- Cross-subdomain session sharing enabled
+
+---
+
+## 🚀 Neptune 10-Point Enhancement (December 9, 2025) ✅
+
+**Major Feature Upgrade: Enhanced UX, Navigation, and Content Generation**
+
+### Features Implemented:
+
+#### Pre-Implementation Fixes:
+- ✅ **DALL-E Availability** - Added `generate_image` and `create_professional_document` to dashboard tools category
+- ✅ **User Text Color** - User messages now display in white (`text-white`) for better contrast
+
+#### Phase 1 - Quick Wins:
+- ✅ **Quick Actions Wired** - Welcome banner buttons now dispatch `neptune-prompt` events to trigger Neptune
+- ✅ **Context Awareness** - Added `currentPage` to Neptune context, synced via `PageTracker` component
+- ✅ **Contextual Typing Indicators** - Shows status like "Searching web...", "Generating image...", "Creating document..."
+- ✅ **Keyboard Shortcuts** - Enter to submit, Cmd/Ctrl+K to focus Neptune input, Escape to blur
+
+#### Phase 2 - Navigation & Interactivity:
+- ✅ **Direct Navigation Tool** - New `navigate_to_page` tool with enum of available pages
+- ✅ **Navigation Handler** - Client-side event listener for `neptune-navigate` events
+- ✅ **Interactive Roadmap** - Roadmap items now expand to show "Ask Neptune for help" button
+- ✅ **Proactive Suggestions** - Enhanced system prompt with trigger-based suggestions for empty states
+
+#### Phase 3 - Search & Documents:
+- ✅ **Conversation Search** - Search bar in History view to filter past conversations by title/preview
+- ✅ **PDF Generation Tool** - New `generate_pdf` tool creates professional documents:
+  - Invoice generation with line items and totals
+  - Report generation with sections and key findings
+  - Proposal generation with scope, deliverables, and pricing
+  - Contract generation with clauses
+  - Server-side rendering with `@react-pdf/renderer`
+  - Auto-upload to Vercel Blob storage
+
+### Files Created:
+- `src/lib/pdf-generator.ts` - PDF generation utilities with styled templates
+
+### Files Modified:
+- `src/lib/ai/tools.ts` - Added `navigate_to_page` and `generate_pdf` tools, updated dashboard category
+- `src/contexts/neptune-context.tsx` - Added `currentPage`, `currentToolStatus`, `setCurrentPage`, navigation event dispatch
+- `src/components/galaxy/app-layout.tsx` - Added `PageTracker` and `NavigationHandler` components
+- `src/components/conversations/NeptuneAssistPanel.tsx` - Added keyboard shortcuts, search input, contextual indicators
+- `src/components/dashboard-v2/NeptuneDashboardWelcome.tsx` - Wired quick action buttons to Neptune
+- `src/components/dashboard-v2/RoadmapCard.tsx` - Added interactive "Ask Neptune for help" button
+- `src/lib/ai/system-prompt.ts` - Added proactive suggestion triggers and creative capabilities section
+
+### New Dependencies:
+- `@react-pdf/renderer` - Server-side PDF generation
+
+---
+
+## ✨ Neptune Rich Response Rendering (December 8, 2025) ✅
+
+**Enhancement: Polished, structured AI assistant responses**
+
+### Features Implemented:
+- ✅ **Markdown Rendering** - Full support via `react-markdown` with `remark-gfm`:
+  - Headers (h1, h2, h3) with subtle styling
+  - Bullet points with accent-colored dots
+  - Bold, italic, inline code formatting
+  - Tables with zebra striping
+  - Blockquotes with left border accent
+- ✅ **Code Syntax Highlighting** - Using `prism-react-renderer`:
+  - Dark theme code blocks
+  - Language indicator badge
+  - Copy button for easy code copying
+- ✅ **Link Preview Cards** - Auto-fetches Open Graph metadata:
+  - Thumbnail image (og:image)
+  - Title and description
+  - Favicon and domain display
+  - Lazy loading with skeleton placeholder
+  - Fallback to simple link pill on error
+- ✅ **Search Results Cards** - Visual display when `search_web` tool is used:
+  - Card grid with favicon, title, snippet
+  - Expandable to show more results
+  - Provider attribution (Perplexity/Google)
+- ✅ **DALL-E HD Quality** - Default image quality upgraded from `standard` to `hd`
+- ✅ **System Prompt Updated** - Neptune now encouraged to use markdown formatting
+
+**Files Created:**
+- `src/types/neptune.ts` - Type definitions
+- `src/components/neptune/NeptuneMessage.tsx` - Main message renderer
+- `src/components/neptune/MarkdownContent.tsx` - Styled ReactMarkdown wrapper
+- `src/components/neptune/LinkPreviewCard.tsx` - Rich link previews
+- `src/components/neptune/SearchResultsCard.tsx` - Search results display
+- `src/app/api/link-preview/route.ts` - OG metadata fetcher with SSRF protection
+
+**Files Modified:**
+- `src/components/conversations/NeptuneAssistPanel.tsx` - Uses NeptuneMessage component
+- `src/lib/ai/system-prompt.ts` - Enables markdown formatting
+- `src/lib/dalle.ts` - Default quality changed to HD
+
+---
+
+## 💬 Feedback in Sidebar (December 8, 2025) ✅
+
+**UX Improvement: Feedback moved to sidebar navigation**
+
+### Changes Made:
+- ✅ Added Feedback link at bottom of Main section in sidebar
+- ✅ Created `FeedbackProvider` context for shared state
+- ✅ Removed floating feedback button from bottom-right corner
+- ✅ Feedback panel now triggered from sidebar link
+
+**Files Created:**
+- `src/contexts/feedback-context.tsx` - Feedback state management
+
+**Files Modified:**
+- `src/components/galaxy/sidebar.tsx` - Added Feedback link
+- `src/components/galaxy/app-layout.tsx` - Wrapped with FeedbackProvider
+- `src/components/shared/FeedbackButton.tsx` - Refactored to FeedbackPanel
+
+---
+
 ## 🎯 Avatar Dropdown Navigation (December 8, 2025) ✅
 
 **UX Improvement: Cleaner sidebar with user menu**
