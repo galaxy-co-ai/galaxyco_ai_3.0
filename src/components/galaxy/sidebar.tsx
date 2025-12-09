@@ -18,6 +18,11 @@ import {
   MessageSquare,
   Rocket,
   MessageSquarePlus,
+  Network,
+  UsersRound,
+  Workflow,
+  ClipboardCheck,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -40,7 +45,16 @@ const mainNavItems = [
   { icon: MessageSquare, label: "Conversations", href: "/conversations", id: "conversations" },
   { icon: TrendingUp, label: "Finance HQ", href: "/finance", id: "finance" },
   { icon: Megaphone, label: "Marketing", href: "/marketing", id: "marketing" },
+  { icon: Network, label: "Orchestration", href: "/orchestration", id: "orchestration", hasSubitems: true },
   { icon: FlaskConical, label: "Lunar Labs", href: "/lunar-labs", id: "lunar-labs" },
+];
+
+// Orchestration subitems
+const orchestrationSubitems = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/orchestration", id: "orchestration-dashboard" },
+  { icon: UsersRound, label: "Teams", href: "/orchestration/teams", id: "orchestration-teams" },
+  { icon: Workflow, label: "Workflows", href: "/orchestration/workflows", id: "orchestration-workflows" },
+  { icon: ClipboardCheck, label: "Approvals", href: "/orchestration/approvals", id: "orchestration-approvals" },
 ];
 
 // Secondary navigation items (Settings, Connectors, Mission Control moved to avatar dropdown)
@@ -57,7 +71,28 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [isManuallyControlled, setIsManuallyControlled] = React.useState(false);
+  const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set());
   const { openFeedback } = useFeedback();
+
+  // Auto-expand Orchestration section if on orchestration page
+  React.useEffect(() => {
+    if (pathname.startsWith('/orchestration')) {
+      setExpandedSections(prev => new Set(prev).add('orchestration'));
+    }
+  }, [pathname]);
+
+  // Toggle section expansion
+  const toggleSection = React.useCallback((sectionId: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+      } else {
+        next.add(sectionId);
+      }
+      return next;
+    });
+  }, []);
   
   // Auto-collapse sidebar on smaller screens
   React.useEffect(() => {
@@ -144,6 +179,73 @@ export function Sidebar({ className }: SidebarProps) {
           {mainNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
+            const hasSubitems = 'hasSubitems' in item && item.hasSubitems;
+            const isExpanded = expandedSections.has(item.id);
+
+            // For items with subitems (like Orchestration)
+            if (hasSubitems && !isCollapsed) {
+              return (
+                <div key={item.id}>
+                  <button
+                    onClick={() => toggleSection(item.id)}
+                    className={cn(
+                      "w-full h-9 rounded-lg transition-all duration-200",
+                      "flex items-center gap-2.5 justify-start px-2.5",
+                      active
+                        ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                      "font-normal"
+                    )}
+                    aria-expanded={isExpanded}
+                    aria-label={`${item.label}, ${isExpanded ? 'collapse' : 'expand'} submenu`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="text-xs font-normal whitespace-nowrap flex-1 text-left">{item.label}</span>
+                    <ChevronDown 
+                      className={cn(
+                        "h-3 w-3 shrink-0 transition-transform duration-200",
+                        isExpanded && "rotate-180"
+                      )} 
+                    />
+                  </button>
+                  
+                  {/* Subitems */}
+                  {isExpanded && (
+                    <div className="ml-4 mt-0.5 space-y-0.5 border-l border-sidebar-border/50 pl-2">
+                      {orchestrationSubitems.map((subitem) => {
+                        const SubIcon = subitem.icon;
+                        const subActive = pathname === subitem.href || 
+                          (subitem.href !== '/orchestration' && pathname.startsWith(subitem.href));
+                        
+                        return (
+                          <Link
+                            key={subitem.id}
+                            href={subitem.href}
+                            onClick={() => trackClick(`sidebar_${subitem.id}`, { section: 'orchestration', label: subitem.label })}
+                          >
+                            <Button
+                              variant="ghost"
+                              className={cn(
+                                "w-full h-8 rounded-lg transition-all duration-200",
+                                "flex items-center gap-2 justify-start px-2",
+                                subActive
+                                  ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-sidebar-accent-foreground bg-sidebar-accent/50"
+                                  : "text-sidebar-foreground/80 hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]",
+                                "font-normal"
+                              )}
+                              aria-current={subActive ? "page" : undefined}
+                            >
+                              <SubIcon className="h-3.5 w-3.5 shrink-0" />
+                              <span className="text-xs font-normal whitespace-nowrap">{subitem.label}</span>
+                            </Button>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
             const button = (
               <Button
