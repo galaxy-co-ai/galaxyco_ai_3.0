@@ -871,7 +871,7 @@ src/
 ... and 120+ more!
 ```
 
-**Agent Orchestration** 🆕
+**Agent Orchestration**
 ```
 /api/orchestration/teams              GET/POST     List/create agent teams
 /api/orchestration/teams/[id]         GET/PATCH/DELETE  Manage team
@@ -890,6 +890,14 @@ src/
 /api/orchestration/audit              GET          Get audit log entries
 /api/orchestration/audit/[teamId]     GET          Get team-specific audit log
 /api/orchestration/metrics            GET          Get department metrics & stats
+```
+
+**Article Studio** 🆕
+```
+/api/admin/topics                     GET/POST     List/create topic ideas
+/api/admin/topics/[id]                GET/PATCH/DELETE  Manage topic idea
+/api/admin/ai/topics/generate         POST         Generate AI topic suggestions
+/api/admin/blog-profile               GET/POST     Get/update workspace voice profile
 ```
 
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.

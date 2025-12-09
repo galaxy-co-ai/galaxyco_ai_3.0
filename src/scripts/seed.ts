@@ -9,7 +9,7 @@
 
 import 'dotenv/config';
 import { db } from '@/lib/db';
-import { creatorTemplates } from '@/db/schema';
+import { creatorTemplates, blogVoiceProfiles, workspaces } from '@/db/schema';
 
 // Helper to create section with correct type
 function section(
@@ -288,10 +288,90 @@ async function seedTemplates() {
   }
 }
 
+// Default voice profile for Article Studio
+const DEFAULT_VOICE_PROFILE = {
+  toneDescriptors: [
+    'Professional',
+    'Friendly',
+    'Clear',
+    'Actionable',
+    'Engaging',
+  ],
+  examplePhrases: [
+    "Here's what you need to know",
+    "Let's dive in",
+    "The key takeaway is",
+    "In practice, this means",
+    "To get started",
+  ],
+  avoidPhrases: [
+    "Basically",
+    "Obviously",
+    "As you know",
+    "It goes without saying",
+    "To be honest",
+  ],
+  avgSentenceLength: 18,
+  structurePreferences: {
+    preferredIntroStyle: 'Hook with a question or bold statement, then preview what the reader will learn',
+    preferredConclusionStyle: 'Summarize key points and include a clear call-to-action',
+    usesSubheadings: true,
+    usesBulletPoints: true,
+    includesCallToAction: true,
+  },
+};
+
+async function seedVoiceProfiles() {
+  console.log('🎙️ Seeding default voice profiles...');
+  
+  try {
+    // Get all workspaces that don't have a voice profile
+    const allWorkspaces = await db.select().from(workspaces);
+    
+    if (allWorkspaces.length === 0) {
+      console.log('  ℹ️  No workspaces found, skipping voice profile seed');
+      return;
+    }
+
+    let created = 0;
+    for (const workspace of allWorkspaces) {
+      // Check if profile already exists for this workspace
+      const existingProfile = await db.query.blogVoiceProfiles.findFirst({
+        where: (profiles, { eq }) => eq(profiles.workspaceId, workspace.id),
+      });
+
+      if (existingProfile) {
+        console.log(`  ℹ️  Voice profile already exists for workspace: ${workspace.name}`);
+        continue;
+      }
+
+      // Create default voice profile
+      await db.insert(blogVoiceProfiles).values({
+        workspaceId: workspace.id,
+        ...DEFAULT_VOICE_PROFILE,
+        analyzedPostCount: 0,
+      });
+      
+      console.log(`  ✓ Created voice profile for workspace: ${workspace.name}`);
+      created++;
+    }
+
+    if (created > 0) {
+      console.log(`\n✅ Successfully seeded ${created} voice profile(s)!`);
+    } else {
+      console.log('  ℹ️  All workspaces already have voice profiles');
+    }
+  } catch (error) {
+    console.error('❌ Error seeding voice profiles:', error);
+    // Don't throw - voice profiles are optional
+  }
+}
+
 async function main() {
   console.log('\n🚀 Starting database seed...\n');
   
   await seedTemplates();
+  await seedVoiceProfiles();
   
   console.log('\n🎉 Seed complete!\n');
   process.exit(0);

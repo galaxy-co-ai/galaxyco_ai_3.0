@@ -255,6 +255,35 @@ export const blogPostContentTypeEnum = pgEnum('blog_post_content_type', [
   'tool-spotlight',
 ]);
 
+// Article Studio enums
+export const topicIdeaStatusEnum = pgEnum('topic_idea_status', [
+  'saved',
+  'in_progress',
+  'published',
+  'archived',
+]);
+
+export const topicIdeaGeneratedByEnum = pgEnum('topic_idea_generated_by', [
+  'ai',
+  'user',
+]);
+
+export const articleSourceVerificationEnum = pgEnum('article_source_verification', [
+  'verified',
+  'unverified',
+  'failed',
+]);
+
+export const articleLayoutTemplateEnum = pgEnum('article_layout_template', [
+  'standard',
+  'how-to',
+  'listicle',
+  'case-study',
+  'tool-review',
+  'news',
+  'opinion',
+]);
+
 export const blogReactionTypeEnum = pgEnum('blog_reaction_type', [
   'helpful',
   'insightful',
@@ -4184,6 +4213,18 @@ export const blogPosts = pgTable(
     // Analytics
     viewCount: integer('view_count').notNull().default(0),
     
+    // Article Studio - Outline and Layout
+    outline: jsonb('outline').$type<{
+      sections: Array<{
+        id: string;
+        title: string;
+        type: 'intro' | 'body' | 'conclusion' | 'cta';
+        bullets?: string[];
+        wordCount?: number;
+      }>;
+    }>(),
+    layoutTemplate: articleLayoutTemplateEnum('layout_template'),
+    
     // Timestamps
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -4195,6 +4236,7 @@ export const blogPosts = pgTable(
     index('blog_posts_published_at_idx').on(table.publishedAt),
     index('blog_posts_featured_idx').on(table.featured),
     index('blog_posts_author_idx').on(table.authorId),
+    index('blog_posts_layout_template_idx').on(table.layoutTemplate),
   ]
 );
 
@@ -4322,6 +4364,177 @@ export const blogUserPreferences = pgTable(
   },
   (table) => [
     index('blog_user_preferences_user_idx').on(table.userId),
+  ]
+);
+
+// ============================================================================
+// ARTICLE STUDIO - AI-ASSISTED ARTICLE CREATION
+// ============================================================================
+
+// Topic Ideas Bank - Store generated and saved topic ideas
+export const topicIdeas = pgTable(
+  'topic_ideas',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    title: text('title').notNull(),
+    description: text('description'),
+    whyItWorks: text('why_it_works'), // AI explanation of why this topic is good
+    
+    generatedBy: topicIdeaGeneratedByEnum('generated_by').notNull().default('user'),
+    status: topicIdeaStatusEnum('status').notNull().default('saved'),
+    
+    // Optional link to resulting post
+    resultingPostId: uuid('resulting_post_id').references(() => blogPosts.id),
+    
+    // Source context (e.g., from brainstorm session)
+    sourceConversation: jsonb('source_conversation').$type<{
+      sessionId?: string;
+      keyPoints?: string[];
+    }>(),
+    
+    // Categorization
+    category: text('category'), // e.g., "Tutorial", "News", "Opinion"
+    suggestedLayout: articleLayoutTemplateEnum('suggested_layout'),
+    
+    // AI metadata
+    aiPrompt: text('ai_prompt'), // Original prompt used to generate
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('topic_ideas_workspace_idx').on(table.workspaceId),
+    index('topic_ideas_status_idx').on(table.status),
+    index('topic_ideas_generated_by_idx').on(table.generatedBy),
+    index('topic_ideas_category_idx').on(table.category),
+  ]
+);
+
+// Blog Voice Profile - Workspace-specific writing style
+export const blogVoiceProfiles = pgTable(
+  'blog_voice_profiles',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // One profile per workspace
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' })
+      .unique(),
+    
+    // Voice characteristics
+    toneDescriptors: jsonb('tone_descriptors').$type<string[]>().default([]),
+    examplePhrases: jsonb('example_phrases').$type<string[]>().default([]),
+    avoidPhrases: jsonb('avoid_phrases').$type<string[]>().default([]),
+    
+    // Style metrics
+    avgSentenceLength: integer('avg_sentence_length'),
+    
+    // Structure preferences
+    structurePreferences: jsonb('structure_preferences').$type<{
+      preferredIntroStyle?: string;
+      preferredConclusionStyle?: string;
+      usesSubheadings?: boolean;
+      usesBulletPoints?: boolean;
+      includesCallToAction?: boolean;
+    }>(),
+    
+    // Analysis metadata
+    analyzedPostCount: integer('analyzed_post_count').default(0),
+    lastAnalyzedAt: timestamp('last_analyzed_at'),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('blog_voice_profiles_workspace_idx').on(table.workspaceId),
+  ]
+);
+
+// Article Sources - Track sources and citations for posts
+export const articleSources = pgTable(
+  'article_sources',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Link to post
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => blogPosts.id, { onDelete: 'cascade' }),
+    
+    // Source details
+    title: text('title').notNull(),
+    url: text('url'),
+    publication: text('publication'), // e.g., "TechCrunch", "Harvard Business Review"
+    publishedDate: timestamp('published_date'),
+    
+    // What was used from this source
+    quoteUsed: text('quote_used'),
+    claimSupported: text('claim_supported'), // The claim this source supports
+    
+    // Verification
+    verified: boolean('verified').notNull().default(false),
+    verificationStatus: articleSourceVerificationEnum('verification_status').default('unverified'),
+    verificationMethod: text('verification_method'), // e.g., "web_search", "manual"
+    verificationNotes: text('verification_notes'),
+    verifiedAt: timestamp('verified_at'),
+    
+    // Position in article (for inline citations)
+    inlinePosition: integer('inline_position'), // Character position in content
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('article_sources_post_idx').on(table.postId),
+    index('article_sources_verified_idx').on(table.verified),
+  ]
+);
+
+// Brainstorm Sessions - Store brainstorm conversations
+export const brainstormSessions = pgTable(
+  'brainstorm_sessions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id),
+    
+    // Session title (auto-generated or user-set)
+    title: text('title'),
+    
+    // Conversation history
+    messages: jsonb('messages').$type<Array<{
+      role: 'user' | 'assistant';
+      content: string;
+      timestamp: string;
+    }>>().default([]),
+    
+    // Results
+    resultingTopicId: uuid('resulting_topic_id').references(() => topicIdeas.id),
+    resultingPostId: uuid('resulting_post_id').references(() => blogPosts.id),
+    
+    // Key insights extracted from conversation
+    keyInsights: jsonb('key_insights').$type<string[]>().default([]),
+    suggestedAngle: text('suggested_angle'),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('brainstorm_sessions_workspace_idx').on(table.workspaceId),
+    index('brainstorm_sessions_user_idx').on(table.userId),
   ]
 );
 
@@ -4681,6 +4894,10 @@ export const blogPostsRelations = relations(blogPosts, ({ one, many }) => ({
   bookmarks: many(blogBookmarks),
   reactions: many(blogReactions),
   collectionPosts: many(blogCollectionPosts),
+  // Article Studio relations
+  sources: many(articleSources),
+  topicIdeas: many(topicIdeas),
+  brainstormSessions: many(brainstormSessions),
 }));
 
 export const blogPostTagsRelations = relations(blogPostTags, ({ one }) => ({
@@ -4829,6 +5046,54 @@ export const blogBookmarksRelations = relations(blogBookmarks, ({ one }) => ({
 export const blogReactionsRelations = relations(blogReactions, ({ one }) => ({
   post: one(blogPosts, {
     fields: [blogReactions.postId],
+    references: [blogPosts.id],
+  }),
+}));
+
+// ============================================================================
+// ARTICLE STUDIO - RELATIONS
+// ============================================================================
+
+export const topicIdeasRelations = relations(topicIdeas, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [topicIdeas.workspaceId],
+    references: [workspaces.id],
+  }),
+  resultingPost: one(blogPosts, {
+    fields: [topicIdeas.resultingPostId],
+    references: [blogPosts.id],
+  }),
+}));
+
+export const blogVoiceProfilesRelations = relations(blogVoiceProfiles, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [blogVoiceProfiles.workspaceId],
+    references: [workspaces.id],
+  }),
+}));
+
+export const articleSourcesRelations = relations(articleSources, ({ one }) => ({
+  post: one(blogPosts, {
+    fields: [articleSources.postId],
+    references: [blogPosts.id],
+  }),
+}));
+
+export const brainstormSessionsRelations = relations(brainstormSessions, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [brainstormSessions.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [brainstormSessions.userId],
+    references: [users.id],
+  }),
+  resultingTopic: one(topicIdeas, {
+    fields: [brainstormSessions.resultingTopicId],
+    references: [topicIdeas.id],
+  }),
+  resultingPost: one(blogPosts, {
+    fields: [brainstormSessions.resultingPostId],
     references: [blogPosts.id],
   }),
 }));
@@ -6087,6 +6352,25 @@ export type NewNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
 export type FeedbackType = (typeof feedbackTypeEnum.enumValues)[number];
 export type FeedbackStatus = (typeof feedbackStatusEnum.enumValues)[number];
 export type FeedbackSentiment = (typeof feedbackSentimentEnum.enumValues)[number];
+
+// Article Studio Types
+export type TopicIdea = typeof topicIdeas.$inferSelect;
+export type NewTopicIdea = typeof topicIdeas.$inferInsert;
+
+export type BlogVoiceProfile = typeof blogVoiceProfiles.$inferSelect;
+export type NewBlogVoiceProfile = typeof blogVoiceProfiles.$inferInsert;
+
+export type ArticleSource = typeof articleSources.$inferSelect;
+export type NewArticleSource = typeof articleSources.$inferInsert;
+
+export type BrainstormSession = typeof brainstormSessions.$inferSelect;
+export type NewBrainstormSession = typeof brainstormSessions.$inferInsert;
+
+// Article Studio Enum Types
+export type TopicIdeaStatus = (typeof topicIdeaStatusEnum.enumValues)[number];
+export type TopicIdeaGeneratedBy = (typeof topicIdeaGeneratedByEnum.enumValues)[number];
+export type ArticleSourceVerification = (typeof articleSourceVerificationEnum.enumValues)[number];
+export type ArticleLayoutTemplate = (typeof articleLayoutTemplateEnum.enumValues)[number];
 
 
 
