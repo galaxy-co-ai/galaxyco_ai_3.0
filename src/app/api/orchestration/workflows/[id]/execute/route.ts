@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agentWorkflows, users } from '@/db/schema';
+import { agentWorkflows } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -29,23 +29,8 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { workspaceId, user } = await getCurrentWorkspace();
     const { id: workflowId } = await params;
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
 
     // Verify workflow exists and is active
     const workflow = await db.query.agentWorkflows.findFirst({
@@ -82,7 +67,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     logger.info('[Workflows API] Executing workflow', {
       workflowId,
       workflowName: workflow.name,
-      triggeredBy: user.id,
+      triggeredBy: user?.id || '',
     });
 
     // Create orchestrator and execute workflow
@@ -90,7 +75,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const result = await orchestrator.executeWorkflow({
       workflowId,
       workspaceId,
-      triggeredBy: user.id,
+      triggeredBy: user?.id || '',
       triggerType: 'manual',
       triggerData,
       initialContext: context,
@@ -122,4 +107,3 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     );
   }
 }
-

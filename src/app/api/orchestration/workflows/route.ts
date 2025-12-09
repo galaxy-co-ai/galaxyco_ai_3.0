@@ -6,14 +6,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agentWorkflows, agentTeams, users } from '@/db/schema';
+import { agentWorkflows, agentTeams } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 
-// Workflow step schema
+// Workflow step schema - value in conditions is required by the database schema
 const workflowStepSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -22,8 +22,8 @@ const workflowStepSchema = z.object({
   inputs: z.record(z.unknown()).default({}),
   conditions: z.array(z.object({
     field: z.string(),
-    operator: z.enum(['equals', 'not_equals', 'contains', 'greater_than', 'less_than', 'exists']),
-    value: z.unknown(),
+    operator: z.string(), // Keep as string to match DB schema
+    value: z.unknown().transform((v) => v ?? null), // Required, transform undefined to null
   })).optional(),
   onSuccess: z.string().optional(),
   onFailure: z.string().optional(),
@@ -48,7 +48,7 @@ const createWorkflowSchema = z.object({
     conditions: z.array(z.object({
       field: z.string(),
       operator: z.string(),
-      value: z.unknown(),
+      value: z.unknown(), // Required
     })).optional(),
   }).optional(),
   steps: z.array(workflowStepSchema).min(1, 'At least one step is required'),
@@ -61,21 +61,7 @@ const createWorkflowSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
+    const { workspaceId } = await getCurrentWorkspace();
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -153,21 +139,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
+    const { workspaceId, user } = await getCurrentWorkspace();
 
     // Parse and validate body
     const body = await request.json();
@@ -199,20 +171,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the workflow
+    // Create the workflow - cast steps and triggerConfig to match expected types
     const [workflow] = await db
       .insert(agentWorkflows)
       .values({
         workspaceId,
-        teamId,
+        teamId: teamId || null,
         name,
-        description,
-        category,
+        description: description || null,
+        category: category || null,
         triggerType,
-        triggerConfig: triggerConfig || {},
-        steps,
+        triggerConfig: (triggerConfig || {}) as typeof agentWorkflows.$inferInsert.triggerConfig,
+        steps: steps as typeof agentWorkflows.$inferInsert.steps,
         status,
-        createdBy: user.id,
+        createdBy: user?.id || '',
       })
       .returning();
 
@@ -237,4 +209,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

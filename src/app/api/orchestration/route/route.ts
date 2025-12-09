@@ -5,10 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { db } from '@/lib/db';
-import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { AgentOrchestrator } from '@/lib/orchestration';
@@ -31,21 +28,7 @@ const routeTaskSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
+    const { workspaceId } = await getCurrentWorkspace();
 
     // Parse and validate body
     const body = await request.json();
@@ -122,4 +105,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

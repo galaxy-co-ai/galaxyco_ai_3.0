@@ -7,9 +7,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agentTeams, agentTeamMembers, users, agents } from '@/db/schema';
+import { agentTeams, agentTeamMembers, agents } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -48,23 +48,8 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { workspaceId } = await getCurrentWorkspace();
     const { id: teamId } = await params;
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
 
     // Get team
     const team = await db.query.agentTeams.findFirst({
@@ -141,23 +126,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { workspaceId } = await getCurrentWorkspace();
     const { id: teamId } = await params;
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
 
     // Get existing team
     const existingTeam = await db.query.agentTeams.findFirst({
@@ -202,7 +172,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Build update object
-    const updateData: Partial<typeof agentTeams.$inferInsert> = {
+    const updateData: Record<string, unknown> = {
       updatedAt: new Date(),
     };
 
@@ -211,8 +181,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (coordinatorAgentId !== undefined) updateData.coordinatorAgentId = coordinatorAgentId;
     if (status !== undefined) updateData.status = status;
     if (config !== undefined) {
+      const existingConfig = existingTeam.config as Record<string, unknown> || {};
       updateData.config = {
-        ...(existingTeam.config as Record<string, unknown>),
+        ...existingConfig,
         ...config,
       };
     }
@@ -285,23 +256,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { workspaceId } = await getCurrentWorkspace();
     const { id: teamId } = await params;
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
 
     // Verify team exists and belongs to workspace
     const team = await db.query.agentTeams.findFirst({
@@ -332,4 +288,3 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     );
   }
 }
-

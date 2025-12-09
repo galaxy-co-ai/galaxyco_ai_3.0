@@ -6,9 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agentMessages, agents, agentTeams, users } from '@/db/schema';
+import { agentMessages, agents, agentTeams } from '@/db/schema';
 import { eq, and, desc, gte, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -37,21 +37,7 @@ const sendMessageSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
+    const { workspaceId } = await getCurrentWorkspace();
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -163,21 +149,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
+    const { workspaceId } = await getCurrentWorkspace();
 
     // Parse and validate body
     const body = await request.json();
@@ -305,4 +277,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

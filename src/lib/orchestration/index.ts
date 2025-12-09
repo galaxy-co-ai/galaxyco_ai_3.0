@@ -18,6 +18,20 @@ export * from './types';
 export { AgentOrchestrator } from './orchestrator';
 export { AgentMessageBus } from './message-bus';
 export { AgentMemoryService } from './memory';
+export { TeamExecutor } from './team-executor';
+
+// Team Templates
+export {
+  teamTemplates,
+  teamTemplatesById,
+  getTeamTemplate,
+  getTeamTemplatesByDepartment,
+  suggestTeamTemplate,
+  salesTeamTemplate,
+  marketingTeamTemplate,
+  supportTeamTemplate,
+  operationsTeamTemplate,
+} from './team-templates';
 
 // Re-export commonly used types for convenience
 export type {
@@ -35,4 +49,19 @@ export type {
   TeamExecutionResult,
   WorkflowResult,
 } from './types';
+
+export type {
+  TeamTemplate,
+  AgentTemplate,
+  WorkflowTemplate,
+  TeamTemplateId,
+} from './team-templates';
+
+export type {
+  TeamTask,
+  HandoffContext,
+  AgentExecutionResult,
+  TeamMemberInfo,
+  TeamExecutionState,
+} from './team-executor';
 

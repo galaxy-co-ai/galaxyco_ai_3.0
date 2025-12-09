@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agentTeams, users } from '@/db/schema';
+import { agentTeams } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -30,23 +30,8 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const { workspaceId } = await getCurrentWorkspace();
     const { id: teamId } = await params;
-
-    // Get user and workspace
-    const user = await db.query.users.findFirst({
-      where: eq(users.clerkUserId, userId),
-    });
-
-    if (!user?.activeWorkspaceId) {
-      return NextResponse.json({ error: 'No active workspace' }, { status: 400 });
-    }
-
-    const workspaceId = user.activeWorkspaceId;
 
     // Verify team exists and belongs to workspace
     const team = await db.query.agentTeams.findFirst({
@@ -78,7 +63,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { objective, context, priority } = validation.data;
+    const { objective, priority } = validation.data;
 
     logger.info('[Teams API] Running team', {
       teamId,
@@ -115,4 +100,3 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     );
   }
 }
-

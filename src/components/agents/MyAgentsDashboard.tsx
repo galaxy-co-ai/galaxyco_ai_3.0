@@ -29,6 +29,7 @@ import AgentList, { type Agent, type AgentStatus } from "./AgentList";
 import AgentActivityPanel, { type AgentActivity } from "./AgentActivityPanel";
 import AgentMessagesTab from "./AgentMessagesTab";
 import AgentLaboratoryTab from "./AgentLaboratoryTab";
+import AgentTeamsTab from "./AgentTeamsTab";
 
 // Fetcher for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -361,6 +362,33 @@ export default function MyAgentsDashboard({
             </Card>
             
             {/* Neptune Panel for Laboratory */}
+            <AnimatePresence>
+              {showNeptune && (
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: '28%', opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col relative z-40"
+                >
+                  <Card className="flex flex-col h-full rounded-l-2xl shadow-sm border border-r-0 bg-card overflow-hidden">
+                    <NeptuneAssistPanel
+                      conversationId={null}
+                      conversation={null}
+                    />
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        ) : activeTab === "teams" ? (
+          // Teams tab with optional Neptune - full width
+          <>
+            <Card className="flex-1 rounded-2xl shadow-sm border bg-card overflow-hidden transition-all min-w-0">
+              <AgentTeamsTab neptuneOpen={showNeptune} />
+            </Card>
+            
+            {/* Neptune Panel for Teams */}
             <AnimatePresence>
               {showNeptune && (
                 <motion.div
