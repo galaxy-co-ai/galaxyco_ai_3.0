@@ -1,13 +1,15 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import { db } from '@/lib/db';
 import { blogCategories } from '@/db/schema';
-import { PostEditorClient } from '@/components/admin/PostEditorClient';
+import { NewPostWizard } from './NewPostWizard';
+import { Loader2 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'New Post | Content Studio',
-  description: 'Create a new Launchpad blog post',
+  title: 'New Article | Article Studio',
+  description: 'Create a new article with AI assistance',
 };
 
 async function getCategories() {
@@ -25,13 +27,20 @@ async function getCategories() {
   }
 }
 
+function WizardLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
 export default async function NewPostPage() {
   const categories = await getCategories();
 
   return (
-    <PostEditorClient 
-      categories={categories}
-      mode="create"
-    />
+    <Suspense fallback={<WizardLoading />}>
+      <NewPostWizard categories={categories} />
+    </Suspense>
   );
 }

@@ -899,6 +899,8 @@ src/
 /api/admin/ai/topics/generate         POST         Generate AI topic suggestions
 /api/admin/ai/brainstorm              POST         Streaming brainstorm conversation
 /api/admin/ai/outline/from-conversation POST       Generate outline from brainstorm
+/api/admin/ai/outline                 POST         Generate outline from topic + layout
+/api/admin/ai/outline/section         POST         Regenerate section or get title variations
 /api/admin/blog-profile               GET/POST     Get/update workspace voice profile
 ```
 
