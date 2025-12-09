@@ -1464,6 +1464,12 @@ See [`NEPTUNE_ENHANCEMENT_PLAN.md`](./NEPTUNE_ENHANCEMENT_PLAN.md) for full impl
 | **Overall** | ✅ 100% Production-Ready |
 
 **Latest Updates (December 9, 2025):**
+- **UI Polish & Consistency Fixes** ✅ **COMPLETE**:
+  - Marketing page title now left-aligned (removed centering wrapper)
+  - Marketing title uses spaced letter format (`M A R K E T I N G`) matching site pattern
+  - Orchestration page titles no longer have subtitle descriptions (cleaner headers)
+  - All Orchestration buttons now use consistent Neptune button style (white bg, shadow, hover lift, active scale)
+  - Files updated: MarketingDashboard, OrchestrationDashboardClient, TeamsListClient, TeamDetailClient, WorkflowsListClient, WorkflowDetailClient, ApprovalsPageClient
 - **Orchestration UI Theme Conversion** ✅ **COMPLETE** - All orchestration pages now match the site-wide light theme:
   - Converted 6 page-level client components from dark theme to light theme
   - Updated 6 orchestration components with consistent light theme styling

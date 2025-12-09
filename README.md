@@ -731,7 +731,7 @@ Inspired by The General Intelligence Company's "Cofounder" approach, our orchest
 - `/orchestration/workflows/[id]` - Workflow editor with visual builder
 - `/orchestration/approvals` - Approval queue with bulk operations
 
-**UI Theme:** All orchestration pages use the site-wide light theme with consistent styling - `bg-gray-50/50` backgrounds, branded headers with SVG gradient icons, and light-colored badges matching the Dashboard and CRM design patterns.
+**UI Theme:** All orchestration pages use the site-wide light theme with consistent styling - `bg-gray-50/50` backgrounds, branded headers with SVG gradient icons, light-colored badges, and consistent Neptune-style buttons (white bg, subtle shadow, hover lift effect) matching the Dashboard and CRM design patterns.
 
 ### 🤝 CRM
 - Contact, project, and deal management
