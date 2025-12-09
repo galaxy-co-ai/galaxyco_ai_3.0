@@ -1357,6 +1357,136 @@ export const agentSharedMemory = pgTable(
 );
 
 // ============================================================================
+// AGENT AUTONOMY & APPROVAL SYSTEM
+// ============================================================================
+
+/**
+ * Risk levels for agent actions
+ */
+export const actionRiskLevelEnum = pgEnum('action_risk_level', [
+  'low',      // Read operations, status updates
+  'medium',   // CRM updates, task creation
+  'high',     // External emails, calendar changes
+  'critical', // Financial transactions, data deletion
+]);
+
+/**
+ * Approval status for pending actions
+ */
+export const approvalStatusEnum = pgEnum('approval_status', [
+  'pending',
+  'approved',
+  'rejected',
+  'expired',
+  'auto_approved', // For actions that were auto-approved based on autonomy level
+]);
+
+/**
+ * Agent Pending Actions - Queue for actions requiring approval
+ * Implements approval workflow with risk classification
+ */
+export const agentPendingActions = pgTable(
+  'agent_pending_actions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Context
+    teamId: uuid('team_id').references(() => agentTeams.id, { onDelete: 'set null' }),
+    agentId: uuid('agent_id').references(() => agents.id, { onDelete: 'set null' }),
+    workflowExecutionId: uuid('workflow_execution_id').references(() => agentWorkflowExecutions.id, { onDelete: 'set null' }),
+
+    // Action details
+    actionType: text('action_type').notNull(), // e.g., 'send_email', 'create_task', 'update_crm'
+    actionData: jsonb('action_data').$type<Record<string, unknown>>().notNull(),
+    description: text('description').notNull(), // Human-readable description
+
+    // Risk classification
+    riskLevel: actionRiskLevelEnum('risk_level').notNull(),
+    riskReasons: jsonb('risk_reasons').$type<string[]>().default([]),
+
+    // Approval status
+    status: approvalStatusEnum('status').notNull().default('pending'),
+
+    // Review info
+    reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+    reviewedAt: timestamp('reviewed_at'),
+    reviewNotes: text('review_notes'),
+
+    // Auto-expiration
+    expiresAt: timestamp('expires_at'),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('agent_pending_action_tenant_idx').on(table.workspaceId),
+    teamIdx: index('agent_pending_action_team_idx').on(table.teamId),
+    agentIdx: index('agent_pending_action_agent_idx').on(table.agentId),
+    statusIdx: index('agent_pending_action_status_idx').on(table.status),
+    riskLevelIdx: index('agent_pending_action_risk_level_idx').on(table.riskLevel),
+    expiresAtIdx: index('agent_pending_action_expires_at_idx').on(table.expiresAt),
+    createdAtIdx: index('agent_pending_action_created_at_idx').on(table.createdAt),
+  }),
+);
+
+/**
+ * Agent Action Audit Log - Full audit trail for all autonomous actions
+ * Records both approved and auto-executed actions
+ */
+export const agentActionAuditLog = pgTable(
+  'agent_action_audit_log',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Context
+    teamId: uuid('team_id').references(() => agentTeams.id, { onDelete: 'set null' }),
+    agentId: uuid('agent_id').references(() => agents.id, { onDelete: 'set null' }),
+    workflowExecutionId: uuid('workflow_execution_id').references(() => agentWorkflowExecutions.id, { onDelete: 'set null' }),
+
+    // Action details
+    actionType: text('action_type').notNull(),
+    actionData: jsonb('action_data').$type<Record<string, unknown>>(),
+    description: text('description'),
+
+    // Execution info
+    executedAt: timestamp('executed_at').notNull().defaultNow(),
+    wasAutomatic: boolean('was_automatic').notNull(), // true if auto-executed, false if required approval
+    approvalId: uuid('approval_id').references(() => agentPendingActions.id, { onDelete: 'set null' }),
+
+    // Risk info
+    riskLevel: actionRiskLevelEnum('risk_level'),
+
+    // Result
+    success: boolean('success').notNull(),
+    error: text('error'),
+    result: jsonb('result').$type<Record<string, unknown>>(),
+    durationMs: integer('duration_ms'),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('agent_action_audit_tenant_idx').on(table.workspaceId),
+    teamIdx: index('agent_action_audit_team_idx').on(table.teamId),
+    agentIdx: index('agent_action_audit_agent_idx').on(table.agentId),
+    executedAtIdx: index('agent_action_audit_executed_at_idx').on(table.executedAt),
+    wasAutomaticIdx: index('agent_action_audit_was_automatic_idx').on(table.wasAutomatic),
+    successIdx: index('agent_action_audit_success_idx').on(table.success),
+    actionTypeIdx: index('agent_action_audit_action_type_idx').on(table.actionType),
+  }),
+);
+
+// ============================================================================
 // KNOWLEDGE BASE (Wisebase-like Document Management)
 // ============================================================================
 
@@ -1698,6 +1828,52 @@ export const agentSharedMemoryRelations = relations(agentSharedMemory, ({ one })
   agent: one(agents, {
     fields: [agentSharedMemory.agentId],
     references: [agents.id],
+  }),
+}));
+
+export const agentPendingActionsRelations = relations(agentPendingActions, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [agentPendingActions.workspaceId],
+    references: [workspaces.id],
+  }),
+  team: one(agentTeams, {
+    fields: [agentPendingActions.teamId],
+    references: [agentTeams.id],
+  }),
+  agent: one(agents, {
+    fields: [agentPendingActions.agentId],
+    references: [agents.id],
+  }),
+  workflowExecution: one(agentWorkflowExecutions, {
+    fields: [agentPendingActions.workflowExecutionId],
+    references: [agentWorkflowExecutions.id],
+  }),
+  reviewer: one(users, {
+    fields: [agentPendingActions.reviewedBy],
+    references: [users.id],
+  }),
+}));
+
+export const agentActionAuditLogRelations = relations(agentActionAuditLog, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [agentActionAuditLog.workspaceId],
+    references: [workspaces.id],
+  }),
+  team: one(agentTeams, {
+    fields: [agentActionAuditLog.teamId],
+    references: [agentTeams.id],
+  }),
+  agent: one(agents, {
+    fields: [agentActionAuditLog.agentId],
+    references: [agents.id],
+  }),
+  workflowExecution: one(agentWorkflowExecutions, {
+    fields: [agentActionAuditLog.workflowExecutionId],
+    references: [agentWorkflowExecutions.id],
+  }),
+  approval: one(agentPendingActions, {
+    fields: [agentActionAuditLog.approvalId],
+    references: [agentPendingActions.id],
   }),
 }));
 

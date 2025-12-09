@@ -21,6 +21,22 @@ export { AgentMemoryService } from './memory';
 export { TeamExecutor } from './team-executor';
 export { WorkflowEngine } from './workflow-engine';
 
+// Autonomy Service (Phase 6)
+export { AutonomyService, createAutonomyService } from './autonomy';
+
+// Notification Integration (Phase 6)
+export {
+  notifyPendingApproval,
+  notifyActionApproved,
+  notifyActionRejected,
+  notifyActionExpired,
+  notifyAutonomyLevelChanged,
+  sendDailyAutonomyDigest,
+  alertHighPendingCount,
+  alertCriticalAction,
+  alertActionFailed,
+} from './notification-integration';
+
 // Team Templates
 export {
   teamTemplates,
@@ -64,6 +80,20 @@ export type {
   DelegationResult,
   TeamExecutionResult,
   WorkflowResult,
+  // Phase 6 Autonomy Types
+  ActionRiskLevel,
+  ApprovalStatus,
+  RiskClassification,
+  PendingAction,
+  QueueActionInput,
+  ProcessApprovalInput,
+  ActionAuditEntry,
+  RecordAuditInput,
+  PendingActionsFilters,
+  AuditLogFilters,
+  DepartmentMetrics,
+  TeamAutonomyStats,
+  ActionRiskRules,
 } from './types';
 
 export type {

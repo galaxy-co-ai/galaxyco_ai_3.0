@@ -633,7 +633,7 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - AI-powered summarization
 - Multi-format support (PDF, TXT, MD, DOCX)
 
-### 🎯 Agent Orchestration System ✅ (Phase 1-5 Complete)
+### 🎯 Agent Orchestration System ✅ (Phase 1-6 Complete)
 
 **Multi-Agent Coordination for Autonomous Business Operations**
 
@@ -645,6 +645,15 @@ Inspired by The General Intelligence Company's "Cofounder" approach, our orchest
 - **Multi-Agent Workflows** - Chain agents together for complex business processes
 - **Three-Tier Memory System** - Short-term, medium-term, and long-term context storage
 - **Visual Workflow Builder** - Drag-and-drop workflow creation with step routing
+- **Autonomous Operations Mode** (Phase 6) - Human oversight gates with approval workflows
+
+#### Autonomous Operations Mode (Phase 6):
+- **Autonomy Levels** - Supervised, Semi-Autonomous, Autonomous modes per team
+- **Risk Classification** - Low, Medium, High, Critical action risk levels
+- **Approval Queue** - Pending actions with bulk approve/reject operations
+- **Audit Trail** - Full logging of all autonomous actions
+- **Department Dashboard** - Real-time metrics, team stats, pending approvals
+- **Notification Integration** - Alerts for pending approvals and critical actions
 
 #### Pre-Built Team Templates (Phase 3):
 - **Sales Team** - Lead Qualifier, Proposal Writer, Follow-up Agent, Sales Manager
@@ -684,7 +693,8 @@ Inspired by The General Intelligence Company's "Cofounder" approach, our orchest
 - ✅ Phase 3: Team templates, execution engine, UI components
 - ✅ Phase 4: Workflow engine, visual builder, workflow templates, execution monitoring
 - ✅ Phase 5: Neptune Integration - 12 new orchestration tools for natural language control
-- ⏳ Phase 6-7: Autonomous mode, UI polish (upcoming)
+- ✅ Phase 6: Autonomous Operations Mode - approval workflows, risk classification, audit logs
+- ⏳ Phase 7: UI Integration and Polish (upcoming)
 
 ### 🤝 CRM
 - Contact, project, and deal management
@@ -824,6 +834,12 @@ src/
 /api/orchestration/route              POST         Route task to best agent
 /api/orchestration/delegate           POST         Delegate task between agents
 /api/orchestration/memory             GET/POST/DELETE  Shared memory system
+/api/orchestration/approvals          GET/POST     List/queue pending approvals
+/api/orchestration/approvals/[id]     GET/POST     Get/process approval
+/api/orchestration/approvals/bulk     POST         Bulk approve/reject actions
+/api/orchestration/audit              GET          Get audit log entries
+/api/orchestration/audit/[teamId]     GET          Get team-specific audit log
+/api/orchestration/metrics            GET          Get department metrics & stats
 ```
 
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.

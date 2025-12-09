@@ -51,6 +51,188 @@ export type MessageStatus = 'pending' | 'delivered' | 'read' | 'processed';
 export type StepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
 
 // ============================================================================
+// AUTONOMY & APPROVAL TYPES
+// ============================================================================
+
+export type ActionRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired' | 'auto_approved';
+
+/**
+ * Risk classification for an action based on autonomy rules
+ */
+export interface RiskClassification {
+  riskLevel: ActionRiskLevel;
+  reasons: string[];
+  requiresApproval: boolean;
+}
+
+/**
+ * Pending action awaiting approval
+ */
+export interface PendingAction {
+  id: string;
+  workspaceId: string;
+  teamId?: string;
+  agentId?: string;
+  workflowExecutionId?: string;
+  actionType: string;
+  actionData: Record<string, unknown>;
+  description: string;
+  riskLevel: ActionRiskLevel;
+  riskReasons: string[];
+  status: ApprovalStatus;
+  reviewedBy?: string;
+  reviewedAt?: Date;
+  reviewNotes?: string;
+  expiresAt?: Date;
+  createdAt: Date;
+  // Populated fields
+  agentName?: string;
+  teamName?: string;
+  reviewerName?: string;
+}
+
+/**
+ * Input for queueing an action for approval
+ */
+export interface QueueActionInput {
+  workspaceId: string;
+  teamId?: string;
+  agentId?: string;
+  workflowExecutionId?: string;
+  actionType: string;
+  actionData: Record<string, unknown>;
+  description: string;
+  expiresInHours?: number; // Default 24 hours
+}
+
+/**
+ * Input for processing an approval decision
+ */
+export interface ProcessApprovalInput {
+  actionId: string;
+  approved: boolean;
+  reviewerId: string;
+  reviewNotes?: string;
+}
+
+/**
+ * Audit log entry for executed actions
+ */
+export interface ActionAuditEntry {
+  id: string;
+  workspaceId: string;
+  teamId?: string;
+  agentId?: string;
+  workflowExecutionId?: string;
+  actionType: string;
+  actionData?: Record<string, unknown>;
+  description?: string;
+  executedAt: Date;
+  wasAutomatic: boolean;
+  approvalId?: string;
+  riskLevel?: ActionRiskLevel;
+  success: boolean;
+  error?: string;
+  result?: Record<string, unknown>;
+  durationMs?: number;
+  // Populated fields
+  agentName?: string;
+  teamName?: string;
+}
+
+/**
+ * Input for recording an audit log entry
+ */
+export interface RecordAuditInput {
+  workspaceId: string;
+  teamId?: string;
+  agentId?: string;
+  workflowExecutionId?: string;
+  actionType: string;
+  actionData?: Record<string, unknown>;
+  description?: string;
+  wasAutomatic: boolean;
+  approvalId?: string;
+  riskLevel?: ActionRiskLevel;
+  success: boolean;
+  error?: string;
+  result?: Record<string, unknown>;
+  durationMs?: number;
+}
+
+/**
+ * Filters for querying pending actions
+ */
+export interface PendingActionsFilters {
+  teamId?: string;
+  agentId?: string;
+  status?: ApprovalStatus;
+  riskLevel?: ActionRiskLevel;
+  actionType?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Filters for querying audit log
+ */
+export interface AuditLogFilters {
+  teamId?: string;
+  agentId?: string;
+  actionType?: string;
+  wasAutomatic?: boolean;
+  success?: boolean;
+  startDate?: Date;
+  endDate?: Date;
+  limit?: number;
+  offset?: number;
+}
+
+/**
+ * Department metrics for dashboard
+ */
+export interface DepartmentMetrics {
+  department: string;
+  teamCount: number;
+  activeTeams: number;
+  totalActions: number;
+  autoApprovedActions: number;
+  manuallyApprovedActions: number;
+  rejectedActions: number;
+  pendingApprovals: number;
+  successRate: number;
+  avgResponseTimeMs: number;
+}
+
+/**
+ * Team autonomy statistics
+ */
+export interface TeamAutonomyStats {
+  teamId: string;
+  teamName: string;
+  autonomyLevel: TeamAutonomyLevel;
+  totalActions: number;
+  autoExecuted: number;
+  awaitingApproval: number;
+  approvedToday: number;
+  rejectedToday: number;
+  lastActionAt?: Date;
+}
+
+/**
+ * Risk classification rules for action types
+ */
+export interface ActionRiskRules {
+  // Action types categorized by risk level
+  lowRisk: string[];
+  mediumRisk: string[];
+  highRisk: string[];
+  critical: string[];
+}
+
+// ============================================================================
 // AGENT TEAM TYPES
 // ============================================================================
 
