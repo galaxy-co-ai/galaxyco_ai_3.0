@@ -29,6 +29,7 @@ import { useDebounce } from "@/hooks/useDebounce";
  */
 const SYSTEM_ADMIN_EMAILS: string[] = [
   'dev@galaxyco.ai',
+  'dalton@galaxyco.ai',
 ];
 
 export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
