@@ -165,7 +165,21 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Project Status:** [PROJECT_STATUS.md](./PROJECT_STATUS.md) ← Always check here first
 - **Test Coverage:** Run `npm run test:coverage`
 
-**Recent Updates (December 8, 2025):**
+**Recent Updates (December 9, 2025):**
+- 🚀 **Neptune 10-Point Enhancement** - Major feature upgrade:
+  - **DALL-E Fix** - Image generation now available from dashboard (added to tools)
+  - **User Text Color** - User messages now display in white for better readability
+  - **Quick Actions Wired** - Welcome banner buttons now trigger Neptune prompts
+  - **Context Awareness** - Neptune knows current page and tailors responses
+  - **Contextual Typing** - Shows "Searching web...", "Generating image...", etc.
+  - **Keyboard Shortcuts** - Enter to submit, Cmd/Ctrl+K to focus Neptune input
+  - **Direct Navigation** - New `navigate_to_page` tool lets Neptune navigate users
+  - **Interactive Roadmap** - Roadmap items clickable with "Ask Neptune for help" button
+  - **Proactive Suggestions** - Enhanced system prompt for empty workspace detection
+  - **Conversation Search** - Search bar in History view to find past conversations
+  - **PDF Generation** - New `generate_pdf` tool creates invoices, reports, proposals, contracts
+
+**Previous Updates (December 8, 2025):**
 - ✨ **Neptune Rich Response Rendering** - Polished, structured AI responses:
   - Full markdown support (headers, bullet points, bold, code blocks, tables)
   - Syntax highlighting for code with copy button

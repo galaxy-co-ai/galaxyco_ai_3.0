@@ -696,6 +696,119 @@ export const aiTools: ChatCompletionTool[] = [
     },
   },
 
+  // Navigation tool - allows Neptune to navigate users to different pages
+  {
+    type: 'function',
+    function: {
+      name: 'navigate_to_page',
+      description: 'Navigate the user to a different page in the platform. Use this when the user asks to "go to", "show me", "open", "take me to" a specific section of the application.',
+      parameters: {
+        type: 'object',
+        properties: {
+          page: {
+            type: 'string',
+            enum: ['dashboard', 'crm', 'library', 'campaigns', 'creator', 'activity', 'settings', 'connected-apps', 'launchpad'],
+            description: 'The page to navigate to. dashboard = main home, crm = customer relationship management, library = knowledge base/documents, campaigns = marketing campaigns, creator = content creator, activity = agents & automation, settings = user settings, connected-apps = integrations, launchpad = public portal',
+          },
+          tab: {
+            type: 'string',
+            description: 'Optional tab within the page (e.g., "leads" for CRM, "laboratory" for Activity)',
+          },
+        },
+        required: ['page'],
+      },
+    },
+  },
+
+  // PDF Generation tool
+  {
+    type: 'function',
+    function: {
+      name: 'generate_pdf',
+      description: 'Generate a professional PDF document such as an invoice, report, proposal, or contract. The PDF will be styled beautifully and uploaded for download.',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['invoice', 'report', 'proposal', 'contract'],
+            description: 'Type of document to generate',
+          },
+          title: {
+            type: 'string',
+            description: 'Title of the document',
+          },
+          content: {
+            type: 'object',
+            description: 'Document content. Include relevant fields like companyName, recipientName, items (for invoices), sections (for reports), scope/deliverables (for proposals), or clauses (for contracts).',
+            properties: {
+              date: { type: 'string', description: 'Document date' },
+              companyName: { type: 'string', description: 'Company/sender name' },
+              companyAddress: { type: 'string', description: 'Company address' },
+              recipientName: { type: 'string', description: 'Recipient name' },
+              recipientCompany: { type: 'string', description: 'Recipient company' },
+              recipientAddress: { type: 'string', description: 'Recipient address' },
+              invoiceNumber: { type: 'string', description: 'Invoice number (for invoices)' },
+              dueDate: { type: 'string', description: 'Due date (for invoices)' },
+              items: {
+                type: 'array',
+                description: 'Line items (for invoices)',
+                items: {
+                  type: 'object',
+                  properties: {
+                    description: { type: 'string' },
+                    quantity: { type: 'number' },
+                    unitPrice: { type: 'number' },
+                    total: { type: 'number' },
+                  },
+                },
+              },
+              total: { type: 'number', description: 'Total amount' },
+              sections: {
+                type: 'array',
+                description: 'Report sections',
+                items: {
+                  type: 'object',
+                  properties: {
+                    heading: { type: 'string' },
+                    content: { type: 'string' },
+                  },
+                },
+              },
+              keyFindings: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Key findings or bullet points',
+              },
+              scope: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Scope items (for proposals)',
+              },
+              deliverables: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Deliverables (for proposals)',
+              },
+              clauses: {
+                type: 'array',
+                description: 'Contract clauses',
+                items: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    content: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+        },
+        required: ['type', 'title', 'content'],
+      },
+    },
+  },
+
   // Save uploaded file to Library with smart organization
   {
     type: 'function',
@@ -3327,6 +3440,95 @@ A: [Detailed answer]`,
         success: false,
         message: 'Failed to generate image. Please try again with a different prompt.',
         error: errorMessage,
+      };
+    }
+  },
+
+  async navigate_to_page(args): Promise<ToolResult> {
+    const page = args.page as string;
+    const tab = args.tab as string | undefined;
+    
+    // Map page names to URLs
+    const pageUrls: Record<string, string> = {
+      'dashboard': '/',
+      'crm': '/crm',
+      'library': '/library',
+      'campaigns': '/campaigns',
+      'creator': '/creator',
+      'activity': '/activity',
+      'settings': '/settings',
+      'connected-apps': '/connected-apps',
+      'launchpad': '/launchpad',
+    };
+
+    const baseUrl = pageUrls[page];
+    if (!baseUrl) {
+      return {
+        success: false,
+        message: `Unknown page: ${page}. Available pages: ${Object.keys(pageUrls).join(', ')}`,
+        error: 'invalid_page',
+      };
+    }
+
+    const url = tab ? `${baseUrl}?tab=${tab}` : baseUrl;
+    
+    // Return navigation action for client to handle
+    return {
+      success: true,
+      message: `Navigating to ${page}${tab ? ` (${tab} tab)` : ''}...`,
+      data: {
+        action: 'navigate',
+        url,
+        page,
+        tab,
+        dispatchEvent: 'neptune-navigate',
+      },
+    };
+  },
+
+  async generate_pdf(args, context): Promise<ToolResult> {
+    try {
+      const { generatePDF, isPDFConfigured } = await import('@/lib/pdf-generator');
+      
+      if (!isPDFConfigured()) {
+        return {
+          success: false,
+          message: 'PDF generation is not configured.',
+          error: 'pdf_not_configured',
+        };
+      }
+
+      const type = args.type as 'invoice' | 'report' | 'proposal' | 'contract';
+      const title = args.title as string;
+      const content = args.content as Record<string, unknown>;
+
+      logger.info('Generating PDF document', { type, title, workspaceId: context.workspaceId });
+
+      const result = await generatePDF({
+        type,
+        title,
+        content,
+        workspaceId: context.workspaceId,
+      });
+
+      logger.info('PDF generated successfully', { url: result.url, type, title });
+
+      return {
+        success: true,
+        message: `📄 Generated ${type}: "${title}"\n\n🔗 Download: ${result.url}`,
+        data: {
+          url: result.url,
+          filename: result.filename,
+          type: result.type,
+          title: result.title,
+        },
+      };
+    } catch (error) {
+      logger.error('PDF generation failed', error);
+      return {
+        success: false,
+        message: 'Failed to generate PDF. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   },
@@ -7496,7 +7698,7 @@ export const toolsByCategory = {
   agents: ['list_agents', 'run_agent', 'get_agent_status'],
   content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents', 'save_upload_to_library'],
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library', 'search_web'],
-  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media', 'search_web'],
+  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media', 'search_web', 'generate_image', 'create_professional_document', 'navigate_to_page', 'generate_pdf'],
   automation: ['create_automation'],
   team: ['list_team_members', 'assign_to_team_member'],
   marketing: [

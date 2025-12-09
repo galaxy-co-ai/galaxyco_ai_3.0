@@ -5,12 +5,14 @@
  * 
  * Displays dynamic roadmap items that Neptune builds based on conversation.
  * Items check off as Neptune helps the user complete them.
+ * Now interactive - clicking items triggers Neptune prompts.
  */
 
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Compass, CheckCircle2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Compass, CheckCircle2, ChevronDown, ChevronUp, Sparkles, MessageSquare } from 'lucide-react';
 
 export interface DashboardRoadmapItem {
   id: string;
@@ -23,11 +25,21 @@ export interface DashboardRoadmapItem {
 interface RoadmapCardProps {
   items: DashboardRoadmapItem[];
   completionPercentage: number;
+  onItemClick?: (item: DashboardRoadmapItem) => void;
 }
+
+// Helper to dispatch Neptune prompt event
+const sendNeptunePrompt = (prompt: string) => {
+  const event = new CustomEvent('neptune-prompt', {
+    detail: { prompt },
+  });
+  window.dispatchEvent(event);
+};
 
 export default function RoadmapCard({
   items,
   completionPercentage,
+  onItemClick,
 }: RoadmapCardProps) {
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
@@ -43,6 +55,16 @@ export default function RoadmapCard({
     } else {
       setExpandedItemId(item.id);
     }
+  };
+
+  const handleHelpClick = (item: DashboardRoadmapItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Send prompt to Neptune
+    sendNeptunePrompt(`Help me with: ${item.title}. ${item.description || ''}`);
+    // Call optional callback
+    onItemClick?.(item);
+    // Close expanded state
+    setExpandedItemId(null);
   };
 
   return (
@@ -172,11 +194,22 @@ export default function RoadmapCard({
                     </Badge>
                     
                     {/* Expanded Dropdown */}
-                    {isExpanded && !item.completed && item.description && (
-                      <div className="mt-2 p-3 rounded-lg border bg-background shadow-sm">
-                        <p className="text-sm text-muted-foreground">
-                          {item.description}
-                        </p>
+                    {isExpanded && !item.completed && (
+                      <div className="mt-2 p-3 rounded-lg border bg-background shadow-sm space-y-3">
+                        {item.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {item.description}
+                          </p>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full text-xs h-8 gap-1.5"
+                          onClick={(e) => handleHelpClick(item, e)}
+                        >
+                          <MessageSquare className="h-3 w-3" />
+                          Ask Neptune for help
+                        </Button>
                       </div>
                     )}
                   </div>

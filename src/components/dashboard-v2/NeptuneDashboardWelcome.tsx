@@ -11,8 +11,7 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Bot, Users, FolderOpen, Zap, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Sparkles, Bot, FolderOpen, X } from 'lucide-react';
 
 interface NeptuneDashboardWelcomeProps {
   userId: string;
@@ -38,7 +37,6 @@ export default function NeptuneDashboardWelcome({
   workspaceId,
   userName,
 }: NeptuneDashboardWelcomeProps) {
-  const router = useRouter();
   const [welcomeData, setWelcomeData] = useState<WelcomeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -168,25 +166,30 @@ export default function NeptuneDashboardWelcome({
     );
   }
 
+  // Helper to dispatch Neptune prompt event
+  const sendNeptunePrompt = (prompt: string) => {
+    const event = new CustomEvent('neptune-prompt', {
+      detail: { prompt },
+    });
+    window.dispatchEvent(event);
+  };
+
   // New user onboarding-focused welcome
   if (isNewUser) {
     const suggestedPrompts = [
       {
         text: 'Help me create my first agent',
-        action: () => router.push('/activity?tab=laboratory'),
+        prompt: 'Help me create my first AI agent. What kind of agent would be most useful for my business?',
         icon: Bot,
       },
       {
         text: 'Show me what I can do',
-        action: () => {
-          // This will be handled by Neptune chat
-          return 'What can I do with GalaxyCo?';
-        },
+        prompt: 'What can I do with GalaxyCo? Show me all the features and capabilities available to me.',
         icon: Sparkles,
       },
       {
-        text: 'Upload a document to my knowledge base',
-        action: () => router.push('/library?tab=upload'),
+        text: 'Upload a document',
+        prompt: 'Help me upload a document to my knowledge base. What types of documents can I upload and how will Neptune use them?',
         icon: FolderOpen,
       },
     ];
@@ -222,16 +225,7 @@ export default function NeptuneDashboardWelcome({
                   key={i}
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    if (typeof prompt.action === 'function') {
-                      const result = prompt.action();
-                      if (typeof result === 'string') {
-                        // If it returns a string, it's a prompt for Neptune
-                        // We'll need to pass this to the parent component
-                        // For now, just navigate
-                      }
-                    }
-                  }}
+                  onClick={() => sendNeptunePrompt(prompt.prompt)}
                   className="text-xs h-8"
                 >
                   <prompt.icon className="h-3.5 w-3.5 mr-1.5" />

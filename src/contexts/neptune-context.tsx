@@ -64,6 +64,8 @@ interface NeptuneContextValue {
   isStreaming: boolean;
   conversationHistory: ConversationHistoryItem[];
   isLoadingHistory: boolean;
+  currentPage: string;
+  currentToolStatus: string | null;
 
   // Actions
   sendMessage: (
@@ -76,6 +78,7 @@ interface NeptuneContextValue {
   loadConversation: (conversationId: string) => Promise<void>;
   fetchConversationHistory: () => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
+  setCurrentPage: (page: string) => void;
 }
 
 // ============================================================================
@@ -157,6 +160,8 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<ConversationHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [currentPage, setCurrentPage] = useState<string>('dashboard');
+  const [currentToolStatus, setCurrentToolStatus] = useState<string | null>(null);
   const initRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -346,6 +351,23 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
           // Handle tool execution notification
           if (event.toolExecution && event.tools) {
             logger.debug("[Neptune] Tool execution", { tools: event.tools });
+            // Set contextual tool status for UI feedback
+            const toolStatusMap: Record<string, string> = {
+              search_web: "Searching the web...",
+              generate_image: "Generating image...",
+              create_professional_document: "Creating document...",
+              analyze_company_website: "Analyzing website...",
+              create_lead: "Creating lead...",
+              create_contact: "Adding contact...",
+              schedule_meeting: "Scheduling meeting...",
+              draft_email: "Drafting email...",
+              update_dashboard_roadmap: "Updating roadmap...",
+              create_agent: "Creating agent...",
+              navigate_to_page: "Navigating...",
+              generate_pdf: "Generating PDF...",
+            };
+            const firstTool = event.tools[0];
+            setCurrentToolStatus(toolStatusMap[firstTool] || `Running ${firstTool}...`);
           }
 
           // Handle tool results
@@ -384,6 +406,18 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
               : msg
           )
         );
+
+        // Check for navigation tool results and dispatch event
+        if (finalMetadata?.functionCalls) {
+          for (const funcCall of finalMetadata.functionCalls) {
+            const result = funcCall.result?.data as Record<string, unknown> | undefined;
+            if (result?.dispatchEvent === 'neptune-navigate' && result.url) {
+              window.dispatchEvent(new CustomEvent('neptune-navigate', {
+                detail: { url: result.url as string },
+              }));
+            }
+          }
+        }
       } catch (error) {
         // Handle abort (user initiated)
         if (error instanceof Error && error.name === "AbortError") {
@@ -425,6 +459,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
       } finally {
         setIsLoading(false);
         setIsStreaming(false);
+        setCurrentToolStatus(null);
         abortControllerRef.current = null;
       }
     },
@@ -653,12 +688,15 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         isStreaming,
         conversationHistory,
         isLoadingHistory,
+        currentPage,
+        currentToolStatus,
         sendMessage,
         clearConversation,
         refreshMessages,
         loadConversation,
         fetchConversationHistory,
         deleteConversation,
+        setCurrentPage,
       }}
     >
       {children}
@@ -679,12 +717,15 @@ const defaultNeptuneContext: NeptuneContextValue = {
   isStreaming: false,
   conversationHistory: [],
   isLoadingHistory: false,
+  currentPage: 'dashboard',
+  currentToolStatus: null,
   sendMessage: async () => {},
   clearConversation: async () => {},
   refreshMessages: async () => {},
   loadConversation: async () => {},
   fetchConversationHistory: async () => {},
   deleteConversation: async () => {},
+  setCurrentPage: () => {},
 };
 
 export function useNeptune() {

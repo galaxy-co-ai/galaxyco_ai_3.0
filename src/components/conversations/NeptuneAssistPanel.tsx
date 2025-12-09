@@ -73,6 +73,7 @@ export default function NeptuneAssistPanel({
     isStreaming,
     conversationHistory,
     isLoadingHistory,
+    currentToolStatus,
     sendMessage,
     clearConversation,
     loadConversation,
@@ -88,8 +89,10 @@ export default function NeptuneAssistPanel({
   const [viewMode, setViewMode] = useState<"chat" | "history">("chat");
   const [isRecording, setIsRecording] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState<string | null>(null);
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -106,6 +109,24 @@ export default function NeptuneAssistPanel({
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Global keyboard shortcut: Cmd/Ctrl+K to focus Neptune input
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K (Mac) or Ctrl+K (Windows/Linux) to focus input
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+      // Escape to blur input
+      if (e.key === "Escape" && document.activeElement === inputRef.current) {
+        inputRef.current?.blur();
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, []);
 
   // Listen for roadmap prompts (from RoadmapCard)
   useEffect(() => {
@@ -523,7 +544,44 @@ export default function NeptuneAssistPanel({
 
         {/* History View */}
         {viewMode === "history" ? (
-          <div className={`flex-1 overflow-y-auto ${isFullscreen ? "p-6" : "p-4"}`}>
+          <div className={`flex-1 overflow-hidden flex flex-col ${isFullscreen ? "p-6" : "p-4"}`}>
+            {/* Search Input */}
+            <div className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={historySearchQuery}
+                  onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  placeholder="Search conversations..."
+                  className="w-full rounded-md border bg-background px-3 py-2 text-sm pl-9"
+                  aria-label="Search conversation history"
+                />
+                <svg
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                {historySearchQuery && (
+                  <button
+                    onClick={() => setHistorySearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto">
             {isLoadingHistory ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -536,9 +594,30 @@ export default function NeptuneAssistPanel({
                   Your past conversations will appear here
                 </p>
               </div>
-            ) : (
+            ) : (() => {
+              const filteredHistory = conversationHistory.filter((conv) => {
+                if (!historySearchQuery.trim()) return true;
+                const query = historySearchQuery.toLowerCase();
+                return (
+                  conv.title.toLowerCase().includes(query) ||
+                  (conv.preview && conv.preview.toLowerCase().includes(query))
+                );
+              });
+              
+              if (filteredHistory.length === 0 && historySearchQuery.trim()) {
+                return (
+                  <div className="flex flex-col items-center justify-center h-32 text-center">
+                    <p className="text-sm text-muted-foreground">No conversations found</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      Try a different search term
+                    </p>
+                  </div>
+                );
+              }
+              
+              return (
               <div className="space-y-2">
-                {conversationHistory.map((conv) => (
+                {filteredHistory.map((conv) => (
                   <div
                     key={conv.id}
                     className="group relative w-full text-left p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
@@ -591,7 +670,9 @@ export default function NeptuneAssistPanel({
                   </div>
                 ))}
               </div>
-            )}
+              );
+            })()}
+            </div>
           </div>
         ) : (
           /* Chat Messages */
@@ -610,7 +691,7 @@ export default function NeptuneAssistPanel({
                 <div
                   className={`max-w-[85%] rounded-lg p-3 ${
                     msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-white"
                       : "bg-muted"
                   }`}
                 >
@@ -658,11 +739,18 @@ export default function NeptuneAssistPanel({
                       metadata={msg.metadata}
                     />
                   ) : msg.isStreaming ? (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </span>
+                      {currentToolStatus && (
+                        <span className="text-xs text-muted-foreground animate-pulse">
+                          {currentToolStatus}
+                        </span>
+                      )}
+                    </div>
                   ) : null}
 
                   {/* Gamma Document Display */}
@@ -1028,6 +1116,7 @@ export default function NeptuneAssistPanel({
               )}
             </Button>
             <input
+              ref={inputRef}
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -1038,10 +1127,10 @@ export default function NeptuneAssistPanel({
                   handleSend(undefined);
                 }
               }}
-              placeholder="Ask Neptune..."
+              placeholder="Ask Neptune... (⌘K to focus)"
               className="flex-1 rounded-md border bg-background px-3 py-2 text-sm min-w-0"
               disabled={isLoading || isRecording}
-              aria-label="Message Neptune"
+              aria-label="Message Neptune, press Command+K to focus"
             />
             <Button
               variant={isRecording ? "destructive" : "ghost"}
