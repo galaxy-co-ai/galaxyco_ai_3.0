@@ -82,6 +82,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Handle case where table doesn't exist yet (migration not run)
+    if (error instanceof Error && error.message.includes('relation') && error.message.includes('does not exist')) {
+      logger.warn('Marketing channels table does not exist yet');
+      return NextResponse.json({
+        channels: [],
+        total: 0,
+      });
+    }
+
     logger.error('Failed to list marketing channels', { error });
     return NextResponse.json(
       { error: 'Something went wrong. Please try again.' },

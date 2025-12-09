@@ -170,7 +170,7 @@ export default function MarketingDashboard({
   }>('/api/marketing/channels', fetcher);
   
   // Use API channels if available, otherwise fall back to initial
-  const channels = channelsData?.channels.map(ch => ({
+  const channels = channelsData?.channels?.map(ch => ({
     id: ch.id,
     name: ch.name,
     type: ch.type,
@@ -178,7 +178,7 @@ export default function MarketingDashboard({
     performance: ch.performance,
     budget: ch.budgetDollars || 0,
     reach: ch.impressions,
-  })) || initialChannels;
+  })) ?? initialChannels;
   const [selectedAnalyticsCampaign, setSelectedAnalyticsCampaign] = useState<Campaign | null>(null);
   const [analyticsSearchQuery, setAnalyticsSearchQuery] = useState("");
   const [selectedAudience, setSelectedAudience] = useState<string>("high-value");
