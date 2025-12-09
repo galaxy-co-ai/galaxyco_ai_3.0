@@ -733,11 +733,17 @@ export default function NeptuneAssistPanel({
                   )}
 
                   {msg.content ? (
-                    <NeptuneMessage
-                      content={msg.content}
-                      isStreaming={msg.isStreaming}
-                      metadata={msg.metadata}
-                    />
+                    msg.role === "user" ? (
+                      // User messages: plain text (white on primary background)
+                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    ) : (
+                      // Assistant messages: rich markdown rendering
+                      <NeptuneMessage
+                        content={msg.content}
+                        isStreaming={msg.isStreaming}
+                        metadata={msg.metadata}
+                      />
+                    )
                   ) : msg.isStreaming ? (
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1">
