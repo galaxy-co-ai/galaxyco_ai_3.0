@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Plus,
   Search,
   Workflow,
@@ -363,35 +370,38 @@ export default function WorkflowsListClient({
             {/* Trigger Filter */}
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <select
-                value={triggerFilter}
-                onChange={(e) => setTriggerFilter(e.target.value)}
-                className="px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                aria-label="Filter by trigger type"
-              >
-                <option value="all">All Triggers</option>
-                {Object.entries(triggerConfig).map(([key, config]) => (
-                  <option key={key} value={key}>
-                    {config.label}
-                  </option>
-                ))}
-              </select>
+              <Select value={triggerFilter} onValueChange={setTriggerFilter}>
+                <SelectTrigger className="w-[150px]" aria-label="Filter by trigger type">
+                  <SelectValue placeholder="All Triggers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Triggers</SelectItem>
+                  {Object.entries(triggerConfig).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>
+                      <span className="flex items-center gap-2">
+                        {config.icon}
+                        <span>{config.label}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Status Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 rounded-md border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              aria-label="Filter by status"
-            >
-              <option value="all">All Status</option>
-              {Object.entries(statusConfig).map(([key, config]) => (
-                <option key={key} value={key}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px]" aria-label="Filter by status">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                {Object.entries(statusConfig).map(([key, config]) => (
+                  <SelectItem key={key} value={key}>
+                    {config.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Refresh */}
             <Button
