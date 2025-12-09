@@ -155,6 +155,88 @@ export async function POST(request: NextRequest) {
           .set({ isActive: false })
           .where(eq(workspaceMembers.userId, user.id));
       }
+    } else if (eventType === 'organization.created') {
+      // Handle organization creation - create a corresponding workspace
+      const clerkOrgId = data.id;
+      const orgName = data.name;
+      const orgSlug = data.slug || orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const createdBy = data.created_by;
+
+      // Check if workspace with this clerk org ID already exists
+      const existingWorkspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.clerkOrganizationId, clerkOrgId),
+      });
+
+      if (!existingWorkspace) {
+        // Create workspace for the organization
+        const [newWorkspace] = await db
+          .insert(workspaces)
+          .values({
+            name: orgName,
+            slug: orgSlug,
+            clerkOrganizationId: clerkOrgId,
+          })
+          .returning();
+
+        // If we know who created it, add them as owner
+        if (createdBy) {
+          const creator = await db.query.users.findFirst({
+            where: eq(users.clerkUserId, createdBy),
+          });
+
+          if (creator) {
+            await db.insert(workspaceMembers).values({
+              userId: creator.id,
+              workspaceId: newWorkspace.id,
+              role: 'owner',
+              isActive: true,
+            });
+          }
+        }
+
+        logger.info('Organization workspace created', { clerkOrgId, workspaceId: newWorkspace.id });
+      }
+    } else if (eventType === 'organization.updated') {
+      // Handle organization updates - sync name/slug changes
+      const clerkOrgId = data.id;
+      const orgName = data.name;
+      const orgSlug = data.slug;
+
+      const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.clerkOrganizationId, clerkOrgId),
+      });
+
+      if (workspace) {
+        await db
+          .update(workspaces)
+          .set({
+            name: orgName || workspace.name,
+            slug: orgSlug || workspace.slug,
+            updatedAt: new Date(),
+          })
+          .where(eq(workspaces.id, workspace.id));
+
+        logger.info('Organization workspace updated', { clerkOrgId, workspaceId: workspace.id });
+      }
+    } else if (eventType === 'organization.deleted') {
+      // Handle organization deletion - deactivate the workspace
+      const clerkOrgId = data.id;
+
+      const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.clerkOrganizationId, clerkOrgId),
+      });
+
+      if (workspace) {
+        // Deactivate all memberships for this workspace
+        await db
+          .update(workspaceMembers)
+          .set({ isActive: false })
+          .where(eq(workspaceMembers.workspaceId, workspace.id));
+
+        // Optionally mark workspace as inactive (if you have such a field)
+        // For now, just log the deletion
+        logger.info('Organization workspace deactivated', { clerkOrgId, workspaceId: workspace.id });
+      }
     }
 
     return NextResponse.json({ received: true });
