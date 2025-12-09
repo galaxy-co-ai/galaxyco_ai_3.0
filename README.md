@@ -166,6 +166,29 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 9, 2025):**
+- 🔍 **Global Search** - Search across all workspace data:
+  - New `/api/search` endpoint searches contacts, campaigns, knowledge items, creator items, agents, blog posts
+  - SearchResults dropdown component with keyboard navigation and categorized results
+  - Wired to header search (Cmd+K shortcut) and Launchpad blog search
+  - Debounced API calls with loading and empty states
+  - ARIA labels and full keyboard accessibility
+- 📢 **Marketing Channels** - Full CRUD for marketing channels:
+  - New `marketingChannels` database table with type/status enums
+  - `/api/marketing/channels` endpoints for list, create, update, delete
+  - AddChannelDialog component with type selector, budget, and description
+  - MarketingDashboard now fetches real channel data via SWR
+  - Performance metrics tracking (impressions, clicks, conversions, revenue)
+- ⚙️ **Agent/Team Configuration Modals** - Edit existing agents and teams:
+  - AgentConfigModal for editing agent name, description, status with delete option
+  - TeamConfigModal for editing team name, description, status, autonomy level
+  - Wired to MyAgentsDashboard and AgentTeamsTab configure actions
+  - Delete confirmation dialogs with loading states
+- 🔗 **Document Sharing** - Generate shareable links for creator documents:
+  - New `sharedDocuments` table with tokens, expiry, password protection
+  - `/api/creator/share` endpoints for generating and managing share links
+  - Public `/shared/[token]` page for viewing without authentication
+  - ShareDocumentDialog with expiry options, password protection, existing shares list
+  - Access count tracking and revoke functionality
 - 🔐 **Clerk Production Deployment** - Authentication system now production-ready:
   - Migrated from Development to Production instance in Clerk Dashboard
   - Configured DNS records (Frontend API, Account Portal, Email DKIM)
@@ -812,6 +835,19 @@ src/
 /api/assistant/insights      GET    Get proactive insights and suggestions
 /api/assistant/action-approval POST  Approve/reject actions for learning
 /api/assistant/feedback      POST   Rate Neptune responses (👍/👎)
+```
+
+**Search & Marketing**
+```
+/api/search                  GET    Global search across workspace (contacts, campaigns, knowledge, etc.)
+/api/marketing/channels      GET/POST  List/create marketing channels
+/api/marketing/channels/[id] GET/PATCH/DELETE  Manage marketing channel
+```
+
+**Document Sharing**
+```
+/api/creator/share           GET/POST  List shares / Generate share link for document
+/api/creator/share/[token]   GET/POST/DELETE  Access shared document / Verify password / Revoke share
 ```
 
 **Core Features**
