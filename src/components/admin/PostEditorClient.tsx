@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -16,6 +16,7 @@ import {
   Upload,
   Link as LinkIcon,
   X,
+  ClipboardCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { TiptapEditor, InsertImageFunction, CitationData } from './TiptapEditor';
 import { AIImageModal } from './ArticleStudio/AIImageModal';
+import { PrePublishChecklist } from './ArticleStudio/PrePublishChecklist';
+import type { ArticleSource } from './ArticleStudio/SourcePanel';
 import { toast } from 'sonner';
 import readingTime from 'reading-time';
 import slugify from 'slugify';
@@ -77,6 +80,21 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  
+  // Pre-Publish Checklist state
+  const [isChecklistOpen, setIsChecklistOpen] = useState(false);
+  const [sources, setSources] = useState<ArticleSource[]>([]);
+  const [focusKeyword, setFocusKeyword] = useState('');
+  
+  // Fetch sources when editing an existing post
+  useEffect(() => {
+    if (mode === 'edit' && initialData?.id) {
+      fetch(`/api/admin/sources?postId=${initialData.id}`)
+        .then(res => res.ok ? res.json() : [])
+        .then(data => setSources(Array.isArray(data) ? data : []))
+        .catch(() => setSources([]));
+    }
+  }, [mode, initialData?.id]);
   
   // Editor insert function ref (will be set by TiptapEditor)
   const insertImageRef = useRef<((url: string, alt?: string) => void) | null>(null);
@@ -238,8 +256,8 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
     }
   };
 
-  // Publish post
-  const handlePublish = async () => {
+  // Open pre-publish checklist
+  const handlePublishClick = () => {
     if (!title.trim()) {
       toast.error('Please enter a title');
       return;
@@ -248,7 +266,22 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
       toast.error('Please add some content');
       return;
     }
+    setIsChecklistOpen(true);
+  };
 
+  // Handle article updates from checklist (e.g., SEO auto-generation)
+  const handleArticleUpdate = useCallback((updates: {
+    metaTitle?: string;
+    metaDescription?: string;
+    slug?: string;
+  }) => {
+    if (updates.metaTitle !== undefined) setMetaTitle(updates.metaTitle);
+    if (updates.metaDescription !== undefined) setMetaDescription(updates.metaDescription);
+    if (updates.slug !== undefined) setSlug(updates.slug);
+  }, []);
+
+  // Publish post (called from checklist after approval)
+  const handlePublish = async () => {
     setIsPublishing(true);
     try {
       const endpoint = mode === 'create' 
@@ -279,6 +312,7 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
         throw new Error(error.message || 'Failed to publish');
       }
 
+      setIsChecklistOpen(false);
       toast.success('Post published!');
       router.push('/admin/content');
     } catch (error) {
@@ -328,13 +362,14 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
             </Button>
             <Button 
               size="sm"
-              onClick={handlePublish}
+              onClick={handlePublishClick}
               disabled={isSaving || isPublishing}
+              aria-label="Open pre-publish checklist"
             >
               {isPublishing ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <Send className="h-4 w-4 mr-2" />
+                <ClipboardCheck className="h-4 w-4 mr-2" />
               )}
               Publish
             </Button>
@@ -600,6 +635,29 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
         onSelectImage={handleAIImageSelect}
         initialPrompt={aiImageInitialPrompt}
         context={aiImageContext}
+      />
+
+      {/* Pre-Publish Checklist */}
+      <PrePublishChecklist
+        isOpen={isChecklistOpen}
+        onClose={() => setIsChecklistOpen(false)}
+        onPublish={handlePublish}
+        article={{
+          id: initialData?.id,
+          title,
+          slug,
+          excerpt,
+          content,
+          metaTitle,
+          metaDescription,
+          featuredImage,
+          categoryId,
+        }}
+        sources={sources}
+        focusKeyword={focusKeyword}
+        isPublishing={isPublishing}
+        onUpdateArticle={handleArticleUpdate}
+        onFocusKeywordChange={setFocusKeyword}
       />
     </div>
   );

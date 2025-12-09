@@ -910,6 +910,7 @@ src/
 /api/admin/sources/[id]               GET/PATCH/DELETE  Manage article source
 /api/admin/sources/[id]/verify        POST         Verify source URL accessibility and relevance
 /api/admin/ai/image                   POST         Generate AI images (DALL-E 3) or suggest prompts
+/api/admin/ai/seo                     POST         Auto-generate meta title, description, slug from content
 /api/admin/upload/image               POST         Upload image to Vercel Blob storage
 ```
 
