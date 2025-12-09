@@ -633,7 +633,7 @@ Neptune has been transformed from a basic chat assistant into a proactive, auton
 - AI-powered summarization
 - Multi-format support (PDF, TXT, MD, DOCX)
 
-### 🎯 Agent Orchestration System ✅ (Phase 1-3 Complete)
+### 🎯 Agent Orchestration System ✅ (Phase 1-4 Complete)
 
 **Multi-Agent Coordination for Autonomous Business Operations**
 
@@ -644,12 +644,18 @@ Inspired by The General Intelligence Company's "Cofounder" approach, our orchest
 - **Agent-to-Agent Communication** - Message bus for task delegation and context sharing
 - **Multi-Agent Workflows** - Chain agents together for complex business processes
 - **Three-Tier Memory System** - Short-term, medium-term, and long-term context storage
+- **Visual Workflow Builder** - Drag-and-drop workflow creation with step routing
 
 #### Pre-Built Team Templates (Phase 3):
 - **Sales Team** - Lead Qualifier, Proposal Writer, Follow-up Agent, Sales Manager
 - **Marketing Team** - Campaign Manager, Content Creator, Analytics Agent
 - **Support Team** - Ticket Triage, Response Generator, Escalation Handler
 - **Operations Team** - Task Prioritizer, Resource Allocator, Workflow Executor
+
+#### Pre-Built Workflow Templates (Phase 4):
+- **Lead-to-Customer Pipeline** - Lead qualification → Score check → Proposal → Follow-up → Nurture
+- **Content Campaign Workflow** - Plan → Research → Create → Optimize → Schedule → Monitor → Report
+- **Support Ticket Resolution** - Triage → KB Search → Priority Check → Response → Verify → Close/Escalate
 
 #### Features:
 - **Department Automation** - Run entire departments with coordinated agent teams
@@ -660,18 +666,24 @@ Inspired by The General Intelligence Company's "Cofounder" approach, our orchest
 - **Autonomy Levels** - Supervised, semi-autonomous, and fully autonomous modes
 - **Team Creation Wizard** - 4-step wizard with department templates
 - **Team Dashboard** - Real-time team status, member management, execution controls
+- **Visual Workflow Builder** - Drag-and-drop interface for creating multi-agent workflows
+- **Workflow Execution Monitor** - Real-time step-by-step execution visualization
+- **Error Recovery** - Retry failed workflow steps with exponential backoff
+- **Scheduled Workflows** - Cron-based workflow triggers for automation
 
 #### Use Cases:
 - "Create a sales team with lead qualifier and proposal writer"
 - "Run the marketing team to handle this week's social content"
 - "Set up a workflow for support ticket resolution"
 - "Have the operations team prioritize and batch similar tasks"
+- "Build a lead qualification pipeline with conditional routing"
 
 #### Implementation Status:
 - ✅ Phase 1: Database schema (6 tables, 8 enums)
 - ✅ Phase 2: API endpoints (21 routes for orchestration)
 - ✅ Phase 3: Team templates, execution engine, UI components
-- ⏳ Phase 4-7: Workflows, Neptune integration, autonomous mode (upcoming)
+- ✅ Phase 4: Workflow engine, visual builder, workflow templates, execution monitoring
+- ⏳ Phase 5-7: Neptune integration, autonomous mode, UI polish (upcoming)
 
 ### 🤝 CRM
 - Contact, project, and deal management

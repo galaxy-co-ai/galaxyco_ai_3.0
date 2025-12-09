@@ -1,9 +1,9 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Activity, MessageSquare, FlaskConical, Users } from "lucide-react";
+import { Activity, MessageSquare, FlaskConical, Users, Workflow } from "lucide-react";
 
-export type AgentTabType = "activity" | "messages" | "teams" | "laboratory";
+export type AgentTabType = "activity" | "messages" | "teams" | "workflows" | "laboratory";
 
 interface AgentTabsProps {
   activeTab: AgentTabType;
@@ -12,6 +12,7 @@ interface AgentTabsProps {
     activity?: number;
     messages?: number;
     teams?: number;
+    workflows?: number;
   };
 }
 
@@ -42,6 +43,13 @@ const tabs: Array<{
     icon: Users,
     activeColor: "bg-amber-100 text-amber-700",
     badgeColor: "bg-amber-500",
+  },
+  {
+    value: "workflows",
+    label: "Workflows",
+    icon: Workflow,
+    activeColor: "bg-violet-100 text-violet-700",
+    badgeColor: "bg-violet-500",
   },
   {
     value: "laboratory",

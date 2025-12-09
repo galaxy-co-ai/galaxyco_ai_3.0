@@ -5,6 +5,323 @@
 
 ---
 
+## 🤖 Agent Orchestration System - Phase 4 Complete (December 9, 2025) ✅
+
+**Multi-Agent Workflows with Visual Builder**
+
+Phase 4 implements the workflow engine for multi-agent workflows, visual workflow builder UI, pre-built workflow templates, and execution monitoring.
+
+### Phase 4 Deliverables:
+
+#### Workflow Engine (`src/lib/orchestration/workflow-engine.ts`):
+- ✅ **WorkflowEngine class** - Full workflow execution management
+- ✅ **execute()** - Execute workflows from start with trigger context
+- ✅ **resume()** - Resume paused workflow executions
+- ✅ **pause()** - Pause running workflows
+- ✅ **cancel()** - Cancel workflow executions
+- ✅ **executeStep()** - Execute individual workflow steps with conditions
+- ✅ **handleStepComplete()** - Handle step completion and routing to next steps
+- ✅ **retryStep()** - Retry failed steps with backoff
+- ✅ Condition evaluation (equals, not_equals, contains, greater_than, less_than, exists)
+- ✅ Success/failure routing between steps
+- ✅ Execution context sharing between steps
+
+#### Workflow Templates (`src/lib/orchestration/workflow-templates.ts`):
+- ✅ **Lead-to-Customer Pipeline** - Lead qualification → Score check → Proposal → Follow-up → Nurture
+- ✅ **Content Campaign Workflow** - Plan → Research → Create → Optimize → Schedule → Monitor → Report
+- ✅ **Support Ticket Resolution** - Triage → KB Search → Priority Check → Generate Response → Verify → Close/Escalate
+
+Each template includes:
+- Step definitions with agent types and roles
+- Condition-based routing (success/failure paths)
+- Timeout and retry configurations
+- Required agent types validation
+- Benefits and use cases documentation
+- Estimated duration
+
+#### Trigger.dev Jobs (`src/trigger/workflow-executor-orchestration.ts`):
+- ✅ **executeWorkflowTask** - Durable, retried workflow execution
+- ✅ **executeWorkflowStepTask** - Execute individual workflow steps
+- ✅ **resumeWorkflowTask** - Resume paused workflows
+- ✅ **retryWorkflowStepTask** - Retry failed steps
+- ✅ **processScheduledWorkflows** - Process cron-triggered workflows (every minute)
+- ✅ **cleanupStaleExecutions** - Mark stuck executions as failed (hourly)
+
+#### UI Components (`src/components/orchestration/`):
+- ✅ **WorkflowBuilder** - Visual drag-and-drop workflow editor:
+  - Workflow name, description configuration
+  - Trigger type selection (manual, event, schedule, agent_request)
+  - Step builder with drag-and-drop reordering
+  - Agent selection for each step
+  - Action and input configuration
+  - Condition builder with multiple operators
+  - Success/failure routing configuration
+  - Timeout configuration
+  - Test and save functionality
+- ✅ **WorkflowCard** - Workflow display card with:
+  - Status badge (active, paused, draft, archived)
+  - Trigger type indicator
+  - Step count
+  - Team association
+  - Execution stats (runs, success rate, last executed)
+  - Quick actions (run, edit, delete)
+- ✅ **WorkflowExecutionMonitor** - Real-time execution tracking:
+  - Execution status with progress bar
+  - Step-by-step visualization
+  - Step status indicators (pending, running, completed, failed, skipped)
+  - Expandable step details with output/error
+  - Pause/Resume/Cancel controls
+  - Retry failed steps
+  - Auto-refresh while running
+- ✅ **AgentWorkflowsTab** - Full workflows dashboard:
+  - Workflow list with search and category filters
+  - Stats cards (total, active, runs, success rate)
+  - Template gallery for quick workflow creation
+  - Selected workflow detail panel
+  - Run workflow with context
+
+#### API Endpoints:
+- ✅ `GET /api/orchestration/workflows/executions/[executionId]` - Get execution details with workflow and agents
+- ✅ `PATCH /api/orchestration/workflows/executions/[executionId]` - Pause/resume/cancel/retry executions
+
+### Files Created:
+- `src/lib/orchestration/workflow-engine.ts` - Workflow execution engine
+- `src/lib/orchestration/workflow-templates.ts` - 3 pre-built workflow templates
+- `src/trigger/workflow-executor-orchestration.ts` - Trigger.dev background jobs
+- `src/components/orchestration/WorkflowBuilder.tsx` - Visual workflow editor
+- `src/components/orchestration/WorkflowCard.tsx` - Workflow card component
+- `src/components/orchestration/WorkflowExecutionMonitor.tsx` - Execution monitor
+- `src/components/orchestration/AgentWorkflowsTab.tsx` - Workflows dashboard tab
+- `src/components/orchestration/index.ts` - Component exports
+- `src/app/api/orchestration/workflows/executions/[executionId]/route.ts` - Execution API
+
+### Files Modified:
+- `src/lib/orchestration/index.ts` - Added exports for workflow engine and templates
+- `src/components/agents/AgentTabs.tsx` - Added Workflows tab (violet color scheme)
+- `src/components/agents/MyAgentsDashboard.tsx` - Integrated Workflows tab
+
+### Key Features:
+- **Visual Workflow Builder** - Drag-and-drop interface for creating workflows
+- **Condition-Based Routing** - Branch workflows based on step results
+- **Template-Based Creation** - Start with pre-built workflow templates
+- **Real-Time Monitoring** - Step-by-step execution visualization
+- **Error Recovery** - Retry failed steps with exponential backoff
+- **Scheduled Workflows** - Cron-based workflow triggers
+- **Execution History** - Track all workflow runs with detailed results
+
+### Next Phases:
+- **Phase 5**: Neptune Integration and Natural Language Orchestration
+- **Phase 6**: Autonomous Operations Mode
+- **Phase 7**: UI Integration and Polish
+
+---
+
+## 🤖 Agent Orchestration System - Phase 3 Complete (December 9, 2025) ✅
+
+**Agent Teams and Department Automation**
+
+Phase 3 implements pre-built team configurations, team execution engine, and UI components for creating and managing agent teams.
+
+### Phase 3 Deliverables:
+
+#### Team Templates (`src/lib/orchestration/team-templates.ts`):
+- ✅ **Sales Team** - Lead Qualifier, Proposal Writer, Follow-up Agent, Sales Manager
+- ✅ **Marketing Team** - Campaign Manager, Content Creator, Analytics Agent
+- ✅ **Support Team** - Ticket Triage, Response Generator, Escalation Handler, Support Manager
+- ✅ **Operations Team** - Task Prioritizer, Resource Allocator, Workflow Executor, Operations Manager
+
+Each template includes:
+- Pre-configured agent roles with system prompts
+- Workflow templates for common department processes
+- Benefits and use cases documentation
+- Autonomy level defaults
+
+#### Team Execution Engine (`src/lib/orchestration/team-executor.ts`):
+- ✅ **TeamExecutor class** - Coordinates agent team execution
+- ✅ **run()** - Execute teams with high-level objectives
+- ✅ **coordinate()** - Coordinate agents within a team for specific tasks
+- ✅ **handoff()** - Handle inter-agent task handoffs with context
+- ✅ Execution state tracking and result aggregation
+- ✅ Automatic context sharing via memory service
+- ✅ Team metrics updates (total/successful executions)
+
+#### Trigger.dev Jobs (`src/trigger/team-executor.ts`):
+- ✅ **executeTeamTask** - Durable, retried team execution job
+- ✅ **processTeamQueueTask** - Process pending team tasks from queue
+- ✅ **cleanupTeamMemoryTask** - Remove expired short-term memories
+- ✅ **scheduledMemoryCleanup** - Runs every 6 hours
+- ✅ **scheduledQueueProcessing** - Runs every 5 minutes
+- ✅ **scheduledTeamHealthCheck** - Daily team health monitoring
+
+#### UI Components:
+- ✅ **AgentTabs** - Added "Teams" tab (amber color scheme)
+- ✅ **TeamCard** - Team display with status, members, stats, actions
+- ✅ **TeamCreationWizard** - 4-step wizard:
+  - Step 1: Select department template
+  - Step 2: Customize team name, description, autonomy level
+  - Step 3: Configure agents (from template or existing)
+  - Step 4: Review and confirm
+- ✅ **AgentTeamsTab** - Full teams dashboard with:
+  - Team list with search and department filters
+  - Team stats (active, total, success rate)
+  - Selected team detail panel
+  - Run team with objective input
+  - Team member management
+
+### Files Created:
+- `src/lib/orchestration/team-templates.ts` - 4 department team templates
+- `src/lib/orchestration/team-executor.ts` - Team execution engine
+- `src/trigger/team-executor.ts` - Trigger.dev background jobs
+- `src/components/agents/TeamCard.tsx` - Team card component
+- `src/components/agents/TeamCreationWizard.tsx` - Team creation wizard
+- `src/components/agents/AgentTeamsTab.tsx` - Teams tab dashboard
+
+### Files Modified:
+- `src/lib/orchestration/index.ts` - Added exports for new modules
+- `src/components/agents/AgentTabs.tsx` - Added Teams tab
+- `src/components/agents/MyAgentsDashboard.tsx` - Integrated Teams tab
+- `src/components/agents/index.ts` - Added exports for new components
+
+### Key Features:
+- **Template-Based Creation** - Start with pre-configured team templates
+- **Department Automation** - Sales, Marketing, Support, Operations teams
+- **Objective-Driven Execution** - Run teams with natural language objectives
+- **Inter-Agent Handoffs** - Context preserved between agent handoffs
+- **Real-Time Coordination** - Agents work together via message bus
+- **Memory Sharing** - Shared context through three-tier memory system
+- **Visual Dashboard** - Full UI for team management and execution
+
+---
+
+## 🤖 Agent Orchestration System - Phase 1 Complete (December 9, 2025) ✅
+
+**Multi-Agent Orchestration Infrastructure: Database & Core Services**
+
+Implementing a multi-agent orchestration system inspired by The General Intelligence Company's "Cofounder" approach - enabling department-level automation, agent-to-agent communication, and autonomous business operations.
+
+### Phase 1 Deliverables:
+
+#### Database Schema (6 New Tables):
+- ✅ **agent_teams** - Department-level agent groups with autonomy configuration
+- ✅ **agent_team_members** - Agent membership with roles (coordinator, specialist, support)
+- ✅ **agent_messages** - Inter-agent communication bus with threading
+- ✅ **agent_workflows** - Multi-agent workflow definitions with step configuration
+- ✅ **agent_workflow_executions** - Workflow execution tracking with step results
+- ✅ **agent_shared_memory** - Three-tier memory system (short/medium/long term)
+
+#### New Enums:
+- ✅ `agent_department` - sales, marketing, support, operations, finance, product, general
+- ✅ `agent_team_role` - coordinator, specialist, support
+- ✅ `agent_message_type` - task, result, context, handoff, status, query
+- ✅ `memory_tier` - short_term, medium_term, long_term
+- ✅ `orchestration_workflow_status` - active, paused, archived, draft
+- ✅ `orchestration_workflow_trigger_type` - manual, event, schedule, agent_request
+- ✅ `orchestration_execution_status` - running, completed, failed, paused, cancelled
+- ✅ `team_autonomy_level` - supervised, semi_autonomous, autonomous
+
+#### Core Services:
+- ✅ **AgentOrchestrator** (`src/lib/orchestration/orchestrator.ts`)
+  - Task routing to appropriate agents
+  - Agent-to-agent task delegation
+  - Team execution with objectives
+  - Multi-agent workflow execution
+  - Workflow pause/resume support
+- ✅ **AgentMessageBus** (`src/lib/orchestration/message-bus.ts`)
+  - Direct agent-to-agent messaging
+  - Team broadcasts
+  - Message threading
+  - Delivery tracking
+  - Reply support
+- ✅ **AgentMemoryService** (`src/lib/orchestration/memory.ts`)
+  - Three-tier memory (short/medium/long term)
+  - Context sharing between agents
+  - Memory promotion based on usage
+  - Automatic cleanup of expired memories
+  - Importance-based retrieval
+
+#### TypeScript Types:
+- ✅ Comprehensive type definitions in `src/lib/orchestration/types.ts`
+- ✅ 40+ interfaces for teams, messages, workflows, memory, and events
+
+### Files Created:
+- `src/lib/orchestration/types.ts` - Type definitions
+- `src/lib/orchestration/index.ts` - Main exports
+- `src/lib/orchestration/orchestrator.ts` - Central orchestrator service
+- `src/lib/orchestration/message-bus.ts` - Agent-to-agent messaging
+- `src/lib/orchestration/memory.ts` - Three-tier memory system
+
+### Files Modified:
+- `src/db/schema.ts` - Added 6 tables, 8 enums, and relations
+
+### Next Phases:
+- **Phase 3**: Agent Teams and Department Automation
+- **Phase 4**: Multi-Agent Workflows with Visual Builder
+- **Phase 5**: Neptune Integration and Natural Language Orchestration
+- **Phase 6**: Autonomous Operations Mode
+- **Phase 7**: UI Integration and Polish
+
+---
+
+## 🤖 Agent Orchestration System - Phase 2 Complete (December 9, 2025) ✅
+
+**API Routes for Orchestration Endpoints**
+
+### Phase 2 Deliverables:
+
+#### Teams API:
+- ✅ `GET /api/orchestration/teams` - List all teams with filtering
+- ✅ `POST /api/orchestration/teams` - Create a new team
+- ✅ `GET /api/orchestration/teams/[id]` - Get team details with members
+- ✅ `PATCH /api/orchestration/teams/[id]` - Update team
+- ✅ `DELETE /api/orchestration/teams/[id]` - Delete team
+- ✅ `POST /api/orchestration/teams/[id]/run` - Run team with objective
+- ✅ `GET /api/orchestration/teams/[id]/members` - List team members
+- ✅ `POST /api/orchestration/teams/[id]/members` - Add member to team
+- ✅ `DELETE /api/orchestration/teams/[id]/members` - Remove member from team
+
+#### Workflows API:
+- ✅ `GET /api/orchestration/workflows` - List all workflows
+- ✅ `POST /api/orchestration/workflows` - Create a new workflow
+- ✅ `GET /api/orchestration/workflows/[id]` - Get workflow with steps and executions
+- ✅ `PATCH /api/orchestration/workflows/[id]` - Update workflow
+- ✅ `DELETE /api/orchestration/workflows/[id]` - Delete workflow
+- ✅ `POST /api/orchestration/workflows/[id]/execute` - Execute workflow
+
+#### Messages API:
+- ✅ `GET /api/orchestration/messages` - Get agent messages with filtering
+- ✅ `POST /api/orchestration/messages` - Send message or broadcast to team
+
+#### Task Routing & Delegation:
+- ✅ `POST /api/orchestration/route` - Route task to best agent
+- ✅ `POST /api/orchestration/delegate` - Delegate task between agents
+
+#### Memory API:
+- ✅ `GET /api/orchestration/memory` - Query shared memories
+- ✅ `POST /api/orchestration/memory` - Store memory
+- ✅ `DELETE /api/orchestration/memory` - Delete memory
+
+### Files Created:
+- `src/app/api/orchestration/teams/route.ts`
+- `src/app/api/orchestration/teams/[id]/route.ts`
+- `src/app/api/orchestration/teams/[id]/run/route.ts`
+- `src/app/api/orchestration/teams/[id]/members/route.ts`
+- `src/app/api/orchestration/workflows/route.ts`
+- `src/app/api/orchestration/workflows/[id]/route.ts`
+- `src/app/api/orchestration/workflows/[id]/execute/route.ts`
+- `src/app/api/orchestration/messages/route.ts`
+- `src/app/api/orchestration/route/route.ts`
+- `src/app/api/orchestration/delegate/route.ts`
+- `src/app/api/orchestration/memory/route.ts`
+
+### API Features:
+- Full Zod validation on all endpoints
+- Proper error handling with meaningful messages
+- Workspace isolation (multi-tenant)
+- Query parameters for filtering and pagination
+- Related data enrichment (agent names, team names)
+
+---
+
 ## 🔐 Clerk Production Deployment (December 9, 2025) ✅
 
 **Authentication System: Migrated to Production**
@@ -22,6 +339,21 @@
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` → `pk_live_...`
   - `CLERK_SECRET_KEY` → `sk_live_...`
 - ✅ **Email Branding** - Verification emails now sent from `@galaxyco.ai`
+- ✅ **Google OAuth Configured** - SSO connection set up for production:
+  - Custom OAuth credentials (Client ID + Secret) from Google Cloud Console
+  - Authorized redirect URI: `https://clerk.galaxyco.ai/v1/oauth_callback`
+  - Scopes: `openid`, `userinfo.email`, `userinfo.profile`
+  - Account selector prompt enabled for multi-account users
+  - Email subaddress blocking enabled
+- ✅ **Webhooks Configured** - Real-time sync between Clerk and database:
+  - Endpoint: `https://www.galaxyco.ai/api/webhooks/clerk`
+  - User events: `user.created`, `user.updated`, `user.deleted`
+  - Organization events: `organization.created`, `organization.updated`, `organization.deleted`
+  - Webhook handler creates/updates users and workspaces automatically
+  - `CLERK_WEBHOOK_SECRET` configured in Vercel
+
+### Files Modified:
+- `src/app/api/webhooks/clerk/route.ts` - Added organization event handlers
 
 ### Benefits:
 - Production-grade authentication for real users
@@ -29,6 +361,8 @@
 - Email verification from branded domain
 - Unlimited users (vs 500 user limit in Development)
 - Cross-subdomain session sharing enabled
+- Google Sign-In working with custom branding
+- Real-time user/organization sync via webhooks
 
 ---
 

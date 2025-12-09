@@ -19,6 +19,7 @@ export { AgentOrchestrator } from './orchestrator';
 export { AgentMessageBus } from './message-bus';
 export { AgentMemoryService } from './memory';
 export { TeamExecutor } from './team-executor';
+export { WorkflowEngine } from './workflow-engine';
 
 // Team Templates
 export {
@@ -32,6 +33,21 @@ export {
   supportTeamTemplate,
   operationsTeamTemplate,
 } from './team-templates';
+
+// Workflow Templates
+export {
+  workflowTemplates,
+  workflowTemplatesById,
+  getWorkflowTemplate,
+  getWorkflowTemplatesByDepartment,
+  getWorkflowTemplatesByCategory,
+  convertTemplateToSteps,
+  suggestWorkflowTemplate,
+  validateAgentAvailability,
+  leadToCustomerPipeline,
+  contentCampaignWorkflow,
+  supportTicketResolution,
+} from './workflow-templates';
 
 // Re-export commonly used types for convenience
 export type {
@@ -53,9 +69,15 @@ export type {
 export type {
   TeamTemplate,
   AgentTemplate,
-  WorkflowTemplate,
+  WorkflowTemplate as TeamWorkflowTemplate,
   TeamTemplateId,
 } from './team-templates';
+
+export type {
+  WorkflowTemplate,
+  WorkflowStepTemplate,
+  WorkflowTemplateId,
+} from './workflow-templates';
 
 export type {
   TeamTask,
@@ -64,4 +86,11 @@ export type {
   TeamMemberInfo,
   TeamExecutionState,
 } from './team-executor';
+
+export type {
+  WorkflowTrigger,
+  ExecuteWorkflowOptions,
+  StepExecutionOptions,
+  WorkflowEngineResult,
+} from './workflow-engine';
 
