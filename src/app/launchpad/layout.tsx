@@ -1,14 +1,30 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Rocket, Search, ArrowLeft, Twitter, Linkedin, Mail, ArrowUp, Send, Sparkles } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Rocket, Search, ArrowLeft, Twitter, Linkedin, Mail, ArrowUp, Send, Sparkles, Newspaper, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useDebounce } from '@/hooks/useDebounce';
+import { cn } from '@/lib/utils';
+
+// Blog search result type
+interface BlogSearchResult {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+}
+
+interface BlogSearchResponse {
+  results: BlogSearchResult[];
+  total: number;
+}
 
 // Animated star field for footer
 function StarField({ count = 25 }: { count?: number }) {
@@ -127,11 +143,120 @@ export default function LaunchpadLayout({
   children: React.ReactNode;
 }) {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const { trackEvent } = useAnalytics({ trackPageViews: false });
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<BlogSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const debouncedQuery = useDebounce(searchQuery, 300);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch blog search results
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (debouncedQuery.length < 2) {
+        setSearchResults([]);
+        setShowSearchResults(false);
+        return;
+      }
+
+      setIsSearching(true);
+      setShowSearchResults(true);
+      
+      try {
+        // Search only blog posts (public endpoint)
+        const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&types=blog&limit=8`);
+        if (response.ok) {
+          const data = await response.json();
+          // Map blog results to simpler format
+          const blogResults = data.categories?.blog || [];
+          setSearchResults(blogResults.map((r: { id: string; title: string; description: string | null; metadata?: { slug?: string } }) => ({
+            id: r.id,
+            title: r.title,
+            excerpt: r.description,
+            slug: r.metadata?.slug || r.id,
+          })));
+        }
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    fetchResults();
+  }, [debouncedQuery]);
+
+  // Reset selection when results change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [searchResults.length]);
+
+  // Close search on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Escape') {
+      setShowSearchResults(false);
+      setSearchQuery("");
+      searchInputRef.current?.blur();
+    } else if (e.key === 'ArrowDown' && searchResults.length > 0) {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % searchResults.length);
+    } else if (e.key === 'ArrowUp' && searchResults.length > 0) {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchResults.length > 0 && searchResults[selectedIndex]) {
+        handleSelectResult(searchResults[selectedIndex]);
+      } else if (searchQuery.trim()) {
+        // Track search even without results
+        trackEvent({
+          eventType: 'search',
+          eventName: 'launchpad_search',
+          metadata: {
+            searchQuery: searchQuery.trim(),
+            source: 'launchpad',
+            hasResults: false
+          }
+        });
+      }
+    }
+  };
+
+  const handleSelectResult = (result: BlogSearchResult) => {
+    trackEvent({
+      eventType: 'click',
+      eventName: 'launchpad_search_result_click',
+      metadata: {
+        query: searchQuery,
+        resultId: result.id,
+        resultTitle: result.title,
+      }
+    });
+    setShowSearchResults(false);
+    setSearchQuery("");
+    router.push(`/launchpad/${result.slug}`);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -239,26 +364,105 @@ export default function LaunchpadLayout({
           
           {/* Right - Search & Sign In */}
           <div className="flex-1 flex items-center justify-end gap-3">
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <div className="relative hidden sm:block" ref={searchContainerRef}>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
               <Input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search articles..."
                 className="w-48 lg:w-56 h-9 pl-9 pr-3 rounded-full bg-white/95 border-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-400/50 shadow-sm"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    trackEvent({
-                      eventType: 'search',
-                      eventName: 'launchpad_search',
-                      metadata: {
-                        searchQuery: e.currentTarget.value.trim(),
-                        source: 'launchpad'
-                      }
-                    });
-                    // TODO: Navigate to search results or perform search
-                  }
-                }}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
+                aria-label="Search articles"
+                aria-expanded={showSearchResults}
+                aria-controls="launchpad-search-results"
+                aria-autocomplete="list"
               />
+              
+              {/* Search Results Dropdown */}
+              <AnimatePresence>
+                {showSearchResults && (searchQuery.length >= 2 || isSearching) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    id="launchpad-search-results"
+                    className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-50"
+                    role="listbox"
+                    aria-label="Search results"
+                  >
+                    {/* Loading */}
+                    {isSearching && (
+                      <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm">Searching...</span>
+                      </div>
+                    )}
+
+                    {/* Results */}
+                    {!isSearching && searchResults.length > 0 && (
+                      <div className="max-h-80 overflow-y-auto">
+                        <div className="px-3 py-2 border-b border-slate-100">
+                          <span className="text-xs font-medium text-slate-500">
+                            {searchResults.length} article{searchResults.length !== 1 ? 's' : ''} found
+                          </span>
+                        </div>
+                        {searchResults.map((result, index) => (
+                          <button
+                            key={result.id}
+                            onClick={() => handleSelectResult(result)}
+                            onMouseEnter={() => setSelectedIndex(index)}
+                            className={cn(
+                              "w-full px-3 py-2.5 flex items-start gap-3 text-left transition-colors",
+                              selectedIndex === index ? "bg-indigo-50" : "hover:bg-slate-50"
+                            )}
+                            role="option"
+                            aria-selected={selectedIndex === index}
+                          >
+                            <Newspaper className="h-4 w-4 text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium text-slate-900 truncate">
+                                {result.title}
+                              </div>
+                              {result.excerpt && (
+                                <div className="text-xs text-slate-500 line-clamp-2 mt-0.5">
+                                  {result.excerpt}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Empty */}
+                    {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
+                      <div className="flex flex-col items-center justify-center gap-1 py-6 text-slate-500">
+                        <Search className="h-6 w-6 opacity-50" />
+                        <span className="text-sm">No articles found</span>
+                        <span className="text-xs opacity-70">Try different keywords</span>
+                      </div>
+                    )}
+
+                    {/* Keyboard hints */}
+                    {searchResults.length > 0 && (
+                      <div className="px-3 py-2 border-t border-slate-100 flex items-center gap-3 text-xs text-slate-400 bg-slate-50">
+                        <span className="flex items-center gap-1">
+                          <kbd className="px-1 py-0.5 bg-white rounded border text-[10px]">↑↓</kbd>
+                          navigate
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <kbd className="px-1 py-0.5 bg-white rounded border text-[10px]">↵</kbd>
+                          select
+                        </span>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <Link href="/launchpad/search" className="sm:hidden">
               <Button 
