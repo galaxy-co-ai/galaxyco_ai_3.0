@@ -8079,19 +8079,32 @@ Provide analysis in JSON format:
       const { getTeamTemplate } = await import('@/lib/orchestration/team-templates');
 
       const name = args.name as string;
-      const department = args.department as string;
+      const departmentArg = args.department as string;
       const description = args.description as string | undefined;
       const templateId = args.templateId as string | undefined;
       const autonomyLevel = (args.autonomyLevel as string) || 'supervised';
       const memberAgentIds = args.memberAgentIds as string[] | undefined;
 
-      if (!name || !department) {
+      if (!name || !departmentArg) {
         return {
           success: false,
           message: 'Please provide both a team name and department.',
           error: 'Missing required fields',
         };
       }
+
+      // Validate and cast department to proper enum type
+      const validDepartments = ['sales', 'marketing', 'support', 'operations', 'finance', 'product', 'general'] as const;
+      type DepartmentType = typeof validDepartments[number];
+      
+      if (!validDepartments.includes(departmentArg as DepartmentType)) {
+        return {
+          success: false,
+          message: `Invalid department "${departmentArg}". Valid options: ${validDepartments.join(', ')}`,
+          error: 'Invalid department',
+        };
+      }
+      const department = departmentArg as DepartmentType;
 
       // Get template if specified
       let teamConfig: Record<string, unknown> = {
