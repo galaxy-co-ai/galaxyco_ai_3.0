@@ -8512,7 +8512,7 @@ Provide analysis in JSON format:
       const name = args.name as string;
       const description = args.description as string | undefined;
       const teamId = args.teamId as string | undefined;
-      const triggerType = (args.triggerType as string) || 'manual';
+      const triggerTypeArg = (args.triggerType as string) || 'manual';
       const templateType = args.templateType as string | undefined;
       const steps = args.steps as Array<{ name: string; agentId: string; action: string; inputs: Record<string, unknown> }> | undefined;
 
@@ -8524,8 +8524,29 @@ Provide analysis in JSON format:
         };
       }
 
+      // Validate and type triggerType
+      const validTriggerTypes = ['manual', 'event', 'schedule', 'agent_request'] as const;
+      type TriggerType = typeof validTriggerTypes[number];
+      const triggerType: TriggerType = validTriggerTypes.includes(triggerTypeArg as TriggerType)
+        ? (triggerTypeArg as TriggerType)
+        : 'manual';
+
+      // Define proper step type matching schema
+      type WorkflowStepType = {
+        id: string;
+        name: string;
+        agentId: string;
+        action: string;
+        inputs: Record<string, unknown>;
+        conditions?: Array<{ field: string; operator: string; value: unknown }>;
+        onSuccess?: string;
+        onFailure?: string;
+        timeout?: number;
+        retryConfig?: { maxAttempts: number; backoffMs: number };
+      };
+
       // Get template if specified
-      let workflowSteps: unknown[] = [];
+      let workflowSteps: WorkflowStepType[] = [];
       let templateInfo: string | null = null;
 
       if (templateType) {
@@ -8536,26 +8557,42 @@ Provide analysis in JSON format:
         };
         const template = templates[templateType];
         if (template) {
-          workflowSteps = template.steps.map((step, i) => {
-            // Spread step first, then override id and agentId
-            const { id: _existingId, ...stepRest } = step;
+          workflowSteps = template.steps.map((step, i): WorkflowStepType => {
             return {
-              ...stepRest,
               id: `step_${i + 1}`,
+              name: step.name,
               agentId: '', // Will need to be mapped to actual agents
+              action: step.action,
+              inputs: step.inputs || {},
+              conditions: step.conditions,
+              onSuccess: step.onSuccess,
+              onFailure: step.onFailure,
+              timeout: step.timeout,
+              retryConfig: step.retryConfig,
             };
           });
           templateInfo = `Using the "${template.name}" template with ${template.steps.length} steps.`;
         }
       } else if (steps && steps.length > 0) {
-        workflowSteps = steps.map((step, i) => {
-          const { id: _existingId, ...stepRest } = step as Record<string, unknown>;
+        workflowSteps = steps.map((step, i): WorkflowStepType => {
           return {
-            ...stepRest,
             id: `step_${i + 1}`,
+            name: step.name,
+            agentId: step.agentId || '',
+            action: step.action,
+            inputs: step.inputs || {},
           };
         });
       }
+
+      // Define trigger config type
+      type TriggerConfigType = {
+        eventType?: string;
+        cron?: string;
+        webhookSecret?: string;
+        conditions?: Array<{ field: string; operator: string; value: unknown }>;
+      };
+      const triggerConfig: TriggerConfigType = {};
 
       // Create the workflow
       const [workflow] = await db
@@ -8566,7 +8603,7 @@ Provide analysis in JSON format:
           name,
           description: description || `Workflow: ${name}`,
           triggerType,
-          triggerConfig: {},
+          triggerConfig,
           steps: workflowSteps,
           createdBy: context.userId,
         })
