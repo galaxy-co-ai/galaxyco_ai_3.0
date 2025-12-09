@@ -18,6 +18,12 @@ import {
   aiConversations,
   knowledgeItems,
   knowledgeCollections,
+  agentTeams,
+  agentTeamMembers,
+  agentWorkflows,
+  agentWorkflowExecutions,
+  agentMessages,
+  agentSharedMemory,
 } from '@/db/schema';
 import { eq, and, desc, gte, lte, like, or, sql, lt, inArray, asc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -8070,8 +8076,7 @@ Provide analysis in JSON format:
   async create_agent_team(args, context): Promise<ToolResult> {
     try {
       const { AgentOrchestrator } = await import('@/lib/orchestration');
-      const { teamTemplatesById, getTeamTemplate } = await import('@/lib/orchestration/team-templates');
-      const { agentTeams, agentTeamMembers, agents } = await import('@/db/schema');
+      const { getTeamTemplate } = await import('@/lib/orchestration/team-templates');
 
       const name = args.name as string;
       const department = args.department as string;
@@ -8183,7 +8188,6 @@ Provide analysis in JSON format:
   // Team Management: List Agent Teams
   async list_agent_teams(args, context): Promise<ToolResult> {
     try {
-      const { agentTeams, agentTeamMembers } = await import('@/db/schema');
 
       const department = args.department as string | undefined;
       const status = args.status as string | undefined;
@@ -8255,7 +8259,6 @@ Provide analysis in JSON format:
   async run_agent_team(args, context): Promise<ToolResult> {
     try {
       const { AgentOrchestrator } = await import('@/lib/orchestration');
-      const { agentTeams } = await import('@/db/schema');
 
       const teamId = args.teamId as string | undefined;
       const teamName = args.teamName as string | undefined;
@@ -8344,7 +8347,6 @@ Provide analysis in JSON format:
   // Team Management: Get Team Status
   async get_team_status(args, context): Promise<ToolResult> {
     try {
-      const { agentTeams, agentTeamMembers, agents, agentMessages } = await import('@/db/schema');
 
       const teamId = args.teamId as string | undefined;
       const teamName = args.teamName as string | undefined;
@@ -8469,7 +8471,6 @@ Provide analysis in JSON format:
   // Workflow Management: Create Workflow
   async create_workflow(args, context): Promise<ToolResult> {
     try {
-      const { agentWorkflows } = await import('@/db/schema');
       const { leadToCustomerPipeline, contentCampaignWorkflow, supportTicketResolution } = await import('@/lib/orchestration/workflow-templates');
 
       const name = args.name as string;
@@ -8564,7 +8565,6 @@ Provide analysis in JSON format:
   async execute_workflow(args, context): Promise<ToolResult> {
     try {
       const { WorkflowEngine } = await import('@/lib/orchestration/workflow-engine');
-      const { agentWorkflows } = await import('@/db/schema');
 
       const workflowId = args.workflowId as string | undefined;
       const workflowName = args.workflowName as string | undefined;
@@ -8654,7 +8654,6 @@ Provide analysis in JSON format:
   async get_workflow_status(args, context): Promise<ToolResult> {
     try {
       const { WorkflowEngine } = await import('@/lib/orchestration/workflow-engine');
-      const { agentWorkflows, agentWorkflowExecutions } = await import('@/db/schema');
 
       const workflowId = args.workflowId as string | undefined;
       const workflowName = args.workflowName as string | undefined;
@@ -8795,7 +8794,6 @@ Provide analysis in JSON format:
   async delegate_to_agent(args, context): Promise<ToolResult> {
     try {
       const { AgentOrchestrator } = await import('@/lib/orchestration');
-      const { agents } = await import('@/db/schema');
 
       const agentId = args.agentId as string | undefined;
       const agentName = args.agentName as string | undefined;
@@ -8898,7 +8896,6 @@ Provide analysis in JSON format:
   async coordinate_agents(args, context): Promise<ToolResult> {
     try {
       const { TeamExecutor } = await import('@/lib/orchestration/team-executor');
-      const { agents, agentTeamMembers } = await import('@/db/schema');
 
       const objective = args.objective as string;
       const agentIds = args.agentIds as string[] | undefined;
@@ -8983,7 +8980,6 @@ Provide analysis in JSON format:
   // Orchestration: Check Agent Availability
   async check_agent_availability(args, context): Promise<ToolResult> {
     try {
-      const { agents, agentTeamMembers } = await import('@/db/schema');
 
       const department = args.department as string | undefined;
       const teamId = args.teamId as string | undefined;
