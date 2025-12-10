@@ -54,3 +54,19 @@ export {
 export type { DateRangePreset } from "./Analytics/DateRangeSelector";
 export type { MetricType } from "./Analytics/PerformanceTrendsChart";
 
+// Use Case Studio Components
+export {
+  UseCaseListPage,
+  UseCaseCard,
+  UseCaseWizard,
+} from "./UseCaseStudio";
+export type {
+  UseCase,
+  UseCaseFormData,
+  Persona,
+  JourneyStage,
+  Messaging,
+  OnboardingQuestion,
+  RoadmapStep,
+} from "./UseCaseStudio/types";
+
