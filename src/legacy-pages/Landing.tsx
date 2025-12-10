@@ -10,12 +10,8 @@ import { SmartNavigation } from "../components/shared/SmartNavigation";
 import { EnhancedThreePillars } from "../components/landing/EnhancedThreePillars";
 import { EnhancedBenefits } from "../components/landing/EnhancedBenefits";
 import { SectionDivider } from "../components/shared/SectionDivider";
-import { DemoWrapper } from "../components/shared/DemoWrapper";
+import Image from "next/image";
 import { FloatingSalesChat } from "../components/landing/FloatingSalesChat";
-import DashboardDashboard from "../components/dashboard/DashboardDashboard";
-import CRMDashboard from "../components/crm/CRMDashboard";
-import CreatorDashboard from "../components/creator/CreatorDashboard";
-import MarketingDashboard from "../components/marketing/MarketingDashboard";
 
 interface LandingProps {
   onEnterApp?: () => void;
@@ -95,42 +91,14 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-                  <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
-                    <DashboardDashboard disableLiveData initialData={{
-                      stats: {
-                        activeAgents: 12,
-                        tasksCompleted: 1247,
-                        hoursSaved: 342,
-                      },
-                      agents: [
-                        {
-                          id: "1",
-                          name: "Email Triage Agent",
-                          initials: "ET",
-                          color: "bg-blue-500",
-                          message: "Processed 12 high-priority emails",
-                          time: "2 min ago",
-                          active: true,
-                          status: "Active now",
-                          role: "email",
-                          conversation: [],
-                        },
-                        {
-                          id: "2",
-                          name: "CRM Data Sync",
-                          initials: "CD",
-                          color: "bg-cyan-500",
-                          message: "Synced 24 contacts to Salesforce",
-                          time: "5 min ago",
-                          active: true,
-                          status: "Active now",
-                          role: "sync",
-                          conversation: [],
-                        },
-                      ],
-                      events: [],
-                    }} />
-                  </DemoWrapper>
+                  <Image
+                    src="/screenshots/dashboard-demo.png"
+                    alt="GalaxyCo AI Dashboard - Real-time agent monitoring and task automation"
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto"
+                    priority
+                  />
                 </div>
               </div>
             </motion.div>
@@ -167,9 +135,13 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-                  <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
-                    <CreatorDashboard disableLiveData />
-                  </DemoWrapper>
+                  <Image
+                    src="/screenshots/creator-demo.png"
+                    alt="GalaxyCo AI Creator Studio - Visual workflow builder for content creation"
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto"
+                  />
                 </div>
               </div>
             </motion.div>
@@ -206,38 +178,13 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-orange-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-                  <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
-                    <CRMDashboard
-                      initialLeads={[
-                        {
-                          id: "1",
-                          name: "Sarah Johnson",
-                          email: "sarah@techcorp.com",
-                          company: "TechCorp",
-                          title: "VP of Sales",
-                          phone: "+1 (555) 123-4567",
-                          stage: "qualified",
-                          score: 85,
-                          estimatedValue: 50000,
-                          lastContactedAt: new Date(),
-                          nextFollowUpAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                          interactionCount: 3,
-                          source: "Website",
-                          tags: ["hot", "enterprise"],
-                          notes: "Interested in enterprise plan",
-                        },
-                      ]}
-                      initialOrganizations={[]}
-                      initialContacts={[]}
-                      initialDeals={[]}
-                      stats={{
-                        totalLeads: 1,
-                        hotLeads: 1,
-                        totalOrgs: 0,
-                        totalValue: 50000,
-                      }}
-                    />
-                  </DemoWrapper>
+                  <Image
+                    src="/screenshots/crm-demo.png"
+                    alt="GalaxyCo AI CRM - AI-native customer relationship management with Neptune assistant"
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto"
+                  />
                 </div>
               </div>
             </motion.div>
@@ -274,35 +221,13 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-                  <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
-                    <MarketingDashboard
-                      disableLiveData
-                      initialCampaigns={[
-                        {
-                          id: "1",
-                          name: "Q4 Product Launch",
-                          status: "active",
-                          budget: 5000000,
-                          spent: 2500000,
-                          impressions: 125000,
-                          clicks: 5000,
-                          conversions: 250,
-                          roi: 125,
-                          startDate: new Date("2024-10-01"),
-                          endDate: new Date("2024-12-31"),
-                          channels: ["email", "social", "ads"],
-                        },
-                      ]}
-                      initialContent={[]}
-                      initialChannels={[]}
-                      stats={{
-                        activeCampaigns: 1,
-                        totalBudget: 5000000,
-                        totalImpressions: 125000,
-                        avgROI: 125,
-                      }}
-                    />
-                  </DemoWrapper>
+                  <Image
+                    src="/screenshots/marketing-demo.png"
+                    alt="GalaxyCo AI Marketing Hub - Campaign management and AI-driven analytics"
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto"
+                  />
                 </div>
               </div>
             </motion.div>

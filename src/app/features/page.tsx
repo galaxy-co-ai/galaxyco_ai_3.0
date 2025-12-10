@@ -6,13 +6,10 @@ import { Footer } from "@/components/landing/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SectionDivider } from "@/components/shared/SectionDivider";
-import { DemoWrapper } from "@/components/shared/DemoWrapper";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Sparkles, Bot, Workflow, BarChart3, ArrowRight, Zap, Shield, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import DashboardDashboard from "@/components/dashboard/DashboardDashboard";
-import CRMDashboard from "@/components/crm/CRMDashboard";
-import CreatorDashboard from "@/components/creator/CreatorDashboard";
 
 export default function FeaturesPage() {
   const router = useRouter();
@@ -81,36 +78,15 @@ export default function FeaturesPage() {
                  transition={{ duration: 0.6 }}
                  className="relative"
               >
-                <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] xl:h-[800px] rounded-xl overflow-hidden">
-                  <div className="relative h-full w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
-                    <DemoWrapper scale={0.75} height={700} needsSidebar={false}>
-                      <DashboardDashboard 
-                        disableLiveData
-                        initialTab="snapshot"
-                        initialData={{
-                          stats: {
-                            activeAgents: 12,
-                            tasksCompleted: 1247,
-                            hoursSaved: 342,
-                          },
-                          agents: [
-                            {
-                              id: "1",
-                              name: "Email Triage Agent",
-                              initials: "ET",
-                              color: "bg-blue-500",
-                              message: "Processed 12 high-priority emails",
-                              time: "2 min ago",
-                              active: true,
-                              status: "Active now",
-                              role: "email",
-                              conversation: [],
-                            },
-                          ],
-                          events: [],
-                        }}
-                      />
-                    </DemoWrapper>
+                <div className="relative h-auto rounded-xl overflow-hidden">
+                  <div className="relative w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
+                    <Image
+                      src="/screenshots/dashboard-demo.png"
+                      alt="GalaxyCo AI Dashboard - Real-time agent monitoring and task automation"
+                      width={1920}
+                      height={1080}
+                      className="w-full h-auto"
+                    />
                   </div>
                 </div>
               </motion.div>
@@ -143,11 +119,15 @@ export default function FeaturesPage() {
                  transition={{ duration: 0.6 }}
                  className="relative"
               >
-                <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] xl:h-[800px] rounded-xl overflow-hidden">
-                  <div className="relative h-full w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
-                    <DemoWrapper scale={0.75} height={800} needsSidebar={false}>
-                      <CreatorDashboard disableLiveData />
-                    </DemoWrapper>
+                <div className="relative h-auto rounded-xl overflow-hidden">
+                  <div className="relative w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
+                    <Image
+                      src="/screenshots/creator-demo.png"
+                      alt="GalaxyCo AI Creator Studio - Visual workflow builder for content creation"
+                      width={1920}
+                      height={1080}
+                      className="w-full h-auto"
+                    />
                   </div>
                 </div>
               </motion.div>
@@ -180,41 +160,15 @@ export default function FeaturesPage() {
                  transition={{ duration: 0.6 }}
                  className="relative"
               >
-                <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] xl:h-[800px] rounded-xl overflow-hidden">
-                  <div className="relative h-full w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
-                    <DemoWrapper scale={0.75} height={700} needsSidebar={false}>
-                      <CRMDashboard 
-                        initialTab="insights"
-                        initialLeads={[
-                          {
-                            id: "1",
-                            name: "Sarah Johnson",
-                            email: "sarah@techcorp.com",
-                            company: "TechCorp",
-                            title: "VP of Sales",
-                            phone: "+1 (555) 123-4567",
-                            stage: "qualified",
-                            score: 85,
-                            estimatedValue: 50000,
-                            lastContactedAt: new Date(),
-                            nextFollowUpAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                            interactionCount: 3,
-                            source: "Website",
-                            tags: ["hot", "enterprise"],
-                            notes: "Interested in enterprise plan",
-                          },
-                        ]}
-                        initialOrganizations={[]}
-                        initialContacts={[]}
-                        initialDeals={[]}
-                        stats={{
-                          totalLeads: 1,
-                          hotLeads: 1,
-                          totalOrgs: 0,
-                          totalValue: 50000,
-                        }}
-                      />
-                    </DemoWrapper>
+                <div className="relative h-auto rounded-xl overflow-hidden">
+                  <div className="relative w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
+                    <Image
+                      src="/screenshots/crm-demo.png"
+                      alt="GalaxyCo AI CRM - AI-native customer relationship management with Neptune assistant"
+                      width={1920}
+                      height={1080}
+                      className="w-full h-auto"
+                    />
                   </div>
                 </div>
               </motion.div>
