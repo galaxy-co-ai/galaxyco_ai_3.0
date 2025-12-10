@@ -290,6 +290,64 @@ export const blogReactionTypeEnum = pgEnum('blog_reaction_type', [
   'inspiring',
 ]);
 
+// Content Cockpit enums
+export const contentSourceTypeEnum = pgEnum('content_source_type', [
+  'news',
+  'research',
+  'competitor',
+  'inspiration',
+  'industry',
+  'other',
+]);
+
+export const contentSourceStatusEnum = pgEnum('content_source_status', [
+  'active',
+  'suggested',
+  'rejected',
+  'archived',
+]);
+
+export const workflowUseCaseStatusEnum = pgEnum('use_case_status', [
+  'draft',
+  'complete',
+  'published',
+  'archived',
+]);
+
+export const workflowUseCaseCategoryEnum = pgEnum('use_case_category', [
+  'b2b_saas',
+  'b2c_app',
+  'agency',
+  'enterprise',
+  'solopreneur',
+  'ecommerce',
+  'creator',
+  'consultant',
+  'internal_team',
+  'other',
+]);
+
+export const alertBadgeTypeEnum = pgEnum('alert_badge_type', [
+  'trend',
+  'opportunity',
+  'warning',
+  'milestone',
+  'suggestion',
+]);
+
+export const alertBadgeStatusEnum = pgEnum('alert_badge_status', [
+  'unread',
+  'read',
+  'dismissed',
+  'actioned',
+]);
+
+export const hitListDifficultyEnum = pgEnum('hit_list_difficulty', [
+  'easy',
+  'medium',
+  'hard',
+]);
+
 // Platform Feedback enums
 export const feedbackTypeEnum = pgEnum('feedback_type', [
   'bug',
@@ -4405,6 +4463,41 @@ export const topicIdeas = pgTable(
     // AI metadata
     aiPrompt: text('ai_prompt'), // Original prompt used to generate
     
+    // ====== HIT LIST FIELDS (Content Cockpit Phase A) ======
+    
+    // Priority and scheduling
+    priority: taskPriorityEnum('priority').default('medium'),
+    targetPublishDate: timestamp('target_publish_date'),
+    assignedTo: uuid('assigned_to').references(() => users.id),
+    
+    // Hit List positioning (manual ordering)
+    hitListPosition: integer('hit_list_position'),
+    hitListAddedAt: timestamp('hit_list_added_at'),
+    
+    // Effort estimation
+    estimatedTimeMinutes: integer('estimated_time_minutes'),
+    difficultyLevel: hitListDifficultyEnum('difficulty_level').default('medium'),
+    
+    // AI-calculated priority score (0-100)
+    priorityScore: integer('priority_score'),
+    priorityScoreBreakdown: jsonb('priority_score_breakdown').$type<{
+      contentGap?: number;       // 0-20
+      trendingScore?: number;    // 0-20
+      engagementPotential?: number; // 0-20
+      seasonality?: number;      // 0-15
+      competitorCoverage?: number; // 0-15
+      userSentiment?: number;    // 0-10
+      calculatedAt?: string;
+    }>(),
+    
+    // Wizard progress tracking (for guided flow)
+    wizardProgress: jsonb('wizard_progress').$type<{
+      currentStep?: string;
+      completedSteps?: string[];
+      startedAt?: string;
+      lastUpdatedAt?: string;
+    }>(),
+    
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -4413,6 +4506,9 @@ export const topicIdeas = pgTable(
     index('topic_ideas_status_idx').on(table.status),
     index('topic_ideas_generated_by_idx').on(table.generatedBy),
     index('topic_ideas_category_idx').on(table.category),
+    index('topic_ideas_priority_idx').on(table.priority),
+    index('topic_ideas_hit_list_position_idx').on(table.hitListPosition),
+    index('topic_ideas_priority_score_idx').on(table.priorityScore),
   ]
 );
 
@@ -4535,6 +4631,289 @@ export const brainstormSessions = pgTable(
   (table) => [
     index('brainstorm_sessions_workspace_idx').on(table.workspaceId),
     index('brainstorm_sessions_user_idx').on(table.userId),
+  ]
+);
+
+// ============================================================================
+// CONTENT COCKPIT - SOURCES, USE CASES, ANALYTICS, ALERTS
+// ============================================================================
+
+/**
+ * Content Sources - Bookmarked research sites for content inspiration
+ * Part of the Sources Hub feature in Content Cockpit
+ */
+export const contentSources = pgTable(
+  'content_sources',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    // Source information
+    name: text('name').notNull(),
+    url: text('url').notNull(),
+    description: text('description'),
+    
+    // Classification
+    type: contentSourceTypeEnum('type').notNull().default('other'),
+    status: contentSourceStatusEnum('status').notNull().default('active'),
+    
+    // AI review data
+    aiReviewScore: integer('ai_review_score'), // 0-100
+    aiReviewNotes: text('ai_review_notes'),
+    aiReviewedAt: timestamp('ai_reviewed_at'),
+    
+    // Engagement tracking
+    lastCheckedAt: timestamp('last_checked_at'),
+    articlesFoundCount: integer('articles_found_count').default(0),
+    
+    // Tags for filtering
+    tags: jsonb('tags').$type<string[]>().default([]),
+    
+    // Who added it
+    addedBy: uuid('added_by').references(() => users.id),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('content_sources_workspace_idx').on(table.workspaceId),
+    index('content_sources_type_idx').on(table.type),
+    index('content_sources_status_idx').on(table.status),
+  ]
+);
+
+/**
+ * Use Cases - Pre-built roadmaps for different user types
+ * Part of the Use Case Studio feature in Content Cockpit
+ */
+export const useCases = pgTable(
+  'use_cases',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    // Basic info
+    name: text('name').notNull(),
+    description: text('description'),
+    category: workflowUseCaseCategoryEnum('category').notNull().default('other'),
+    status: workflowUseCaseStatusEnum('status').notNull().default('draft'),
+    
+    // Personas (up to 5)
+    personas: jsonb('personas').$type<Array<{
+      name: string;
+      role: string;
+      goals: string[];
+      painPoints: string[];
+    }>>().default([]),
+    
+    // Platform mapping (which GalaxyCo tools they'll use)
+    platformTools: jsonb('platform_tools').$type<string[]>().default([]),
+    
+    // User journey stages
+    journeyStages: jsonb('journey_stages').$type<Array<{
+      name: string;
+      description: string;
+      actions: string[];
+      tools: string[];
+    }>>().default([]),
+    
+    // Marketing messaging
+    messaging: jsonb('messaging').$type<{
+      tagline?: string;
+      valueProposition?: string;
+      targetChannels?: string[];
+    }>(),
+    
+    // Onboarding questions for user matching
+    onboardingQuestions: jsonb('onboarding_questions').$type<Array<{
+      question: string;
+      options: string[];
+      matchingWeight: number;
+    }>>().default([]),
+    
+    // AI-generated roadmap
+    roadmap: jsonb('roadmap').$type<Array<{
+      step: number;
+      title: string;
+      description: string;
+      estimatedMinutes: number;
+      tools: string[];
+    }>>().default([]),
+    
+    // Metadata
+    createdBy: uuid('created_by').references(() => users.id),
+    publishedAt: timestamp('published_at'),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('use_cases_workspace_idx').on(table.workspaceId),
+    index('use_cases_category_idx').on(table.category),
+    index('use_cases_status_idx').on(table.status),
+  ]
+);
+
+/**
+ * Article Analytics - Aggregated metrics per article
+ * Part of the Article Analytics feature in Content Cockpit
+ */
+export const articleAnalytics = pgTable(
+  'article_analytics',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    // Link to blog post
+    postId: uuid('post_id')
+      .notNull()
+      .references(() => blogPosts.id, { onDelete: 'cascade' }),
+    
+    // Core metrics (aggregated)
+    totalViews: integer('total_views').default(0),
+    uniqueVisitors: integer('unique_visitors').default(0),
+    avgTimeOnPageSeconds: integer('avg_time_on_page_seconds').default(0),
+    avgScrollDepth: integer('avg_scroll_depth').default(0), // 0-100
+    bounceRate: integer('bounce_rate').default(0), // 0-100
+    
+    // Traffic sources breakdown
+    trafficSources: jsonb('traffic_sources').$type<{
+      direct?: number;
+      organic?: number;
+      social?: number;
+      email?: number;
+      referral?: number;
+      other?: number;
+    }>().default({}),
+    
+    // Engagement metrics
+    socialShares: integer('social_shares').default(0),
+    commentsCount: integer('comments_count').default(0),
+    reactionsCount: integer('reactions_count').default(0),
+    
+    // Performance period
+    periodStart: timestamp('period_start').notNull(),
+    periodEnd: timestamp('period_end').notNull(),
+    
+    // AI insights
+    aiInsights: jsonb('ai_insights').$type<Array<{
+      type: 'strength' | 'weakness' | 'opportunity';
+      insight: string;
+      recommendation?: string;
+    }>>().default([]),
+    
+    // Last aggregation
+    aggregatedAt: timestamp('aggregated_at').notNull().defaultNow(),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('article_analytics_workspace_idx').on(table.workspaceId),
+    index('article_analytics_post_idx').on(table.postId),
+    index('article_analytics_period_idx').on(table.periodStart, table.periodEnd),
+  ]
+);
+
+/**
+ * Content AI Learning - Workspace-specific AI patterns
+ * Stores learned patterns about what content works for each workspace
+ */
+export const contentAiLearning = pgTable(
+  'content_ai_learning',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    // Learning type
+    learningType: text('learning_type').notNull(), // 'topic_pattern', 'timing_pattern', 'format_pattern', 'audience_pattern'
+    
+    // Pattern details
+    pattern: jsonb('pattern').$type<{
+      description: string;
+      confidence: number; // 0-1
+      sampleSize: number;
+      examples?: string[];
+    }>().notNull(),
+    
+    // Impact metrics
+    impactScore: integer('impact_score'), // 0-100 how much this pattern affects performance
+    
+    // Validity period
+    validFrom: timestamp('valid_from').notNull().defaultNow(),
+    validUntil: timestamp('valid_until'),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('content_ai_learning_workspace_idx').on(table.workspaceId),
+    index('content_ai_learning_type_idx').on(table.learningType),
+  ]
+);
+
+/**
+ * Alert Badges - Proactive notifications for content insights
+ * Powers the bell icon with alert dropdown in Content Cockpit
+ */
+export const alertBadges = pgTable(
+  'alert_badges',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    // Alert details
+    type: alertBadgeTypeEnum('type').notNull(),
+    status: alertBadgeStatusEnum('status').notNull().default('unread'),
+    
+    title: text('title').notNull(),
+    message: text('message').notNull(),
+    
+    // Optional link to related entity
+    relatedEntityType: text('related_entity_type'), // 'topic', 'post', 'source', 'use_case'
+    relatedEntityId: uuid('related_entity_id'),
+    
+    // Action suggestion
+    actionLabel: text('action_label'),
+    actionUrl: text('action_url'),
+    
+    // Priority (for sorting)
+    priority: integer('priority').default(0),
+    
+    // Timestamps
+    readAt: timestamp('read_at'),
+    dismissedAt: timestamp('dismissed_at'),
+    actionedAt: timestamp('actioned_at'),
+    expiresAt: timestamp('expires_at'),
+    
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('alert_badges_workspace_idx').on(table.workspaceId),
+    index('alert_badges_status_idx').on(table.status),
+    index('alert_badges_type_idx').on(table.type),
+    index('alert_badges_created_at_idx').on(table.createdAt),
   ]
 );
 
@@ -6371,6 +6750,31 @@ export type TopicIdeaStatus = (typeof topicIdeaStatusEnum.enumValues)[number];
 export type TopicIdeaGeneratedBy = (typeof topicIdeaGeneratedByEnum.enumValues)[number];
 export type ArticleSourceVerification = (typeof articleSourceVerificationEnum.enumValues)[number];
 export type ArticleLayoutTemplate = (typeof articleLayoutTemplateEnum.enumValues)[number];
+
+// Content Cockpit Types
+export type ContentSource = typeof contentSources.$inferSelect;
+export type NewContentSource = typeof contentSources.$inferInsert;
+
+export type UseCase = typeof useCases.$inferSelect;
+export type NewUseCase = typeof useCases.$inferInsert;
+
+export type ArticleAnalytics = typeof articleAnalytics.$inferSelect;
+export type NewArticleAnalytics = typeof articleAnalytics.$inferInsert;
+
+export type ContentAiLearning = typeof contentAiLearning.$inferSelect;
+export type NewContentAiLearning = typeof contentAiLearning.$inferInsert;
+
+export type AlertBadge = typeof alertBadges.$inferSelect;
+export type NewAlertBadge = typeof alertBadges.$inferInsert;
+
+// Content Cockpit Enum Types
+export type ContentSourceType = (typeof contentSourceTypeEnum.enumValues)[number];
+export type ContentSourceStatus = (typeof contentSourceStatusEnum.enumValues)[number];
+export type UseCaseStatus = (typeof workflowUseCaseStatusEnum.enumValues)[number];
+export type UseCaseCategory = (typeof workflowUseCaseCategoryEnum.enumValues)[number];
+export type AlertBadgeType = (typeof alertBadgeTypeEnum.enumValues)[number];
+export type AlertBadgeStatus = (typeof alertBadgeStatusEnum.enumValues)[number];
+export type HitListDifficulty = (typeof hitListDifficultyEnum.enumValues)[number];
 
 
 

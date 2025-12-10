@@ -922,6 +922,13 @@ src/
 /api/admin/upload/image               POST         Upload image to Vercel Blob storage
 ```
 
+**Content Cockpit - Alert Badges** 🆕
+```
+/api/admin/alert-badges               GET/POST     List/create alert badges
+/api/admin/alert-badges/[id]          GET/PATCH    Get/update alert badge (mark read/dismissed/actioned)
+/api/admin/alert-badges/bulk-dismiss  POST         Bulk mark alerts as read or dismissed
+```
+
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 
 ---
