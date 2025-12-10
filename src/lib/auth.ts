@@ -147,7 +147,7 @@ export async function getCurrentWorkspace() {
   });
 
   if (!user) {
-    // User doesn't exist in database - create them
+    // User doesn't exist in database - create using upsert to prevent race conditions
     // This happens if webhook hasn't fired yet or user signed up before webhook was set up
     const clerkClient = await import('@clerk/nextjs/server').then(m => m.clerkClient());
     const clerkUser = await clerkClient.users.getUser(userId);
@@ -157,7 +157,7 @@ export async function getCurrentWorkspace() {
       throw new Error('User email not found');
     }
 
-    // Create user
+    // Use upsert pattern to prevent race condition duplicates
     [user] = await db
       .insert(users)
       .values({
@@ -167,40 +167,76 @@ export async function getCurrentWorkspace() {
         lastName: clerkUser.lastName || null,
         avatarUrl: clerkUser.imageUrl || null,
       })
+      .onConflictDoUpdate({
+        target: users.clerkUserId,
+        set: {
+          email,
+          firstName: clerkUser.firstName || null,
+          lastName: clerkUser.lastName || null,
+          avatarUrl: clerkUser.imageUrl || null,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
 
-    // Create default workspace for new user
-    const workspaceName = clerkUser.firstName && clerkUser.lastName
-      ? `${clerkUser.firstName} ${clerkUser.lastName}'s Workspace`
-      : email.split('@')[0] + "'s Workspace";
-
-    const workspaceSlug = workspaceName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    // Check if workspace with this slug exists
-    let workspace = await db.query.workspaces.findFirst({
-      where: eq(workspaces.slug, workspaceSlug),
+    // Check if user already has a workspace membership
+    const existingMembership = await db.query.workspaceMembers.findFirst({
+      where: and(
+        eq(workspaceMembers.userId, user.id),
+        eq(workspaceMembers.isActive, true)
+      ),
     });
 
-    if (!workspace) {
-      [workspace] = await db
-        .insert(workspaces)
-        .values({
-          name: workspaceName,
-          slug: workspaceSlug,
-        })
-        .returning();
+    if (!existingMembership) {
+      // Create default workspace for new user
+      const workspaceName = clerkUser.firstName && clerkUser.lastName
+        ? `${clerkUser.firstName} ${clerkUser.lastName}'s Workspace`
+        : email.split('@')[0] + "'s Workspace";
+
+      const baseSlug = workspaceName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      // Generate unique slug by appending timestamp if needed
+      let workspaceSlug = baseSlug;
+      let workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.slug, workspaceSlug),
+      });
+
+      if (workspace) {
+        // Slug exists, append timestamp to make unique
+        workspaceSlug = `${baseSlug}-${Date.now()}`;
+        [workspace] = await db
+          .insert(workspaces)
+          .values({
+            name: workspaceName,
+            slug: workspaceSlug,
+          })
+          .returning();
+      } else {
+        [workspace] = await db
+          .insert(workspaces)
+          .values({
+            name: workspaceName,
+            slug: workspaceSlug,
+          })
+          .returning();
+      }
+
+      // Add user as owner of workspace
+      await db.insert(workspaceMembers).values({
+        userId: user.id,
+        workspaceId: workspace.id,
+        role: 'owner',
+        isActive: true,
+      });
+
+      logger.info('User workspace created on first access', { 
+        userId: user.id, 
+        workspaceId: workspace.id 
+      });
     }
-
-    // Add user as owner of workspace
-    await db.insert(workspaceMembers).values({
-      userId: user.id,
-      workspaceId: workspace.id,
-      role: 'owner',
-      isActive: true,
-    });
   }
 
   // Check if user is in a Clerk Organization
@@ -387,7 +423,7 @@ export async function getCurrentUser() {
   });
 
   if (!user) {
-    // User doesn't exist in database - auto-create from Clerk data
+    // User doesn't exist in database - auto-create from Clerk data using upsert
     logger.info('User not found in database, auto-creating from Clerk', { userId });
     
     const clerkUser = await currentUser();
@@ -403,7 +439,7 @@ export async function getCurrentUser() {
       throw new Error('No email found for user');
     }
 
-    // Create new user
+    // Use upsert pattern to prevent race condition duplicates
     const [newUser] = await db
       .insert(users)
       .values({
@@ -414,46 +450,76 @@ export async function getCurrentUser() {
         avatarUrl: clerkUser.imageUrl || null,
         createdAt: new Date(),
       })
+      .onConflictDoUpdate({
+        target: users.clerkUserId,
+        set: {
+          email,
+          firstName: clerkUser.firstName || null,
+          lastName: clerkUser.lastName || null,
+          avatarUrl: clerkUser.imageUrl || null,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
 
-    // Create default workspace for new user
-    const workspaceName = clerkUser.firstName && clerkUser.lastName
-      ? `${clerkUser.firstName} ${clerkUser.lastName}'s Workspace`
-      : email.split('@')[0] + "'s Workspace";
-
-    const workspaceSlug = workspaceName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
-    // Check if workspace with this slug exists
-    let workspace = await db.query.workspaces.findFirst({
-      where: eq(workspaces.slug, workspaceSlug),
+    // Check if user already has a workspace membership
+    const existingMembership = await db.query.workspaceMembers.findFirst({
+      where: and(
+        eq(workspaceMembers.userId, newUser.id),
+        eq(workspaceMembers.isActive, true)
+      ),
     });
 
-    if (!workspace) {
-      [workspace] = await db
-        .insert(workspaces)
-        .values({
-          name: workspaceName,
-          slug: workspaceSlug,
-        })
-        .returning();
+    if (!existingMembership) {
+      // Create default workspace for new user
+      const workspaceName = clerkUser.firstName && clerkUser.lastName
+        ? `${clerkUser.firstName} ${clerkUser.lastName}'s Workspace`
+        : email.split('@')[0] + "'s Workspace";
+
+      const baseSlug = workspaceName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+      // Generate unique slug
+      let workspaceSlug = baseSlug;
+      let workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.slug, workspaceSlug),
+      });
+
+      if (workspace) {
+        workspaceSlug = `${baseSlug}-${Date.now()}`;
+        [workspace] = await db
+          .insert(workspaces)
+          .values({
+            name: workspaceName,
+            slug: workspaceSlug,
+          })
+          .returning();
+      } else {
+        [workspace] = await db
+          .insert(workspaces)
+          .values({
+            name: workspaceName,
+            slug: workspaceSlug,
+          })
+          .returning();
+      }
+
+      // Add user as owner of workspace
+      await db.insert(workspaceMembers).values({
+        userId: newUser.id,
+        workspaceId: workspace.id,
+        role: 'owner',
+        isActive: true,
+      });
+
+      logger.info('User auto-created successfully', { 
+        userId: newUser.id, 
+        email, 
+        workspaceId: workspace.id 
+      });
     }
-
-    // Add user as owner of workspace
-    await db.insert(workspaceMembers).values({
-      userId: newUser.id,
-      workspaceId: workspace.id,
-      role: 'owner',
-      isActive: true,
-    });
-
-    logger.info('User auto-created successfully', { 
-      userId: newUser.id, 
-      email, 
-      workspaceId: workspace.id 
-    });
 
     user = newUser;
   }

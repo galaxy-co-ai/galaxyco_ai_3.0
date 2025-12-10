@@ -167,6 +167,13 @@ Neptune is now a fully-featured, production-ready AI assistant with:
 - **Test Coverage:** Run `npm run test:coverage`
 
 **Recent Updates (December 9, 2025):**
+- 🛡️ **User Sync Duplicate Prevention** - Production-grade Clerk user sync:
+  - Clerk webhook now uses upsert (ON CONFLICT) to prevent race condition duplicates
+  - `auth.ts` auto-creation also uses upsert pattern for consistency
+  - Enhanced Mission Control Users page shows Clerk IDs and duplicate detection
+  - Data health indicator card shows duplicate email status
+  - Duplicate email highlighting with tooltips explaining multi-provider scenarios
+  - Added cleanup script (`npx tsx src/scripts/cleanup-duplicate-users.ts`) for existing duplicates
 - 🔍 **Global Search** - Search across all workspace data:
   - New `/api/search` endpoint searches contacts, campaigns, knowledge items, creator items, agents, blog posts
   - SearchResults dropdown component with keyboard navigation and categorized results

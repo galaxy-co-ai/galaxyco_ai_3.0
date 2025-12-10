@@ -5,6 +5,65 @@
 
 ---
 
+## 🛡️ User Sync Duplicate Prevention - COMPLETE ✅
+
+**December 9, 2025** - Fixed duplicate user entries in database. Production-grade Clerk user sync with upsert patterns.
+
+### Problem Identified
+Users reported duplicate entries in Mission Control → Users page. Root cause: race condition between Clerk webhooks and `auth.ts` auto-creation when both fired simultaneously for the same user.
+
+### Solution Implemented
+
+#### 1. Clerk Webhook Upsert (`src/app/api/webhooks/clerk/route.ts`)
+- ✅ Changed from `findFirst` + `insert/update` to `INSERT ... ON CONFLICT DO UPDATE`
+- ✅ Uses `clerkUserId` as conflict target (unique constraint)
+- ✅ Checks for existing workspace membership before creating new workspace
+- ✅ Generates unique workspace slugs with timestamp suffix if needed
+- ✅ Added TypeScript type assertions for webhook event data
+- ✅ Enhanced logging for user sync operations
+
+#### 2. Auth.ts Auto-Creation Upsert (`src/lib/auth.ts`)
+- ✅ `getCurrentWorkspace()` now uses upsert pattern
+- ✅ `getCurrentUser()` now uses upsert pattern
+- ✅ Both functions check for existing membership before creating workspace
+- ✅ Prevents duplicate workspace creation for same user
+
+#### 3. Enhanced Users Page (`src/app/(app)/admin/users/page.tsx`)
+- ✅ Shows Clerk ID for each user (truncated with full ID in tooltip)
+- ✅ Data Health indicator card (green=clean, amber=duplicates detected)
+- ✅ Duplicate email highlighting with amber background
+- ✅ Warning banner explaining multi-provider scenarios (email + Google = separate Clerk accounts)
+- ✅ Tooltip explanations for duplicate badges
+
+#### 4. Cleanup Script (`src/scripts/cleanup-duplicate-users.ts`)
+- ✅ Identifies duplicate `clerkUserId` entries (rare due to unique constraint)
+- ✅ Identifies duplicate email entries (common with multi-provider auth)
+- ✅ Dry-run mode by default, `--execute` flag for actual cleanup
+- ✅ Reassigns workspace memberships before deleting duplicate users
+- ✅ Run with: `npx tsx src/scripts/cleanup-duplicate-users.ts`
+
+### Technical Details
+
+**Upsert Pattern:**
+```typescript
+await db
+  .insert(users)
+  .values({ clerkUserId, email, firstName, lastName, avatarUrl })
+  .onConflictDoUpdate({
+    target: users.clerkUserId,
+    set: { email, firstName, lastName, avatarUrl, updatedAt: new Date() },
+  })
+  .returning();
+```
+
+**Why Duplicate Emails Can Still Exist:**
+- User signs up with email/password → Clerk Account A
+- Same user signs up with Google → Clerk Account B (different `clerkUserId`)
+- Both are legitimate separate Clerk accounts with the same email
+- The Users page now explains this in the warning banner
+
+---
+
 ## 📝 Article Studio - COMPLETE ✅
 
 **December 9, 2025** - Article Studio ALL 9 PHASES COMPLETE. Full AI-assisted article creation system with database schema, topic generation, brainstorming, layout templates, outline editor, AI-assisted writing, source verification system, image generation/upload, blog intelligence (voice profile), pre-publish review with SEO tools, and final integration with comprehensive testing and documentation.
@@ -4616,5 +4675,5 @@ src/
 ---
 
 _Last updated by: AI Assistant_  
-_Last updated: December 6, 2025 (Creator Page Production-Ready)_  
+_Last updated: December 9, 2025 (User Sync Duplicate Prevention Fix)_  
 _Update this file when: Build status changes, major features added, or breaking changes occur_

@@ -3,9 +3,20 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
 import { users, workspaces, workspaceMembers } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
+/**
+ * Clerk Webhook Handler
+ * 
+ * Syncs Clerk users and organizations to the local database.
+ * Uses upsert pattern (ON CONFLICT) to prevent race condition duplicates.
+ * 
+ * Events handled:
+ * - user.created / user.updated - Sync user data
+ * - user.deleted - Deactivate user memberships
+ * - organization.created / updated / deleted - Sync org workspaces
+ */
 export async function POST(request: NextRequest) {
   try {
     // Get the Svix headers for verification
@@ -37,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Create a new Svix instance with the webhook secret
     const wh = new Webhook(webhookSecret);
 
-    let evt: any;
+    let evt: unknown;
 
     try {
       // Verify the webhook payload
@@ -54,20 +65,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle the webhook event
-    const eventType = evt.type;
-    const data = evt.data;
+    // Type assertion for verified webhook event
+    const event = evt as { type: string; data: Record<string, unknown> };
+    const eventType = event.type;
+    const data = event.data;
 
     if (eventType === 'user.created' || eventType === 'user.updated') {
-      // Sync user to database
-      const clerkUserId = data.id;
+      // Sync user to database using upsert pattern
+      const clerkUserId = data.id as string;
       const emailAddresses = (data.email_addresses || []) as Array<{ id: string; email_address: string }>;
       const email = emailAddresses.find((e) => e.id === data.primary_email_address_id)?.email_address 
         || emailAddresses[0]?.email_address;
-      const firstName = data.first_name;
-      const lastName = data.last_name;
-      const avatarUrl = data.image_url;
-      const createdAt = data.created_at ? new Date(data.created_at * 1000) : new Date();
+      const firstName = (data.first_name as string) || null;
+      const lastName = (data.last_name as string) || null;
+      const avatarUrl = (data.image_url as string) || null;
+      const createdAt = data.created_at ? new Date((data.created_at as number) * 1000) : new Date();
 
       if (!email) {
         logger.error('No email found for user', new Error('Missing email'), { clerkUserId });
@@ -77,90 +89,116 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check if user exists
-      const existingUser = await db.query.users.findFirst({
-        where: eq(users.clerkUserId, clerkUserId),
-      });
-
-      if (existingUser) {
-        // Update existing user
-        await db
-          .update(users)
-          .set({
+      // Use upsert pattern to prevent race condition duplicates
+      // ON CONFLICT on clerkUserId will update instead of failing
+      const [upsertedUser] = await db
+        .insert(users)
+        .values({
+          clerkUserId,
+          email,
+          firstName,
+          lastName,
+          avatarUrl,
+          createdAt,
+        })
+        .onConflictDoUpdate({
+          target: users.clerkUserId,
+          set: {
             email,
-            firstName: firstName || existingUser.firstName,
-            lastName: lastName || existingUser.lastName,
-            avatarUrl: avatarUrl || existingUser.avatarUrl,
+            firstName,
+            lastName,
+            avatarUrl,
             updatedAt: new Date(),
-          })
-          .where(eq(users.id, existingUser.id));
-      } else {
-        // Create new user
-        const [newUser] = await db
-          .insert(users)
-          .values({
-            clerkUserId,
-            email,
-            firstName: firstName || null,
-            lastName: lastName || null,
-            avatarUrl: avatarUrl || null,
-            createdAt,
-          })
-          .returning();
+          },
+        })
+        .returning();
 
-        // Create default workspace for new user
-        const workspaceName = firstName && lastName
-          ? `${firstName} ${lastName}'s Workspace`
-          : email.split('@')[0] + "'s Workspace";
-
-        const workspaceSlug = workspaceName
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
-
-        // Check if workspace with this slug exists
-        let workspace = await db.query.workspaces.findFirst({
-          where: eq(workspaces.slug, workspaceSlug),
+      // For new users (user.created), set up their workspace
+      if (eventType === 'user.created') {
+        // Check if user already has a workspace membership
+        const existingMembership = await db.query.workspaceMembers.findFirst({
+          where: and(
+            eq(workspaceMembers.userId, upsertedUser.id),
+            eq(workspaceMembers.isActive, true)
+          ),
         });
 
-        if (!workspace) {
-          [workspace] = await db
+        if (!existingMembership) {
+          // Create default workspace for new user
+          const workspaceName = firstName && lastName
+            ? `${firstName} ${lastName}'s Workspace`
+            : email.split('@')[0] + "'s Workspace";
+
+          const baseSlug = workspaceName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+
+          // Generate unique slug by appending timestamp if needed
+          let workspaceSlug = baseSlug;
+          let existingWorkspace = await db.query.workspaces.findFirst({
+            where: eq(workspaces.slug, workspaceSlug),
+          });
+
+          if (existingWorkspace) {
+            // Slug exists, append timestamp to make unique
+            workspaceSlug = `${baseSlug}-${Date.now()}`;
+          }
+
+          const [newWorkspace] = await db
             .insert(workspaces)
             .values({
               name: workspaceName,
               slug: workspaceSlug,
             })
             .returning();
-        }
 
-        // Add user as owner of workspace
-        await db.insert(workspaceMembers).values({
-          userId: newUser.id,
-          workspaceId: workspace.id,
-          role: 'owner',
-          isActive: true,
-        });
+          // Add user as owner of workspace
+          await db.insert(workspaceMembers).values({
+            userId: upsertedUser.id,
+            workspaceId: newWorkspace.id,
+            role: 'owner',
+            isActive: true,
+          });
+
+          logger.info('User workspace created', { 
+            userId: upsertedUser.id, 
+            workspaceId: newWorkspace.id,
+            clerkUserId 
+          });
+        }
       }
+
+      logger.info('User synced from Clerk', { 
+        userId: upsertedUser.id, 
+        clerkUserId, 
+        eventType 
+      });
     } else if (eventType === 'user.deleted') {
-      // Handle user deletion
-      const clerkUserId = data.id;
+      // Handle user deletion - soft delete by deactivating memberships
+      const clerkUserId = data.id as string;
       const user = await db.query.users.findFirst({
         where: eq(users.clerkUserId, clerkUserId),
       });
 
       if (user) {
-        // Deactivate workspace memberships instead of deleting
+        // Deactivate workspace memberships instead of hard deleting
         await db
           .update(workspaceMembers)
           .set({ isActive: false })
           .where(eq(workspaceMembers.userId, user.id));
+
+        logger.info('User deactivated from Clerk deletion', { 
+          userId: user.id, 
+          clerkUserId 
+        });
       }
     } else if (eventType === 'organization.created') {
       // Handle organization creation - create a corresponding workspace
-      const clerkOrgId = data.id;
-      const orgName = data.name;
-      const orgSlug = data.slug || orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const createdBy = data.created_by;
+      const clerkOrgId = data.id as string;
+      const orgName = data.name as string;
+      const orgSlug = (data.slug as string) || orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const createdBy = data.created_by as string | undefined;
 
       // Check if workspace with this clerk org ID already exists
       const existingWorkspace = await db.query.workspaces.findFirst({
@@ -198,9 +236,9 @@ export async function POST(request: NextRequest) {
       }
     } else if (eventType === 'organization.updated') {
       // Handle organization updates - sync name/slug changes
-      const clerkOrgId = data.id;
-      const orgName = data.name;
-      const orgSlug = data.slug;
+      const clerkOrgId = data.id as string;
+      const orgName = data.name as string | undefined;
+      const orgSlug = data.slug as string | undefined;
 
       const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.clerkOrganizationId, clerkOrgId),
@@ -220,7 +258,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (eventType === 'organization.deleted') {
       // Handle organization deletion - deactivate the workspace
-      const clerkOrgId = data.id;
+      const clerkOrgId = data.id as string;
 
       const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.clerkOrganizationId, clerkOrgId),
