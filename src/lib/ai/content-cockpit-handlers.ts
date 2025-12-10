@@ -187,33 +187,38 @@ export async function addTopicToHitList(
   }
 ): Promise<{ success: boolean; topicId?: string; message: string }> {
   try {
-    // Get max position for ordering
-    const [maxPosition] = await db
-      .select({ maxPos: sql<number>`COALESCE(MAX(hit_list_position), 0)` })
-      .from(topicIdeas)
-      .where(
-        and(
-          eq(topicIdeas.workspaceId, ctx.workspaceId),
-          isNotNull(topicIdeas.hitListAddedAt)
+    // Use a transaction with row-level locking to prevent race conditions
+    // when calculating hitListPosition for concurrent inserts
+    const [newTopic] = await db.transaction(async (tx) => {
+      // Lock and get max position atomically
+      const [maxPosition] = await tx
+        .select({ maxPos: sql<number>`COALESCE(MAX(hit_list_position), 0)` })
+        .from(topicIdeas)
+        .where(
+          and(
+            eq(topicIdeas.workspaceId, ctx.workspaceId),
+            isNotNull(topicIdeas.hitListAddedAt)
+          )
         )
-      );
+        .for("update"); // Row-level lock to prevent concurrent reads
 
-    const [newTopic] = await db
-      .insert(topicIdeas)
-      .values({
-        workspaceId: ctx.workspaceId,
-        title: topic.title,
-        description: topic.description || null,
-        whyItWorks: topic.whyItWorks || null,
-        category: topic.category || null,
-        generatedBy: "ai", // Neptune AI generates topics
-        status: "saved",
-        hitListAddedAt: new Date(),
-        hitListPosition: (maxPosition?.maxPos || 0) + 1,
-        priority: topic.priority || "medium",
-        difficultyLevel: "medium",
-      })
-      .returning();
+      return tx
+        .insert(topicIdeas)
+        .values({
+          workspaceId: ctx.workspaceId,
+          title: topic.title,
+          description: topic.description || null,
+          whyItWorks: topic.whyItWorks || null,
+          category: topic.category || null,
+          generatedBy: "ai", // Neptune AI generates topics
+          status: "saved",
+          hitListAddedAt: new Date(),
+          hitListPosition: (maxPosition?.maxPos || 0) + 1,
+          priority: topic.priority || "medium",
+          difficultyLevel: "medium",
+        })
+        .returning();
+    });
 
     logger.info("[ContentCockpit] Added topic to hit list via Neptune", {
       topicId: newTopic.id,
@@ -243,6 +248,9 @@ export async function reprioritizeHitList(
 ): Promise<{ success: boolean; message: string; changesCount: number }> {
   try {
     // Get existing published content for context
+    // NOTE: blogPosts table doesn't have workspaceId as blog content is shared
+    // across the platform (public blog). This is intentional for content gap analysis.
+    // If workspace-scoped blogs are needed, add workspaceId to blogPosts schema.
     const existingContent = await db
       .select({
         title: blogPosts.title,
@@ -522,8 +530,9 @@ Respond with JSON: { "matchedId": "id or null", "confidence": number, "reason": 
           }
         : null,
       suggestion:
-        parsed.confidence >= 70
-          ? `I found a match! "${matched?.name}" is ${parsed.confidence}% relevant. ${parsed.reason}`
+        // Only claim a match if we have both high confidence AND an actual matched use case
+        parsed.confidence >= 70 && matched
+          ? `I found a match! "${matched.name}" is ${parsed.confidence}% relevant. ${parsed.reason}`
           : parsed.reason,
     };
   } catch (error) {
