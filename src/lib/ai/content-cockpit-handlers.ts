@@ -202,7 +202,7 @@ export async function addTopicToHitList(
         )
         .for("update"); // Row-level lock to prevent concurrent reads
 
-      return tx
+      return await tx
         .insert(topicIdeas)
         .values({
           workspaceId: ctx.workspaceId,
