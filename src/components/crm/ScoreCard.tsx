@@ -213,3 +213,14 @@ export function ScoreCard({ contactId, contactData }: ScoreCardProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+

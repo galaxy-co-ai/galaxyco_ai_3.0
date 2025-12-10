@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 
           // Generate unique slug by appending timestamp if needed
           let workspaceSlug = baseSlug;
-          let existingWorkspace = await db.query.workspaces.findFirst({
+          const existingWorkspace = await db.query.workspaces.findFirst({
             where: eq(workspaces.slug, workspaceSlug),
           });
 

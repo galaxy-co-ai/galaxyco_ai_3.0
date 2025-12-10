@@ -58,3 +58,8 @@
 - Mobile-first responsive design
 - Conventional commits: `feat(content-cockpit): Phase X - description`
 
+
+
+
+
+
