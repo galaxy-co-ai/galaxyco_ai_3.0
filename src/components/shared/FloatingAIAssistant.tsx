@@ -93,9 +93,51 @@ export function FloatingAIAssistant() {
       setIsMinimized(false);
       if (query) {
         setInputValue(query);
-        // Optionally auto-send the query
+        // Optionally auto-send the query - using state update pattern
         setTimeout(() => {
-          handleSendMessage(query);
+          // Direct async call with query parameter avoids stale closure
+          const sendMessage = async () => {
+            setInputValue("");
+            setIsTyping(true);
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              role: "user",
+              content: query,
+              timestamp: formatTimestamp(new Date()),
+            }]);
+            
+            try {
+              const response = await fetch("/api/assistant/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  message: query,
+                  conversationId: null,
+                  context: {
+                    feature: "floating_chat",
+                    page: typeof window !== "undefined" ? window.location.pathname : undefined,
+                  },
+                }),
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                if (data.conversationId) setConversationId(data.conversationId);
+                setMessages(prev => [...prev, {
+                  id: data.messageId || (Date.now() + 1).toString(),
+                  role: "assistant",
+                  content: data.message || data.response || "I processed your request.",
+                  timestamp: formatTimestamp(new Date()),
+                  suggestions: generateSuggestions(query, data.message),
+                }]);
+              }
+            } catch (error) {
+              logger.error("Failed to send message", error);
+            } finally {
+              setIsTyping(false);
+            }
+          };
+          sendMessage();
         }, 300);
       }
     };
@@ -104,6 +146,9 @@ export function FloatingAIAssistant() {
     return () => {
       window.removeEventListener('openNeptune', handleOpenNeptune as EventListener);
     };
+    // Empty deps array is intentional - we only set up the listener once
+    // The event handler uses direct state updates to avoid stale closures
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSendMessage = useCallback(async (messageText?: string) => {
