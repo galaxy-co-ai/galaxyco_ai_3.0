@@ -41,3 +41,16 @@ export {
 } from "./SourcesHub";
 export type { SourceFilters, SourceFormData } from "./SourcesHub";
 
+// Analytics Components
+export {
+  AnalyticsDashboard,
+  ArticlePerformanceCard,
+  PerformanceTrendsChart,
+  TopPerformersTable,
+  EngagementBreakdown,
+  DateRangeSelector,
+  StatsOverviewCards,
+} from "./Analytics";
+export type { DateRangePreset } from "./Analytics/DateRangeSelector";
+export type { MetricType } from "./Analytics/PerformanceTrendsChart";
+
