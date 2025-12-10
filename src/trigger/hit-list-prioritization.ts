@@ -248,12 +248,11 @@ export const scheduledHitListPrioritization = schedules.task({
 
       let processed = 0;
       let failed = 0;
-      let totalItemsUpdated = 0;
 
       // Process each workspace
       for (const workspace of workspacesWithHitList) {
         try {
-          const result = await prioritizeWorkspaceTask.trigger({
+          await prioritizeWorkspaceTask.trigger({
             workspaceId: workspace.id,
           });
           processed++;
