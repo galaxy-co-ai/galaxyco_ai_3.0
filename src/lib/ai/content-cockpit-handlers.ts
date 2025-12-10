@@ -192,32 +192,32 @@ export async function addTopicToHitList(
     const [newTopic] = await db.transaction(async (tx) => {
       // Lock and get max position atomically
       const [maxPosition] = await tx
-        .select({ maxPos: sql<number>`COALESCE(MAX(hit_list_position), 0)` })
-        .from(topicIdeas)
-        .where(
-          and(
-            eq(topicIdeas.workspaceId, ctx.workspaceId),
-            isNotNull(topicIdeas.hitListAddedAt)
-          )
+      .select({ maxPos: sql<number>`COALESCE(MAX(hit_list_position), 0)` })
+      .from(topicIdeas)
+      .where(
+        and(
+          eq(topicIdeas.workspaceId, ctx.workspaceId),
+          isNotNull(topicIdeas.hitListAddedAt)
+        )
         )
         .for("update"); // Row-level lock to prevent concurrent reads
 
       return await tx
-        .insert(topicIdeas)
-        .values({
-          workspaceId: ctx.workspaceId,
-          title: topic.title,
-          description: topic.description || null,
-          whyItWorks: topic.whyItWorks || null,
-          category: topic.category || null,
-          generatedBy: "ai", // Neptune AI generates topics
-          status: "saved",
-          hitListAddedAt: new Date(),
-          hitListPosition: (maxPosition?.maxPos || 0) + 1,
-          priority: topic.priority || "medium",
-          difficultyLevel: "medium",
-        })
-        .returning();
+      .insert(topicIdeas)
+      .values({
+        workspaceId: ctx.workspaceId,
+        title: topic.title,
+        description: topic.description || null,
+        whyItWorks: topic.whyItWorks || null,
+        category: topic.category || null,
+        generatedBy: "ai", // Neptune AI generates topics
+        status: "saved",
+        hitListAddedAt: new Date(),
+        hitListPosition: (maxPosition?.maxPos || 0) + 1,
+        priority: topic.priority || "medium",
+        difficultyLevel: "medium",
+      })
+      .returning();
     });
 
     logger.info("[ContentCockpit] Added topic to hit list via Neptune", {

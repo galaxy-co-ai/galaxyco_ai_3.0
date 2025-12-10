@@ -19,32 +19,38 @@ async function getAdminCounts() {
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   
+  let draftPosts = 0;
+  let newFeedback = 0;
+
   try {
-    const [
-      draftPosts,
-      newFeedback,
-    ] = await Promise.all([
-      // Draft posts count
-      db.select({ count: count() }).from(blogPosts).where(eq(blogPosts.status, 'draft')).then(r => r[0]?.count ?? 0),
-      // New feedback count (last 7 days)
-      db.select({ count: count() }).from(platformFeedback).where(
+    const result = await db
+      .select({ count: count() })
+      .from(blogPosts)
+      .where(eq(blogPosts.status, 'draft'));
+    draftPosts = result[0]?.count ?? 0;
+  } catch {
+    // Table may not exist
+  }
+
+  try {
+    const result = await db
+      .select({ count: count() })
+      .from(platformFeedback)
+      .where(
         and(
           eq(platformFeedback.status, 'new'),
           gte(platformFeedback.createdAt, sevenDaysAgo)
         )
-      ).then(r => r[0]?.count ?? 0),
-    ]);
-    
-    return {
-      content: draftPosts,
-      feedback: newFeedback,
-    };
+      );
+    newFeedback = result[0]?.count ?? 0;
   } catch {
-    return {
-      content: 0,
-      feedback: 0,
-    };
+    // Table may not exist
   }
+
+  return {
+    content: draftPosts,
+    feedback: newFeedback,
+  };
 }
 
 export default async function AdminLayout({
