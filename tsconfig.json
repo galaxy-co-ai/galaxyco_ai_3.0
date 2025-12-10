@@ -39,6 +39,7 @@
     "src/App.tsx",
     "src/main.tsx",
     "tests",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "**/_archive/**"
   ]
 }
