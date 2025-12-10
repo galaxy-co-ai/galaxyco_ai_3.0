@@ -13,7 +13,8 @@ import {
   PenTool,
   Check,
   Loader2,
-  Lightbulb
+  Lightbulb,
+  ListOrdered
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { LayoutPicker, OutlineEditor, type OutlineData, type OutlineSection } from '@/components/admin/ArticleStudio';
 import { type LayoutTemplate } from '@/lib/ai/article-layouts';
+import { useHitListProgress } from '@/lib/hooks';
 
 interface Category {
   id: string;
@@ -51,6 +53,15 @@ export function NewPostWizard({ categories }: NewPostWizardProps) {
   // Initialize from URL params if coming from Article Studio
   const initialTitle = searchParams.get('title') || '';
   const initialLayout = (searchParams.get('layout') as LayoutTemplate['id']) || undefined;
+  const topicIdFromUrl = searchParams.get('topicId');
+  
+  // Progress tracking for Hit List integration
+  const { updateProgress, isTracking } = useHitListProgress({
+    topicId: topicIdFromUrl,
+    onError: (error) => {
+      console.error('Progress tracking error:', error);
+    },
+  });
   
   // Wizard state
   const [currentStep, setCurrentStep] = useState<WizardStep>(
@@ -90,6 +101,12 @@ export function NewPostWizard({ categories }: NewPostWizardProps) {
       toast.error('Please enter a topic or title');
       return;
     }
+    
+    // Track progress for Hit List items
+    if (isTracking) {
+      updateProgress('topic_selected');
+    }
+    
     goToStep('layout');
   };
 
@@ -120,6 +137,12 @@ export function NewPostWizard({ categories }: NewPostWizardProps) {
       const data = await response.json();
       setOutline(data.outline);
       goToStep('outline');
+      
+      // Track progress for Hit List items
+      if (isTracking) {
+        updateProgress('outline_created');
+      }
+      
       toast.success('Outline generated!');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to generate outline');
@@ -137,6 +160,11 @@ export function NewPostWizard({ categories }: NewPostWizardProps) {
 
     setIsGeneratingDraft(true);
     try {
+      // Track progress for Hit List items
+      if (isTracking) {
+        updateProgress('writing_started');
+      }
+      
       // Create the post with outline, then redirect to editor
       const response = await fetch('/api/admin/posts', {
         method: 'POST',
@@ -154,6 +182,8 @@ export function NewPostWizard({ categories }: NewPostWizardProps) {
           },
           layoutTemplate: outline.layoutId,
           status: 'draft',
+          // Link to Hit List topic if present
+          topicId: topicIdFromUrl,
         }),
       });
 
@@ -165,8 +195,11 @@ export function NewPostWizard({ categories }: NewPostWizardProps) {
       const post = await response.json();
       toast.success('Post created! Opening editor...');
       
-      // Redirect to editor with the post ID
-      router.push(`/admin/content/${post.id}`);
+      // Redirect to editor with the post ID (and topicId for continued tracking)
+      const editorUrl = topicIdFromUrl 
+        ? `/admin/content/${post.id}?topicId=${topicIdFromUrl}`
+        : `/admin/content/${post.id}`;
+      router.push(editorUrl);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create post');
     } finally {
@@ -190,19 +223,31 @@ export function NewPostWizard({ categories }: NewPostWizardProps) {
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
-            <Link href="/admin/content">
-              <Button variant="ghost" size="icon" aria-label="Back to Content Studio">
+            <Link href={topicIdFromUrl ? "/admin/content/hit-list" : "/admin/content"}>
+              <Button variant="ghost" size="icon" aria-label={topicIdFromUrl ? "Back to Hit List" : "Back to Content Studio"}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <div>
-              <h1 className="font-semibold flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-amber-500" />
-                New Article
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                AI-assisted article creation
-              </p>
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="font-semibold flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                  New Article
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  AI-assisted article creation
+                </p>
+              </div>
+              {/* Hit List badge */}
+              {topicIdFromUrl && (
+                <Badge 
+                  variant="outline" 
+                  className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200"
+                >
+                  <ListOrdered className="h-3 w-3 mr-1" aria-hidden="true" />
+                  From Hit List
+                </Badge>
+              )}
             </div>
           </div>
           

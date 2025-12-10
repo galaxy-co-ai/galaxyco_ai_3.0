@@ -1,23 +1,25 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   ArrowLeft, 
   Lightbulb, 
   MessageSquare, 
   FileText,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  ListOrdered,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TopicGenerator, BrainstormChat } from '@/components/admin/ArticleStudio';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useHitListProgress, WIZARD_STAGES, type WizardStage } from '@/lib/hooks';
 
 // Types
 interface GeneratedTopic {
@@ -46,28 +48,127 @@ interface OutlineData {
 
 type StudioMode = 'select' | 'topic' | 'brainstorm';
 
+// Hit List topic data shape
+interface HitListTopic {
+  id: string;
+  title: string;
+  description: string | null;
+  whyItWorks: string | null;
+  category: string | null;
+  suggestedLayout: string | null;
+  wizardProgress?: {
+    currentStep?: string;
+    completedSteps?: string[];
+    percentage?: number;
+    startedAt?: string;
+    lastUpdatedAt?: string;
+  } | null;
+}
+
 export function ArticleStudioClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const topicIdFromUrl = searchParams.get('topicId');
+  
   const [mode, setMode] = useState<StudioMode>('select');
   const [selectedTopic, setSelectedTopic] = useState<GeneratedTopic | null>(null);
   const [generatedOutline, setGeneratedOutline] = useState<OutlineData | null>(null);
+  
+  // Hit List integration state
+  const [hitListTopic, setHitListTopic] = useState<HitListTopic | null>(null);
+  const [isLoadingHitListTopic, setIsLoadingHitListTopic] = useState(false);
+  
+  // Progress tracking hook
+  const { updateProgress, isTracking } = useHitListProgress({
+    topicId: topicIdFromUrl,
+    onError: (error) => {
+      // Silently log errors - don't interrupt user flow
+      console.error('Progress tracking error:', error);
+    },
+  });
+  
+  // Fetch hit list topic when topicId is provided
+  useEffect(() => {
+    if (!topicIdFromUrl) {
+      setHitListTopic(null);
+      return;
+    }
+    
+    const fetchTopic = async () => {
+      setIsLoadingHitListTopic(true);
+      try {
+        const response = await fetch(`/api/admin/hit-list/${topicIdFromUrl}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch topic');
+        }
+        const data = await response.json();
+        setHitListTopic(data.item);
+        
+        // Auto-select topic mode and pre-fill topic
+        setMode('topic');
+        setSelectedTopic({
+          title: data.item.title,
+          description: data.item.description || '',
+          whyItWorks: data.item.whyItWorks || '',
+          suggestedLayout: data.item.suggestedLayout || 'standard',
+          category: data.item.category || '',
+        });
+        
+        // Update progress to indicate topic was selected
+        updateProgress('topic_selected');
+        
+        toast.success('Topic loaded from Hit List');
+      } catch (error) {
+        toast.error('Failed to load topic from Hit List');
+      } finally {
+        setIsLoadingHitListTopic(false);
+      }
+    };
+    
+    fetchTopic();
+  }, [topicIdFromUrl, updateProgress]);
 
   // Handle topic selection from generator
   const handleSelectTopic = (topic: GeneratedTopic) => {
     setSelectedTopic(topic);
+    
+    // Track progress if coming from hit list
+    if (isTracking) {
+      updateProgress('topic_selected');
+    }
+    
     toast.success('Topic selected! Choose to brainstorm further or start writing.');
   };
 
   // Handle starting to write from topic generator
   const handleStartWriting = (topic: GeneratedTopic) => {
-    // Save topic selection and redirect to editor
-    // In the future, this will go to the outline editor (Phase 3)
-    router.push(`/admin/content/new?title=${encodeURIComponent(topic.title)}&layout=${topic.suggestedLayout}`);
+    // Track progress if coming from hit list
+    if (isTracking) {
+      updateProgress('writing_started');
+    }
+    
+    // Build URL with topic ID if from hit list
+    const params = new URLSearchParams({
+      title: topic.title,
+      layout: topic.suggestedLayout,
+    });
+    
+    if (topicIdFromUrl) {
+      params.set('topicId', topicIdFromUrl);
+    }
+    
+    router.push(`/admin/content/new?${params.toString()}`);
   };
 
   // Handle outline generation from brainstorm
   const handleGenerateOutline = (outline: OutlineData) => {
     setGeneratedOutline(outline);
+    
+    // Track progress if coming from hit list
+    if (isTracking) {
+      updateProgress('outline_created');
+    }
+    
     toast.success('Outline generated! Review and start writing.');
   };
 
@@ -75,12 +176,35 @@ export function ArticleStudioClient() {
   const handleWriteFromOutline = () => {
     if (!generatedOutline) return;
     
-    // In Phase 3, this will go to the outline editor
-    // For now, go directly to the post editor with the title
-    router.push(
-      `/admin/content/new?title=${encodeURIComponent(generatedOutline.title)}&layout=${generatedOutline.layout}`
-    );
+    // Track progress if coming from hit list
+    if (isTracking) {
+      updateProgress('writing_started');
+    }
+    
+    // Build URL with topic ID if from hit list
+    const params = new URLSearchParams({
+      title: generatedOutline.title,
+      layout: generatedOutline.layout,
+    });
+    
+    if (topicIdFromUrl) {
+      params.set('topicId', topicIdFromUrl);
+    }
+    
+    router.push(`/admin/content/new?${params.toString()}`);
   };
+
+  // Show loading state while fetching hit list topic
+  if (isLoadingHitListTopic) {
+    return (
+      <div className="min-h-full bg-gray-50/50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Loading topic from Hit List...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full bg-gray-50/50">
@@ -88,8 +212,8 @@ export function ArticleStudioClient() {
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-4">
-            <Link href="/admin/content">
-              <Button variant="ghost" size="icon" aria-label="Back to Content Studio">
+            <Link href={hitListTopic ? "/admin/content/hit-list" : "/admin/content"}>
+              <Button variant="ghost" size="icon" aria-label={hitListTopic ? "Back to Hit List" : "Back to Content Studio"}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
@@ -103,11 +227,23 @@ export function ArticleStudioClient() {
               </p>
             </div>
           </div>
-          {selectedTopic && (
-            <Badge variant="secondary" className="text-xs">
-              Topic: {selectedTopic.title.slice(0, 30)}...
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {/* Hit List badge */}
+            {hitListTopic && (
+              <Badge 
+                variant="outline" 
+                className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200"
+              >
+                <ListOrdered className="h-3 w-3 mr-1" aria-hidden="true" />
+                From Hit List
+              </Badge>
+            )}
+            {selectedTopic && (
+              <Badge variant="secondary" className="text-xs">
+                Topic: {selectedTopic.title.slice(0, 30)}...
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
 
@@ -165,7 +301,13 @@ export function ArticleStudioClient() {
 
               {/* Brainstorm Option */}
               <button
-                onClick={() => setMode('brainstorm')}
+                onClick={() => {
+                  setMode('brainstorm');
+                  // Track that brainstorming has started
+                  if (isTracking) {
+                    updateProgress('brainstorm_started');
+                  }
+                }}
                 className="text-left"
                 aria-label="Start brainstorming"
               >
@@ -233,7 +375,12 @@ export function ArticleStudioClient() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setMode('brainstorm')}
+                onClick={() => {
+                  setMode('brainstorm');
+                  if (isTracking) {
+                    updateProgress('brainstorm_started');
+                  }
+                }}
               >
                 <MessageSquare className="h-4 w-4 mr-1" />
                 Switch to Brainstorm

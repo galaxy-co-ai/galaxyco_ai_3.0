@@ -7,6 +7,22 @@ import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
 
 /**
+ * Progress stages for the Article Studio wizard flow
+ */
+const WIZARD_STAGES = [
+  "topic_selected",
+  "brainstorm_started",
+  "outline_created",
+  "writing_started",
+  "first_draft_complete",
+  "editing",
+  "ready_to_publish",
+  "published",
+] as const;
+
+type WizardStage = (typeof WIZARD_STAGES)[number];
+
+/**
  * PATCH /api/admin/hit-list/[id]/progress
  *
  * Update the wizard progress when writing an article.
@@ -14,6 +30,8 @@ import { eq, and } from "drizzle-orm";
 const updateProgressSchema = z.object({
   currentStep: z.string().optional(),
   completedSteps: z.array(z.string()).optional(),
+  stage: z.enum(WIZARD_STAGES).optional(), // New: named stage
+  percentage: z.number().min(0).max(100).optional(), // New: percentage
   reset: z.boolean().optional(), // If true, clears all progress
 });
 
@@ -53,31 +71,49 @@ export async function PATCH(
       // Merge with existing progress
       const currentProgress = existingItem.wizardProgress || {};
 
+      // Handle stage-based updates (new flow)
+      const currentStep = validatedData.stage ?? validatedData.currentStep ?? currentProgress.currentStep;
+      
+      // Build completed steps array
+      let completedSteps = validatedData.completedSteps ?? currentProgress.completedSteps ?? [];
+      
+      // If a stage is provided, add it to completed steps if not already present
+      if (validatedData.stage && !completedSteps.includes(validatedData.stage)) {
+        completedSteps = [...completedSteps, validatedData.stage];
+      }
+
       newProgress = {
         ...currentProgress,
-        currentStep:
-          validatedData.currentStep ?? currentProgress.currentStep ?? undefined,
-        completedSteps:
-          validatedData.completedSteps ??
-          currentProgress.completedSteps ??
-          undefined,
-        startedAt:
-          currentProgress.startedAt ?? new Date().toISOString(),
+        currentStep,
+        completedSteps,
+        percentage: validatedData.percentage ?? currentProgress.percentage,
+        startedAt: currentProgress.startedAt ?? new Date().toISOString(),
         lastUpdatedAt: new Date().toISOString(),
       };
     }
 
-    // Update status to in_progress if starting wizard
-    const shouldUpdateStatus =
-      !validatedData.reset &&
-      validatedData.currentStep &&
-      !existingItem.wizardProgress?.startedAt;
+    // Determine status update based on progress
+    let statusUpdate: "in_progress" | "published" | undefined = undefined;
+    
+    if (!validatedData.reset) {
+      // If stage is 'published', set status to 'published'
+      if (validatedData.stage === "published") {
+        statusUpdate = "published";
+      }
+      // If starting wizard for first time, set status to 'in_progress'
+      else if (
+        (validatedData.currentStep || validatedData.stage) &&
+        !existingItem.wizardProgress?.startedAt
+      ) {
+        statusUpdate = "in_progress";
+      }
+    }
 
     const [updatedItem] = await db
       .update(topicIdeas)
       .set({
         wizardProgress: newProgress,
-        status: shouldUpdateStatus ? "in_progress" : undefined,
+        status: statusUpdate,
         updatedAt: new Date(),
       })
       .where(eq(topicIdeas.id, id))

@@ -1,10 +1,83 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { blogPosts } from '@/db/schema';
-import { isSystemAdmin } from '@/lib/auth';
+import { blogPosts, topicIdeas, alertBadges } from '@/db/schema';
+import { isSystemAdmin, getCurrentWorkspace } from '@/lib/auth';
 import { eq, and, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+
+/**
+ * Auto-complete Hit List item when associated post is published.
+ * Creates a success alert badge for the user.
+ */
+async function completeHitListItem(postId: string, postTitle: string) {
+  try {
+    // Find any topic idea linked to this post
+    const [linkedTopic] = await db
+      .select({
+        id: topicIdeas.id,
+        workspaceId: topicIdeas.workspaceId,
+        title: topicIdeas.title,
+      })
+      .from(topicIdeas)
+      .where(eq(topicIdeas.resultingPostId, postId))
+      .limit(1);
+
+    if (!linkedTopic) {
+      // No linked topic - nothing to complete
+      return;
+    }
+
+    // Update the topic idea to published status
+    await db
+      .update(topicIdeas)
+      .set({
+        status: 'published',
+        wizardProgress: {
+          currentStep: 'published',
+          completedSteps: [
+            'topic_selected',
+            'brainstorm_started',
+            'outline_created',
+            'writing_started',
+            'first_draft_complete',
+            'editing',
+            'ready_to_publish',
+            'published',
+          ],
+          percentage: 100,
+          lastUpdatedAt: new Date().toISOString(),
+        },
+        updatedAt: new Date(),
+      })
+      .where(eq(topicIdeas.id, linkedTopic.id));
+
+    // Create milestone alert badge for successful publication
+    await db.insert(alertBadges).values({
+      workspaceId: linkedTopic.workspaceId,
+      type: 'milestone',
+      title: 'Article Published from Hit List!',
+      message: `"${postTitle}" has been published successfully.`,
+      priority: 10, // Higher priority for milestones
+      actionUrl: `/admin/content/${postId}`,
+      actionLabel: 'View Article',
+      relatedEntityType: 'post',
+      relatedEntityId: postId,
+    });
+
+    logger.info('Hit List item auto-completed on publish', {
+      topicId: linkedTopic.id,
+      postId,
+      postTitle,
+    });
+  } catch (error) {
+    // Log but don't fail the publish operation
+    logger.error('Failed to auto-complete Hit List item', {
+      error,
+      postId,
+    });
+  }
+}
 
 // Validation schema for updating posts
 const updatePostSchema = z.object({
@@ -163,6 +236,11 @@ export async function PUT(
       .returning();
 
     logger.info('Blog post updated', { postId: id, updates: Object.keys(updateData) });
+
+    // Auto-complete Hit List item when post is published
+    if (data.status === 'published' && existingPost.status !== 'published') {
+      await completeHitListItem(id, updatedPost.title);
+    }
 
     return NextResponse.json(updatedPost);
   } catch (error) {

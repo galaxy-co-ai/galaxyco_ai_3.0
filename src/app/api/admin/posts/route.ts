@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { blogPosts, users } from '@/db/schema';
+import { blogPosts, users, topicIdeas } from '@/db/schema';
 import { isSystemAdmin } from '@/lib/auth';
 import { currentUser } from '@clerk/nextjs/server';
 import { eq } from 'drizzle-orm';
@@ -22,6 +22,8 @@ const postSchema = z.object({
   metaDescription: z.string().nullable().optional(),
   publishedAt: z.string().datetime().nullable().optional(),
   scheduledAt: z.string().datetime().nullable().optional(),
+  // Hit List integration - link to topic idea
+  topicId: z.string().uuid().nullable().optional(),
 });
 
 // GET - List all posts (admin only)
@@ -124,6 +126,39 @@ export async function POST(request: NextRequest) {
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
       })
       .returning();
+
+    // If linked to a Hit List topic, update the topic with the resulting post ID
+    if (data.topicId) {
+      try {
+        await db
+          .update(topicIdeas)
+          .set({
+            resultingPostId: newPost.id,
+            status: 'in_progress',
+            wizardProgress: {
+              currentStep: 'writing_started',
+              completedSteps: ['topic_selected', 'outline_created', 'writing_started'],
+              percentage: 50,
+              startedAt: new Date().toISOString(),
+              lastUpdatedAt: new Date().toISOString(),
+            },
+            updatedAt: new Date(),
+          })
+          .where(eq(topicIdeas.id, data.topicId));
+
+        logger.info('Hit List topic linked to post', { 
+          topicId: data.topicId, 
+          postId: newPost.id 
+        });
+      } catch (linkError) {
+        // Log but don't fail - the post was created successfully
+        logger.error('Failed to link topic to post', { 
+          error: linkError, 
+          topicId: data.topicId, 
+          postId: newPost.id 
+        });
+      }
+    }
 
     logger.info('Blog post created', { postId: newPost.id, title: newPost.title });
 

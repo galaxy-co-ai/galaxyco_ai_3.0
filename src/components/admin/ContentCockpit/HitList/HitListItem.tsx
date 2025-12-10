@@ -14,6 +14,8 @@ import {
   ChevronDown,
   ChevronUp,
   User,
+  ExternalLink,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NeptuneButton } from "@/components/ui/neptune-button";
@@ -167,14 +169,28 @@ export function HitListItem({
       item.assignedUser.email
     : null;
 
-  // Calculate wizard progress percentage
+  // Calculate wizard progress percentage - prefer stored percentage, fallback to step count
   const progressPercentage =
-    item.wizardProgress?.completedSteps &&
+    item.wizardProgress?.percentage ??
+    (item.wizardProgress?.completedSteps &&
     item.wizardProgress.completedSteps.length > 0
       ? Math.round(
-          (item.wizardProgress.completedSteps.length / 5) * 100 // Assuming 5 wizard steps
+          (item.wizardProgress.completedSteps.length / 8) * 100 // 8 wizard stages
         )
-      : 0;
+      : 0);
+
+  // Check if writing has started (for "Resume Writing" vs "Start Writing")
+  const hasProgress = progressPercentage > 0;
+  
+  // Check if this item has a published article
+  const hasPublishedArticle = item.status === "published" && item.resultingPostId;
+  
+  // Get current step label for display
+  const currentStepLabel = item.wizardProgress?.currentStep
+    ? item.wizardProgress.currentStep
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (l) => l.toUpperCase())
+    : null;
 
   return (
     <div
@@ -263,8 +279,25 @@ export function HitListItem({
                         onStartWriting(item);
                       }}
                     >
-                      <Play className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Start Writing
+                      {hasProgress ? (
+                        <>
+                          <RotateCcw className="h-4 w-4 mr-2" aria-hidden="true" />
+                          Resume Writing
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-2" aria-hidden="true" />
+                          Start Writing
+                        </>
+                      )}
+                    </DropdownMenuItem>
+                  )}
+                  {hasPublishedArticle && (
+                    <DropdownMenuItem asChild>
+                      <Link href={`/admin/content/${item.resultingPostId}`}>
+                        <ExternalLink className="h-4 w-4 mr-2" aria-hidden="true" />
+                        View Published Article
+                      </Link>
                     </DropdownMenuItem>
                   )}
                   {onEdit && (
@@ -346,17 +379,38 @@ export function HitListItem({
           {progressPercentage > 0 && (
             <div className="mb-3">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-500">Writing Progress</span>
-                <span className="text-indigo-600 font-medium">
+                <span className="text-gray-500">
+                  {currentStepLabel || "Writing Progress"}
+                </span>
+                <span className={cn(
+                  "font-medium",
+                  progressPercentage === 100 ? "text-emerald-600" : "text-indigo-600"
+                )}>
                   {progressPercentage}%
                 </span>
               </div>
               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-500 rounded-full transition-all"
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    progressPercentage === 100 ? "bg-emerald-500" : "bg-indigo-500"
+                  )}
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
+            </div>
+          )}
+          
+          {/* Published Article Link */}
+          {hasPublishedArticle && (
+            <div className="mb-3">
+              <Link
+                href={`/admin/content/${item.resultingPostId}`}
+                className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                View Published Article
+              </Link>
             </div>
           )}
 
@@ -392,10 +446,32 @@ export function HitListItem({
             size="sm"
             className="flex-1"
             onClick={() => onStartWriting(item)}
-            aria-label={`Start writing ${item.title}`}
+            aria-label={hasProgress ? `Resume writing ${item.title}` : `Start writing ${item.title}`}
           >
-            <Play className="h-3.5 w-3.5" aria-hidden="true" />
-            Start Writing
+            {hasProgress ? (
+              <>
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                Resume Writing
+              </>
+            ) : (
+              <>
+                <Play className="h-3.5 w-3.5" aria-hidden="true" />
+                Start Writing
+              </>
+            )}
+          </NeptuneButton>
+        )}
+        {hasPublishedArticle && (
+          <NeptuneButton
+            variant="default"
+            size="sm"
+            className="flex-1"
+            asChild
+          >
+            <Link href={`/admin/content/${item.resultingPostId}`}>
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              View Article
+            </Link>
           </NeptuneButton>
         )}
         <DropdownMenu open={showMenu} onOpenChange={setShowMenu}>

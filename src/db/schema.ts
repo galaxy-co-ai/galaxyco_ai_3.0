@@ -4494,6 +4494,7 @@ export const topicIdeas = pgTable(
     wizardProgress: jsonb('wizard_progress').$type<{
       currentStep?: string;
       completedSteps?: string[];
+      percentage?: number;
       startedAt?: string;
       lastUpdatedAt?: string;
     }>(),
