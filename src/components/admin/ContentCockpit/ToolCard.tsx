@@ -1,12 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { type LucideIcon } from "lucide-react";
+import {
+  Sparkles,
+  ListOrdered,
+  BookOpen,
+  Route,
+  BarChart3,
+  FileText,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Map icon names to components - icons must be imported in client component
+const iconMap: Record<string, LucideIcon> = {
+  sparkles: Sparkles,
+  listOrdered: ListOrdered,
+  bookOpen: BookOpen,
+  route: Route,
+  barChart: BarChart3,
+  fileText: FileText,
+};
+
 interface ToolCardProps {
-  /** Lucide icon component to display */
-  icon: LucideIcon;
+  /** Icon name (key from iconMap) */
+  iconName: string;
   /** Tool title */
   title: string;
   /** Brief description of the tool */
@@ -58,7 +76,7 @@ const iconGradientMap: Record<string, string> = {
  * ```
  */
 export function ToolCard({
-  icon: Icon,
+  iconName,
   title,
   description,
   badgeCount,
@@ -66,6 +84,8 @@ export function ToolCard({
   href,
   iconGradient = "sparkles",
 }: ToolCardProps) {
+  const Icon = iconMap[iconName] || Sparkles;
+  
   return (
     <Link
       href={href}

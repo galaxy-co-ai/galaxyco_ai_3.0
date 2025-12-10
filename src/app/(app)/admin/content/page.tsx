@@ -3,14 +3,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { blogPosts, topicIdeas, alertBadges } from "@/db/schema";
 import { eq, count, sql, and, isNotNull } from "drizzle-orm";
-import {
-  Sparkles,
-  ListOrdered,
-  BookOpen,
-  Route,
-  BarChart3,
-  FileText,
-} from "lucide-react";
+import { Sparkles, ListOrdered } from "lucide-react"; // Used in Quick Actions section
 import { ToolCard, StatsBar } from "@/components/admin/ContentCockpit";
 import { AlertBadgePopover } from "@/components/admin/AlertBadges";
 import { getCurrentWorkspace } from "@/lib/auth";
@@ -169,7 +162,7 @@ export default async function ContentCockpitPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Article Studio */}
           <ToolCard
-            icon={Sparkles}
+            iconName="sparkles"
             title="Article Studio"
             description="Create AI-assisted articles with topic generation, outlines, and smart writing tools"
             href="/admin/content/article-studio"
@@ -178,7 +171,7 @@ export default async function ContentCockpitPage() {
 
           {/* Article Hit List */}
           <ToolCard
-            icon={ListOrdered}
+            iconName="listOrdered"
             title="Article Hit List"
             description="Prioritized queue of topics with AI-calculated priority scores"
             badgeCount={counts.hitListCount}
@@ -189,7 +182,7 @@ export default async function ContentCockpitPage() {
 
           {/* Sources Hub */}
           <ToolCard
-            icon={BookOpen}
+            iconName="bookOpen"
             title="Sources Hub"
             description="Bookmarked research sites and AI-suggested sources"
             badgeCount={counts.sourcesCount > 0 ? counts.sourcesCount : undefined}
@@ -200,7 +193,7 @@ export default async function ContentCockpitPage() {
 
           {/* Use Case Studio */}
           <ToolCard
-            icon={Route}
+            iconName="route"
             title="Use Case Studio"
             description="Create tailored roadmaps and onboarding flows for different user personas"
             href="/admin/content/use-cases"
@@ -209,7 +202,7 @@ export default async function ContentCockpitPage() {
 
           {/* Article Analytics */}
           <ToolCard
-            icon={BarChart3}
+            iconName="barChart"
             title="Article Analytics"
             description="Performance insights, engagement metrics, and AI recommendations"
             href="/admin/content/analytics"
@@ -218,7 +211,7 @@ export default async function ContentCockpitPage() {
 
           {/* All Posts */}
           <ToolCard
-            icon={FileText}
+            iconName="fileText"
             title="All Posts"
             description="Browse and manage all published and draft articles"
             badgeCount={counts.postsCount}
