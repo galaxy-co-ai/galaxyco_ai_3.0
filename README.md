@@ -929,7 +929,7 @@ src/
 /api/admin/alert-badges/bulk-dismiss  POST         Bulk mark alerts as read or dismissed
 ```
 
-**Content Cockpit - Sources Hub** 🆕
+**Content Cockpit - Sources Hub**
 ```
 /api/admin/content-sources            GET/POST     List/create content sources (with filters)
 /api/admin/content-sources/[id]       GET/PATCH/DELETE  Manage content source
@@ -938,11 +938,20 @@ src/
 /api/admin/ai/sources/discover        POST         AI discovers new sources based on workspace topics
 ```
 
+**Content Cockpit - Hit List** 🆕
+```
+/api/admin/hit-list                   GET/POST     List/add hit list items (with filters, stats)
+/api/admin/hit-list/[id]              GET/PATCH/DELETE  Manage hit list item
+/api/admin/hit-list/[id]/progress     PATCH        Update wizard progress when writing
+/api/admin/hit-list/reorder           POST         Manual drag-and-drop reorder
+/api/admin/ai/hit-list/prioritize     POST         AI calculates priority scores (100-point system)
+```
+
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 
 ---
 
-## 🎛️ Content Cockpit (Phase A, B & C Complete)
+## 🎛️ Content Cockpit (Phase A, B, C & D Complete)
 
 **Central hub for content management tools in Mission Control**
 
@@ -959,13 +968,26 @@ The Content tab has been transformed into a comprehensive Content Cockpit with:
 | Tool | Route | Status | Description |
 |------|-------|--------|-------------|
 | Article Studio | `/admin/content/article-studio` | ✅ Live | AI-assisted article creation |
-| Article Hit List | `/admin/content/hit-list` | 📋 Phase D | Prioritized topic queue with AI scoring |
+| Article Hit List | `/admin/content/hit-list` | ✅ Live | Prioritized topic queue with AI scoring |
 | Sources Hub | `/admin/content/sources` | ✅ Live | Bookmarked research sites with AI review |
 | Use Case Studio | `/admin/content/use-cases` | 📋 Phase G | Roadmaps for user personas |
 | Article Analytics | `/admin/content/analytics` | 📋 Phase E | Performance insights and AI recommendations |
 | All Posts | `/admin/content/posts` | ✅ Live | Traditional posts list (moved from main page) |
 
-### Sources Hub (Phase C) 🆕
+### Article Hit List (Phase D) 🆕
+
+Prioritized topic queue with AI-powered scoring:
+- **HitListItem** - Card with score badge, drag handle, progress bar, actions
+- **PriorityScoreBreakdown** - Visual breakdown of all 6 scoring factors
+- **HitListFilters** - Status tabs, search, priority/sort filters
+- **AddToHitListDialog** - Add existing topics or create new ones
+- **AI Priority Scoring** - Weighted 100-point system:
+  - Content Gap (0-20), Trending (0-20), Engagement Potential (0-20)
+  - Seasonality (0-15), Competitor Coverage (0-15), User Sentiment (0-10)
+- **Drag-and-Drop** - Manual reordering with touch support
+- **Daily Prioritization Job** - Trigger.dev job runs at 6 AM UTC
+
+### Sources Hub (Phase C)
 
 Full-featured source management system:
 - **SourceCard** - Display card with type badge, AI score, and actions
@@ -981,6 +1003,7 @@ Full-featured source management system:
 - **ToolCard.tsx** - Reusable card with icon gradient, badge count, Neptune hover effects
 - **StatsBar.tsx** - Quick stats display with loading states and ARIA labels
 - **SourcesHub/** - Full Sources Hub component suite
+- **HitList/** - Full Hit List component suite (Phase D)
 - **index.ts** - Clean exports
 
 ### Alert Badge System (`src/components/admin/AlertBadges/`)
