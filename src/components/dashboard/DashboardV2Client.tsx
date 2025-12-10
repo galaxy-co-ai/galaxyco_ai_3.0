@@ -18,7 +18,7 @@ import {
   Plug,
   Compass,
 } from 'lucide-react';
-import { DashboardV2Data } from '@/types/dashboard-v2';
+import { DashboardV2Data } from '@/types/dashboard';
 import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
 import NeptuneDashboardWelcome from './NeptuneDashboardWelcome';
 import RoadmapCard, { DashboardRoadmapItem } from './RoadmapCard';

@@ -1,8 +1,8 @@
 import { Metadata } from 'next';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
-import DashboardV2Client from '@/components/dashboard-v2/DashboardV2Client';
+import DashboardV2Client from '@/components/dashboard/DashboardV2Client';
 import { getCurrentWorkspace } from '@/lib/auth';
-import { getDashboardData, getEmptyDashboardData } from '@/lib/dashboard-v2';
+import { getDashboardData, getEmptyDashboardData } from '@/lib/dashboard';
 import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
