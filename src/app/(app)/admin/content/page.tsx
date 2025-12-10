@@ -1,271 +1,249 @@
-import { Metadata } from 'next';
-import Link from 'next/link';
-import { db } from '@/lib/db';
-import { blogPosts, blogCategories, users } from '@/db/schema';
-import { desc, eq, count } from 'drizzle-orm';
-import { 
-  Plus, 
-  FileText, 
-  Eye, 
-  Clock, 
-  MoreHorizontal,
-  Search,
-  Filter,
-  Folder,
-  Sparkles
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-// Card still used for Posts List section
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { formatDistanceToNow } from 'date-fns';
+import { Metadata } from "next";
+import Link from "next/link";
+import { db } from "@/lib/db";
+import { blogPosts, topicIdeas, alertBadges } from "@/db/schema";
+import { eq, count, sql, and, isNotNull } from "drizzle-orm";
+import {
+  Sparkles,
+  ListOrdered,
+  BookOpen,
+  Route,
+  BarChart3,
+  FileText,
+} from "lucide-react";
+import { ToolCard, StatsBar } from "@/components/admin/ContentCockpit";
+import { AlertBadgePopover } from "@/components/admin/AlertBadges";
+import { getCurrentWorkspace } from "@/lib/auth";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: 'Content Studio | Mission Control',
-  description: 'Manage Launchpad blog posts and content',
+  title: "Content Cockpit | Mission Control",
+  description: "Central hub for content management tools",
 };
 
-// Get posts with author and category info
-async function getPosts() {
+// Get workspace-scoped stats
+async function getContentStats(workspaceId: string) {
   try {
-    const posts = await db
-      .select({
-        id: blogPosts.id,
-        title: blogPosts.title,
-        slug: blogPosts.slug,
-        excerpt: blogPosts.excerpt,
-        status: blogPosts.status,
-        featured: blogPosts.featured,
-        viewCount: blogPosts.viewCount,
-        readingTimeMinutes: blogPosts.readingTimeMinutes,
-        publishedAt: blogPosts.publishedAt,
-        createdAt: blogPosts.createdAt,
-        updatedAt: blogPosts.updatedAt,
-        categoryId: blogPosts.categoryId,
-        categoryName: blogCategories.name,
-        categorySlug: blogCategories.slug,
-        authorId: blogPosts.authorId,
-        authorFirstName: users.firstName,
-        authorLastName: users.lastName,
-      })
-      .from(blogPosts)
-      .leftJoin(blogCategories, eq(blogPosts.categoryId, blogCategories.id))
-      .leftJoin(users, eq(blogPosts.authorId, users.id))
-      .orderBy(desc(blogPosts.updatedAt))
-      .limit(50);
-    
-    return posts;
+    const [publishedCount, queueCount, viewsTotal, alertsCount] =
+      await Promise.all([
+        // Published articles count
+        db
+          .select({ count: count() })
+          .from(blogPosts)
+          .where(eq(blogPosts.status, "published"))
+          .then((r) => r[0]?.count ?? 0),
+
+        // Hit list queue count (saved topics with hitListPosition or hitListAddedAt)
+        db
+          .select({ count: count() })
+          .from(topicIdeas)
+          .where(
+            and(
+              eq(topicIdeas.workspaceId, workspaceId),
+              eq(topicIdeas.status, "saved")
+            )
+          )
+          .then((r) => r[0]?.count ?? 0),
+
+        // Total views from published posts (approximation for "views this month")
+        db
+          .select({ total: sql<number>`COALESCE(SUM(${blogPosts.viewCount}), 0)` })
+          .from(blogPosts)
+          .where(eq(blogPosts.status, "published"))
+          .then((r) => Number(r[0]?.total ?? 0)),
+
+        // Unread alerts count
+        db
+          .select({ count: count() })
+          .from(alertBadges)
+          .where(
+            and(
+              eq(alertBadges.workspaceId, workspaceId),
+              eq(alertBadges.status, "unread")
+            )
+          )
+          .then((r) => r[0]?.count ?? 0),
+      ]);
+
+    return {
+      publishedCount,
+      queueCount,
+      viewsThisMonth: viewsTotal,
+      alertsCount,
+    };
   } catch {
-    return [];
+    return {
+      publishedCount: 0,
+      queueCount: 0,
+      viewsThisMonth: 0,
+      alertsCount: 0,
+    };
   }
 }
 
-// Get category counts
-async function getCategoryCounts() {
+// Get tool badge counts
+async function getToolCounts(workspaceId: string) {
   try {
-    const categories = await db
-      .select({
-        id: blogCategories.id,
-        name: blogCategories.name,
-        slug: blogCategories.slug,
-        color: blogCategories.color,
-      })
-      .from(blogCategories)
-      .orderBy(blogCategories.sortOrder);
-    
-    return categories;
-  } catch {
-    return [];
-  }
-}
+    const [postsCount, hitListCount, sourcesCount] = await Promise.all([
+      // Total posts count
+      db
+        .select({ count: count() })
+        .from(blogPosts)
+        .then((r) => r[0]?.count ?? 0),
 
-// Get stats
-async function getContentStats() {
-  try {
-    const [totalPosts, publishedPosts, draftPosts] = await Promise.all([
-      db.select({ count: count() }).from(blogPosts).then(r => r[0]?.count ?? 0),
-      db.select({ count: count() }).from(blogPosts).where(eq(blogPosts.status, 'published')).then(r => r[0]?.count ?? 0),
-      db.select({ count: count() }).from(blogPosts).where(eq(blogPosts.status, 'draft')).then(r => r[0]?.count ?? 0),
+      // Hit list items with position
+      db
+        .select({ count: count() })
+        .from(topicIdeas)
+        .where(
+          and(
+            eq(topicIdeas.workspaceId, workspaceId),
+            isNotNull(topicIdeas.hitListPosition)
+          )
+        )
+        .then((r) => r[0]?.count ?? 0),
+
+      // Sources count will be added in Phase C - placeholder for now
+      0,
     ]);
-    
-    return { total: totalPosts, published: publishedPosts, drafts: draftPosts };
+
+    return { postsCount, hitListCount, sourcesCount };
   } catch {
-    return { total: 0, published: 0, drafts: 0 };
+    return { postsCount: 0, hitListCount: 0, sourcesCount: 0 };
   }
 }
 
-function getStatusColor(status: string) {
-  switch (status) {
-    case 'published':
-      return 'bg-green-500/10 text-green-500 border-green-500/20';
-    case 'draft':
-      return 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20';
-    case 'scheduled':
-      return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-    case 'archived':
-      return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-    default:
-      return 'bg-zinc-500/10 text-zinc-500 border-zinc-500/20';
-  }
-}
+export default async function ContentCockpitPage() {
+  // Get current workspace
+  const { workspaceId } = await getCurrentWorkspace();
 
-export default async function ContentStudioPage() {
-  const [posts, categories, stats] = await Promise.all([
-    getPosts(),
-    getCategoryCounts(),
-    getContentStats(),
+  // Fetch stats and counts in parallel
+  const [stats, counts] = await Promise.all([
+    getContentStats(workspaceId),
+    getToolCounts(workspaceId),
   ]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Content Studio</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Content Cockpit
+          </h1>
           <p className="text-muted-foreground">
-            Create and manage Launchpad articles
+            Your central hub for content creation and management
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/admin/content/article-studio">
-            <Button variant="outline" className="gap-2">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              Article Studio
-            </Button>
-          </Link>
-          <Link href="/admin/content/new">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Post
-            </Button>
-          </Link>
-        </div>
+        <AlertBadgePopover />
       </div>
 
-      {/* Stats Bar - Centered badges */}
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-          <FileText className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
-          <span className="font-semibold">{stats.total}</span>
-          <span className="ml-1 text-blue-600/70 font-normal">Total Posts</span>
-        </Badge>
-        <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-          <Eye className="h-3.5 w-3.5 mr-1.5 text-green-600" />
-          <span className="font-semibold">{stats.published}</span>
-          <span className="ml-1 text-green-600/70 font-normal">Published</span>
-        </Badge>
-        <Badge className="px-3 py-1.5 bg-zinc-50 text-zinc-700 border border-zinc-200 hover:bg-zinc-100 transition-colors">
-          <Clock className="h-3.5 w-3.5 mr-1.5 text-zinc-600" />
-          <span className="font-semibold">{stats.drafts}</span>
-          <span className="ml-1 text-zinc-600/70 font-normal">Drafts</span>
-        </Badge>
-        <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-          <Folder className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
-          <span className="font-semibold">{categories.length}</span>
-          <span className="ml-1 text-purple-600/70 font-normal">Categories</span>
-        </Badge>
-      </div>
+      {/* Stats Bar */}
+      <StatsBar
+        publishedCount={stats.publishedCount}
+        queueCount={stats.queueCount}
+        viewsThisMonth={stats.viewsThisMonth}
+        alertsCount={stats.alertsCount}
+      />
 
-      {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search posts..." 
-            className="pl-9"
+      {/* Tools Grid */}
+      <section aria-label="Content tools">
+        <h2 className="sr-only">Content Tools</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Article Studio */}
+          <ToolCard
+            icon={Sparkles}
+            title="Article Studio"
+            description="Create AI-assisted articles with topic generation, outlines, and smart writing tools"
+            href="/admin/content/article-studio"
+            iconGradient="sparkles"
+          />
+
+          {/* Article Hit List */}
+          <ToolCard
+            icon={ListOrdered}
+            title="Article Hit List"
+            description="Prioritized queue of topics with AI-calculated priority scores"
+            badgeCount={counts.hitListCount}
+            badgeColor="indigo"
+            href="/admin/content/hit-list"
+            iconGradient="listOrdered"
+          />
+
+          {/* Sources Hub */}
+          <ToolCard
+            icon={BookOpen}
+            title="Sources Hub"
+            description="Bookmarked research sites and AI-suggested sources"
+            badgeCount={counts.sourcesCount > 0 ? counts.sourcesCount : undefined}
+            badgeColor="green"
+            href="/admin/content/sources"
+            iconGradient="bookOpen"
+          />
+
+          {/* Use Case Studio */}
+          <ToolCard
+            icon={Route}
+            title="Use Case Studio"
+            description="Create tailored roadmaps and onboarding flows for different user personas"
+            href="/admin/content/use-cases"
+            iconGradient="route"
+          />
+
+          {/* Article Analytics */}
+          <ToolCard
+            icon={BarChart3}
+            title="Article Analytics"
+            description="Performance insights, engagement metrics, and AI recommendations"
+            href="/admin/content/analytics"
+            iconGradient="barChart"
+          />
+
+          {/* All Posts */}
+          <ToolCard
+            icon={FileText}
+            title="All Posts"
+            description="Browse and manage all published and draft articles"
+            badgeCount={counts.postsCount}
+            badgeColor="blue"
+            href="/admin/content/posts"
+            iconGradient="fileText"
           />
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Filter className="h-4 w-4" />
-          Filter
-        </Button>
-        <Link href="/admin/content/categories">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Folder className="h-4 w-4" />
-            Categories
-          </Button>
-        </Link>
-      </div>
+      </section>
 
-      {/* Posts List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Posts</CardTitle>
-          <CardDescription>
-            {posts.length > 0 
-              ? `Showing ${posts.length} posts` 
-              : 'No posts yet. Create your first post to get started.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {posts.length > 0 ? (
-            <div className="divide-y">
-              {posts.map((post) => (
-                <div key={post.id} className="py-4 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Link 
-                        href={`/admin/content/${post.id}`}
-                        className="font-medium hover:text-primary transition-colors truncate"
-                      >
-                        {post.title || 'Untitled'}
-                      </Link>
-                      {post.featured && (
-                        <Badge variant="secondary" className="text-xs">Featured</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs ${getStatusColor(post.status)}`}
-                      >
-                        {post.status}
-                      </Badge>
-                      {post.categoryName && (
-                        <span className="truncate">{post.categoryName}</span>
-                      )}
-                      {post.readingTimeMinutes && (
-                        <span>{post.readingTimeMinutes} min read</span>
-                      )}
-                      <span>
-                        Updated {formatDistanceToNow(new Date(post.updatedAt), { addSuffix: true })}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Eye className="h-3.5 w-3.5" />
-                      {post.viewCount}
-                    </div>
-                    <Link href={`/admin/content/${post.id}`}>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <h3 className="text-lg font-medium mb-2">No posts yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Create your first Launchpad post to start engaging your audience.
-              </p>
-              <Link href="/admin/content/new">
-                <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create First Post
-                </Button>
-              </Link>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Quick Actions / Getting Started */}
+      <section
+        className="rounded-xl border border-dashed border-gray-300 bg-gray-50/50 p-6"
+        aria-label="Quick start guide"
+      >
+        <div className="text-center max-w-lg mx-auto">
+          <h3 className="font-semibold text-gray-900 mb-2">
+            Ready to create content?
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Start with the Article Studio to brainstorm topics, or check your
+            Hit List for AI-prioritized article ideas.
+          </p>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Link
+              href="/admin/content/article-studio"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-white font-medium text-sm hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+            >
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              Open Article Studio
+            </Link>
+            <Link
+              href="/admin/content/hit-list"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-700 font-medium text-sm border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+            >
+              <ListOrdered className="h-4 w-4" aria-hidden="true" />
+              View Hit List
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
