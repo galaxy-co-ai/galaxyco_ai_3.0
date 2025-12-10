@@ -5,6 +5,98 @@
 
 ---
 
+## 🎛️ Content Cockpit - Phase D: Article Hit List - COMPLETE ✅
+
+**December 9, 2025** - Built the complete Article Hit List feature with AI-powered priority scoring and drag-and-drop reordering.
+
+### API Routes Created
+
+**Hit List CRUD (`src/app/api/admin/hit-list/`):**
+- `route.ts` - GET (list with filters, stats) and POST (add topic to hit list)
+- `[id]/route.ts` - GET, PATCH, DELETE for individual hit list items
+- `[id]/progress/route.ts` - PATCH to update wizard progress when writing
+- `reorder/route.ts` - POST to manually reorder items
+
+**AI Prioritization (`src/app/api/admin/ai/hit-list/`):**
+- `prioritize/route.ts` - POST to AI calculate priority scores for all items
+
+### Priority Scoring Algorithm (`src/lib/ai/hit-list-prioritizer.ts`)
+
+Weighted scoring system (total 100 points):
+- **Content Gap (0-20)**: How much this fills a gap in existing content
+- **Trending Score (0-20)**: Industry trend relevance
+- **Engagement Potential (0-20)**: Predicted reader interest
+- **Seasonality (0-15)**: Time-sensitive relevance
+- **Competitor Coverage (0-15)**: What competitors are writing
+- **User Sentiment (0-10)**: Positive signals from audience
+
+Each factor returns a score and reasoning note for transparency.
+
+### UI Components Created (`src/components/admin/ContentCockpit/HitList/`)
+
+**HitListItem.tsx:**
+- Display card with priority score badge (color-coded)
+- Title, description, status, priority level, difficulty
+- Progress bar for writing progress
+- Meta info (target date, estimated time, assigned user)
+- Expandable score breakdown on click
+- Drag handle for manual reordering
+- Actions dropdown (Start Writing, Edit, Archive, Remove)
+
+**PriorityScoreBreakdown.tsx:**
+- Detailed breakdown of all 6 scoring factors
+- Visual score bars with max values
+- AI reasoning notes for each factor
+- Compact variant for summary views
+
+**HitListFilters.tsx:**
+- Status filter tabs (All, Queued, In Progress, Published)
+- Search input with debounce
+- Priority filter dropdown
+- Sort options (Priority Score, Manual Order, Target Date, Date Added)
+- Sort order toggle (Asc/Desc)
+- Clear filters button
+
+**AddToHitListDialog.tsx:**
+- Modal with two modes: Add Existing Topic / Create New Topic
+- Search existing topics not in hit list
+- Topic selection with highlight
+- Priority, difficulty, target date, estimated time inputs
+- Form validation and error display
+
+**HitListPage.tsx:**
+- Main page orchestrator with SWR data fetching
+- "Add Topic" and "AI Prioritize" action buttons
+- Score legend guide
+- Drag-and-drop reordering support
+- Empty state with call-to-action
+- Mobile-responsive layout
+
+### Hit List Page (`src/app/(app)/admin/content/hit-list/page.tsx`)
+- Server component wrapper with metadata
+- Header with back navigation and ListOrdered icon
+- HitListPage client component integration
+
+### Trigger.dev Job (`src/trigger/hit-list-prioritization.ts`)
+
+**Daily Hit List Prioritization:**
+- `prioritizeWorkspaceTask` - Calculate scores for single workspace
+- `scheduledHitListPrioritization` - Runs daily at 6 AM UTC
+- Gathers content context and calculates AI scores
+- Updates priorityScore and breakdown in database
+- Reorders list by new scores
+- Creates alert badge for significant priority changes (>15 points)
+
+### Verification
+- ✅ TypeScript strict mode passing (0 errors)
+- ✅ ESLint passing (warnings only from pre-existing files)
+- ✅ Build succeeds (`npm run build`)
+- ✅ All API routes workspace-scoped (multi-tenant)
+- ✅ ARIA labels for accessibility
+- ✅ Mobile-responsive layout
+
+---
+
 ## 🎛️ Content Cockpit - Phase C: Sources Hub - COMPLETE ✅
 
 **December 9, 2025** - Built the complete Sources Hub feature for bookmarking research sites with AI review and suggestions.
