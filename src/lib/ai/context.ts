@@ -20,6 +20,11 @@ import {
   users,
   workspaceIntelligence,
   proactiveInsights,
+  topicIdeas,
+  contentSources,
+  useCases,
+  articleAnalytics,
+  blogPosts,
 } from '@/db/schema';
 import { eq, and, desc, gte, lte, count, sql, or } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -183,6 +188,33 @@ export interface ProactiveInsightsContext {
   hasInsights: boolean;
 }
 
+export interface ContentCockpitContext {
+  hitList: {
+    queuedCount: number;
+    inProgressCount: number;
+    topPriorityTopic: {
+      id: string;
+      title: string;
+      priorityScore: number;
+    } | null;
+  };
+  sources: {
+    activeCount: number;
+    suggestedCount: number;
+  };
+  useCases: {
+    publishedCount: number;
+    draftCount: number;
+  };
+  recentArticles: Array<{
+    id: string;
+    title: string;
+    publishedAt: Date | null;
+    totalViews: number;
+  }>;
+  hasContentCockpit: boolean;
+}
+
 export interface AIContextData {
   user: UserContext;
   preferences: UserPreferencesContext;
@@ -195,6 +227,7 @@ export interface AIContextData {
   marketing?: MarketingContext;
   website?: WebsiteContext;
   proactiveInsights?: ProactiveInsightsContext;
+  contentCockpit?: ContentCockpitContext;
   currentTime: string;
   currentDate: string;
   dayOfWeek: string;
@@ -879,6 +912,122 @@ async function getProactiveInsightsContext(
 }
 
 /**
+ * Get Content Cockpit context for AI assistant
+ */
+async function getContentCockpitContext(workspaceId: string): Promise<ContentCockpitContext> {
+  try {
+    const { isNotNull } = await import('drizzle-orm');
+
+    // Get hit list stats
+    const hitListItems = await db
+      .select({
+        id: topicIdeas.id,
+        title: topicIdeas.title,
+        status: topicIdeas.status,
+        priorityScore: topicIdeas.priorityScore,
+      })
+      .from(topicIdeas)
+      .where(
+        and(
+          eq(topicIdeas.workspaceId, workspaceId),
+          isNotNull(topicIdeas.hitListAddedAt)
+        )
+      )
+      .orderBy(desc(topicIdeas.priorityScore))
+      .limit(50);
+
+    const queuedItems = hitListItems.filter(i => i.status === 'saved');
+    const inProgressItems = hitListItems.filter(i => i.status === 'in_progress');
+    const topPriority = queuedItems[0];
+
+    // Get source stats
+    const [sourceStats] = await db
+      .select({
+        activeCount: sql<number>`COUNT(*) FILTER (WHERE status = 'active')`,
+        suggestedCount: sql<number>`COUNT(*) FILTER (WHERE status = 'suggested')`,
+      })
+      .from(contentSources)
+      .where(eq(contentSources.workspaceId, workspaceId));
+
+    // Get use case stats
+    const [useCaseStats] = await db
+      .select({
+        publishedCount: sql<number>`COUNT(*) FILTER (WHERE status = 'published')`,
+        draftCount: sql<number>`COUNT(*) FILTER (WHERE status = 'draft')`,
+      })
+      .from(useCases)
+      .where(eq(useCases.workspaceId, workspaceId));
+
+    // Get recent published articles with analytics
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentArticles = await db
+      .select({
+        id: blogPosts.id,
+        title: blogPosts.title,
+        publishedAt: blogPosts.publishedAt,
+        totalViews: sql<number>`COALESCE(SUM(${articleAnalytics.totalViews}), 0)`,
+      })
+      .from(blogPosts)
+      .leftJoin(articleAnalytics, eq(articleAnalytics.postId, blogPosts.id))
+      .where(
+        and(
+          eq(blogPosts.status, 'published'),
+          gte(blogPosts.publishedAt, thirtyDaysAgo)
+        )
+      )
+      .groupBy(blogPosts.id, blogPosts.title, blogPosts.publishedAt)
+      .orderBy(desc(blogPosts.publishedAt))
+      .limit(5);
+
+    return {
+      hitList: {
+        queuedCount: queuedItems.length,
+        inProgressCount: inProgressItems.length,
+        topPriorityTopic: topPriority ? {
+          id: topPriority.id,
+          title: topPriority.title,
+          priorityScore: topPriority.priorityScore || 50,
+        } : null,
+      },
+      sources: {
+        activeCount: Number(sourceStats?.activeCount || 0),
+        suggestedCount: Number(sourceStats?.suggestedCount || 0),
+      },
+      useCases: {
+        publishedCount: Number(useCaseStats?.publishedCount || 0),
+        draftCount: Number(useCaseStats?.draftCount || 0),
+      },
+      recentArticles: recentArticles.map(a => ({
+        id: a.id,
+        title: a.title || 'Untitled',
+        publishedAt: a.publishedAt,
+        totalViews: Number(a.totalViews || 0),
+      })),
+      hasContentCockpit: true,
+    };
+  } catch (error) {
+    logger.error('Failed to get Content Cockpit context', error);
+    return {
+      hitList: {
+        queuedCount: 0,
+        inProgressCount: 0,
+        topPriorityTopic: null,
+      },
+      sources: {
+        activeCount: 0,
+        suggestedCount: 0,
+      },
+      useCases: {
+        publishedCount: 0,
+        draftCount: 0,
+      },
+      recentArticles: [],
+      hasContentCockpit: false,
+    };
+  }
+}
+
+/**
  * Gather comprehensive AI context for the current user and workspace
  */
 export async function gatherAIContext(
@@ -893,7 +1042,7 @@ export async function gatherAIContext(
     }
 
     // Gather all contexts in parallel for performance
-    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing, website, proactive] = await Promise.all([
+    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing, website, proactive, contentCockpit] = await Promise.all([
       getUserPreferencesContext(workspaceId, user.id),
       getCRMContext(workspaceId),
       getCalendarContext(workspaceId),
@@ -904,6 +1053,7 @@ export async function gatherAIContext(
       getMarketingContext(workspaceId),
       getWebsiteContext(workspaceId),
       getProactiveInsightsContext(workspaceId, user.id),
+      getContentCockpitContext(workspaceId),
     ]);
 
     const now = new Date();
@@ -921,6 +1071,7 @@ export async function gatherAIContext(
       marketing,
       website,
       proactiveInsights: proactive,
+      contentCockpit,
       currentTime: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       currentDate: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       dayOfWeek: days[now.getDay()],

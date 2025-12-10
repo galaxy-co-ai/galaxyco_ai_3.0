@@ -2450,6 +2450,151 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
+  // ============================================================================
+  // CONTENT COCKPIT TOOLS
+  // ============================================================================
+  {
+    type: 'function',
+    function: {
+      name: 'add_content_source',
+      description: 'Add a research source or website to the Content Cockpit Sources Hub. Use when user mentions a useful website or resource for content research.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Name of the source (e.g., "TechCrunch", "HubSpot Blog")',
+          },
+          url: {
+            type: 'string',
+            description: 'URL of the source website',
+          },
+          description: {
+            type: 'string',
+            description: 'Brief description of what this source covers',
+          },
+          type: {
+            type: 'string',
+            enum: ['news', 'research', 'competitor', 'inspiration', 'industry', 'other'],
+            description: 'Type of content source',
+          },
+        },
+        required: ['name', 'url'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'add_to_hit_list',
+      description: 'Add a topic idea to the Article Hit List for content planning. Use when user wants to save an article idea or topic.',
+      parameters: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: 'Title of the article topic',
+          },
+          description: {
+            type: 'string',
+            description: 'Brief description of what the article should cover',
+          },
+          whyItWorks: {
+            type: 'string',
+            description: 'Explanation of why this topic is good for the audience',
+          },
+          category: {
+            type: 'string',
+            description: 'Content category (e.g., "Marketing", "Sales", "Product")',
+          },
+          priority: {
+            type: 'string',
+            enum: ['low', 'medium', 'high', 'urgent'],
+            description: 'Priority level for the topic',
+          },
+        },
+        required: ['title'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_hit_list_insights',
+      description: 'Get insights about what article to write next based on the hit list priorities. Use when user asks what they should write about.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'reprioritize_hit_list',
+      description: 'Trigger AI reprioritization of hit list items based on current trends and content gaps. Use when user wants to reorder their content queue.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_article_analytics',
+      description: 'Get performance analytics for published articles. Use when user asks about content performance.',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: {
+            type: 'string',
+            enum: ['7d', '30d', '90d'],
+            description: 'Time period for analytics (default: 30d)',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_content_insights',
+      description: 'Get AI-powered content recommendations and suggestions. Use when user wants ideas for improving their content strategy.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_use_case_recommendation',
+      description: 'Find matching use cases based on a description. Use when user describes a customer type or scenario.',
+      parameters: {
+        type: 'object',
+        properties: {
+          description: {
+            type: 'string',
+            description: 'Description of the customer type or scenario to match',
+          },
+        },
+        required: ['description'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_source_suggestions',
+      description: 'Get AI-discovered source suggestions for content research. Use when user wants to find new research sources.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
 ];
 
 // ============================================================================
@@ -9267,6 +9412,309 @@ Provide analysis in JSON format:
       };
     }
   },
+
+  // ============================================================================
+  // CONTENT COCKPIT TOOLS
+  // ============================================================================
+
+  async add_content_source(args, context): Promise<ToolResult> {
+    try {
+      const { addContentSource } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const result = await addContentSource(
+        { workspaceId: context.workspaceId, userId: context.userId },
+        {
+          name: args.name as string,
+          url: args.url as string,
+          description: args.description as string | undefined,
+          type: args.type as 'news' | 'research' | 'competitor' | 'inspiration' | 'industry' | 'other' | undefined,
+        }
+      );
+
+      if (!result.success) {
+        return {
+          success: false,
+          message: result.message,
+        };
+      }
+
+      return {
+        success: true,
+        message: result.message,
+        data: { sourceId: result.sourceId },
+      };
+    } catch (error) {
+      logger.error('AI add_content_source failed', error);
+      return {
+        success: false,
+        message: 'Failed to add content source. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async add_to_hit_list(args, context): Promise<ToolResult> {
+    try {
+      const { addTopicToHitList } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const result = await addTopicToHitList(
+        { workspaceId: context.workspaceId, userId: context.userId },
+        {
+          title: args.title as string,
+          description: args.description as string | undefined,
+          whyItWorks: args.whyItWorks as string | undefined,
+          category: args.category as string | undefined,
+          priority: args.priority as 'low' | 'medium' | 'high' | 'urgent' | undefined,
+        }
+      );
+
+      if (!result.success) {
+        return {
+          success: false,
+          message: result.message,
+        };
+      }
+
+      return {
+        success: true,
+        message: result.message,
+        data: { topicId: result.topicId },
+      };
+    } catch (error) {
+      logger.error('AI add_to_hit_list failed', error);
+      return {
+        success: false,
+        message: 'Failed to add topic to hit list. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_hit_list_insights(args, context): Promise<ToolResult> {
+    try {
+      const { getWhatToWriteNext } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const insights = await getWhatToWriteNext({
+        workspaceId: context.workspaceId,
+        userId: context.userId,
+      });
+
+      let message = `**Hit List Insights**\n`;
+      message += `• Queued Topics: ${insights.totalQueued}\n`;
+      message += `• In Progress: ${insights.inProgress}\n`;
+      message += `• Recently Published: ${insights.recentlyPublished}\n\n`;
+
+      if (insights.topPriority) {
+        message += `**Top Priority:** "${insights.topPriority.title}"\n`;
+        message += `Score: ${insights.topPriority.score}/100\n`;
+        message += `${insights.topPriority.reason}\n\n`;
+      }
+
+      message += `**Recommendation:** ${insights.recommendation}`;
+
+      return {
+        success: true,
+        message,
+        data: {
+          topPriority: insights.topPriority,
+          totalQueued: insights.totalQueued,
+          inProgress: insights.inProgress,
+          recentlyPublished: insights.recentlyPublished,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_hit_list_insights failed', error);
+      return {
+        success: false,
+        message: 'Failed to get hit list insights. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async reprioritize_hit_list(args, context): Promise<ToolResult> {
+    try {
+      const { reprioritizeHitList } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const result = await reprioritizeHitList({
+        workspaceId: context.workspaceId,
+        userId: context.userId,
+      });
+
+      return {
+        success: result.success,
+        message: result.message,
+        data: { changesCount: result.changesCount },
+      };
+    } catch (error) {
+      logger.error('AI reprioritize_hit_list failed', error);
+      return {
+        success: false,
+        message: 'Failed to reprioritize hit list. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_article_analytics(args, context): Promise<ToolResult> {
+    try {
+      const { getContentPerformanceInsights } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const period = (args.period as '7d' | '30d' | '90d') || '30d';
+      const insights = await getContentPerformanceInsights(
+        { workspaceId: context.workspaceId, userId: context.userId },
+        period
+      );
+
+      const periodLabel = period === '7d' ? 'Last 7 Days' : period === '90d' ? 'Last 90 Days' : 'Last 30 Days';
+      const trendEmoji = insights.trend === 'up' ? '📈' : insights.trend === 'down' ? '📉' : '➡️';
+
+      let message = `**Article Analytics (${periodLabel})** ${trendEmoji}\n\n`;
+      message += `• Total Views: ${insights.totalViews.toLocaleString()}\n`;
+      message += `• Articles Tracked: ${insights.totalArticles}\n`;
+      message += `• Trend: ${insights.trend === 'up' ? 'Increasing' : insights.trend === 'down' ? 'Decreasing' : 'Stable'}\n\n`;
+
+      if (insights.topPerformer) {
+        message += `**Top Performer:** "${insights.topPerformer.title}"\n`;
+        message += `Views: ${insights.topPerformer.views.toLocaleString()}\n\n`;
+      }
+
+      message += `**Recommendation:** ${insights.recommendation}`;
+
+      return {
+        success: true,
+        message,
+        data: {
+          totalViews: insights.totalViews,
+          totalArticles: insights.totalArticles,
+          topPerformer: insights.topPerformer,
+          trend: insights.trend,
+          recommendation: insights.recommendation,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_article_analytics failed', error);
+      return {
+        success: false,
+        message: 'Failed to get article analytics. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_content_insights(args, context): Promise<ToolResult> {
+    try {
+      const { getAIContentRecommendations } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const suggestions = await getAIContentRecommendations({
+        workspaceId: context.workspaceId,
+        userId: context.userId,
+      });
+
+      if (suggestions.length === 0) {
+        return {
+          success: true,
+          message: 'No specific recommendations at this time. Try adding some topics to your hit list or publishing content to get personalized insights.',
+          data: { suggestions: [] },
+        };
+      }
+
+      let message = '**Content Recommendations**\n\n';
+      suggestions.forEach((s, i) => {
+        const emoji = s.type === 'article' ? '✍️' : s.type === 'source' ? '📚' : s.type === 'use_case' ? '🎯' : '💡';
+        message += `${i + 1}. ${emoji} **${s.title}**\n`;
+        message += `   ${s.description}\n\n`;
+      });
+
+      return {
+        success: true,
+        message,
+        data: { suggestions },
+      };
+    } catch (error) {
+      logger.error('AI get_content_insights failed', error);
+      return {
+        success: false,
+        message: 'Failed to get content insights. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_use_case_recommendation(args, context): Promise<ToolResult> {
+    try {
+      const { getUseCaseRecommendations } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const description = args.description as string;
+      const result = await getUseCaseRecommendations(
+        { workspaceId: context.workspaceId, userId: context.userId },
+        description
+      );
+
+      let message = '';
+      if (result.matchedUseCase) {
+        message = `**Matched Use Case:** "${result.matchedUseCase.name}"\n`;
+        message += `Match Confidence: ${result.matchedUseCase.match}%\n\n`;
+        message += `${result.suggestion}`;
+      } else {
+        message = result.suggestion;
+      }
+
+      return {
+        success: true,
+        message,
+        data: { matchedUseCase: result.matchedUseCase },
+      };
+    } catch (error) {
+      logger.error('AI get_use_case_recommendation failed', error);
+      return {
+        success: false,
+        message: 'Failed to get use case recommendations. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  async get_source_suggestions(args, context): Promise<ToolResult> {
+    try {
+      const { getSuggestedSources } = await import('@/lib/ai/content-cockpit-handlers');
+
+      const result = await getSuggestedSources({
+        workspaceId: context.workspaceId,
+        userId: context.userId,
+      });
+
+      if (result.count === 0) {
+        return {
+          success: true,
+          message: 'No source suggestions available at this time. I can discover new sources based on your content topics.',
+          data: { suggestions: [], count: 0 },
+        };
+      }
+
+      let message = `**${result.count} Source Suggestion${result.count > 1 ? 's' : ''}**\n\n`;
+      result.suggestions.forEach((s, i) => {
+        message += `${i + 1}. **${s.name}**\n`;
+        message += `   ${s.url}\n`;
+        message += `   ${s.reason}\n\n`;
+      });
+
+      message += 'Visit Sources Hub to approve or reject these suggestions.';
+
+      return {
+        success: true,
+        message,
+        data: result,
+      };
+    } catch (error) {
+      logger.error('AI get_source_suggestions failed', error);
+      return {
+        success: false,
+        message: 'Failed to get source suggestions. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 };
 
 // ============================================================================
@@ -9318,6 +9766,16 @@ export const toolsByCategory = {
   dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media', 'search_web', 'generate_image', 'create_professional_document', 'navigate_to_page', 'generate_pdf'],
   automation: ['create_automation'],
   team: ['list_team_members', 'assign_to_team_member'],
+  content_cockpit: [
+    'add_content_source',
+    'add_to_hit_list',
+    'get_hit_list_insights',
+    'reprioritize_hit_list',
+    'get_article_analytics',
+    'get_content_insights',
+    'get_use_case_recommendation',
+    'get_source_suggestions',
+  ],
   orchestration: [
     'create_agent_team',
     'list_agent_teams',
@@ -9388,6 +9846,9 @@ export function getToolsForCapability(capability: string): ChatCompletionTool[] 
       break;
     case 'orchestration':
       toolNames.push(...toolsByCategory.orchestration, ...toolsByCategory.agents);
+      break;
+    case 'content_cockpit':
+      toolNames.push(...toolsByCategory.content_cockpit, ...toolsByCategory.content);
       break;
     default:
       // Return all tools

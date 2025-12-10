@@ -13,8 +13,13 @@ import {
   calendarEvents,
   deals,
   proactiveInsights,
+  topicIdeas,
+  contentSources,
+  articleAnalytics,
+  useCases,
+  blogPosts,
 } from '@/db/schema';
-import { eq, and, lt, gte, lte, desc, sql, or } from 'drizzle-orm';
+import { eq, and, lt, gte, lte, desc, sql, or, isNotNull } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
 
@@ -24,7 +29,7 @@ import { getOpenAI } from '@/lib/ai-providers';
 
 export interface ProactiveInsight {
   type: 'opportunity' | 'warning' | 'suggestion' | 'achievement';
-  category: 'sales' | 'marketing' | 'operations' | 'finance';
+  category: 'sales' | 'marketing' | 'operations' | 'finance' | 'content';
   title: string;
   description: string;
   priority: number; // 1-10 (matches database schema)
@@ -316,6 +321,306 @@ export async function detectUpcomingMeetingInsights(
 }
 
 // ============================================================================
+// CONTENT COCKPIT INSIGHT DETECTORS
+// ============================================================================
+
+/**
+ * Detect insights for Content Cockpit hit list
+ */
+export async function detectHitListInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const insights: ProactiveInsight[] = [];
+
+    // Get hit list stats
+    const [hitListStats] = await db
+      .select({
+        queued: sql<number>`COUNT(*) FILTER (WHERE status = 'saved')`,
+        inProgress: sql<number>`COUNT(*) FILTER (WHERE status = 'in_progress')`,
+        highPriority: sql<number>`COUNT(*) FILTER (WHERE priority_score >= 75)`,
+      })
+      .from(topicIdeas)
+      .where(
+        and(
+          eq(topicIdeas.workspaceId, workspaceId),
+          isNotNull(topicIdeas.hitListAddedAt)
+        )
+      );
+
+    // High priority topics waiting
+    if (Number(hitListStats?.highPriority || 0) >= 3) {
+      insights.push({
+        type: 'opportunity',
+        category: 'content',
+        title: 'High-Priority Content Opportunities',
+        description: `You have ${hitListStats?.highPriority} high-priority topics in your hit list. Consider scheduling time to write these high-impact articles.`,
+        priority: 8,
+        metadata: { highPriorityCount: hitListStats?.highPriority },
+        suggestedActions: [
+          {
+            action: 'get_hit_list_insights',
+            args: {},
+          },
+        ],
+      });
+    }
+
+    // Many topics in progress
+    if (Number(hitListStats?.inProgress || 0) > 3) {
+      insights.push({
+        type: 'warning',
+        category: 'content',
+        title: 'Multiple Articles In Progress',
+        description: `You have ${hitListStats?.inProgress} articles currently in progress. Consider finishing some before starting new ones.`,
+        priority: 7,
+        metadata: { inProgressCount: hitListStats?.inProgress },
+      });
+    }
+
+    // Empty hit list
+    if (Number(hitListStats?.queued || 0) === 0 && Number(hitListStats?.inProgress || 0) === 0) {
+      insights.push({
+        type: 'suggestion',
+        category: 'content',
+        title: 'Build Your Content Queue',
+        description: 'Your hit list is empty. Add topic ideas to plan your content calendar and maintain consistent publishing.',
+        priority: 6,
+        suggestedActions: [
+          {
+            action: 'navigate_to_page',
+            args: { page: '/admin/content/hit-list' },
+          },
+        ],
+      });
+    }
+
+    return insights;
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect hit list insights', error);
+    return [];
+  }
+}
+
+/**
+ * Detect insights for new source suggestions
+ */
+export async function detectSourceSuggestionInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const insights: ProactiveInsight[] = [];
+
+    // Count suggested sources
+    const [suggestedCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(contentSources)
+      .where(
+        and(
+          eq(contentSources.workspaceId, workspaceId),
+          eq(contentSources.status, 'suggested')
+        )
+      );
+
+    if (Number(suggestedCount?.count || 0) > 0) {
+      insights.push({
+        type: 'suggestion',
+        category: 'content',
+        title: `${suggestedCount?.count} New Source Suggestions`,
+        description: `I discovered ${suggestedCount?.count} new research sources for your content. Review them in Sources Hub.`,
+        priority: 5,
+        metadata: { suggestedCount: suggestedCount?.count },
+        suggestedActions: [
+          {
+            action: 'get_source_suggestions',
+            args: {},
+          },
+        ],
+      });
+    }
+
+    return insights;
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect source suggestion insights', error);
+    return [];
+  }
+}
+
+/**
+ * Detect insights for content performance anomalies
+ */
+export async function detectContentPerformanceInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const insights: ProactiveInsight[] = [];
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const previousPeriodStart = new Date(thirtyDaysAgo.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    // Get current period views
+    const [currentViews] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${articleAnalytics.totalViews}), 0)` })
+      .from(articleAnalytics)
+      .where(
+        and(
+          eq(articleAnalytics.workspaceId, workspaceId),
+          gte(articleAnalytics.periodStart, thirtyDaysAgo)
+        )
+      );
+
+    // Get previous period views
+    const [previousViews] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${articleAnalytics.totalViews}), 0)` })
+      .from(articleAnalytics)
+      .where(
+        and(
+          eq(articleAnalytics.workspaceId, workspaceId),
+          gte(articleAnalytics.periodStart, previousPeriodStart),
+          lt(articleAnalytics.periodEnd, thirtyDaysAgo)
+        )
+      );
+
+    const current = Number(currentViews?.total || 0);
+    const previous = Number(previousViews?.total || 0);
+
+    // Significant decline (> 20%)
+    if (previous > 100 && current < previous * 0.8) {
+      const decline = Math.round((1 - current / previous) * 100);
+      insights.push({
+        type: 'warning',
+        category: 'content',
+        title: 'Content Views Declining',
+        description: `Article views are down ${decline}% compared to last month. Consider refreshing older content or promoting top performers.`,
+        priority: 7,
+        metadata: { currentViews: current, previousViews: previous, declinePercent: decline },
+        suggestedActions: [
+          {
+            action: 'get_article_analytics',
+            args: { period: '30d' },
+          },
+        ],
+      });
+    }
+
+    // Significant growth (> 30%)
+    if (previous > 50 && current > previous * 1.3) {
+      const growth = Math.round((current / previous - 1) * 100);
+      insights.push({
+        type: 'achievement',
+        category: 'content',
+        title: 'Content Views Growing!',
+        description: `Great news! Article views are up ${growth}% compared to last month. Keep up the momentum!`,
+        priority: 6,
+        metadata: { currentViews: current, previousViews: previous, growthPercent: growth },
+      });
+    }
+
+    return insights;
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect content performance insights', error);
+    return [];
+  }
+}
+
+/**
+ * Detect insights for incomplete use cases
+ */
+export async function detectUseCaseInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const insights: ProactiveInsight[] = [];
+
+    // Find draft use cases without roadmaps
+    const incompleteUseCases = await db
+      .select({ id: useCases.id, name: useCases.name })
+      .from(useCases)
+      .where(
+        and(
+          eq(useCases.workspaceId, workspaceId),
+          eq(useCases.status, 'draft'),
+          sql`jsonb_array_length(${useCases.roadmap}) = 0`
+        )
+      )
+      .limit(3);
+
+    if (incompleteUseCases.length > 0) {
+      insights.push({
+        type: 'suggestion',
+        category: 'content',
+        title: 'Incomplete Use Cases',
+        description: `${incompleteUseCases.length} use case${incompleteUseCases.length > 1 ? 's' : ''} need${incompleteUseCases.length === 1 ? 's' : ''} a roadmap. Generate AI roadmaps to help guide users.`,
+        priority: 5,
+        metadata: { 
+          incompleteCount: incompleteUseCases.length,
+          useCaseIds: incompleteUseCases.map(uc => uc.id),
+        },
+        suggestedActions: [
+          {
+            action: 'navigate_to_page',
+            args: { page: `/admin/content/use-cases/${incompleteUseCases[0].id}` },
+          },
+        ],
+      });
+    }
+
+    return insights;
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect use case insights', error);
+    return [];
+  }
+}
+
+/**
+ * Detect content gap opportunities
+ */
+export async function detectContentGapInsights(
+  workspaceId: string
+): Promise<ProactiveInsight[]> {
+  try {
+    const insights: ProactiveInsight[] = [];
+
+    // Check for long gaps since last publish
+    const [lastPublished] = await db
+      .select({ publishedAt: blogPosts.publishedAt })
+      .from(blogPosts)
+      .where(eq(blogPosts.status, 'published'))
+      .orderBy(desc(blogPosts.publishedAt))
+      .limit(1);
+
+    if (lastPublished?.publishedAt) {
+      const daysSincePublish = Math.floor(
+        (Date.now() - new Date(lastPublished.publishedAt).getTime()) / (24 * 60 * 60 * 1000)
+      );
+
+      if (daysSincePublish >= 14) {
+        insights.push({
+          type: 'warning',
+          category: 'content',
+          title: 'Content Publishing Gap',
+          description: `It's been ${daysSincePublish} days since your last article. Consistent publishing helps maintain audience engagement.`,
+          priority: 7,
+          metadata: { daysSincePublish },
+          suggestedActions: [
+            {
+              action: 'get_hit_list_insights',
+              args: {},
+            },
+          ],
+        });
+      }
+    }
+
+    return insights;
+  } catch (error) {
+    logger.error('[Proactive Engine] Failed to detect content gap insights', error);
+    return [];
+  }
+}
+
+// ============================================================================
 // MAIN INSIGHT GENERATION
 // ============================================================================
 
@@ -325,11 +630,11 @@ export async function detectUpcomingMeetingInsights(
 export async function generateProactiveInsights(
   workspaceId: string,
   options: {
-    categories?: Array<'sales' | 'marketing' | 'operations' | 'finance'>;
+    categories?: Array<'sales' | 'marketing' | 'operations' | 'finance' | 'content'>;
     maxInsights?: number;
   } = {}
 ): Promise<ProactiveInsight[]> {
-  const { categories = ['sales', 'marketing', 'operations', 'finance'], maxInsights = 10 } = options;
+  const { categories = ['sales', 'marketing', 'operations', 'finance', 'content'], maxInsights = 10 } = options;
 
   const allInsights: ProactiveInsight[] = [];
 
@@ -379,6 +684,24 @@ export async function generateProactiveInsights(
     }
 
     // Finance insights (handled by precompute-insights.ts)
+
+    // Content Cockpit insights
+    if (categories.includes('content')) {
+      const hitListInsights = await detectHitListInsights(workspaceId);
+      allInsights.push(...hitListInsights);
+
+      const sourceInsights = await detectSourceSuggestionInsights(workspaceId);
+      allInsights.push(...sourceInsights);
+
+      const performanceInsights = await detectContentPerformanceInsights(workspaceId);
+      allInsights.push(...performanceInsights);
+
+      const useCaseInsights = await detectUseCaseInsights(workspaceId);
+      allInsights.push(...useCaseInsights);
+
+      const contentGapInsights = await detectContentGapInsights(workspaceId);
+      allInsights.push(...contentGapInsights);
+    }
 
     // Sort by priority and limit
     return allInsights

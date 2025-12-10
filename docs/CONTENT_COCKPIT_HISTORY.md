@@ -13,7 +13,7 @@
 | E | Article Analytics | 7095147 | Dec 9, 2025 |
 | F | Guided Article Flow | - | Dec 9, 2025 |
 | G | Use Case Studio | - | Dec 9, 2025 |
-| H | Neptune AI Integration | - | Pending |
+| H | Neptune AI Integration | - | Dec 10, 2025 |
 | I | Testing and Polish | - | Pending |
 
 ## Phase Details
@@ -65,4 +65,11 @@ For implementation details of each phase, see the kickoff files:
 - CRUD + match + generate-roadmap APIs
 - AI roadmap generator using GPT-4o
 - UseCaseListPage with status filters and search
+
+### Phase H: Neptune AI Integration
+- 8 new AI tools for Content Cockpit (add_content_source, add_to_hit_list, get_hit_list_insights, reprioritize_hit_list, get_article_analytics, get_content_insights, get_use_case_recommendation, get_source_suggestions)
+- Content Cockpit handlers for conversational AI
+- 5 new proactive insight detectors (hit list, sources, performance, use cases, content gaps)
+- ContentCockpitContext in AI context gathering
+- toolsByCategory["content_cockpit"] for capability routing
 
