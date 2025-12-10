@@ -367,11 +367,14 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const assistantMessagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [assistantConversations, setAssistantConversations] = useState<AssistantConversation[]>([
-    { id: "conv-1", title: "Lead follow-up workflow", preview: "Create a workflow to follow up...", capability: "workflow", messages: [{ id: "1", role: "user", content: "Create a workflow to follow up with leads", timestamp: new Date(Date.now() - 86400000) }, { id: "2", role: "assistant", content: "I can help you create that workflow!", timestamp: new Date(Date.now() - 86400000) }], createdAt: new Date(Date.now() - 86400000), updatedAt: new Date(Date.now() - 86400000) },
-    { id: "conv-2", title: "Sales pipeline analysis", preview: "Analyze my sales pipeline...", capability: "insights", messages: [{ id: "1", role: "user", content: "Analyze my sales pipeline", timestamp: new Date(Date.now() - 172800000) }, { id: "2", role: "assistant", content: "Your pipeline health is strong at $1.2M", timestamp: new Date(Date.now() - 172800000) }], createdAt: new Date(Date.now() - 172800000), updatedAt: new Date(Date.now() - 172800000) },
-    { id: "conv-3", title: "Email draft for John", preview: "Write a follow-up email...", capability: "content", messages: [{ id: "1", role: "user", content: "Write a follow-up email", timestamp: new Date(Date.now() - 259200000) }, { id: "2", role: "assistant", content: "I've drafted a professional follow-up email", timestamp: new Date(Date.now() - 259200000) }], createdAt: new Date(Date.now() - 259200000), updatedAt: new Date(Date.now() - 259200000) },
-  ]);
+  const [assistantConversations, setAssistantConversations] = useState<AssistantConversation[]>(() => {
+    const now = Date.now();
+    return [
+      { id: "conv-1", title: "Lead follow-up workflow", preview: "Create a workflow to follow up...", capability: "workflow", messages: [{ id: "1", role: "user", content: "Create a workflow to follow up with leads", timestamp: new Date(now - 86400000) }, { id: "2", role: "assistant", content: "I can help you create that workflow!", timestamp: new Date(now - 86400000) }], createdAt: new Date(now - 86400000), updatedAt: new Date(now - 86400000) },
+      { id: "conv-2", title: "Sales pipeline analysis", preview: "Analyze my sales pipeline...", capability: "insights", messages: [{ id: "1", role: "user", content: "Analyze my sales pipeline", timestamp: new Date(now - 172800000) }, { id: "2", role: "assistant", content: "Your pipeline health is strong at $1.2M", timestamp: new Date(now - 172800000) }], createdAt: new Date(now - 172800000), updatedAt: new Date(now - 172800000) },
+      { id: "conv-3", title: "Email draft for John", preview: "Write a follow-up email...", capability: "content", messages: [{ id: "1", role: "user", content: "Write a follow-up email", timestamp: new Date(now - 259200000) }, { id: "2", role: "assistant", content: "I've drafted a professional follow-up email", timestamp: new Date(now - 259200000) }], createdAt: new Date(now - 259200000), updatedAt: new Date(now - 259200000) },
+    ];
+  });
 
   const assistantCapabilities: AssistantCapability[] = [
     { id: "workflow", title: "Workflow Automation", description: "Create automated workflows", icon: Workflow, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-200", examples: ["Create a workflow to follow up with leads", "Automate my email responses"], category: "Automation" },

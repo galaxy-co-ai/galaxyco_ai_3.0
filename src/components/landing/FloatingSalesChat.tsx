@@ -30,7 +30,7 @@ interface Message {
   suggestions?: string[];
 }
 
-const initialMessages: Message[] = [
+const getInitialMessages = (): Message[] => [
   {
     id: "1",
     role: "assistant",
@@ -47,7 +47,7 @@ const initialMessages: Message[] = [
 
 export function FloatingSalesChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(() => getInitialMessages());
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -124,7 +124,7 @@ export function FloatingSalesChat() {
   };
 
   const resetChat = () => {
-    setMessages(initialMessages);
+    setMessages(getInitialMessages());
     setInput("");
   };
 
