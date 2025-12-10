@@ -25,46 +25,61 @@ export const metadata: Metadata = {
 // Get workspace-scoped stats
 async function getContentStats(workspaceId: string) {
   try {
-    const [publishedCount, queueCount, viewsTotal, alertsCount] =
-      await Promise.all([
-        // Published articles count
-        db
-          .select({ count: count() })
-          .from(blogPosts)
-          .where(eq(blogPosts.status, "published"))
-          .then((r) => r[0]?.count ?? 0),
+    // Run queries individually to handle missing tables gracefully
+    let publishedCount = 0;
+    let queueCount = 0;
+    let viewsTotal = 0;
+    let alertsCount = 0;
 
-        // Hit list queue count (saved topics with hitListPosition or hitListAddedAt)
-        db
-          .select({ count: count() })
-          .from(topicIdeas)
-          .where(
-            and(
-              eq(topicIdeas.workspaceId, workspaceId),
-              eq(topicIdeas.status, "saved")
-            )
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(blogPosts)
+        .where(eq(blogPosts.status, "published"));
+      publishedCount = result[0]?.count ?? 0;
+    } catch {
+      // Table may not exist
+    }
+
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(topicIdeas)
+        .where(
+          and(
+            eq(topicIdeas.workspaceId, workspaceId),
+            eq(topicIdeas.status, "saved")
           )
-          .then((r) => r[0]?.count ?? 0),
+        );
+      queueCount = result[0]?.count ?? 0;
+    } catch {
+      // Table may not exist
+    }
 
-        // Total views from published posts (approximation for "views this month")
-        db
-          .select({ total: sql<number>`COALESCE(SUM(${blogPosts.viewCount}), 0)` })
-          .from(blogPosts)
-          .where(eq(blogPosts.status, "published"))
-          .then((r) => Number(r[0]?.total ?? 0)),
+    try {
+      const result = await db
+        .select({ total: sql<number>`COALESCE(SUM(${blogPosts.viewCount}), 0)` })
+        .from(blogPosts)
+        .where(eq(blogPosts.status, "published"));
+      viewsTotal = Number(result[0]?.total ?? 0);
+    } catch {
+      // Table may not exist
+    }
 
-        // Unread alerts count
-        db
-          .select({ count: count() })
-          .from(alertBadges)
-          .where(
-            and(
-              eq(alertBadges.workspaceId, workspaceId),
-              eq(alertBadges.status, "unread")
-            )
+    try {
+      const result = await db
+        .select({ count: count() })
+        .from(alertBadges)
+        .where(
+          and(
+            eq(alertBadges.workspaceId, workspaceId),
+            eq(alertBadges.status, "unread")
           )
-          .then((r) => r[0]?.count ?? 0),
-      ]);
+        );
+      alertsCount = result[0]?.count ?? 0;
+    } catch {
+      // alertBadges table may not exist in production yet
+    }
 
     return {
       publishedCount,
@@ -84,34 +99,35 @@ async function getContentStats(workspaceId: string) {
 
 // Get tool badge counts
 async function getToolCounts(workspaceId: string) {
+  let postsCount = 0;
+  let hitListCount = 0;
+  const sourcesCount = 0; // Sources count will be added in Phase C - placeholder for now
+
   try {
-    const [postsCount, hitListCount, sourcesCount] = await Promise.all([
-      // Total posts count
-      db
-        .select({ count: count() })
-        .from(blogPosts)
-        .then((r) => r[0]?.count ?? 0),
-
-      // Hit list items with position
-      db
-        .select({ count: count() })
-        .from(topicIdeas)
-        .where(
-          and(
-            eq(topicIdeas.workspaceId, workspaceId),
-            isNotNull(topicIdeas.hitListPosition)
-          )
-        )
-        .then((r) => r[0]?.count ?? 0),
-
-      // Sources count will be added in Phase C - placeholder for now
-      0,
-    ]);
-
-    return { postsCount, hitListCount, sourcesCount };
+    const result = await db
+      .select({ count: count() })
+      .from(blogPosts);
+    postsCount = result[0]?.count ?? 0;
   } catch {
-    return { postsCount: 0, hitListCount: 0, sourcesCount: 0 };
+    // Table may not exist
   }
+
+  try {
+    const result = await db
+      .select({ count: count() })
+      .from(topicIdeas)
+      .where(
+        and(
+          eq(topicIdeas.workspaceId, workspaceId),
+          isNotNull(topicIdeas.hitListPosition)
+        )
+      );
+    hitListCount = result[0]?.count ?? 0;
+  } catch {
+    // Table may not exist
+  }
+
+  return { postsCount, hitListCount, sourcesCount };
 }
 
 export default async function ContentCockpitPage() {
