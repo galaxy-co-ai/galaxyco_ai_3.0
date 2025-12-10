@@ -5,6 +5,85 @@
 
 ---
 
+## 🎛️ Content Cockpit - Phase C: Sources Hub - COMPLETE ✅
+
+**December 9, 2025** - Built the complete Sources Hub feature for bookmarking research sites with AI review and suggestions.
+
+### API Routes Created
+
+**Content Sources CRUD (`src/app/api/admin/content-sources/`):**
+- `route.ts` - GET (list with filters) and POST (create source)
+- `[id]/route.ts` - GET, PATCH, DELETE for individual sources
+- `suggestions/route.ts` - GET AI-suggested sources queue
+
+**AI Source Intelligence (`src/app/api/admin/ai/sources/`):**
+- `review/route.ts` - POST to AI review a URL for quality, relevance, authority (returns 0-100 score)
+- `discover/route.ts` - POST to AI discover new relevant sources based on workspace topics
+
+### UI Components Created (`src/components/admin/ContentCockpit/SourcesHub/`)
+
+**SourceCard.tsx:**
+- Display card for individual sources with type badge, status, and AI score
+- Dropdown menu for edit, visit, archive, delete actions
+- Tags display and added-by attribution
+- Compact SuggestionCard variant for queue items with approve/reject buttons
+
+**SourcesList.tsx:**
+- Grid/list view toggle for sources
+- Search with debounce
+- Filter dropdown by status and type
+- Active filter pills with clear functionality
+- Loading skeletons and empty states
+
+**SourcesQueueSidebar.tsx:**
+- AI suggestions sidebar (desktop) and bottom sheet (mobile)
+- Collapsible with badge count
+- "Discover More" button to trigger AI discovery
+- Approve/reject actions for each suggestion
+
+**AddSourceDialog.tsx:**
+- Modal dialog for adding new sources
+- URL input with "Review" button for AI analysis
+- AI review score display with quality/relevance/authority breakdown
+- Auto-fill name, type, tags from AI suggestions
+- Warning display for low-score sources (< 70)
+- Form validation with Zod
+
+**SourcesHubPage.tsx:**
+- Main page orchestrator with SWR data fetching
+- Stats summary cards (clickable filters)
+- Integration of all components
+- Toast notifications for all actions
+
+### Sources Hub Page (`src/app/(app)/admin/content/sources/page.tsx`)
+- Server component wrapper with metadata
+- Header with back navigation and icon
+- SourcesHubPage client component integration
+
+### Trigger.dev Job (`src/trigger/content-source-discovery.ts`)
+
+**Weekly Source Discovery:**
+- `discoverWorkspaceSourcesTask` - Discover sources for single workspace
+- `scheduledSourceDiscovery` - Runs every Monday at 9 AM UTC
+- Gets existing sources and topics for context
+- Uses GPT-4o to discover complementary sources
+- Adds discoveries as suggestions with AI scores
+- Creates alert badge when new suggestions found
+
+### Verification
+- ✅ TypeScript strict mode passing (0 errors)
+- ✅ ESLint passing (0 errors in new code)
+- ✅ Next.js build successful
+- ✅ All API routes workspace-scoped (multi-tenant)
+- ✅ Zod validation on all inputs
+- ✅ ARIA labels and keyboard navigation
+- ✅ Mobile responsive with bottom sheet
+
+### Next Phase
+Phase D: Article Hit List - Priority scoring, drag-reorder, daily prioritization job
+
+---
+
 ## 🎛️ Content Cockpit - Phase B: Dashboard UI Redesign - COMPLETE ✅
 
 **December 10, 2025** - Transformed the Content tab from a simple posts list into a comprehensive Content Cockpit dashboard with tool cards, stats bar, and alert integration.

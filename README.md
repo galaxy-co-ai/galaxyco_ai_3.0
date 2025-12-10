@@ -929,11 +929,20 @@ src/
 /api/admin/alert-badges/bulk-dismiss  POST         Bulk mark alerts as read or dismissed
 ```
 
+**Content Cockpit - Sources Hub** 🆕
+```
+/api/admin/content-sources            GET/POST     List/create content sources (with filters)
+/api/admin/content-sources/[id]       GET/PATCH/DELETE  Manage content source
+/api/admin/content-sources/suggestions GET         Get AI-suggested sources queue
+/api/admin/ai/sources/review          POST         AI reviews URL for quality/relevance/authority (0-100)
+/api/admin/ai/sources/discover        POST         AI discovers new sources based on workspace topics
+```
+
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 
 ---
 
-## 🎛️ Content Cockpit (Phase A & B Complete)
+## 🎛️ Content Cockpit (Phase A, B & C Complete)
 
 **Central hub for content management tools in Mission Control**
 
@@ -951,15 +960,27 @@ The Content tab has been transformed into a comprehensive Content Cockpit with:
 |------|-------|--------|-------------|
 | Article Studio | `/admin/content/article-studio` | ✅ Live | AI-assisted article creation |
 | Article Hit List | `/admin/content/hit-list` | 📋 Phase D | Prioritized topic queue with AI scoring |
-| Sources Hub | `/admin/content/sources` | 📋 Phase C | Bookmarked research sites with AI review |
+| Sources Hub | `/admin/content/sources` | ✅ Live | Bookmarked research sites with AI review |
 | Use Case Studio | `/admin/content/use-cases` | 📋 Phase G | Roadmaps for user personas |
 | Article Analytics | `/admin/content/analytics` | 📋 Phase E | Performance insights and AI recommendations |
 | All Posts | `/admin/content/posts` | ✅ Live | Traditional posts list (moved from main page) |
+
+### Sources Hub (Phase C) 🆕
+
+Full-featured source management system:
+- **SourceCard** - Display card with type badge, AI score, and actions
+- **SourcesList** - Grid/list view with search and filters
+- **SourcesQueueSidebar** - AI suggestions queue (collapsible)
+- **AddSourceDialog** - Add sources with AI review integration
+- **AI Source Review** - Analyzes quality, relevance, authority (0-100 score)
+- **AI Source Discovery** - Finds new sources based on workspace topics
+- **Weekly Discovery Job** - Trigger.dev job runs Mondays at 9 AM UTC
 
 ### Components (`src/components/admin/ContentCockpit/`)
 
 - **ToolCard.tsx** - Reusable card with icon gradient, badge count, Neptune hover effects
 - **StatsBar.tsx** - Quick stats display with loading states and ARIA labels
+- **SourcesHub/** - Full Sources Hub component suite
 - **index.ts** - Clean exports
 
 ### Alert Badge System (`src/components/admin/AlertBadges/`)

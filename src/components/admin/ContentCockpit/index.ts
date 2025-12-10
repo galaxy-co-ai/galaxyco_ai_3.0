@@ -29,3 +29,15 @@
 export { ToolCard } from "./ToolCard";
 export { StatsBar } from "./StatsBar";
 
+// Sources Hub Components
+export {
+  SourceCard,
+  SuggestionCard,
+  SourcesList,
+  SourcesQueueSidebar,
+  SuggestionsBottomSheet,
+  AddSourceDialog,
+  SourcesHubPage,
+} from "./SourcesHub";
+export type { SourceFilters, SourceFormData } from "./SourcesHub";
+

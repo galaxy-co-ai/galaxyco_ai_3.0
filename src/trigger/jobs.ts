@@ -48,3 +48,9 @@ export {
   precomputeWorkspaceInsightsTask,
   scheduledInsightsPrecompute,
 } from "./precompute-insights";
+
+// Content Source Discovery Jobs
+export {
+  discoverWorkspaceSourcesTask,
+  scheduledSourceDiscovery,
+} from "./content-source-discovery";
