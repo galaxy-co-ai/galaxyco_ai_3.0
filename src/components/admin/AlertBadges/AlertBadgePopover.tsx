@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import useSWR, { mutate } from "swr";
 import { Bell } from "lucide-react";
 import {
@@ -55,7 +55,8 @@ export function AlertBadgePopover({ className }: AlertBadgePopoverProps) {
     }
   );
 
-  const alerts = data?.alerts ?? [];
+  // Memoize alerts array to prevent useCallback deps from changing on every render
+  const alerts = useMemo(() => data?.alerts ?? [], [data?.alerts]);
   const unreadCount = data?.unreadCount ?? 0;
 
   /**
