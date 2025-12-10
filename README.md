@@ -947,6 +947,15 @@ src/
 /api/admin/ai/hit-list/prioritize     POST         AI calculates priority scores (100-point system)
 ```
 
+**Content Cockpit - Article Analytics** 🆕
+```
+/api/admin/analytics/overview         GET          Dashboard stats (views, time, scroll, bounce, shares)
+/api/admin/analytics/articles         GET          List articles with aggregated metrics (sortable, filterable)
+/api/admin/analytics/articles/[id]    GET/PATCH    Single article detail with chart data, traffic sources
+/api/admin/analytics/trends           GET          Time-series data (daily/weekly/monthly aggregation)
+/api/analytics/track                  POST         Client-side event tracking (public endpoint)
+```
+
 See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** for complete reference.
 
 ---
