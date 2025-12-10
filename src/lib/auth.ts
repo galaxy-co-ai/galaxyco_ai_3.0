@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger';
 const SYSTEM_ADMIN_EMAILS: string[] = [
   'dev@galaxyco.ai',
   'dalton@galaxyco.ai',
+  'aryan@heizen.work', // Heizen demo access
 ];
 
 /**
