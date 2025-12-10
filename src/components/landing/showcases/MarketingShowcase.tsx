@@ -167,6 +167,7 @@ export function MarketingShowcase() {
   return (
     <DemoWrapper scale={0.6} height={600} needsSidebar={false}>
       <MarketingDashboard
+        disableLiveData
         initialCampaigns={mockCampaigns}
         initialContent={mockContent}
         initialChannels={mockChannels}

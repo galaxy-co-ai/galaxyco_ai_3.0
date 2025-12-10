@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from '@/app/api/assistant/chat/route';
+import { POST } from '@/app/api/assistant/simple/route';
 import { NextRequest } from 'next/server';
 
 // Mock dependencies
@@ -84,13 +84,13 @@ vi.mock('@/lib/ai-providers', () => ({
   })),
 }));
 
-describe('POST /api/assistant/chat', () => {
+describe('POST /api/assistant/simple', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should create a new conversation and return AI response', async () => {
-    const request = new NextRequest('http://localhost:3000/api/assistant/chat', {
+  it('should return a simple AI response', async () => {
+    const request = new NextRequest('http://localhost:3000/api/assistant/simple', {
       method: 'POST',
       body: JSON.stringify({
         message: 'Hello, AI assistant!',
@@ -101,14 +101,13 @@ describe('POST /api/assistant/chat', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toHaveProperty('conversationId');
+    expect(data).toHaveProperty('content');
     expect(data).toHaveProperty('message');
     expect(data.message.content).toBe('This is a test AI response');
-    expect(data).toHaveProperty('usage');
   });
 
   it('should validate message input - empty message', async () => {
-    const request = new NextRequest('http://localhost:3000/api/assistant/chat', {
+    const request = new NextRequest('http://localhost:3000/api/assistant/simple', {
       method: 'POST',
       body: JSON.stringify({
         message: '',
@@ -123,7 +122,7 @@ describe('POST /api/assistant/chat', () => {
   });
 
   it('should validate message input - missing message', async () => {
-    const request = new NextRequest('http://localhost:3000/api/assistant/chat', {
+    const request = new NextRequest('http://localhost:3000/api/assistant/simple', {
       method: 'POST',
       body: JSON.stringify({}),
     });
@@ -144,7 +143,7 @@ describe('POST /api/assistant/chat', () => {
       reset: Date.now() + 60000,
     });
 
-    const request = new NextRequest('http://localhost:3000/api/assistant/chat', {
+    const request = new NextRequest('http://localhost:3000/api/assistant/simple', {
       method: 'POST',
       body: JSON.stringify({
         message: 'Hello',
@@ -158,9 +157,9 @@ describe('POST /api/assistant/chat', () => {
     expect(data.error).toContain('Rate limit');
   });
 
-  it('should handle very long messages', async () => {
+  it('should handle very long messages within limit', async () => {
     const longMessage = 'a'.repeat(500);
-    const request = new NextRequest('http://localhost:3000/api/assistant/chat', {
+    const request = new NextRequest('http://localhost:3000/api/assistant/simple', {
       method: 'POST',
       body: JSON.stringify({
         message: longMessage,
@@ -171,12 +170,12 @@ describe('POST /api/assistant/chat', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toHaveProperty('conversationId');
+    expect(data).toHaveProperty('content');
   });
 
   it('should reject messages over max length', async () => {
-    const tooLongMessage = 'a'.repeat(10001); // Over 10000 char limit
-    const request = new NextRequest('http://localhost:3000/api/assistant/chat', {
+    const tooLongMessage = 'a'.repeat(2001); // Over 2000 char limit
+    const request = new NextRequest('http://localhost:3000/api/assistant/simple', {
       method: 'POST',
       body: JSON.stringify({
         message: tooLongMessage,
@@ -190,6 +189,7 @@ describe('POST /api/assistant/chat', () => {
     expect(data).toHaveProperty('error');
   });
 });
+
 
 
 

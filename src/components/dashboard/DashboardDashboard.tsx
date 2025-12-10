@@ -60,6 +60,11 @@ type TabType = 'assistant' | 'snapshot' | 'automations' | 'planner';
 interface DashboardDashboardProps {
   initialData?: DashboardData;
   initialTab?: TabType;
+  /**
+   * When true, disables live API calls so the dashboard runs in demo mode.
+   * Used on marketing/feature pages to avoid 404s and auth errors.
+   */
+  disableLiveData?: boolean;
 }
 
 interface AssistantMessage {
@@ -93,7 +98,7 @@ interface AssistantCapability {
 
 type AssistantLeftPanelView = "capabilities" | "history";
 
-export default function DashboardDashboard({ initialData, initialTab = 'assistant' }: DashboardDashboardProps) {
+export default function DashboardDashboard({ initialData, initialTab = 'assistant', disableLiveData = false }: DashboardDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [date, setDate] = useState<Date | undefined>(new Date()); // Current date
   const [messageInput, setMessageInput] = useState("");
@@ -117,14 +122,18 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
   }>>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
 
-  // Fetch live dashboard stats (refreshes every 30 seconds)
-  const { data: liveStats, error: statsError, isLoading: isLoadingStats } = useSWR('/api/dashboard', fetcher, {
+  // Fetch live dashboard stats (refreshes every 30 seconds). When disableLiveData
+  // is true (marketing/demo usage), we pass a null key to SWR to avoid any
+  // network calls and rely entirely on initialData.
+  const dashboardKey = disableLiveData ? null : '/api/dashboard';
+  const { data: liveStats, error: statsError, isLoading: isLoadingStats } = useSWR(dashboardKey, fetcher, {
     refreshInterval: 30000, // 30 seconds
     fallbackData: initialData,
   });
 
   // Fetch agents list (refreshes every 30 seconds)
-  const { data: agentsData, error: agentsError, isLoading: isLoadingAgents } = useSWR('/api/agents', fetcher, {
+  const agentsKey = disableLiveData ? null : '/api/agents';
+  const { data: agentsData, error: agentsError, isLoading: isLoadingAgents } = useSWR(agentsKey, fetcher, {
     refreshInterval: 30000, // 30 seconds
   });
 
@@ -333,12 +342,12 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
     }
   };
 
-  // Fetch events when date changes
+  // Fetch events when date changes (disabled in demo mode)
   useEffect(() => {
-    if (date) {
+    if (date && !disableLiveData) {
       fetchCalendarEvents(date);
     }
-  }, [date]);
+  }, [date, disableLiveData]);
 
   // Top stat badges (using live stats)
   const statBadges = [
@@ -1365,15 +1374,17 @@ export default function DashboardDashboard({ initialData, initialTab = 'assistan
     { id: 'planner' as TabType, label: 'Planner', icon: CalendarDays, badge: calendarEvents.length > 0 ? String(calendarEvents.length) : undefined, badgeColor: 'bg-orange-500', activeColor: 'bg-orange-100 text-orange-700' },
   ];
 
-  // Load agent conversation when selected agent changes
+  // Load agent conversation when selected agent changes (skip in demo mode)
   useEffect(() => {
+    if (disableLiveData) return;
+
     if (agentsList.length > 0 && agentsList[selectedAgent]) {
       const agentId = agentsList[selectedAgent].id;
       if (agentId && !agentConversations[agentId]) {
         loadAgentConversation(agentId);
       }
     }
-  }, [selectedAgent, agentsList]);
+  }, [disableLiveData, selectedAgent, agentsList, agentConversations]);
 
   return (
     <div className="min-h-0 bg-gray-50/50 overflow-y-auto">

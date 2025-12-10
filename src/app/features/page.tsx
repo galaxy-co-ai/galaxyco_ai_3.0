@@ -85,6 +85,7 @@ export default function FeaturesPage() {
                   <div className="relative h-full w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
                     <DemoWrapper scale={0.75} height={700} needsSidebar={false}>
                       <DashboardDashboard 
+                        disableLiveData
                         initialTab="snapshot"
                         initialData={{
                           stats: {
@@ -145,7 +146,7 @@ export default function FeaturesPage() {
                 <div className="relative h-[500px] sm:h-[600px] lg:h-[700px] xl:h-[800px] rounded-xl overflow-hidden">
                   <div className="relative h-full w-full bg-white rounded-xl border border-white/20 shadow-2xl overflow-hidden">
                     <DemoWrapper scale={0.75} height={800} needsSidebar={false}>
-                      <CreatorDashboard />
+                      <CreatorDashboard disableLiveData />
                     </DemoWrapper>
                   </div>
                 </div>

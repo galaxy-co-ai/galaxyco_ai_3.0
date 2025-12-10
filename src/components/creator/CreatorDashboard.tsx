@@ -67,13 +67,21 @@ interface StatsResponse {
   };
 }
 
-export default function CreatorDashboard() {
+interface CreatorDashboardProps {
+  /**
+   * When true, do not call live APIs (used on marketing/feature pages).
+   */
+  disableLiveData?: boolean;
+}
+
+export default function CreatorDashboard({ disableLiveData = false }: CreatorDashboardProps) {
   const [activeTab, setActiveTab] = useState<CreatorTabType>("create");
   const [showNeptune, setShowNeptune] = useState(false);
 
-  // Fetch stats from API
+  // Fetch stats from API (disabled in demo mode)
+  const statsKey = disableLiveData ? null : '/api/creator/stats';
   const { data: statsData, isLoading: statsLoading } = useSWR<StatsResponse>(
-    '/api/creator/stats',
+    statsKey,
     fetcher,
     { refreshInterval: 30000 } // Refresh every 30 seconds
   );

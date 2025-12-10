@@ -122,6 +122,11 @@ interface MarketingDashboardProps {
     totalImpressions: number;
     avgROI: number;
   };
+  /**
+   * When true, disable live API calls and rely entirely on initial props.
+   * Used on marketing/landing demos to avoid 404s and auth noise.
+   */
+  disableLiveData?: boolean;
 }
 
 type TabType = 'create' | 'campaigns' | 'channels' | 'analytics';
@@ -138,6 +143,7 @@ export default function MarketingDashboard({
   initialContent,
   initialChannels,
   stats,
+  disableLiveData = false,
 }: MarketingDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('create');
   const [searchQuery, setSearchQuery] = useState("");
@@ -150,7 +156,8 @@ export default function MarketingDashboard({
   const [channelSearchQuery, setChannelSearchQuery] = useState("");
   const [showAddChannelDialog, setShowAddChannelDialog] = useState(false);
   
-  // Fetch channels from API
+  // Fetch channels from API (skip in demo mode)
+  const channelsKey = disableLiveData ? null : '/api/marketing/channels';
   const { data: channelsData, mutate: mutateChannels } = useSWR<{
     channels: Array<{
       id: string;
@@ -167,7 +174,7 @@ export default function MarketingDashboard({
       revenueDollars: number;
     }>;
     total: number;
-  }>('/api/marketing/channels', fetcher);
+  }>(channelsKey, fetcher);
   
   // Use API channels if available, otherwise fall back to initial
   const channels = channelsData?.channels?.map(ch => ({
@@ -249,9 +256,10 @@ export default function MarketingDashboard({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [assetChatMessages]);
 
-  // SWR for real-time campaign data
+  // SWR for real-time campaign data (skip in demo mode)
+  const campaignsKey = disableLiveData ? null : '/api/campaigns';
   const { data: campaignsData, mutate: mutateCampaigns } = useSWR(
-    '/api/campaigns',
+    campaignsKey,
     fetcher,
     { 
       refreshInterval: 30000, // Refresh every 30 seconds

@@ -96,7 +96,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                   <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
-                    <DashboardDashboard initialData={{
+                    <DashboardDashboard disableLiveData initialData={{
                       stats: {
                         activeAgents: 12,
                         tasksCompleted: 1247,
@@ -168,7 +168,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                 <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                   <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
-                    <CreatorDashboard />
+                    <CreatorDashboard disableLiveData />
                   </DemoWrapper>
                 </div>
               </div>
@@ -276,6 +276,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                   <DemoWrapper scale={0.9} height={900} needsSidebar={false}>
                     <MarketingDashboard
+                      disableLiveData
                       initialCampaigns={[
                         {
                           id: "1",
