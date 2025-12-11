@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { workspacePhoneNumbers, workspaces, workspaceMembers } from '@/db/schema';
 import { eq, and, desc, asc } from 'drizzle-orm';
-import { autoProvisionForWorkspace } from '@/lib/phone-numbers';
+// Note: autoProvisionForWorkspace is lazily imported in POST to avoid loading SignalWire SDK on GET
 
 /**
  * GET /api/workspaces/[id]/phone-numbers
@@ -172,7 +172,8 @@ export async function POST(
       );
     }
 
-    // Provision the phone number
+    // Provision the phone number (lazy import to avoid loading SignalWire on GET requests)
+    const { autoProvisionForWorkspace } = await import('@/lib/phone-numbers');
     const result = await autoProvisionForWorkspace({
       workspaceId,
       workspaceName: workspace.name,
