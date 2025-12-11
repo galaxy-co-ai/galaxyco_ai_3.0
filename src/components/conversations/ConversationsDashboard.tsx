@@ -171,7 +171,7 @@ export default function ConversationsDashboard({
           </div>
 
           {/* Stats Bar */}
-          <div className="hidden lg:flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Phone Number Badge */}
             {phoneNumbers.length > 0 && (
               <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
