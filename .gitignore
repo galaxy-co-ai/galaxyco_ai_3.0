@@ -45,3 +45,10 @@ next-env.d.ts
 .vercel
 
 .env*.local
+
+# Internal status documentation (AI session tracking)
+docs/status/PROJECT_STATUS*.md
+docs/status/SESSION_SUMMARY*.md
+docs/status/COMPLETION_SUMMARY*.md
+docs/status/AI_CONTEXT.md
+docs/status/sessions/
