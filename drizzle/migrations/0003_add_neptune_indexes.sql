@@ -7,9 +7,9 @@
 -- Run on staging first and monitor query performance
 
 -- Index for AI messages - speeds up conversation history fetches
--- Query pattern: SELECT * FROM ai_messages WHERE workspace_id = ? AND user_id = ? ORDER BY created_at DESC
-CREATE INDEX IF NOT EXISTS idx_ai_messages_workspace_user_created 
-ON ai_messages (workspace_id, user_id, created_at DESC);--> statement-breakpoint
+-- Query pattern: SELECT * FROM ai_messages WHERE conversation_id = ? ORDER BY created_at DESC
+CREATE INDEX IF NOT EXISTS idx_ai_messages_conversation_created 
+ON ai_messages (conversation_id, created_at DESC);--> statement-breakpoint
 
 -- Index for AI conversations - speeds up recent conversation lookups
 -- Query pattern: SELECT * FROM ai_conversations WHERE workspace_id = ? AND user_id = ? ORDER BY last_message_at DESC
