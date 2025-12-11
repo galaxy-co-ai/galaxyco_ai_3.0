@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Auto-update AI_CONTEXT.md after each commit
+npm run update-context
+
+# Stage the updated context file if it changed
+git add docs/status/AI_CONTEXT.md 2>/dev/null || true
+
+# Amend the commit if context changed (silent, no editor)
+if git diff --cached --quiet; then
+  # No changes, do nothing
+  :
+else
+  # Context changed, amend commit
+  git commit --amend --no-edit --no-verify
+fi
