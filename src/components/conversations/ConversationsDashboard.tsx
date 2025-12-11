@@ -92,6 +92,9 @@ export default function ConversationsDashboard({
   const [showNeptune, setShowNeptune] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+  // Debug: Log phone numbers
+  console.log('Phone Numbers in Dashboard:', phoneNumbers);
+
   // Filter conversations based on channel and search
   const filteredConversations = useMemo(() => {
     let filtered = conversations;
