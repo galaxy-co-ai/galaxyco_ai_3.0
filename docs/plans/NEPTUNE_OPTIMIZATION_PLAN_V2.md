@@ -51,12 +51,22 @@ This is a comprehensive optimization plan for Neptune, the primary AI assistant 
 - [x] Create cross-user workspace intelligence ✅ (2024-12-11)
 - [x] Create PR and push to GitHub ✅ (2024-12-11) - PR #3
 
+**Phase 4A Checklist - COMPLETE ✅:**
+- [x] Implement Sentry performance tracking ✅ (2024-12-11) - Day 1
+- [x] Create admin metrics API endpoints ✅ (2024-12-11) - Day 2
+- [x] Build validation test suite ✅ (2024-12-11) - Day 3
+- [x] Write comprehensive metrics documentation ✅ (2024-12-11) - Day 4
+- [x] Create Sentry alerts configuration guide ✅ (2024-12-11) - Day 4
+- [x] Update Neptune Optimization Plan ✅ (2024-12-11) - Day 4
+
 **Post-Deployment Monitoring:**
-- [ ] Monitor cache hit rates in Upstash dashboard (target: >70%)
-- [ ] Measure Neptune response times (target: <2s from ~4-6s)
+- [x] Sentry performance tracking operational ✅ (2024-12-11)
+- [x] Admin API endpoints accessible at `/api/admin/metrics/*` ✅ (2024-12-11)
+- [ ] Configure Sentry alerts (see `docs/observability/SENTRY_ALERTS.md`)
+- [ ] Monitor cache hit rates (target: >70%) - View at `/api/admin/metrics/neptune`
+- [ ] Measure Neptune response times (target: <2s) - View in Sentry dashboard
 - [ ] Track RAG accuracy improvements (target: 35-40% better)
 - [ ] Monitor session memory usage and token savings
-- [ ] Track automation suggestion acceptance rate
 
 **Need Help?**
 - Architecture questions → See `docs/architecture/`
@@ -441,79 +451,182 @@ export async function aggregateWorkspacePatterns(workspaceId: string) {
 
 ---
 
-### Phase 4: Performance Monitoring (Week 7) 📊
+### Phase 4A: Metrics Foundation (Days 1-4) 📊 ✅ COMPLETE
 
 **Priority:** P1 - High  
 **Impact:** Medium  
-**Effort:** Medium  
-**Expected Result:** Full observability and continuous optimization
+**Effort:** Low-Medium (3-4 days)  
+**Result:** Backend observability without visual dashboard  
+**Status:** ✅ Complete (2024-12-11)
 
-#### 4.1 Observability Layer
+#### 4A.1 Sentry Performance Tracking ✅
 
-**OpenTelemetry Integration:**
-```typescript
-// src/lib/observability.ts
-import { trace } from '@opentelemetry/api';
+**Implementation:** Day 1 (Commit: f05a9f8)
 
-export const tracer = trace.getTracer('neptune-ai');
+**Created:**
+- `src/lib/observability.ts` - Sentry tracking utilities
+  - `trackNeptuneRequest()` - Response time, tokens, RAG results
+  - `trackCacheHit()` - Cache performance by type
+  - `trackDatabaseQuery()` - Slow query detection
+  - `trackNeptuneError()` - Error tracking with context
 
-// Wrap key operations
-export async function tracedContextGather(workspaceId: string) {
-  return await tracer.startActiveSpan('context.gather', async (span) => {
-    const startTime = Date.now();
-    
-    try {
-      const context = await gatherAIContext(workspaceId);
-      span.setAttribute('context.size', JSON.stringify(context).length);
-      span.setAttribute('duration.ms', Date.now() - startTime);
-      return context;
-    } finally {
-      span.end();
-    }
-  });
-}
+**Instrumented:**
+- `/api/assistant/chat` - Full Neptune request tracking
+- `src/lib/cache.ts` - Automatic cache hit/miss tracking
+- Redis counters for API aggregation
+
+**Metrics tracked:**
+- Response times (ms)
+- Token usage per request
+- RAG result counts
+- Cache performance (3 types: context, rag, user_prefs)
+- Database query times (>100ms)
+- Error rates with full context
+
+**View in:** Sentry > Issues > Filter: `component:neptune`
+
+#### 4A.2 Admin Metrics API ✅
+
+**Implementation:** Day 2 (Commit: 5dbf710)
+
+**Created:**
+- `src/lib/admin/metrics.ts` - Metrics calculation utilities
+- `src/app/api/admin/metrics/route.ts` - Comprehensive summary
+- `src/app/api/admin/metrics/neptune/route.ts` - Neptune-specific with time ranges
+- `src/app/api/admin/metrics/health/route.ts` - System health checks
+
+**Endpoints:**
+```bash
+GET /api/admin/metrics              # Full summary
+GET /api/admin/metrics/neptune      # Neptune metrics + targets
+GET /api/admin/metrics/health       # Health checks
 ```
 
-**Metrics to Track:**
-- Response time (p50, p95, p99)
-- Context fetch time
-- Cache hit rate
-- Token usage per query
-- RAG accuracy (user feedback)
+**Query parameters:**
+- `range=hour|day|week` - Time range for metrics
 
-**Alerts:**
-- Response time >5s for 5 consecutive requests
-- Cache hit rate <50%
-- Error rate >5%
+**Authentication:** Requires whitelisted admin email
 
-#### 4.2 Performance Metrics Dashboard
+**Metrics provided:**
+- Performance: avg/p95 response time, requests/hour
+- Cache: hit rate, total hits/misses
+- Tokens: usage, costs, avg per request
+- RAG: search count, avg results
+- Conversations: total, active today
+- Database: query times, slow queries, error rate
+- System: health status, uptime, connection checks
+- Targets: Performance vs Phase 1-3 goals
 
-**Create Admin API:**
-```typescript
-// src/app/api/admin/metrics/route.ts
-export async function GET() {
-  const metrics = {
-    performance: {
-      avgResponseTime: await calculateAvgResponseTime(),
-      cacheHitRate: await getCacheHitRate(),
-      tokenEfficiency: await calculateTokenEfficiency(),
-    },
-    intelligence: {
-      ragAccuracy: await calculateRAGAccuracy(),
-      proactiveInsightAcceptance: await getInsightAcceptanceRate(),
-      automationUsage: await getAutomationUsageRate(),
-    },
-  };
+#### 4A.3 Validation Testing ✅
+
+**Implementation:** Day 3 (Commit: 06ee8ec)
+
+**Created:**
+- `scripts/test-metrics.ts` - Comprehensive test suite (300 lines)
+
+**Tests:**
+- Redis connection and counter initialization
+- All 3 admin API endpoints
+- Time range parameter handling
+- Performance target validation
+- Error handling and edge cases
+
+**Usage:**
+```bash
+# Local testing
+npx tsx scripts/test-metrics.ts
+
+# Production testing
+BASE_URL=https://galaxyco.ai npx tsx scripts/test-metrics.ts
+```
+
+#### 4A.4 Documentation ✅
+
+**Implementation:** Day 4 (Commit: pending)
+
+**Created:**
+- `docs/observability/METRICS.md` - Comprehensive metrics guide
+  - Available metrics catalog
+  - 3 viewing methods (Sentry, Admin API, Redis direct)
+  - Performance targets from Phase 1-3
+  - Troubleshooting guides
+  - Cost tracking
+  - Integration with Mission Control (Phase 4B preview)
   
-  return Response.json(metrics);
-}
-```
+- `docs/observability/SENTRY_ALERTS.md` - Alert configuration guide
+  - 4 critical alerts with setup instructions
+  - Alert thresholds and rationale
+  - Verification and testing procedures
+  - Maintenance recommendations
 
-**Files to Create:**
-- `src/lib/observability.ts` - OpenTelemetry setup
-- `src/lib/metrics.ts` - Custom metrics
-- `src/app/api/admin/metrics/route.ts` - Metrics API
-- `src/components/admin/MetricsDashboard.tsx` - UI dashboard
+**Performance Targets:**
+- Response time: <2000ms (was ~4-6s)
+- Cache hit rate: >70%
+- Token efficiency: 30% reduction
+- RAG accuracy: 35-40% improvement
+
+**Files Modified:**
+- `src/app/api/assistant/chat/route.ts` - Added tracking
+- `src/lib/cache.ts` - Added automatic cache tracking
+- `docs/plans/NEPTUNE_OPTIMIZATION_PLAN_V2.md` - Updated plan
+
+#### Completion Status
+
+**Phase 4A Complete!** ✅
+- Backend observability: Fully operational
+- Admin API: Available at `/api/admin/metrics/*`
+- Validation: Tests passing
+- Documentation: Comprehensive guides created
+- Sentry alerts: Configuration guide ready
+
+**Total time:** 4 days (target: 3-4 days)
+
+**Next step:** Configure Sentry alerts using `docs/observability/SENTRY_ALERTS.md` guide
+
+---
+
+### Phase 4B: Visual Dashboard (Deferred) 📊 
+
+**Priority:** P2 - Medium  
+**Impact:** Medium  
+**Effort:** High (1-2 weeks)  
+**Expected Result:** Mission Control visual dashboard  
+**Status:** 📅 Backlogged - Deferred to future sprint
+
+#### 4B.1 Mission Control Dashboard
+
+**Location:** `/admin/performance` (Mission Control page)
+
+**Features:**
+- Real-time performance metrics
+- 7-day/30-day trend charts
+- Cache performance visualizations
+- Token usage and cost tracking
+- RAG performance metrics
+- System health indicators
+- Alert history panel
+
+**Tech Stack:**
+- Recharts for data visualization
+- Real-time updates via SWR
+- Admin-only access (existing whitelist)
+- Matches current analytics page style
+
+**Why deferred:**
+- Phase 4A provides all backend functionality
+- Admin API allows manual metric querying
+- Visual dashboard nice-to-have, not critical
+- Can be built when prioritized (1-2 weeks)
+
+**Dependencies:**
+- Phase 4A complete ✅
+- Time allocation for UI work
+
+**Files to Create (when implemented):**
+- `src/app/admin/performance/page.tsx` - Dashboard page
+- `src/components/admin/MetricsChart.tsx` - Trend charts
+- `src/components/admin/HealthStatus.tsx` - Health indicators
+- `src/lib/hooks/useMetrics.ts` - SWR hook for metrics
 
 ---
 
