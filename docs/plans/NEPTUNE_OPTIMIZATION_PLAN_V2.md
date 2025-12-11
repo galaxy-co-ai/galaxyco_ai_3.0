@@ -31,8 +31,11 @@ This is a comprehensive optimization plan for Neptune, the primary AI assistant 
 - [x] Implement Redis caching layer in `src/lib/ai/context.ts` ✅ (2024-12-11)
 - [x] Add database indexes via migration in `drizzle/migrations/0003_add_neptune_indexes.sql` ✅ (2024-12-11)
 - [x] Create context pruning logic in `src/lib/ai/context-pruning.ts` ✅ (2024-12-11)
-- [ ] Test on staging environment
-- [ ] Monitor cache hit rates and response times
+- [x] Create PR and push to GitHub ✅ (2024-12-11) - PR #1
+- [ ] Verify Vercel preview build passes
+- [ ] Run migration on preview database: `npm run db:migrate`
+- [ ] Test Neptune response times on preview
+- [ ] Monitor cache hit rates in Upstash dashboard
 
 **Need Help?**
 - Architecture questions → See `docs/architecture/`

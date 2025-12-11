@@ -1,7 +1,7 @@
 # AI Agent Context - GalaxyCo.ai 3.0
 
-**Last Updated:** 2025-12-11T17:57:31.158Z  
-**Commit:** 4923de7 on feat/neptune-optimization-phase1  
+**Last Updated:** 2025-12-11T18:01:45.464Z  
+**Commit:** 84f1390 on feat/neptune-optimization-phase1  
 **Last Commit:** 2025-12-11
 
 ---
@@ -29,6 +29,7 @@ Production SaaS platform for AI-powered business automation. Built with Next.js 
 
 ## 🔄 Recent Work (Last 7 Days)
 
+- 2025-12-11: fix(migration): update index migration for Drizzle compatibility
 - 2025-12-11: feat(neptune): implement Phase 1 performance optimizations
 - 2025-12-11: chore: hide internal scripts and old files from public view
 - 2025-12-11: docs: remove tagline from README
@@ -278,6 +279,7 @@ Production SaaS platform for AI-powered business automation. Built with Next.js 
 
 ## 📝 Recent Commits (Last 10)
 
+- 2025-12-11: fix(migration): update index migration for Drizzle compatibility
 - 2025-12-11: feat(neptune): implement Phase 1 performance optimizations
 - 2025-12-11: chore: hide internal scripts and old files from public view
 - 2025-12-11: docs: remove tagline from README
@@ -287,7 +289,6 @@ Production SaaS platform for AI-powered business automation. Built with Next.js 
 - 2025-12-11: fix(phone-numbers): lazy load SignalWire SDK to avoid lodash dependency error
 - 2025-12-11: debug(phone-numbers): add detailed logging to API routes
 - 2025-12-10: feat(conversations): add department filtering UI
-- 2025-12-10: fix(webhooks): add type assertion for nullable numberType
 
 ---
 
