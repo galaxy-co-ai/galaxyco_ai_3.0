@@ -15,6 +15,13 @@
       "when": 1765421292429,
       "tag": "0002_chief_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1733939744000,
+      "tag": "0003_add_neptune_indexes",
+      "breakpoints": true
     }
   ]
 }

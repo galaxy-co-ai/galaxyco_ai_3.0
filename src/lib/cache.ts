@@ -9,7 +9,52 @@ import { logger } from '@/lib/logger';
  * - Graceful degradation when Redis is unavailable
  * - Health tracking to avoid spamming logs on failures
  * - Auto-recovery after temporary outages
+ * 
+ * Neptune Context Cache Keys:
+ * - context:crm:{workspaceId} - CRM data (TTL: 5 min)
+ * - context:calendar:{workspaceId} - Calendar events (TTL: 2 min)
+ * - context:workspace:{workspaceId} - Workspace intelligence (TTL: 1 hour)
+ * - context:prefs:{workspaceId}:{userId} - User preferences (TTL: 15 min)
+ * - context:tasks:{workspaceId} - Tasks (TTL: 3 min)
+ * - context:agents:{workspaceId} - Agents (TTL: 10 min)
+ * - context:marketing:{workspaceId} - Marketing data (TTL: 5 min)
  */
+
+// ============================================================================
+// NEPTUNE CONTEXT CACHE TTL CONFIGURATION (in seconds)
+// ============================================================================
+
+export const CONTEXT_CACHE_TTL = {
+  CRM: 5 * 60,              // 5 minutes - CRM data changes frequently but not per-request
+  CALENDAR: 2 * 60,         // 2 minutes - Calendar needs to be relatively fresh
+  WORKSPACE: 60 * 60,       // 1 hour - Workspace intelligence changes rarely
+  USER_PREFS: 15 * 60,      // 15 minutes - User preferences are stable
+  TASKS: 3 * 60,            // 3 minutes - Tasks change moderately
+  AGENTS: 10 * 60,          // 10 minutes - Agent list is relatively stable
+  MARKETING: 5 * 60,        // 5 minutes - Campaign stats need reasonable freshness
+  CONTENT_COCKPIT: 10 * 60, // 10 minutes - Content metrics don't change rapidly
+  FINANCE: 5 * 60,          // 5 minutes - Financial data needs reasonable freshness
+  CONVERSATION: 5 * 60,     // 5 minutes - Conversation history context
+  PROACTIVE_INSIGHTS: 5 * 60, // 5 minutes - Proactive insights
+} as const;
+
+// ============================================================================
+// NEPTUNE CONTEXT CACHE KEY BUILDERS
+// ============================================================================
+
+export const ContextCacheKeys = {
+  crm: (workspaceId: string) => `context:crm:${workspaceId}`,
+  calendar: (workspaceId: string) => `context:calendar:${workspaceId}`,
+  workspace: (workspaceId: string) => `context:workspace:${workspaceId}`,
+  userPrefs: (workspaceId: string, userId: string) => `context:prefs:${workspaceId}:${userId}`,
+  tasks: (workspaceId: string) => `context:tasks:${workspaceId}`,
+  agents: (workspaceId: string) => `context:agents:${workspaceId}`,
+  marketing: (workspaceId: string) => `context:marketing:${workspaceId}`,
+  contentCockpit: (workspaceId: string) => `context:content:${workspaceId}`,
+  finance: (workspaceId: string) => `context:finance:${workspaceId}`,
+  conversation: (workspaceId: string, userId: string) => `context:conversation:${workspaceId}:${userId}`,
+  proactiveInsights: (workspaceId: string, userId: string) => `context:insights:${workspaceId}:${userId}`,
+} as const;
 
 interface CacheOptions {
   ttl?: number; // Time to live in seconds (default: 5 minutes)

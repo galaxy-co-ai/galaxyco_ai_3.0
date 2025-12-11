@@ -28,6 +28,7 @@ import {
 } from '@/db/schema';
 import { eq, and, desc, gte, lte, count, sql, or } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { getCacheOrFetch, ContextCacheKeys, CONTEXT_CACHE_TTL } from '@/lib/cache';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -318,8 +319,22 @@ async function getUserPreferencesContext(
 
 /**
  * Get CRM context (leads, contacts, pipeline)
+ * Cached for 5 minutes to reduce DB queries
  */
 async function getCRMContext(workspaceId: string): Promise<CRMContext> {
+  const cacheKey = ContextCacheKeys.crm(workspaceId);
+  
+  return getCacheOrFetch<CRMContext>(
+    cacheKey,
+    () => fetchCRMContext(workspaceId),
+    { ttl: CONTEXT_CACHE_TTL.CRM, prefix: '' }
+  );
+}
+
+/**
+ * Fetch fresh CRM context from database
+ */
+async function fetchCRMContext(workspaceId: string): Promise<CRMContext> {
   try {
     // Get all prospects for analysis
     const allProspects = await db.query.prospects.findMany({
@@ -396,8 +411,22 @@ async function getCRMContext(workspaceId: string): Promise<CRMContext> {
 
 /**
  * Get calendar context
+ * Cached for 2 minutes to balance freshness with performance
  */
 async function getCalendarContext(workspaceId: string): Promise<CalendarContext> {
+  const cacheKey = ContextCacheKeys.calendar(workspaceId);
+  
+  return getCacheOrFetch<CalendarContext>(
+    cacheKey,
+    () => fetchCalendarContext(workspaceId),
+    { ttl: CONTEXT_CACHE_TTL.CALENDAR, prefix: '' }
+  );
+}
+
+/**
+ * Fetch fresh calendar context from database
+ */
+async function fetchCalendarContext(workspaceId: string): Promise<CalendarContext> {
   try {
     const now = new Date();
     const endOfDay = new Date(now);
@@ -463,8 +492,22 @@ async function getCalendarContext(workspaceId: string): Promise<CalendarContext>
 
 /**
  * Get task context
+ * Cached for 3 minutes
  */
 async function getTaskContext(workspaceId: string): Promise<TaskContext> {
+  const cacheKey = ContextCacheKeys.tasks(workspaceId);
+  
+  return getCacheOrFetch<TaskContext>(
+    cacheKey,
+    () => fetchTaskContext(workspaceId),
+    { ttl: CONTEXT_CACHE_TTL.TASKS, prefix: '' }
+  );
+}
+
+/**
+ * Fetch fresh task context from database
+ */
+async function fetchTaskContext(workspaceId: string): Promise<TaskContext> {
   try {
     const now = new Date();
 
@@ -510,8 +553,22 @@ async function getTaskContext(workspaceId: string): Promise<TaskContext> {
 
 /**
  * Get agent context
+ * Cached for 10 minutes - agent list is relatively stable
  */
 async function getAgentContext(workspaceId: string): Promise<AgentContext> {
+  const cacheKey = ContextCacheKeys.agents(workspaceId);
+  
+  return getCacheOrFetch<AgentContext>(
+    cacheKey,
+    () => fetchAgentContext(workspaceId),
+    { ttl: CONTEXT_CACHE_TTL.AGENTS, prefix: '' }
+  );
+}
+
+/**
+ * Fetch fresh agent context from database
+ */
+async function fetchAgentContext(workspaceId: string): Promise<AgentContext> {
   try {
     const allAgents = await db.query.agents.findMany({
       where: eq(agents.workspaceId, workspaceId),
@@ -584,8 +641,22 @@ async function getConversationHistoryContext(
 
 /**
  * Get marketing context (campaigns, performance metrics)
+ * Cached for 5 minutes
  */
 async function getMarketingContext(workspaceId: string): Promise<MarketingContext> {
+  const cacheKey = ContextCacheKeys.marketing(workspaceId);
+  
+  return getCacheOrFetch<MarketingContext>(
+    cacheKey,
+    () => fetchMarketingContext(workspaceId),
+    { ttl: CONTEXT_CACHE_TTL.MARKETING, prefix: '' }
+  );
+}
+
+/**
+ * Fetch fresh marketing context from database
+ */
+async function fetchMarketingContext(workspaceId: string): Promise<MarketingContext> {
   try {
     // Get active campaigns
     const activeCampaigns = await db.query.campaigns.findMany({
@@ -817,8 +888,22 @@ async function getFinanceContext(workspaceId: string): Promise<FinanceContext> {
 
 /**
  * Get website context from workspace intelligence
+ * Cached for 1 hour - workspace intelligence changes rarely
  */
 async function getWebsiteContext(workspaceId: string): Promise<WebsiteContext> {
+  const cacheKey = ContextCacheKeys.workspace(workspaceId);
+  
+  return getCacheOrFetch<WebsiteContext>(
+    cacheKey,
+    () => fetchWebsiteContext(workspaceId),
+    { ttl: CONTEXT_CACHE_TTL.WORKSPACE, prefix: '' }
+  );
+}
+
+/**
+ * Fetch fresh website context from database
+ */
+async function fetchWebsiteContext(workspaceId: string): Promise<WebsiteContext> {
   try {
     const intelligence = await db.query.workspaceIntelligence.findFirst({
       where: eq(workspaceIntelligence.workspaceId, workspaceId),
