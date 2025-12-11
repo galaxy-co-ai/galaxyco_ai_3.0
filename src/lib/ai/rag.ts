@@ -395,3 +395,15 @@ export function formatCitations(citations: RAGContext['citations']): string {
     .map((c, i) => `[${i + 1}] ${c.title}${c.url ? ` - ${c.url}` : ''}`)
     .join('\n');
 }
+
+// ============================================================================
+// RE-EXPORT ENHANCED RAG (Phase 2)
+// ============================================================================
+
+export {
+  searchKnowledgeBaseEnhanced,
+  searchKnowledgeBaseWithFallback,
+  expandQuery,
+  type EnhancedRAGResult,
+  type EnhancedRAGContext,
+} from './rag-enhanced';

@@ -36,6 +36,8 @@ export const CONTEXT_CACHE_TTL = {
   FINANCE: 5 * 60,          // 5 minutes - Financial data needs reasonable freshness
   CONVERSATION: 5 * 60,     // 5 minutes - Conversation history context
   PROACTIVE_INSIGHTS: 5 * 60, // 5 minutes - Proactive insights
+  RAG_SEARCH: 10 * 60,      // 10 minutes - RAG search results (documents don't change often)
+  QUERY_EXPANSION: 60 * 60, // 1 hour - Query expansions are stable for same queries
 } as const;
 
 // ============================================================================
@@ -54,6 +56,9 @@ export const ContextCacheKeys = {
   finance: (workspaceId: string) => `context:finance:${workspaceId}`,
   conversation: (workspaceId: string, userId: string) => `context:conversation:${workspaceId}:${userId}`,
   proactiveInsights: (workspaceId: string, userId: string) => `context:insights:${workspaceId}:${userId}`,
+  // RAG cache keys
+  ragSearch: (workspaceId: string, queryHash: string) => `rag:search:${workspaceId}:${queryHash}`,
+  queryExpansion: (queryHash: string) => `rag:expand:${queryHash}`,
 } as const;
 
 interface CacheOptions {
