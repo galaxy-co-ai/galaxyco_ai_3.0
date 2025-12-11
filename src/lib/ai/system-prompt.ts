@@ -7,6 +7,7 @@
 
 import type { AIContextData } from './context';
 import { MARKETING_EXPERTISE } from './marketing-expertise';
+import { shouldPruneContext, getPrunedContext, type PrunedContext } from './context-pruning';
 
 // ============================================================================
 // PERSONALITY TRAITS
@@ -174,10 +175,18 @@ When the user asks about:
 - Debug errors from screenshots`;
 }
 
-function buildContextSection(context: AIContextData): string {
+function buildContextSection(context: AIContextData, userQuery?: string): string {
   const { user, crm, calendar, tasks, agents, marketing, website } = context;
   
   const sections: string[] = [];
+  
+  // Check if we should use optimized/pruned context for token efficiency
+  const usePrunedContext = shouldPruneContext(context);
+  let prunedContext: PrunedContext | null = null;
+  
+  if (usePrunedContext) {
+    prunedContext = getPrunedContext(context, userQuery);
+  }
   
   // Check if workspace is essentially empty (new user)
   const isEmptyWorkspace = 
@@ -226,83 +235,238 @@ Use this company context to personalize all interactions. Reference the company 
 - ${context.dayOfWeek}, ${context.currentDate}
 - ${context.currentTime}`);
 
-  // CRM summary
-  if (crm.totalLeads > 0) {
-    sections.push(`## CRM Overview
+  // If using pruned context, build optimized sections
+  if (usePrunedContext && prunedContext) {
+    sections.push(buildPrunedContextSection(prunedContext, context));
+  } else {
+    // Full context (for smaller workspaces)
+    // CRM summary
+    if (crm.totalLeads > 0) {
+      sections.push(`## CRM Overview
 - Total Leads: ${crm.totalLeads}
 - Pipeline Value: ${formatNumber(crm.totalPipelineValue)}
 - Contacts: ${crm.totalContacts}
 - Organizations: ${crm.totalCustomers}
 - Pipeline Stages: ${Object.entries(crm.leadsByStage).map(([stage, count]) => `${stage}: ${count}`).join(', ')}`);
 
-    if (crm.hotLeads.length > 0) {
-      sections.push(`### Hot Leads (Ready to Close)
+      if (crm.hotLeads.length > 0) {
+        sections.push(`### Hot Leads (Ready to Close)
 ${crm.hotLeads.map(l => `- ${l.name}${l.company ? ` (${l.company})` : ''} - ${l.stage}${l.estimatedValue ? ` - ${formatNumber(l.estimatedValue)}` : ''}`).join('\n')}`);
+      }
     }
-  }
 
-  // Marketing summary
-  if (marketing && marketing.totalCampaigns > 0) {
-    sections.push(`## Marketing Overview
+    // Marketing summary
+    if (marketing && marketing.totalCampaigns > 0) {
+      sections.push(`## Marketing Overview
 - Total Campaigns: ${marketing.totalCampaigns}
 - Active Campaigns: ${marketing.activeCampaigns.length}
 - Avg Open Rate: ${marketing.campaignStats.avgOpenRate}
 - Avg Click Rate: ${marketing.campaignStats.avgClickRate}
 - Top Channel: ${marketing.campaignStats.topChannel}`);
-    
-    if (marketing.activeCampaigns.length > 0) {
-      sections.push(`### Active Campaigns
+      
+      if (marketing.activeCampaigns.length > 0) {
+        sections.push(`### Active Campaigns
 ${marketing.activeCampaigns.slice(0, 3).map(c => `- ${c.name} (${c.type}) - ${c.sentCount} sent, ${c.openCount} opens`).join('\n')}`);
+      }
     }
-  }
 
-  // Calendar summary
-  if (calendar.todayEventCount > 0 || calendar.upcomingEvents.length > 0) {
-    sections.push(`## Calendar
+    // Calendar summary
+    if (calendar.todayEventCount > 0 || calendar.upcomingEvents.length > 0) {
+      sections.push(`## Calendar
 - Events today: ${calendar.todayEventCount}
 - Events this week: ${calendar.thisWeekEventCount}`);
-    
-    if (calendar.upcomingEvents.length > 0) {
-      sections.push(`### Upcoming Events
+      
+      if (calendar.upcomingEvents.length > 0) {
+        sections.push(`### Upcoming Events
 ${calendar.upcomingEvents.slice(0, 3).map(e => `- ${e.title} - ${formatDate(new Date(e.startTime))} at ${formatTime(new Date(e.startTime))}`).join('\n')}`);
+      }
     }
-  }
 
-  // Tasks summary
-  if (tasks.pendingTasks > 0) {
-    sections.push(`## Tasks
+    // Tasks summary
+    if (tasks.pendingTasks > 0) {
+      sections.push(`## Tasks
 - Pending: ${tasks.pendingTasks}
 - Overdue: ${tasks.overdueTasks}${tasks.overdueTasks > 0 ? ' ⚠️' : ''}`);
-    
-    if (tasks.highPriorityTasks.length > 0) {
-      sections.push(`### High Priority
+      
+      if (tasks.highPriorityTasks.length > 0) {
+        sections.push(`### High Priority
 ${tasks.highPriorityTasks.slice(0, 3).map(t => `- ${t.title} (${t.priority})${t.dueDate ? ` - due ${formatDate(new Date(t.dueDate))}` : ''}`).join('\n')}`);
+      }
+    }
+
+    // Agents summary
+    if (agents.activeAgents > 0) {
+      sections.push(`## AI Agents
+- Active agents: ${agents.activeAgents}
+- Total executions: ${agents.totalExecutions}`);
+    }
+
+    // Proactive insights
+    if (context.proactiveInsights && context.proactiveInsights.hasInsights) {
+      const insights = context.proactiveInsights.insights;
+      sections.push(`## Proactive Insights & Suggestions
+${insights.map((insight, i) => {
+        const priorityEmoji = insight.priority >= 9 ? '🔴' : insight.priority >= 7 ? '🟡' : '🟢';
+        let actionsText = '';
+        if (insight.suggestedActions && insight.suggestedActions.length > 0) {
+          actionsText = `\n  Suggested: ${insight.suggestedActions.map(a => a.action).join(', ')}`;
+        }
+        return `${i + 1}. ${priorityEmoji} ${insight.title} - ${insight.description}${actionsText}`;
+      }).join('\n')}
+
+These are proactive suggestions based on your workspace activity. Consider mentioning them naturally in conversation if relevant.`);
     }
   }
 
-  // Agents summary
-  if (agents.activeAgents > 0) {
-    sections.push(`## AI Agents
-- Active agents: ${agents.activeAgents}
-- Total executions: ${agents.totalExecutions}`);
-  }
+  return sections.join('\n\n');
+}
 
-  // Proactive insights
-  if (context.proactiveInsights && context.proactiveInsights.hasInsights) {
-    const insights = context.proactiveInsights.insights;
-    sections.push(`## Proactive Insights & Suggestions
-${insights.map((insight, i) => {
+/**
+ * Build optimized context section from pruned context items
+ * Used when context is large and needs token-efficient representation
+ */
+function buildPrunedContextSection(pruned: PrunedContext, fullContext: AIContextData): string {
+  const sections: string[] = [];
+  
+  // Group items by type
+  const itemsByType: Record<string, typeof pruned.items> = {};
+  for (const item of pruned.items) {
+    if (!itemsByType[item.type]) {
+      itemsByType[item.type] = [];
+    }
+    itemsByType[item.type].push(item);
+  }
+  
+  // Build CRM section
+  if (itemsByType.crm) {
+    const crmItems = itemsByType.crm;
+    const summary = crmItems.find(i => i.subType === 'summary');
+    const hotLeads = crmItems.filter(i => i.subType === 'hotLead');
+    
+    if (summary) {
+      const data = summary.data as { totalLeads: number; totalContacts: number; totalCustomers: number; totalPipelineValue: number; leadsByStage: Record<string, number> };
+      sections.push(`## CRM Overview
+- Total Leads: ${data.totalLeads}
+- Pipeline Value: ${formatNumber(data.totalPipelineValue)}
+- Contacts: ${data.totalContacts}
+- Organizations: ${data.totalCustomers}`);
+    }
+    
+    if (hotLeads.length > 0) {
+      sections.push(`### Hot Leads (Ready to Close)
+${hotLeads.map(l => {
+        const lead = l.data as { name: string; company?: string | null; stage: string; estimatedValue?: number | null };
+        return `- ${lead.name}${lead.company ? ` (${lead.company})` : ''} - ${lead.stage}${lead.estimatedValue ? ` - ${formatNumber(lead.estimatedValue)}` : ''}`;
+      }).join('\n')}`);
+    }
+  }
+  
+  // Build Calendar section
+  if (itemsByType.calendar) {
+    const calItems = itemsByType.calendar;
+    const summary = calItems.find(i => i.subType === 'summary');
+    const events = calItems.filter(i => i.subType === 'event');
+    
+    if (summary) {
+      const data = summary.data as { todayEventCount: number; thisWeekEventCount: number };
+      sections.push(`## Calendar
+- Events today: ${data.todayEventCount}
+- Events this week: ${data.thisWeekEventCount}`);
+    }
+    
+    if (events.length > 0) {
+      sections.push(`### Upcoming Events
+${events.slice(0, 3).map(e => {
+        const event = e.data as { title: string; startTime: Date };
+        return `- ${event.title} - ${formatDate(new Date(event.startTime))} at ${formatTime(new Date(event.startTime))}`;
+      }).join('\n')}`);
+    }
+  }
+  
+  // Build Tasks section
+  if (itemsByType.task) {
+    const taskItems = itemsByType.task;
+    const summary = taskItems.find(i => i.subType === 'summary');
+    const tasks = taskItems.filter(i => i.subType !== 'summary');
+    
+    if (summary) {
+      const data = summary.data as { pendingTasks: number; overdueTasks: number };
+      sections.push(`## Tasks
+- Pending: ${data.pendingTasks}
+- Overdue: ${data.overdueTasks}${data.overdueTasks > 0 ? ' ⚠️' : ''}`);
+    }
+    
+    if (tasks.length > 0) {
+      sections.push(`### High Priority
+${tasks.slice(0, 3).map(t => {
+        const task = t.data as { title: string; priority: string; dueDate?: Date | null };
+        return `- ${task.title} (${task.priority})${task.dueDate ? ` - due ${formatDate(new Date(task.dueDate))}` : ''}`;
+      }).join('\n')}`);
+    }
+  }
+  
+  // Build Agents section
+  if (itemsByType.agent) {
+    const agentItems = itemsByType.agent;
+    const summary = agentItems.find(i => i.subType === 'summary');
+    
+    if (summary) {
+      const data = summary.data as { activeAgents: number; totalExecutions: number };
+      sections.push(`## AI Agents
+- Active agents: ${data.activeAgents}
+- Total executions: ${data.totalExecutions}`);
+    }
+  }
+  
+  // Build Marketing section
+  if (itemsByType.marketing) {
+    const marketingItems = itemsByType.marketing;
+    const summary = marketingItems.find(i => i.subType === 'summary');
+    
+    if (summary) {
+      const data = summary.data as { totalCampaigns: number; activeCampaigns: number; campaignStats: { avgOpenRate: string; avgClickRate: string; topChannel: string } };
+      sections.push(`## Marketing Overview
+- Total Campaigns: ${data.totalCampaigns}
+- Active: ${data.activeCampaigns}
+- Avg Open Rate: ${data.campaignStats.avgOpenRate}
+- Top Channel: ${data.campaignStats.topChannel}`);
+    }
+  }
+  
+  // Build Finance section  
+  if (itemsByType.finance) {
+    const financeItems = itemsByType.finance;
+    const summary = financeItems.find(i => i.subType === 'summary');
+    const overdueInvoices = financeItems.filter(i => i.subType === 'overdueInvoice');
+    
+    if (summary) {
+      const data = summary.data as { revenue: number; expenses: number; profit: number; outstandingInvoices: number };
+      sections.push(`## Finance
+- Revenue: ${formatNumber(data.revenue)}
+- Profit: ${formatNumber(data.profit)}
+- Outstanding: ${formatNumber(data.outstandingInvoices)}`);
+    }
+    
+    if (overdueInvoices.length > 0) {
+      sections.push(`### ⚠️ Overdue Invoices
+${overdueInvoices.map(i => {
+        const inv = i.data as { customer: string; amount: number };
+        return `- ${inv.customer}: ${formatNumber(inv.amount)}`;
+      }).join('\n')}`);
+    }
+  }
+  
+  // Build Insights section
+  if (itemsByType.insight) {
+    const insightItems = itemsByType.insight.slice(0, 3); // Limit to top 3
+    sections.push(`## Key Insights
+${insightItems.map((item, i) => {
+      const insight = item.data as { title: string; description: string; priority: number };
       const priorityEmoji = insight.priority >= 9 ? '🔴' : insight.priority >= 7 ? '🟡' : '🟢';
-      let actionsText = '';
-      if (insight.suggestedActions && insight.suggestedActions.length > 0) {
-        actionsText = `\n  Suggested: ${insight.suggestedActions.map(a => a.action).join(', ')}`;
-      }
-      return `${i + 1}. ${priorityEmoji} ${insight.title} - ${insight.description}${actionsText}`;
-    }).join('\n')}
-
-These are proactive suggestions based on your workspace activity. Consider mentioning them naturally in conversation if relevant.`);
+      return `${i + 1}. ${priorityEmoji} ${insight.title}`;
+    }).join('\n')}`);
   }
-
+  
   return sections.join('\n\n');
 }
 

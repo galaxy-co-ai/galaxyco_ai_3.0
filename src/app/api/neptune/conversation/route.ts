@@ -50,11 +50,11 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get messages
+    // Get messages (reduced from 100 to 30 for performance optimization)
     const messages = await db.query.aiMessages.findMany({
       where: eq(aiMessages.conversationId, conversationId),
       orderBy: [asc(aiMessages.createdAt)],
-      limit: 100, // Limit to last 100 messages
+      limit: 30, // Optimized: was 100, reduced to improve context gathering speed
     });
 
     return NextResponse.json({
@@ -105,11 +105,11 @@ export async function POST(request: Request) {
       });
 
       if (existingConversation) {
-        // Get messages for this conversation
+        // Get messages for this conversation (optimized limit)
         const messages = await db.query.aiMessages.findMany({
           where: eq(aiMessages.conversationId, existingConversationId),
           orderBy: [asc(aiMessages.createdAt)],
-          limit: 100,
+          limit: 30, // Optimized: was 100
         });
 
         logger.debug("[Neptune API] Returning existing conversation", {
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
       const messages = await db.query.aiMessages.findMany({
         where: eq(aiMessages.conversationId, recentConversation.id),
         orderBy: [asc(aiMessages.createdAt)],
-        limit: 100,
+        limit: 30, // Optimized: was 100
       });
 
       logger.debug("[Neptune API] Returning recent conversation", {
