@@ -33,6 +33,7 @@ export interface SendMessageOptions {
   from?: string; // Optional custom from address
   mediaUrls?: string[]; // For MMS/WhatsApp media
   replyToMessageId?: string; // For threading
+  workspaceId?: string; // For multi-tenant phone number routing
 }
 
 export interface SendMessageResult {
@@ -45,6 +46,29 @@ export interface SendMessageResult {
  * Send a message through the appropriate channel
  */
 export async function sendMessage(options: SendMessageOptions): Promise<SendMessageResult> {
+  // For SMS/WhatsApp/Call: fetch workspace's dedicated phone number
+  if (['sms', 'whatsapp', 'call'].includes(options.channel) && options.workspaceId && !options.from) {
+    try {
+      const { db } = await import('@/lib/db');
+      const { workspacePhoneNumbers } = await import('@/db/schema');
+      const { eq } = await import('drizzle-orm');
+
+      // Fetch workspace's phone number
+      const phoneNumber = await db.query.workspacePhoneNumbers.findFirst({
+        where: eq(workspacePhoneNumbers.workspaceId, options.workspaceId),
+        columns: { phoneNumber: true },
+      });
+
+      // Use workspace number if found, otherwise falls back to platform number
+      if (phoneNumber?.phoneNumber) {
+        options.from = phoneNumber.phoneNumber;
+      }
+    } catch (error) {
+      logger.error('Failed to fetch workspace phone number', error);
+      // Continue with platform number as fallback
+    }
+  }
+
   switch (options.channel) {
     case 'email':
       return sendEmail(options);
@@ -198,6 +222,7 @@ async function sendSMS(options: SendMessageOptions): Promise<SendMessageResult> 
     const message = await signalwire.sendSMS({
       to: options.to,
       body: options.body,
+      from: options.from, // Use workspace's phone number
       mediaUrl: options.mediaUrls?.[0],
     });
 
@@ -222,6 +247,7 @@ async function sendWhatsApp(options: SendMessageOptions): Promise<SendMessageRes
     const message = await signalwire.sendWhatsApp({
       to: options.to,
       body: options.body,
+      from: options.from, // Use workspace's phone number
       mediaUrl: options.mediaUrls?.[0],
     });
 
@@ -248,6 +274,7 @@ async function initiateCall(options: SendMessageOptions): Promise<SendMessageRes
 
     const call = await signalwire.makeCall({
       to: options.to,
+      from: options.from, // Use workspace's phone number
       twiml,
     });
 

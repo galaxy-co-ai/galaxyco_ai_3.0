@@ -136,49 +136,58 @@ import { db } from '@/lib/db';
 import { workspaces, workspacePhoneNumbers } from '@/db/schema';
 
 export async function POST(req: Request) {
-  const { name, userId } = await req.json();
+  const { name, userId, plan } = await req.json(); // plan: 'starter' | 'pro' | 'enterprise'
   
   // 1. Create workspace
   const [workspace] = await db
     .insert(workspaces)
-    .values({ name, createdBy: userId })
+    .values({ name, createdBy: userId, plan: plan || 'starter' })
     .returning();
   
-  // 2. Auto-provision phone number
-  try {
-    const phoneNumber = await autoProvisionForWorkspace({
-      workspaceId: workspace.id,
-      workspaceName: workspace.name,
-      preferredAreaCode: '212', // Or let user choose during signup
-    });
-    
-    // 3. Save to database
-    await db.insert(workspacePhoneNumbers).values({
-      workspaceId: workspace.id,
-      phoneNumber: phoneNumber.phoneNumber,
-      phoneNumberSid: phoneNumber.sid,
-      friendlyName: phoneNumber.friendlyName,
-      capabilities: phoneNumber.capabilities,
-      voiceUrl: phoneNumber.voiceUrl,
-      smsUrl: phoneNumber.smsUrl,
-      statusCallbackUrl: phoneNumber.statusCallback,
-      monthlyCost: 100, // $1.00/mo per number
-    });
-    
-    return Response.json({
-      workspace,
-      phoneNumber: phoneNumber.phoneNumber,
-    });
-  } catch (error) {
-    // If provisioning fails, still create workspace but flag for manual setup
-    logger.error('Failed to auto-provision phone number', error);
-    
-    return Response.json({
-      workspace,
-      phoneNumber: null,
-      warning: 'Phone number provisioning failed. Contact support.',
-    });
+  // 2. Auto-provision phone number (ONLY for Pro/Enterprise)
+  if (plan === 'pro' || plan === 'enterprise') {
+    try {
+      const phoneNumber = await autoProvisionForWorkspace({
+        workspaceId: workspace.id,
+        workspaceName: workspace.name,
+        preferredAreaCode: '212', // Or let user choose during signup
+      });
+      
+      // 3. Save to database
+      await db.insert(workspacePhoneNumbers).values({
+        workspaceId: workspace.id,
+        phoneNumber: phoneNumber.phoneNumber,
+        phoneNumberSid: phoneNumber.sid,
+        friendlyName: phoneNumber.friendlyName,
+        capabilities: phoneNumber.capabilities,
+        voiceUrl: phoneNumber.voiceUrl,
+        smsUrl: phoneNumber.smsUrl,
+        statusCallbackUrl: phoneNumber.statusCallback,
+        monthlyCost: 100, // $1.00/mo per number
+      });
+      
+      return Response.json({
+        workspace,
+        phoneNumber: phoneNumber.phoneNumber,
+      });
+    } catch (error) {
+      // If provisioning fails, still create workspace but flag for manual setup
+      logger.error('Failed to auto-provision phone number', error);
+      
+      return Response.json({
+        workspace,
+        phoneNumber: null,
+        warning: 'Phone number provisioning failed. Contact support.',
+      });
+    }
   }
+  
+  // Starter plan: no dedicated number
+  return Response.json({
+    workspace,
+    phoneNumber: null,
+    note: 'Upgrade to Pro for dedicated phone number',
+  });
 }
 ```
 
@@ -299,24 +308,23 @@ export async function POST(req: Request) {
 
 ### **Your Pricing Strategy:**
 
-**Option 1: Include in subscription tiers**
+**Plan Tiers:**
 ```
-Free:  No dedicated number (uses platform number)
-Pro:   1 dedicated number included ($49/mo)
-Enterprise: Unlimited numbers ($199/mo)
-```
-
-**Option 2: Add-on pricing**
-```
-Dedicated Phone Number: $5/mo (you pay $1, keep $4 profit)
-Additional Numbers: $5/mo each
+Starter:    No dedicated number (shares platform number) - FREE or $9/mo
+Pro:        1 dedicated number included - $49/mo
+Enterprise: 1 dedicated number + ability to add more - $199/mo
 ```
 
-**Option 3: Usage-based**
+**Additional Numbers (Enterprise only):**
 ```
-Number rental: $2/mo
-SMS: $0.015 each (you pay $0.0079, markup 89%)
-Voice: $0.020/min (you pay $0.0085, markup 135%)
+Extra Phone Numbers: $5/mo each
+(You pay $1/mo to SignalWire, keep $4/mo profit per number)
+```
+
+**Usage Costs (All plans with numbers):**
+```
+SMS: Included up to limit, then $0.015 each (you pay $0.0079, markup 89%)
+Voice: Included up to limit, then $0.020/min (you pay $0.0085, markup 135%)
 ```
 
 ---
@@ -601,10 +609,19 @@ async function provisionExistingWorkspaces() {
 - ✅ Profitable (charge $5/mo, costs you $1/mo)
 
 ### **Cost Example:**
-- 1000 workspaces with dedicated numbers
-- Your cost: $1,000/mo
-- Your revenue: $5,000/mo (at $5/workspace)
-- **Profit: $4,000/mo** 💰
+```
+Plan Distribution:
+- 500 Starter workspaces × $0 = $0/mo (no numbers)
+- 400 Pro workspaces × $49/mo = $19,600/mo revenue, $400/mo cost
+- 100 Enterprise workspaces × $199/mo = $19,900/mo revenue, $100/mo cost
+- 50 extra numbers (Enterprise) × $5/mo = $250/mo revenue, $50/mo cost
+
+Total Revenue: $39,750/mo
+Total Phone Costs: $550/mo
+Phone Number Profit: $39,200/mo 💰
+
+(Plus SMS/voice usage markup revenue on top!)
+```
 
 ---
 

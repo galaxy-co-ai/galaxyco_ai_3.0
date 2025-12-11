@@ -73,6 +73,7 @@ function getClient() {
 export interface SendMessageParams {
   to: string;
   body: string;
+  from?: string; // Optional - defaults to platform number
   mediaUrl?: string;
   statusCallback?: string;
 }
@@ -97,11 +98,12 @@ export async function sendSMS(params: SendMessageParams): Promise<SignalWireMess
   if (!config) throw new Error('SignalWire not configured');
 
   const client = getClient();
+  const fromNumber = params.from || config.phoneNumber;
 
-  logger.info('Sending SMS via SignalWire', { to: params.to, bodyLength: params.body.length });
+  logger.info('Sending SMS via SignalWire', { to: params.to, from: fromNumber, bodyLength: params.body.length });
 
   const message = await client.messages.create({
-    from: config.phoneNumber,
+    from: fromNumber,
     to: params.to,
     body: params.body,
     ...(params.mediaUrl && { mediaUrl: [params.mediaUrl] }),
@@ -118,12 +120,13 @@ export async function sendWhatsApp(params: SendMessageParams): Promise<SignalWir
   const config = getSignalWireConfig();
   if (!config) throw new Error('SignalWire not configured');
 
-  const fromNumber = config.whatsappNumber || `whatsapp:${config.phoneNumber}`;
+  const baseNumber = params.from || config.phoneNumber;
+  const fromNumber = config.whatsappNumber || `whatsapp:${baseNumber}`;
   const toNumber = params.to.startsWith('whatsapp:') ? params.to : `whatsapp:${params.to}`;
 
   const client = getClient();
 
-  logger.info('Sending WhatsApp via SignalWire', { to: params.to, bodyLength: params.body.length });
+  logger.info('Sending WhatsApp via SignalWire', { to: params.to, from: fromNumber, bodyLength: params.body.length });
 
   const message = await client.messages.create({
     from: fromNumber,
@@ -151,6 +154,7 @@ export async function getMessageStatus(messageSid: string): Promise<SignalWireMe
 
 export interface MakeCallParams {
   to: string;
+  from?: string; // Optional - defaults to platform number
   twiml?: string;
   url?: string;
   statusCallback?: string;
@@ -177,11 +181,12 @@ export async function makeCall(params: MakeCallParams): Promise<SignalWireCall> 
   if (!config) throw new Error('SignalWire not configured');
 
   const client = getClient();
+  const fromNumber = params.from || config.phoneNumber;
 
-  logger.info('Initiating call via SignalWire', { to: params.to });
+  logger.info('Initiating call via SignalWire', { to: params.to, from: fromNumber });
 
   const call = await client.calls.create({
-    from: config.phoneNumber,
+    from: fromNumber,
     to: params.to,
     ...(params.twiml && { twiml: params.twiml }),
     ...(params.url && { url: params.url }),
@@ -192,6 +197,10 @@ export async function makeCall(params: MakeCallParams): Promise<SignalWireCall> 
 
   return call as SignalWireCall;
 }
+
+/**
+ * Get call details
+ */
 
 /**
  * Get call details

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { db } from '@/lib/db';
-import { users, workspaces, workspaceMembers } from '@/db/schema';
+import { users, workspaces, workspaceMembers, workspacePhoneNumbers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { autoProvisionForWorkspace } from '@/lib/phone-numbers';
 
 /**
  * Clerk Webhook Handler
@@ -161,6 +162,43 @@ export async function POST(request: NextRequest) {
             isActive: true,
           });
 
+          // Auto-provision phone number for Pro/Enterprise tiers
+          // Starter plan uses platform's shared number
+          if (newWorkspace.subscriptionTier === 'professional' || newWorkspace.subscriptionTier === 'enterprise') {
+            try {
+              const provisionedNumber = await autoProvisionForWorkspace({
+                workspaceId: newWorkspace.id,
+                workspaceName: newWorkspace.name,
+              });
+
+              // Store phone number in database
+              await db.insert(workspacePhoneNumbers).values({
+                workspaceId: newWorkspace.id,
+                phoneNumber: provisionedNumber.phoneNumber,
+                phoneNumberSid: provisionedNumber.sid,
+                friendlyName: provisionedNumber.friendlyName,
+                capabilities: provisionedNumber.capabilities,
+                voiceUrl: provisionedNumber.voiceUrl,
+                smsUrl: provisionedNumber.smsUrl,
+                statusCallbackUrl: provisionedNumber.statusCallback,
+                numberType: 'primary',
+                monthlyCost: 100, // $1.00 in cents
+              });
+
+              logger.info('Phone number provisioned for workspace', {
+                workspaceId: newWorkspace.id,
+                phoneNumber: provisionedNumber.phoneNumber,
+                tier: newWorkspace.subscriptionTier,
+              });
+            } catch (error) {
+              // Don't fail workspace creation if phone provisioning fails
+              // User can provision manually later
+              logger.error('Failed to provision phone number', error instanceof Error ? error : new Error(String(error)), {
+                workspaceId: newWorkspace.id,
+              });
+            }
+          }
+
           logger.info('User workspace created', { 
             userId: upsertedUser.id, 
             workspaceId: newWorkspace.id,
@@ -228,6 +266,38 @@ export async function POST(request: NextRequest) {
               workspaceId: newWorkspace.id,
               role: 'owner',
               isActive: true,
+            });
+          }
+        }
+
+        // Auto-provision phone number for Pro/Enterprise org workspaces
+        if (newWorkspace.subscriptionTier === 'professional' || newWorkspace.subscriptionTier === 'enterprise') {
+          try {
+            const provisionedNumber = await autoProvisionForWorkspace({
+              workspaceId: newWorkspace.id,
+              workspaceName: newWorkspace.name,
+            });
+
+            await db.insert(workspacePhoneNumbers).values({
+              workspaceId: newWorkspace.id,
+              phoneNumber: provisionedNumber.phoneNumber,
+              phoneNumberSid: provisionedNumber.sid,
+              friendlyName: provisionedNumber.friendlyName,
+              capabilities: provisionedNumber.capabilities,
+              voiceUrl: provisionedNumber.voiceUrl,
+              smsUrl: provisionedNumber.smsUrl,
+              statusCallbackUrl: provisionedNumber.statusCallback,
+              numberType: 'primary',
+              monthlyCost: 100,
+            });
+
+            logger.info('Phone number provisioned for organization workspace', {
+              workspaceId: newWorkspace.id,
+              phoneNumber: provisionedNumber.phoneNumber,
+            });
+          } catch (error) {
+            logger.error('Failed to provision phone number for org', error instanceof Error ? error : new Error(String(error)), {
+              workspaceId: newWorkspace.id,
             });
           }
         }

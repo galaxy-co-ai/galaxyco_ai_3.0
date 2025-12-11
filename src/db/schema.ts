@@ -4004,6 +4004,63 @@ export const conversationParticipants = pgTable(
 );
 
 // ============================================================================
+// WORKSPACE PHONE NUMBERS - SignalWire Integration
+// ============================================================================
+
+export const workspacePhoneNumbers = pgTable(
+  'workspace_phone_numbers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    
+    // SignalWire phone number details
+    phoneNumber: text('phone_number').notNull().unique(), // +14055551234
+    phoneNumberSid: text('phone_number_sid').notNull(), // SignalWire SID
+    friendlyName: text('friendly_name'), // "Acme Inc - Main"
+    
+    // Capabilities
+    capabilities: jsonb('capabilities')
+      .$type<{
+        voice: boolean;
+        sms: boolean;
+        mms: boolean;
+        fax?: boolean;
+      }>()
+      .notNull(),
+    
+    // Webhook configuration
+    voiceUrl: text('voice_url'),
+    smsUrl: text('sms_url'),
+    statusCallbackUrl: text('status_callback_url'),
+    
+    // Status
+    status: text('status').notNull().default('active'), // 'active' | 'suspended' | 'released'
+    
+    // Type (for multi-number workspaces - Enterprise feature)
+    numberType: text('number_type').notNull().default('primary'), // 'primary' | 'support' | 'sales' | 'custom'
+    
+    // Cost tracking
+    monthlyCost: integer('monthly_cost_cents').notNull().default(100), // $1.00/mo in cents
+    
+    // Metadata
+    provisionedAt: timestamp('provisioned_at').notNull().defaultNow(),
+    releasedAt: timestamp('released_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    workspaceIdx: index('workspace_phone_workspace_idx').on(table.workspaceId),
+    phoneNumberIdx: uniqueIndex('workspace_phone_number_idx').on(table.phoneNumber),
+    statusIdx: index('workspace_phone_status_idx').on(table.status),
+    typeIdx: index('workspace_phone_type_idx').on(table.numberType),
+  })
+);
+
+// ============================================================================
 // TEAM MESSAGING - Internal Communication
 // ============================================================================
 
