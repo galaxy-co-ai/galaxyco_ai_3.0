@@ -308,3 +308,52 @@ export async function verifyCredentials(): Promise<boolean> {
     return false;
   }
 }
+
+// ============================================================================
+// Phone Number Management
+// ============================================================================
+
+/**
+ * Release/delete a phone number from SignalWire
+ */
+export async function releasePhoneNumber(phoneNumberSid: string): Promise<void> {
+  const client = getClient();
+  
+  logger.info('Releasing phone number from SignalWire', { phoneNumberSid });
+  
+  try {
+    await client.incomingPhoneNumbers(phoneNumberSid).remove();
+    logger.info('Phone number released successfully', { phoneNumberSid });
+  } catch (error: any) {
+    logger.error('Failed to release phone number', { phoneNumberSid, error: error.message });
+    throw new Error(`Failed to release phone number: ${error.message}`);
+  }
+}
+
+/**
+ * Update phone number webhooks and settings
+ */
+export async function updatePhoneNumberWebhooks(
+  phoneNumberSid: string,
+  webhooks: {
+    smsUrl?: string;
+    voiceUrl?: string;
+    statusCallback?: string;
+  }
+): Promise<void> {
+  const client = getClient();
+  
+  logger.info('Updating phone number webhooks', { phoneNumberSid, webhooks });
+  
+  try {
+    await client.incomingPhoneNumbers(phoneNumberSid).update({
+      ...(webhooks.smsUrl && { smsUrl: webhooks.smsUrl }),
+      ...(webhooks.voiceUrl && { voiceUrl: webhooks.voiceUrl }),
+      ...(webhooks.statusCallback && { statusCallbackUrl: webhooks.statusCallback }),
+    });
+    logger.info('Phone number webhooks updated successfully', { phoneNumberSid });
+  } catch (error: any) {
+    logger.error('Failed to update phone number webhooks', { phoneNumberSid, error: error.message });
+    throw new Error(`Failed to update phone number: ${error.message}`);
+  }
+}
