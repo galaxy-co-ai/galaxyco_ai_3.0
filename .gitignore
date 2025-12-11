@@ -52,3 +52,10 @@ docs/status/SESSION_SUMMARY*.md
 docs/status/COMPLETION_SUMMARY*.md
 docs/status/AI_CONTEXT.md
 docs/status/sessions/
+
+# Internal scripts and utilities
+reorganize-docs.sh
+test-monitor.js
+ROLLBACK_IF_NEEDED.sh
+README_OLD.md
+_to-delete/
