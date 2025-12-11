@@ -185,143 +185,76 @@ async function sendEmailViaResend(options: SendMessageOptions): Promise<SendMess
 }
 
 /**
- * Send SMS via Twilio
+ * Send SMS via SignalWire
  */
 async function sendSMS(options: SendMessageOptions): Promise<SendMessageResult> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = options.from || process.env.TWILIO_PHONE_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
-    return { success: false, error: 'Twilio credentials not configured' };
-  }
-
   try {
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          From: fromNumber,
-          To: options.to,
-          Body: options.body,
-          ...(options.mediaUrls?.length ? { MediaUrl: options.mediaUrls[0] } : {}),
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      logger.error('Twilio SMS send error', error);
-      return { success: false, error: `Twilio error: ${error.message}` };
+    const signalwire = await import('@/lib/signalwire');
+    
+    if (!signalwire.isSignalWireConfigured()) {
+      return { success: false, error: 'SignalWire credentials not configured' };
     }
 
-    const result = await response.json();
-    return { success: true, externalId: result.sid };
+    const message = await signalwire.sendSMS({
+      to: options.to,
+      body: options.body,
+      mediaUrl: options.mediaUrls?.[0],
+    });
+
+    return { success: true, externalId: message.sid };
   } catch (error) {
-    logger.error('Twilio SMS send exception', error);
-    return { success: false, error: 'Failed to send SMS via Twilio' };
+    logger.error('SignalWire SMS send exception', error);
+    return { success: false, error: 'Failed to send SMS via SignalWire' };
   }
 }
 
 /**
- * Send WhatsApp message via Twilio
+ * Send WhatsApp message via SignalWire
  */
 async function sendWhatsApp(options: SendMessageOptions): Promise<SendMessageResult> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = options.from || process.env.TWILIO_WHATSAPP_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
-    return { success: false, error: 'Twilio WhatsApp credentials not configured' };
-  }
-
-  // Ensure WhatsApp format
-  const toNumber = options.to.startsWith('whatsapp:') ? options.to : `whatsapp:${options.to}`;
-  const fromWhatsApp = fromNumber.startsWith('whatsapp:') ? fromNumber : `whatsapp:${fromNumber}`;
-
   try {
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          From: fromWhatsApp,
-          To: toNumber,
-          Body: options.body,
-          ...(options.mediaUrls?.length ? { MediaUrl: options.mediaUrls[0] } : {}),
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      logger.error('Twilio WhatsApp send error', error);
-      return { success: false, error: `Twilio WhatsApp error: ${error.message}` };
+    const signalwire = await import('@/lib/signalwire');
+    
+    if (!signalwire.isSignalWireConfigured()) {
+      return { success: false, error: 'SignalWire WhatsApp credentials not configured' };
     }
 
-    const result = await response.json();
-    return { success: true, externalId: result.sid };
+    const message = await signalwire.sendWhatsApp({
+      to: options.to,
+      body: options.body,
+      mediaUrl: options.mediaUrls?.[0],
+    });
+
+    return { success: true, externalId: message.sid };
   } catch (error) {
-    logger.error('Twilio WhatsApp send exception', error);
-    return { success: false, error: 'Failed to send WhatsApp message via Twilio' };
+    logger.error('SignalWire WhatsApp send exception', error);
+    return { success: false, error: 'Failed to send WhatsApp message via SignalWire' };
   }
 }
 
 /**
- * Initiate a phone call via Twilio
+ * Initiate a phone call via SignalWire
  */
 async function initiateCall(options: SendMessageOptions): Promise<SendMessageResult> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = options.from || process.env.TWILIO_PHONE_NUMBER;
-
-  if (!accountSid || !authToken || !fromNumber) {
-    return { success: false, error: 'Twilio credentials not configured' };
-  }
-
-  // TwiML to say the message body
-  const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Say voice="alice">${options.body}</Say>
-</Response>`;
-
   try {
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          From: fromNumber,
-          To: options.to,
-          Twiml: twiml,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      logger.error('Twilio call initiate error', error);
-      return { success: false, error: `Twilio call error: ${error.message}` };
+    const signalwire = await import('@/lib/signalwire');
+    
+    if (!signalwire.isSignalWireConfigured()) {
+      return { success: false, error: 'SignalWire credentials not configured' };
     }
 
-    const result = await response.json();
-    return { success: true, externalId: result.sid };
+    // TwiML to say the message body
+    const twiml = signalwire.TwiML.say(options.body);
+
+    const call = await signalwire.makeCall({
+      to: options.to,
+      twiml,
+    });
+
+    return { success: true, externalId: call.sid };
   } catch (error) {
-    logger.error('Twilio call initiate exception', error);
-    return { success: false, error: 'Failed to initiate call via Twilio' };
+    logger.error('SignalWire call initiate exception', error);
+    return { success: false, error: 'Failed to initiate call via SignalWire' };
   }
 }
 
@@ -336,48 +269,36 @@ export async function getMessageStatus(
     case 'sms':
     case 'whatsapp':
     case 'call':
-      return getTwilioMessageStatus(externalId);
+      return getSignalWireMessageStatus(externalId);
     default:
       return { status: 'unknown', error: 'Status check not supported for this channel' };
   }
 }
 
 /**
- * Get Twilio message/call status
+ * Get SignalWire message/call status
  */
-async function getTwilioMessageStatus(
+async function getSignalWireMessageStatus(
   sid: string
 ): Promise<{ status: string; error?: string }> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-
-  if (!accountSid || !authToken) {
-    return { status: 'unknown', error: 'Twilio credentials not configured' };
-  }
-
   try {
-    // Try messages first, then calls
-    const endpoints = [
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages/${sid}.json`,
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls/${sid}.json`,
-    ];
-
-    for (const url of endpoints) {
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        return { status: result.status };
-      }
+    const signalwire = await import('@/lib/signalwire');
+    
+    if (!signalwire.isSignalWireConfigured()) {
+      return { status: 'unknown', error: 'SignalWire credentials not configured' };
     }
 
-    return { status: 'unknown', error: 'Message not found' };
+    // Try to get message status
+    try {
+      const message = await signalwire.getMessageStatus(sid);
+      return { status: message.status };
+    } catch {
+      // Try to get call status
+      const call = await signalwire.getCallDetails(sid);
+      return { status: call.status };
+    }
   } catch (error) {
-    logger.error('Twilio status check error', error);
+    logger.error('SignalWire status check error', error);
     return { status: 'unknown', error: 'Failed to check status' };
   }
 }

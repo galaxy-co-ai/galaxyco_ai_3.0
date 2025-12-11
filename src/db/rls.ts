@@ -9,7 +9,7 @@
  * ALL queries MUST respect workspace_id boundaries. RLS provides defense-in-depth.
  */
 
-import { db } from './db';
+import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 
 /**
@@ -48,7 +48,8 @@ export async function getWorkspaceContext(): Promise<string | null> {
     SELECT current_setting('app.current_workspace_id', true) as workspace_id;
   `);
   
-  return result.rows[0]?.workspace_id || null;
+  const workspaceId = result.rows[0]?.workspace_id;
+  return typeof workspaceId === 'string' ? workspaceId : null;
 }
 
 /**

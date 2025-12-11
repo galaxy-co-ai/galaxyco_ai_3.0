@@ -34,27 +34,27 @@ export function getChannelStatus(): Record<string, { configured: boolean; provid
     },
     sms: {
       configured: !!(
-        process.env.TWILIO_ACCOUNT_SID &&
-        process.env.TWILIO_AUTH_TOKEN &&
-        process.env.TWILIO_PHONE_NUMBER
+        process.env.SIGNALWIRE_PROJECT_ID &&
+        process.env.SIGNALWIRE_TOKEN &&
+        process.env.SIGNALWIRE_PHONE_NUMBER
       ),
-      provider: 'Twilio',
+      provider: 'SignalWire',
     },
     whatsapp: {
       configured: !!(
-        process.env.TWILIO_ACCOUNT_SID &&
-        process.env.TWILIO_AUTH_TOKEN &&
-        process.env.TWILIO_WHATSAPP_NUMBER
+        process.env.SIGNALWIRE_PROJECT_ID &&
+        process.env.SIGNALWIRE_TOKEN &&
+        process.env.SIGNALWIRE_WHATSAPP_NUMBER
       ),
-      provider: 'Twilio',
+      provider: 'SignalWire',
     },
     call: {
       configured: !!(
-        process.env.TWILIO_ACCOUNT_SID &&
-        process.env.TWILIO_AUTH_TOKEN &&
-        process.env.TWILIO_PHONE_NUMBER
+        process.env.SIGNALWIRE_PROJECT_ID &&
+        process.env.SIGNALWIRE_TOKEN &&
+        process.env.SIGNALWIRE_PHONE_NUMBER
       ),
-      provider: 'Twilio',
+      provider: 'SignalWire',
     },
     social: {
       configured: false,
@@ -76,9 +76,9 @@ export const CHANNEL_ENV_VARS = {
     postmark: ['POSTMARK_API_KEY', 'POSTMARK_FROM_EMAIL'],
     resend: ['RESEND_API_KEY', 'RESEND_FROM_EMAIL'],
   },
-  sms: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER'],
-  whatsapp: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_WHATSAPP_NUMBER'],
-  call: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER'],
+  sms: ['SIGNALWIRE_PROJECT_ID', 'SIGNALWIRE_TOKEN', 'SIGNALWIRE_PHONE_NUMBER'],
+  whatsapp: ['SIGNALWIRE_PROJECT_ID', 'SIGNALWIRE_TOKEN', 'SIGNALWIRE_WHATSAPP_NUMBER'],
+  call: ['SIGNALWIRE_PROJECT_ID', 'SIGNALWIRE_TOKEN', 'SIGNALWIRE_PHONE_NUMBER'],
   social: [],
   live_chat: [],
 };
