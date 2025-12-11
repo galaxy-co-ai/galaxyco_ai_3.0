@@ -10,6 +10,8 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const repoRoot = path.join(__dirname, '..');
+
 // Helper to run shell commands safely
 function exec(command) {
   try {
@@ -19,9 +21,100 @@ function exec(command) {
   }
 }
 
+function readJson(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function normalizeVersion(version) {
+  if (typeof version !== 'string') {
+    return null;
+  }
+
+  const trimmed = version.trim();
+  const firstDigit = trimmed.search(/[0-9]/);
+  if (firstDigit === -1) {
+    return trimmed;
+  }
+
+  return trimmed.slice(firstDigit);
+}
+
+function countMarkdownFiles(dirPath) {
+  let count = 0;
+
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        count += countMarkdownFiles(fullPath);
+        continue;
+      }
+
+      if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+        count += 1;
+      }
+    }
+  } catch {
+    // Ignore missing directories or permission issues
+  }
+
+  return count;
+}
+
+function getDependencyVersion(allDeps, name) {
+  const raw = allDeps?.[name];
+  return normalizeVersion(raw) ?? null;
+}
+
 // Get current date/time
 const now = new Date().toISOString();
 const dateOnly = now.split('T')[0];
+
+// Read package.json for an accurate stack snapshot
+const packageJson = readJson(path.join(repoRoot, 'package.json')) ?? {};
+const allDeps = {
+  ...(packageJson.dependencies ?? {}),
+  ...(packageJson.devDependencies ?? {}),
+};
+
+const versions = {
+  next: getDependencyVersion(allDeps, 'next'),
+  react: getDependencyVersion(allDeps, 'react'),
+  typescript: getDependencyVersion(allDeps, 'typescript'),
+  tailwind: getDependencyVersion(allDeps, 'tailwindcss'),
+  drizzleOrm: getDependencyVersion(allDeps, 'drizzle-orm'),
+  clerk: getDependencyVersion(allDeps, '@clerk/nextjs'),
+  nextAuth: getDependencyVersion(allDeps, 'next-auth'),
+  upstashRedis: getDependencyVersion(allDeps, '@upstash/redis'),
+  upstashVector: getDependencyVersion(allDeps, '@upstash/vector'),
+  trigger: getDependencyVersion(allDeps, '@trigger.dev/sdk'),
+  stripe: getDependencyVersion(allDeps, 'stripe'),
+  sentry: getDependencyVersion(allDeps, '@sentry/nextjs'),
+};
+
+const authProvider = versions.clerk ? 'Clerk' : versions.nextAuth ? 'NextAuth' : 'Unknown';
+
+const techStackParts = [
+  versions.next ? `Next.js ${versions.next}` : 'Next.js',
+  versions.react ? `React ${versions.react}` : 'React',
+  versions.typescript ? `TypeScript ${versions.typescript}` : 'TypeScript',
+  versions.tailwind ? `Tailwind CSS ${versions.tailwind}` : 'Tailwind CSS',
+  authProvider !== 'Unknown' ? `${authProvider} Auth` : 'Auth',
+  versions.drizzleOrm ? `Drizzle ORM ${versions.drizzleOrm}` : 'Drizzle ORM',
+  'Neon Postgres',
+  versions.upstashRedis || versions.upstashVector ? 'Upstash (Redis/Vector)' : null,
+  versions.trigger ? 'Trigger.dev' : null,
+  versions.stripe ? 'Stripe' : null,
+  versions.sentry ? 'Sentry' : null,
+].filter(Boolean);
+
+const techStackLine = techStackParts.join(', ');
 
 // Get git info
 const currentBranch = exec('git branch --show-current');
@@ -40,43 +133,46 @@ let tsHealth = '⏳ Checking...';
 try {
   execSync('npm run typecheck --silent', { stdio: 'pipe' });
   tsHealth = '✅ 0 errors';
-} catch (error) {
+} catch {
   tsHealth = '❌ Has errors';
 }
 
-// Check ESLint warnings count (from last run, don't run full lint here)
-let eslintHealth = '🟡 899 warnings (non-blocking)';
+// Keep lint/build/tests fast: do not run them in this generator
+const eslintHealth = '🟡 Not checked by generator';
+const buildHealth = '🟡 Not checked by generator';
+const testHealth = '🟡 Not checked by generator';
+const depsHealth = '🟡 Not checked by generator';
 
-// Count markdown files in docs
-const docsCount = exec('find docs -name "*.md" -type f | wc -l');
+// Count markdown files in docs (cross-platform)
+const docsCount = countMarkdownFiles(path.join(repoRoot, 'docs'));
 
 // Build the context file
 const contextContent = `# AI Agent Context - GalaxyCo.ai 3.0
 
 **Last Updated:** ${now}  
-**Commit:** ${currentCommit} on ${currentBranch}  
-**Last Commit:** ${lastCommitDate}
+**Git Branch:** ${currentBranch}  
+**Git HEAD (at generation):** ${currentCommit}  
+**Last Commit Date:** ${lastCommitDate}
 
 ---
 
 ## 🎯 Quick Summary (100 words)
 
-Production SaaS platform for AI-powered business automation. Built with Next.js 15 + TypeScript + Drizzle ORM + Neon Postgres. Clean architecture with 0 TypeScript errors, comprehensive documentation, and organized component structure. Recently completed Phase 1-6 cleanup: documentation organization, dependency cleanup (removed 66 packages), React hooks fixes, and directory consolidation. Site is production-ready and actively maintained. Ready for feature development.
+Production SaaS platform for AI-powered business automation. Built with Next.js (App Router) + React + TypeScript + Tailwind. Data layer uses Drizzle ORM with Neon Postgres. Authentication is handled by ${authProvider}. Key integrations include Upstash (Redis/Vector), Trigger.dev background jobs, Stripe billing, and Sentry monitoring (where configured). Repo contains extensive documentation under \`docs/\` and a broad API surface under \`src/app/api/\`.
 
-**Tech Stack:** Next.js 15, TypeScript, Tailwind CSS, Radix UI, Drizzle ORM, Neon (Postgres), Redis, Trigger.dev, Stripe, NextAuth
+**Tech Stack:** ${techStackLine}
 
 ---
 
 ## 📊 Current Health
 
-| Metric | Status | Details |
-|--------|--------|---------|
-| **TypeScript** | ${tsHealth} | Strict mode enabled |
-| **ESLint** | ${eslintHealth} | Mostly unused vars |
-| **Build** | ✅ Successful | 158 pages generated |
-| **Tests** | ✅ Passing | E2E + unit tests |
-| **Production** | ✅ Live | https://www.galaxyco.ai/ |
-| **Dependencies** | ✅ Clean | 1419 packages, no critical vulnerabilities |
+|| Metric | Status | Details |
+||--------|--------|---------|
+|| **TypeScript** | ${tsHealth} | \`npm run typecheck\` |
+|| **ESLint** | ${eslintHealth} | Run \`npm run lint\` |
+|| **Build** | ${buildHealth} | Run \`npm run build\` |
+|| **Tests** | ${testHealth} | Run \`npm test\` |
+|| **Dependencies** | ${depsHealth} | Run \`npm audit\` / \`npm outdated\` |
 
 ---
 
@@ -102,8 +198,8 @@ galaxyco-ai-3.0/
 │   ├── guides/             # Setup & tutorials
 │   └── archive/            # Historical docs
 ├── src/
-│   ├── app/                # Next.js 15 App Router
-│   ├── components/         # React components (22 directories)
+│   ├── app/                # Next.js App Router
+│   ├── components/         # React components
 │   ├── lib/                # Utilities & integrations
 │   └── types/              # TypeScript definitions
 └── tests/                  # E2E & unit tests
@@ -116,17 +212,17 @@ galaxyco-ai-3.0/
 **None blocking production.**
 
 Optional improvements:
-- 650 unused imports (ESLint warnings) - cosmetic only
-- 24 remaining React hooks violations - low priority
-- Console statements cleanup (53 occurrences)
+- ESLint warnings cleanup (unused imports/vars)
+- React hooks deps cleanup where flagged
+- Console statements cleanup (prefer \`logger\`)
 
 ---
 
 ## 🚀 Next Priorities
 
-1. **Feature Development** - Continue Content Cockpit Phase II
-2. **Performance** - Optional hooks cleanup when touching files
-3. **Monitoring** - Consider adding error tracking (Sentry)
+1. **Feature Development** - Continue shipping product features
+2. **Performance/Quality** - Incrementally reduce lint noise where touched
+3. **Observability** - Keep Sentry + metrics coverage current
 
 ---
 
@@ -153,21 +249,21 @@ Optional improvements:
 ## 🏗️ Architecture Highlights
 
 ### Current Tech Decisions
-- **Frontend:** Next.js 15 (App Router), React 18, TypeScript strict mode
+- **Frontend:** Next.js App Router, React, TypeScript strict mode
 - **Styling:** Tailwind CSS utilities only (no CSS modules/inline styles)
 - **UI Components:** Radix UI primitives + shadcn/ui patterns
-- **State:** Zustand (global), React Context (feature-specific), SWR (data fetching)
-- **Database:** Neon Postgres via Drizzle ORM
-- **Caching:** Redis (Upstash)
-- **Auth:** NextAuth v5
+- **Data:** Drizzle ORM + Neon Postgres
+- **Caching/Search:** Upstash (Redis/Vector)
+- **Auth:** ${authProvider}
 - **Payments:** Stripe
 - **Background Jobs:** Trigger.dev
+- **Monitoring:** Sentry
 
 ### Key Patterns
 - Server Components by default, Client Components when needed
 - Zod validation for all user inputs
 - Error boundaries around features
-- TypeScript: No \`any\` types, all props typed
+- TypeScript: Prefer \`unknown\` over \`any\`; type everything
 - Git: Conventional Commits (feat, fix, refactor, docs, chore)
 
 ---
@@ -176,7 +272,7 @@ Optional improvements:
 
 **ALWAYS:**
 - ✅ Work on a branch (never directly on main)
-- ✅ Test after every change (typecheck, build, lint)
+- ✅ Test after changes (typecheck, build, lint)
 - ✅ Commit incrementally with descriptive messages
 - ✅ Follow existing patterns and conventions
 - ✅ Read ORGANIZATION_GUIDELINES.md before major changes
@@ -185,28 +281,7 @@ Optional improvements:
 - ❌ Delete files without verification (move to _archive/ instead)
 - ❌ Change imports without exhaustive grep
 - ❌ Skip build verification after code changes
-- ❌ Use \`any\` type in TypeScript
 - ❌ Hard-code secrets (use environment variables)
-
----
-
-## 📊 Recent Milestones
-
-- **2025-12-10:** Phase 1-6 cleanup complete
-  - Documentation organized (28 files → structured)
-  - Dependencies cleaned (removed 66 packages, -1.13 MB)
-  - React hooks fixed (2 critical stale closure bugs)
-  - Directory consolidation (no more dashboard-v2)
-  
-- **2025-12-09:** Content Cockpit Phase I complete
-  - Article Studio shipped
-  - Analytics dashboard functional
-  - Use case management live
-
-- **2025-12-06:** Production deployment stabilized
-  - Landing page polished with HD screenshots
-  - Dashboard real-time updates working
-  - Authentication flow hardened
 
 ---
 
