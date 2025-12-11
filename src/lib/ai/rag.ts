@@ -10,6 +10,7 @@ import { knowledgeItems } from '@/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { searchKnowledge, isVectorConfigured } from '@/lib/vector';
 import { logger } from '@/lib/logger';
+import { trackCacheHit } from '@/lib/observability';
 
 // ============================================================================
 // TYPES
@@ -177,6 +178,9 @@ export async function searchKnowledgeBase(
       resultsCount: filteredResults.length,
       topScore: filteredResults[0]?.score || 0,
     });
+
+    // Note: RAG result count is now tracked in the AI chat endpoint
+    // via the ragResultsCount variable, not here to avoid double tracking
 
     return {
       results: filteredResults,

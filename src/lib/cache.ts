@@ -1,5 +1,6 @@
 import { redis, shouldUseRedis, markRedisHealthy, markRedisUnhealthy } from '@/lib/upstash';
 import { logger } from '@/lib/logger';
+import { trackCacheHit, type CacheType } from '@/lib/observability';
 
 /**
  * Redis Cache Helper Utilities
@@ -182,16 +183,42 @@ export async function invalidateCachePattern(
 
 /**
  * Get or set cached data (cache-aside pattern)
+ * Now includes observability tracking for cache hits/misses
  */
 export async function getCacheOrFetch<T>(
   key: string,
   fetchFn: () => Promise<T>,
   options: CacheOptions = {}
 ): Promise<T> {
+  // Determine cache type from key for tracking
+  let cacheType: CacheType = 'context'; // default
+  if (key.includes('rag:')) {
+    cacheType = 'rag';
+  } else if (key.includes('prefs:')) {
+    cacheType = 'user_prefs';
+  }
+
   // Try to get from cache
   const cached = await getCache<T>(key, options);
+  
   if (cached !== null) {
+    // Track cache hit
+    trackCacheHit(cacheType, true);
+    
+    // Increment Redis counter for API metrics
+    if (shouldUseRedis() && redis) {
+      redis.incr('metrics:cache:hits').catch(() => {});
+    }
+    
     return cached;
+  }
+
+  // Track cache miss
+  trackCacheHit(cacheType, false);
+  
+  // Increment Redis counter for API metrics
+  if (shouldUseRedis() && redis) {
+    redis.incr('metrics:cache:misses').catch(() => {});
   }
 
   // If not cached, fetch and cache

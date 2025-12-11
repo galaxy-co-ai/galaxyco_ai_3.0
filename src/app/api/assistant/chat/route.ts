@@ -15,6 +15,7 @@ import { trackFrequentQuestion, analyzeConversationForLearning, updateUserPrefer
 import { processDocuments } from '@/lib/document-processing';
 import { shouldAutoExecute, recordActionExecution } from '@/lib/ai/autonomy-learning';
 import { getCachedResponse, cacheResponse, isCacheAvailable } from '@/lib/ai/cache';
+import { trackNeptuneRequest, trackNeptuneError } from '@/lib/observability';
 
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
 
@@ -338,6 +339,16 @@ export async function POST(request: Request) {
             await new Promise(resolve => setTimeout(resolve, 10));
           }
 
+          // Track cached response metrics
+          const duration = Date.now() - startTime;
+          trackNeptuneRequest(duration, {
+            userId: currentUser.id,
+            workspaceId,
+            cached: true,
+            tokensUsed: 0, // Cached responses use no new tokens
+            ragResultsCount: 0,
+          });
+
           sse.sendDone({
             conversationId: conversationId || 'cached',
             cached: true,
@@ -509,6 +520,9 @@ export async function POST(request: Request) {
       const toolCallsMade: Array<{ name: string; result: ToolResult }> = [];
       let iterations = 0;
       const maxIterations = 5;
+      let totalTokensUsed = 0; // Track token usage for observability
+      let wasResponseCached = false; // Track if response came from cache
+      let ragResultsCount = 0; // Track RAG results count
 
       // Streaming with tool call loop
       let continueLoop = true;
@@ -729,6 +743,15 @@ Show your reasoning process naturally in your response.`;
         responseLength: fullResponse.length,
       });
 
+      // Track Neptune performance metrics
+      trackNeptuneRequest(duration, {
+        userId: currentUser.id,
+        workspaceId,
+        cached: wasResponseCached,
+        tokensUsed: totalTokensUsed,
+        ragResultsCount,
+      });
+
       // Cache the response for similar future queries (async, non-blocking)
       if (!attachments || attachments.length === 0) {
         cacheResponse(message, fullResponse, workspaceId, {
@@ -748,6 +771,14 @@ Show your reasoning process naturally in your response.`;
     } catch (error) {
       const duration = Date.now() - startTime;
       logger.error('[AI Chat Stream] Error', { error, duration: `${duration}ms` });
+      
+      // Track Neptune error
+      if (error instanceof Error) {
+        trackNeptuneError(error, {
+          workspaceId: '', // May not be available in error state
+          duration,
+        });
+      }
       
       const errorMessage = error instanceof Error 
         ? error.message 
