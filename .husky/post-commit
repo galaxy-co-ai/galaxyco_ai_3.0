@@ -1,17 +1,10 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 # Auto-update AI_CONTEXT.md after each commit
+# Just update the file, don't auto-commit (prevents infinite loop)
 npm run update-context
 
-# Stage the updated context file if it changed
-git add docs/status/AI_CONTEXT.md 2>/dev/null || true
-
-# Amend the commit if context changed (silent, no editor)
-if git diff --cached --quiet; then
-  # No changes, do nothing
-  :
-else
-  # Context changed, amend commit
-  git commit --amend --no-edit --no-verify
-fi
+echo ""
+echo "✅ AI_CONTEXT.md updated (not committed)"
+echo "   Run 'git add docs/status/AI_CONTEXT.md && git commit --amend --no-edit' to include in this commit"
+echo "   Or commit it separately later"
