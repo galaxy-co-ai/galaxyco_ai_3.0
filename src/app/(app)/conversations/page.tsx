@@ -1,6 +1,6 @@
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { conversations, conversationMessages, conversationParticipants } from "@/db/schema";
+import { conversations, conversationMessages, conversationParticipants, workspacePhoneNumbers } from "@/db/schema";
 import { eq, desc, count, and, inArray } from "drizzle-orm";
 import ConversationsDashboard from "@/components/conversations/ConversationsDashboard";
 import { logger } from "@/lib/logger";
@@ -12,12 +12,21 @@ export default async function ConversationsPage() {
   try {
     const { workspaceId } = await getCurrentWorkspace();
 
-    // Fetch conversations
-    const conversationsList = await db.query.conversations.findMany({
-      where: eq(conversations.workspaceId, workspaceId),
-      orderBy: [desc(conversations.lastMessageAt)],
-      limit: 100,
-    });
+    // Fetch conversations and workspace phone numbers
+    const [conversationsList, phoneNumbers] = await Promise.all([
+      db.query.conversations.findMany({
+        where: eq(conversations.workspaceId, workspaceId),
+        orderBy: [desc(conversations.lastMessageAt)],
+        limit: 100,
+      }),
+      db.query.workspacePhoneNumbers.findMany({
+        where: and(
+          eq(workspacePhoneNumbers.workspaceId, workspaceId),
+          eq(workspacePhoneNumbers.status, 'active')
+        ),
+        orderBy: [desc(workspacePhoneNumbers.numberType)], // Primary first
+      }),
+    ]);
 
     // Fetch latest messages and participants for each conversation
     const conversationIds = conversationsList.map(c => c.id);
@@ -84,6 +93,7 @@ export default async function ConversationsPage() {
     return (
       <ErrorBoundary>
         <ConversationsDashboard
+          phoneNumbers={phoneNumbers as any}
           initialConversations={conversationsList.map((conv) => {
             const convMessages = latestMessages.filter(m => m.conversationId === conv.id);
             const latestMessage = convMessages.sort((a, b) => 
@@ -136,6 +146,7 @@ export default async function ConversationsPage() {
     return (
       <ErrorBoundary>
         <ConversationsDashboard
+          phoneNumbers={[]}
           initialConversations={[]}
           stats={{ totalConversations: 0, unreadMessages: 0, activeChannels: 0, avgResponseTime: 0 }}
         />

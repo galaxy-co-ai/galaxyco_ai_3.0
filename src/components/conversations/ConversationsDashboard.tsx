@@ -14,6 +14,7 @@ import {
   Users,
   Zap,
   MessagesSquare,
+  Phone,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ConversationList from "./ConversationList";
@@ -59,7 +60,17 @@ export interface Conversation {
   }>;
 }
 
+interface WorkspacePhoneNumber {
+  id: string;
+  phoneNumber: string;
+  friendlyName: string | null;
+  numberType: 'primary' | 'sales' | 'support' | 'custom';
+  status: string;
+  [key: string]: any; // Allow additional fields from database
+}
+
 interface ConversationsDashboardProps {
+  phoneNumbers: WorkspacePhoneNumber[];
   initialConversations: Conversation[];
   stats: {
     totalConversations: number;
@@ -70,6 +81,7 @@ interface ConversationsDashboardProps {
 }
 
 export default function ConversationsDashboard({
+  phoneNumbers,
   initialConversations,
   stats,
 }: ConversationsDashboardProps) {
@@ -160,6 +172,22 @@ export default function ConversationsDashboard({
 
           {/* Stats Bar */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
+            {/* Phone Number Badge */}
+            {phoneNumbers.length > 0 && (
+              <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+                <Phone className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+                <span className="font-semibold">
+                  {phoneNumbers[0].phoneNumber.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3')}
+                </span>
+                {phoneNumbers[0].friendlyName && (
+                  <span className="ml-1 text-green-600/70 font-normal">• {phoneNumbers[0].friendlyName}</span>
+                )}
+                {phoneNumbers.length > 1 && (
+                  <span className="ml-1 text-green-600/70 font-normal">+{phoneNumbers.length - 1} more</span>
+                )}
+              </Badge>
+            )}
+            
             <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
               <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
               <span className="font-semibold">{stats.totalConversations}</span>
