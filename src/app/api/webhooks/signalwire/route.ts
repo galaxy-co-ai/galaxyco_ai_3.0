@@ -112,9 +112,10 @@ export async function POST(
     const cleanTo = To?.replace('whatsapp:', '') || '';
 
     // **KEY DIFFERENCE**: Look up workspace by destination phone number
+    // Also get numberType for department routing
     const phoneNumberRecord = await db.query.workspacePhoneNumbers.findFirst({
       where: eq(workspacePhoneNumbers.phoneNumber, cleanTo),
-      columns: { workspaceId: true, phoneNumber: true },
+      columns: { workspaceId: true, phoneNumber: true, numberType: true, friendlyName: true },
     });
 
     if (!phoneNumberRecord) {
@@ -149,7 +150,9 @@ export async function POST(
         CallSid || '',
         CallStatus || '',
         CallDuration,
-        RecordingUrl
+        RecordingUrl,
+        phoneNumberRecord.numberType || 'primary',
+        phoneNumberRecord.friendlyName || undefined
       );
     }
 
@@ -161,7 +164,9 @@ export async function POST(
       cleanTo,
       Body || '',
       MessageSid || '',
-      parseInt(NumMedia || '0', 10)
+      parseInt(NumMedia || '0', 10),
+      phoneNumberRecord.numberType || 'primary',
+      phoneNumberRecord.friendlyName || undefined
     );
   } catch (error) {
     logger.error('SignalWire webhook error', error);
@@ -187,7 +192,9 @@ async function handleMessageWebhook(
   to: string,
   body: string,
   messageSid: string,
-  numMedia: number
+  numMedia: number,
+  numberType: 'primary' | 'sales' | 'support' | 'custom',
+  friendlyName?: string
 ): Promise<NextResponse> {
   try {
     // Find or create conversation
@@ -208,7 +215,15 @@ async function handleMessageWebhook(
     });
 
     if (!conversation) {
-      // Create new conversation
+      // Create new conversation with department tag
+      const departmentTag = `department:${numberType}`;
+      const conversationTags = [departmentTag];
+      
+      // Add friendly name if available
+      if (friendlyName) {
+        conversationTags.push(`number:${friendlyName}`);
+      }
+      
       const [newConv] = await db
         .insert(conversations)
         .values({
@@ -222,6 +237,7 @@ async function handleMessageWebhook(
           messageCount: 1,
           lastMessageAt: new Date(),
           externalId: from,
+          tags: conversationTags,
         })
         .returning();
       
@@ -301,7 +317,9 @@ async function handleVoiceWebhook(
   callSid: string,
   callStatus: string,
   callDuration?: string,
-  recordingUrl?: string
+  recordingUrl?: string,
+  numberType?: 'primary' | 'sales' | 'support' | 'custom',
+  friendlyName?: string
 ): Promise<NextResponse> {
   try {
     // Find or create conversation for this call
@@ -314,7 +332,15 @@ async function handleVoiceWebhook(
     });
 
     if (!conversation) {
-      // Create new conversation for the call
+      // Create new conversation for the call with department tag
+      const conversationTags = [];
+      if (numberType) {
+        conversationTags.push(`department:${numberType}`);
+      }
+      if (friendlyName) {
+        conversationTags.push(`number:${friendlyName}`);
+      }
+      
       const [newConv] = await db
         .insert(conversations)
         .values({
@@ -328,6 +354,7 @@ async function handleVoiceWebhook(
           messageCount: 1,
           lastMessageAt: new Date(),
           externalId: callSid,
+          tags: conversationTags,
         })
         .returning();
       
