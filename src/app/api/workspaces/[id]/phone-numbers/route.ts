@@ -24,7 +24,9 @@ export async function GET(
     let workspaceId = resolvedParams.id;
 
     // If ID is a Clerk org ID, look up the workspace
-    if (workspaceId.startsWith('org_')) {
+    // Clerk has already verified the user is a member of this org
+    const isClerkOrg = workspaceId.startsWith('org_');
+    if (isClerkOrg) {
       const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.clerkOrganizationId, workspaceId),
       });
@@ -32,18 +34,18 @@ export async function GET(
         return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
       }
       workspaceId = workspace.id;
-    }
+    } else {
+      // For non-Clerk workspaces, verify database membership
+      const membership = await db.query.workspaceMembers.findFirst({
+        where: and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.userId, userId)
+        ),
+      });
 
-    // Verify user has access to this workspace
-    const membership = await db.query.workspaceMembers.findFirst({
-      where: and(
-        eq(workspaceMembers.workspaceId, workspaceId),
-        eq(workspaceMembers.userId, userId)
-      ),
-    });
-
-    if (!membership) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      if (!membership) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     // Get all phone numbers for this workspace
@@ -91,32 +93,37 @@ export async function POST(
     let workspaceId = resolvedParams.id;
 
     // If ID is a Clerk org ID, look up the workspace
-    if (workspaceId.startsWith('org_')) {
-      const workspace = await db.query.workspaces.findFirst({
+    // Clerk has already verified the user is a member of this org
+    const isClerkOrg = workspaceId.startsWith('org_');
+    let workspace;
+    
+    if (isClerkOrg) {
+      const ws = await db.query.workspaces.findFirst({
         where: eq(workspaces.clerkOrganizationId, workspaceId),
       });
-      if (!workspace) {
+      if (!ws) {
         return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
       }
-      workspaceId = workspace.id;
+      workspace = ws;
+      workspaceId = ws.id;
+    } else {
+      // For non-Clerk workspaces, verify database membership
+      const membership = await db.query.workspaceMembers.findFirst({
+        where: and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.userId, userId)
+        ),
+        with: {
+          workspace: true,
+        },
+      });
+
+      if (!membership) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      
+      workspace = membership.workspace;
     }
-
-    // Verify user has access to this workspace
-    const membership = await db.query.workspaceMembers.findFirst({
-      where: and(
-        eq(workspaceMembers.workspaceId, workspaceId),
-        eq(workspaceMembers.userId, userId)
-      ),
-      with: {
-        workspace: true,
-      },
-    });
-
-    if (!membership) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const workspace = membership.workspace;
 
     // Check subscription tier
     if (workspace.subscriptionTier === 'starter') {
