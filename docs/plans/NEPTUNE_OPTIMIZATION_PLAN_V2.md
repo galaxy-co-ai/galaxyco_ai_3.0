@@ -35,9 +35,18 @@ This is a comprehensive optimization plan for Neptune, the primary AI assistant 
 - [x] Run database migration - 8 indexes created ✅ (2024-12-11)
 - [x] Merge PR to main ✅ (2024-12-11)
 
+**Phase 2 Checklist - COMPLETE ✅:**
+- [x] Implement hybrid search (vector 70% + keyword 30%) with RRF ✅ (2024-12-11)
+- [x] Add query expansion using GPT-4o-mini ✅ (2024-12-11)
+- [x] Implement cross-encoder style reranking ✅ (2024-12-11)
+- [x] Add Redis caching for RAG results ✅ (2024-12-11)
+- [x] Upgrade semantic chunking with overlap ✅ (2024-12-11)
+- [x] Create PR and push to GitHub ✅ (2024-12-11) - PR #2
+
 **Post-Deployment Monitoring:**
 - [ ] Monitor cache hit rates in Upstash dashboard (target: >70%)
 - [ ] Measure Neptune response times (target: <2s from ~4-6s)
+- [ ] Track RAG accuracy improvements (target: 35-40% better)
 
 **Need Help?**
 - Architecture questions → See `docs/architecture/`
