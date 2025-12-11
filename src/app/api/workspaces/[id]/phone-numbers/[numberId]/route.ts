@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { workspacePhoneNumbers, workspaceMembers } from '@/db/schema';
+import { workspacePhoneNumbers, workspaceMembers, workspaces } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { releasePhoneNumber } from '@/lib/signalwire';
 
@@ -26,8 +26,19 @@ export async function PATCH(
 
     // Await params (Next.js 15+ requirement)
     const resolvedParams = await params;
-    const workspaceId = resolvedParams.id;
+    let workspaceId = resolvedParams.id;
     const numberId = resolvedParams.numberId;
+
+    // If ID is a Clerk org ID, look up the workspace
+    if (workspaceId.startsWith('org_')) {
+      const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.clerkOrganizationId, workspaceId),
+      });
+      if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      }
+      workspaceId = workspace.id;
+    }
 
     // Verify user has access to this workspace
     const membership = await db.query.workspaceMembers.findFirst({
@@ -98,8 +109,19 @@ export async function DELETE(
 
     // Await params (Next.js 15+ requirement)
     const resolvedParams = await params;
-    const workspaceId = resolvedParams.id;
+    let workspaceId = resolvedParams.id;
     const numberId = resolvedParams.numberId;
+
+    // If ID is a Clerk org ID, look up the workspace
+    if (workspaceId.startsWith('org_')) {
+      const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.clerkOrganizationId, workspaceId),
+      });
+      if (!workspace) {
+        return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      }
+      workspaceId = workspace.id;
+    }
 
     // Verify user has access to this workspace
     const membership = await db.query.workspaceMembers.findFirst({
