@@ -151,7 +151,7 @@ export async function POST(
         CallStatus || '',
         CallDuration,
         RecordingUrl,
-        phoneNumberRecord.numberType || 'primary',
+        (phoneNumberRecord.numberType || 'primary') as 'primary' | 'sales' | 'support' | 'custom',
         phoneNumberRecord.friendlyName || undefined
       );
     }
@@ -165,7 +165,7 @@ export async function POST(
       Body || '',
       MessageSid || '',
       parseInt(NumMedia || '0', 10),
-      phoneNumberRecord.numberType || 'primary',
+      (phoneNumberRecord.numberType || 'primary') as 'primary' | 'sales' | 'support' | 'custom',
       phoneNumberRecord.friendlyName || undefined
     );
   } catch (error) {
