@@ -148,7 +148,3 @@ This project is proprietary software. All rights reserved.
 ## Support
 
 For questions or issues, contact: [hello@galaxyco.ai](mailto:hello@galaxyco.ai)
-
----
-
-**Built with ❤️ by the GalaxyCo.ai team**
