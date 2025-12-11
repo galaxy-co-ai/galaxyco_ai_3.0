@@ -22,6 +22,7 @@ import ConversationThread from "./ConversationThread";
 import ContactProfileCard from "./ContactProfileCard";
 import NeptuneAssistPanel from "./NeptuneAssistPanel";
 import ChannelTabs, { ChannelType } from "./ChannelTabs";
+import DepartmentFilter, { DepartmentType } from "./DepartmentFilter";
 import TeamChat from "./TeamChat";
 
 export interface Conversation {
@@ -88,6 +89,7 @@ export default function ConversationsDashboard({
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [activeChannel, setActiveChannel] = useState<ChannelType>('team');
+  const [activeDepartment, setActiveDepartment] = useState<DepartmentType>('all');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNeptune, setShowNeptune] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -95,7 +97,7 @@ export default function ConversationsDashboard({
   // Debug: Log phone numbers
   console.log('Phone Numbers in Dashboard:', phoneNumbers);
 
-  // Filter conversations based on channel and search
+  // Filter conversations based on channel, department, and search
   const filteredConversations = useMemo(() => {
     let filtered = conversations;
 
@@ -110,6 +112,12 @@ export default function ConversationsDashboard({
       } else {
         filtered = filtered.filter(conv => conv.channel === activeChannel);
       }
+    }
+
+    // Filter by department (based on tags)
+    if (activeDepartment !== 'all') {
+      const departmentTag = `department:${activeDepartment}`;
+      filtered = filtered.filter(conv => conv.tags.includes(departmentTag));
     }
 
     // Filter by status
@@ -132,7 +140,22 @@ export default function ConversationsDashboard({
     }
 
     return filtered;
-  }, [conversations, activeChannel, statusFilter, searchQuery]);
+  }, [conversations, activeChannel, activeDepartment, statusFilter, searchQuery]);
+
+  // Calculate department counts
+  const departmentCounts = useMemo(() => {
+    const counts: Partial<Record<DepartmentType, number>> = {
+      all: conversations.length,
+    };
+    
+    (['primary', 'sales', 'support', 'custom'] as const).forEach(dept => {
+      counts[dept] = conversations.filter(conv => 
+        conv.tags.includes(`department:${dept}`)
+      ).length;
+    });
+    
+    return counts;
+  }, [conversations]);
 
   const selectedConv = useMemo(() => {
     return conversations.find(c => c.id === selectedConversation) || null;
@@ -235,6 +258,17 @@ export default function ConversationsDashboard({
             </Button>
           </div>
         </div>
+
+        {/* Department Filter - Only show for text/call channels */}
+        {(activeChannel === 'text' || activeChannel === 'call') && (
+          <div className="mt-4 flex items-center justify-center">
+            <DepartmentFilter
+              activeDepartment={activeDepartment}
+              onDepartmentChange={setActiveDepartment}
+              counts={departmentCounts}
+            />
+          </div>
+        )}
       </div>
 
       {/* Main Content Area */}
