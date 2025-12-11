@@ -26,13 +26,18 @@ export async function GET(
     // If ID is a Clerk org ID, look up the workspace
     // Clerk has already verified the user is a member of this org
     const isClerkOrg = workspaceId.startsWith('org_');
+    console.log('[GET /phone-numbers] Workspace ID:', workspaceId, 'Is Clerk Org:', isClerkOrg);
+    
     if (isClerkOrg) {
       const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.clerkOrganizationId, workspaceId),
       });
+      console.log('[GET /phone-numbers] Workspace lookup result:', workspace ? 'Found' : 'Not found');
       if (!workspace) {
+        console.error('[GET /phone-numbers] No workspace found for Clerk org:', workspaceId);
         return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
       }
+      console.log('[GET /phone-numbers] Mapped to workspace UUID:', workspace.id);
       workspaceId = workspace.id;
     } else {
       // For non-Clerk workspaces, verify database membership
@@ -49,6 +54,7 @@ export async function GET(
     }
 
     // Get all phone numbers for this workspace
+    console.log('[GET /phone-numbers] Fetching numbers for workspace:', workspaceId);
     const phoneNumbers = await db.query.workspacePhoneNumbers.findMany({
       where: eq(workspacePhoneNumbers.workspaceId, workspaceId),
       orderBy: [
@@ -57,12 +63,17 @@ export async function GET(
         asc(workspacePhoneNumbers.provisionedAt),
       ],
     });
+    console.log('[GET /phone-numbers] Found', phoneNumbers.length, 'phone numbers');
 
     return NextResponse.json({ phoneNumbers });
   } catch (error) {
-    console.error('Error fetching phone numbers:', error);
+    console.error('[GET /phone-numbers] Error:', error);
+    console.error('[GET /phone-numbers] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: 'Failed to fetch phone numbers' },
+      { 
+        error: 'Failed to fetch phone numbers',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
