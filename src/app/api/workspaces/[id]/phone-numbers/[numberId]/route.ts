@@ -16,7 +16,7 @@ import { releasePhoneNumber } from '@/lib/signalwire';
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; numberId: string } }
+  { params }: { params: Promise<{ id: string; numberId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -24,8 +24,10 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const workspaceId = params.id;
-    const numberId = params.numberId;
+    // Await params (Next.js 15+ requirement)
+    const resolvedParams = await params;
+    const workspaceId = resolvedParams.id;
+    const numberId = resolvedParams.numberId;
 
     // Verify user has access to this workspace
     const membership = await db.query.workspaceMembers.findFirst({
@@ -86,7 +88,7 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; numberId: string } }
+  { params }: { params: Promise<{ id: string; numberId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -94,8 +96,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const workspaceId = params.id;
-    const numberId = params.numberId;
+    // Await params (Next.js 15+ requirement)
+    const resolvedParams = await params;
+    const workspaceId = resolvedParams.id;
+    const numberId = resolvedParams.numberId;
 
     // Verify user has access to this workspace
     const membership = await db.query.workspaceMembers.findFirst({

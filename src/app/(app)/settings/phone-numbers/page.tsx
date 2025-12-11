@@ -23,6 +23,9 @@ export default function PhoneNumbersPage() {
   const [loading, setLoading] = useState(true);
   const [provisioning, setProvisioning] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingNumber, setEditingNumber] = useState<PhoneNumber | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (workspace?.id) {
@@ -76,8 +79,42 @@ export default function PhoneNumbersPage() {
   };
 
   const handleEditNumber = async (phoneNumber: PhoneNumber) => {
-    // TODO: Implement edit modal
-    toast.info('Edit functionality coming soon');
+    setEditingNumber(phoneNumber);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (friendlyName: string, numberType: string) => {
+    if (!workspace?.id || !editingNumber) return;
+
+    try {
+      setSaving(true);
+      const response = await fetch(
+        `/api/workspaces/${workspace.id}/phone-numbers/${editingNumber.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ friendlyName, numberType }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update phone number');
+      }
+
+      const data = await response.json();
+      setPhoneNumbers(
+        phoneNumbers.map((p) => (p.id === editingNumber.id ? data.phoneNumber : p))
+      );
+      toast.success('Phone number updated successfully');
+      setShowEditModal(false);
+      setEditingNumber(null);
+    } catch (error: any) {
+      console.error('Error updating phone number:', error);
+      toast.error(error.message || 'Failed to update phone number');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDeleteNumber = async (phoneNumber: PhoneNumber) => {
@@ -269,6 +306,92 @@ export default function PhoneNumbersPage() {
                   <Loader2 className="h-4 w-4 animate-spin mx-auto" />
                 ) : (
                   'Provision Number'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Number Modal */}
+      {showEditModal && editingNumber && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-lg shadow-xl max-w-md w-full p-6">
+            <h2 className="text-xl font-semibold mb-4">Edit Phone Number</h2>
+            
+            <div className="space-y-4">
+              {/* Phone Number Display */}
+              <div className="bg-muted p-3 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">Phone Number</p>
+                <p className="text-base font-medium">{editingNumber.phoneNumber}</p>
+              </div>
+
+              {/* Friendly Name Input */}
+              <div>
+                <label htmlFor="editFriendlyName" className="block text-sm font-medium mb-2">
+                  Friendly Name
+                </label>
+                <input
+                  type="text"
+                  id="editFriendlyName"
+                  placeholder="e.g., Main Office, Sales Team, Support Line"
+                  defaultValue={editingNumber.friendlyName || ''}
+                  className="w-full h-10 px-3 border rounded-lg bg-background"
+                  maxLength={50}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Optional: Add a memorable name for this number
+                </p>
+              </div>
+
+              {/* Number Type Select */}
+              <div>
+                <label htmlFor="editNumberType" className="block text-sm font-medium mb-2">
+                  Number Type
+                </label>
+                <select
+                  id="editNumberType"
+                  className="w-full h-10 px-3 border rounded-lg bg-background"
+                  defaultValue={editingNumber.numberType}
+                  disabled={editingNumber.numberType === 'primary'}
+                >
+                  <option value="primary">Primary</option>
+                  <option value="sales">Sales</option>
+                  <option value="support">Support</option>
+                  <option value="custom">Custom</option>
+                </select>
+                {editingNumber.numberType === 'primary' && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Primary number type cannot be changed
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingNumber(null);
+                }}
+                disabled={saving}
+                className="flex-1 px-4 py-2 border rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const friendlyName = (document.getElementById('editFriendlyName') as HTMLInputElement).value;
+                  const numberType = (document.getElementById('editNumberType') as HTMLSelectElement).value;
+                  handleSaveEdit(friendlyName, numberType);
+                }}
+                disabled={saving}
+                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                ) : (
+                  'Save Changes'
                 )}
               </button>
             </div>

@@ -61,12 +61,15 @@ function validateSignalWireSignature(
  */
 export async function POST(
   request: Request,
-  { params }: { params: { type?: string } }
+  { params }: { params: Promise<{ type?: string }> }
 ) {
   try {
+    // Await params (Next.js 15+ requirement)
+    const resolvedParams = await params;
+    
     // Extract type from URL path or query param
     const { searchParams } = new URL(request.url);
-    const type = params?.type || searchParams.get('type') || 'sms';
+    const type = resolvedParams?.type || searchParams.get('type') || 'sms';
 
     // Parse form data (SignalWire sends form-encoded data like Twilio)
     const formData = await request.formData();
