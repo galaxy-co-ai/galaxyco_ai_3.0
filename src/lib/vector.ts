@@ -653,35 +653,210 @@ export async function deleteKnowledgeDocument(
 }
 
 // ============================================================================
-// TEXT CHUNKING UTILITY
+// TEXT CHUNKING UTILITY (Enhanced for Phase 2)
 // ============================================================================
 
 /**
- * Split text into chunks for embedding
- * Uses sentence boundaries for natural splits
+ * Chunking configuration
  */
-function chunkText(text: string, chunkSize: number = 500): string[] {
-  const chunks: string[] = [];
-  
-  // Split by sentence endings
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  let currentChunk = '';
+const CHUNK_CONFIG = {
+  TARGET_SIZE: 500,      // Target chunk size in characters
+  MAX_SIZE: 700,         // Maximum chunk size
+  MIN_SIZE: 100,         // Minimum chunk size (smaller ones get merged)
+  OVERLAP_SIZE: 50,      // Overlap between chunks for context continuity
+  OVERLAP_SENTENCES: 1,  // Number of sentences to overlap
+};
 
-  for (const sentence of sentences) {
-    // If adding this sentence would exceed chunk size, save current and start new
-    if ((currentChunk + sentence).length > chunkSize && currentChunk.length > 0) {
-      chunks.push(currentChunk.trim());
-      currentChunk = sentence;
-    } else {
-      currentChunk += (currentChunk ? ' ' : '') + sentence;
+/**
+ * Chunk metadata for improved RAG
+ */
+export interface ChunkMetadata {
+  chunkIndex: number;
+  totalChunks: number;
+  startChar: number;
+  endChar: number;
+  hasOverlap: boolean;
+  section?: string;  // Section header if detected
+}
+
+/**
+ * Split text into semantic chunks with overlap
+ * Uses sentence boundaries, section detection, and overlapping for better context
+ */
+export function semanticChunk(
+  text: string,
+  options: {
+    targetSize?: number;
+    maxSize?: number;
+    overlapSentences?: number;
+  } = {}
+): { text: string; metadata: ChunkMetadata }[] {
+  const {
+    targetSize = CHUNK_CONFIG.TARGET_SIZE,
+    maxSize = CHUNK_CONFIG.MAX_SIZE,
+    overlapSentences = CHUNK_CONFIG.OVERLAP_SENTENCES,
+  } = options;
+
+  if (!text || text.trim().length < CHUNK_CONFIG.MIN_SIZE) {
+    if (text && text.trim().length > 0) {
+      return [{
+        text: text.trim(),
+        metadata: {
+          chunkIndex: 0,
+          totalChunks: 1,
+          startChar: 0,
+          endChar: text.length,
+          hasOverlap: false,
+        },
+      }];
+    }
+    return [];
+  }
+
+  // Detect section headers (markdown-style or numbered)
+  const sectionPattern = /^(?:#{1,6}\s+|\d+\.\s+|[A-Z][A-Z\s]+:)/gm;
+  const sections = text.split(sectionPattern);
+  const sectionHeaders = text.match(sectionPattern) || [];
+
+  // Parse into sentences while preserving structure
+  const sentences = parseSentences(text);
+  
+  const chunks: { text: string; metadata: ChunkMetadata }[] = [];
+  let currentChunk = '';
+  let currentSection = '';
+  let chunkStartChar = 0;
+  let currentCharPos = 0;
+  let lastOverlapSentences: string[] = [];
+
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i];
+    const sentenceLength = sentence.length;
+    
+    // Check if this sentence starts a new section
+    if (sectionPattern.test(sentence)) {
+      currentSection = sentence.trim();
+    }
+
+    // If adding this sentence would exceed max size, finalize current chunk
+    if (currentChunk.length > 0 && 
+        currentChunk.length + sentenceLength > maxSize) {
+      // Save current chunk
+      const chunkText = currentChunk.trim();
+      chunks.push({
+        text: chunkText,
+        metadata: {
+          chunkIndex: chunks.length,
+          totalChunks: 0, // Will update later
+          startChar: chunkStartChar,
+          endChar: currentCharPos,
+          hasOverlap: lastOverlapSentences.length > 0,
+          section: currentSection || undefined,
+        },
+      });
+
+      // Start new chunk with overlap from previous
+      lastOverlapSentences = sentences.slice(
+        Math.max(0, i - overlapSentences), 
+        i
+      );
+      currentChunk = lastOverlapSentences.join(' ') + ' ';
+      chunkStartChar = currentCharPos - currentChunk.length;
+    }
+
+    currentChunk += sentence + ' ';
+    currentCharPos += sentenceLength + 1;
+
+    // If we've reached target size and hit a natural break, consider chunking
+    if (currentChunk.length >= targetSize) {
+      // Look for natural break points (paragraph, section end)
+      const isNaturalBreak = 
+        sentence.endsWith('.') || 
+        sentence.endsWith('?') || 
+        sentence.endsWith('!') ||
+        sentence.includes('\n\n');
+
+      if (isNaturalBreak && i < sentences.length - 1) {
+        const chunkText = currentChunk.trim();
+        chunks.push({
+          text: chunkText,
+          metadata: {
+            chunkIndex: chunks.length,
+            totalChunks: 0,
+            startChar: chunkStartChar,
+            endChar: currentCharPos,
+            hasOverlap: lastOverlapSentences.length > 0,
+            section: currentSection || undefined,
+          },
+        });
+
+        // Prepare overlap for next chunk
+        lastOverlapSentences = [sentence];
+        currentChunk = sentence + ' ';
+        chunkStartChar = currentCharPos - sentence.length - 1;
+      }
     }
   }
 
   // Don't forget the last chunk
-  if (currentChunk.trim().length > 0) {
-    chunks.push(currentChunk.trim());
+  if (currentChunk.trim().length >= CHUNK_CONFIG.MIN_SIZE) {
+    chunks.push({
+      text: currentChunk.trim(),
+      metadata: {
+        chunkIndex: chunks.length,
+        totalChunks: 0,
+        startChar: chunkStartChar,
+        endChar: text.length,
+        hasOverlap: lastOverlapSentences.length > 0,
+        section: currentSection || undefined,
+      },
+    });
+  } else if (chunks.length > 0 && currentChunk.trim().length > 0) {
+    // Merge small trailing chunk with previous
+    const lastChunk = chunks[chunks.length - 1];
+    lastChunk.text = lastChunk.text + ' ' + currentChunk.trim();
+    lastChunk.metadata.endChar = text.length;
   }
 
-  // Filter out empty or very short chunks
-  return chunks.filter((chunk) => chunk.length >= 20);
+  // Update total chunk count
+  const totalChunks = chunks.length;
+  chunks.forEach(chunk => {
+    chunk.metadata.totalChunks = totalChunks;
+  });
+
+  return chunks;
+}
+
+/**
+ * Parse text into sentences preserving structure
+ */
+function parseSentences(text: string): string[] {
+  // Split on sentence boundaries but keep abbreviations intact
+  const sentences: string[] = [];
+  
+  // Regex that handles common abbreviations and decimal numbers
+  const sentenceRegex = /[^.!?\n]+(?:[.!?]+|\n\n|$)/g;
+  let match;
+  
+  while ((match = sentenceRegex.exec(text)) !== null) {
+    const sentence = match[0].trim();
+    if (sentence.length > 0) {
+      sentences.push(sentence);
+    }
+  }
+  
+  // Handle edge case where regex doesn't match
+  if (sentences.length === 0 && text.trim().length > 0) {
+    sentences.push(text.trim());
+  }
+  
+  return sentences;
+}
+
+/**
+ * Split text into chunks for embedding (legacy function - calls semanticChunk)
+ * Uses sentence boundaries for natural splits
+ */
+function chunkText(text: string, chunkSize: number = 500): string[] {
+  const chunks = semanticChunk(text, { targetSize: chunkSize });
+  return chunks.map(c => c.text);
 }
