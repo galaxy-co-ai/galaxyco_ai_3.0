@@ -68,6 +68,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import MarketingAutomationsTab from "./MarketingAutomationsTab";
 import CampaignCreateTab from "./CampaignCreateTab";
+import MarketingCampaignsTab from "./MarketingCampaignsTab";
+import MarketingTemplatesTab from "./MarketingTemplatesTab";
 import { logger } from "@/lib/logger";
 import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 import useSWR from 'swr';
@@ -131,7 +133,7 @@ interface MarketingDashboardProps {
   disableLiveData?: boolean;
 }
 
-type TabType = 'create' | 'campaigns' | 'channels' | 'analytics';
+type TabType = 'campaigns' | 'templates' | 'create';
 
 interface ChatMessage {
   id: string;
@@ -147,7 +149,7 @@ export default function MarketingDashboard({
   stats,
   disableLiveData = false,
 }: MarketingDashboardProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('create');
+  const [activeTab, setActiveTab] = useState<TabType>('campaigns');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNeptune, setShowNeptune] = useState(false);
   const [showCampaignChat, setShowCampaignChat] = useState(false);
@@ -485,12 +487,11 @@ export default function MarketingDashboard({
     return channels[audienceId] || [];
   };
 
-  // Tab configuration - Content and Assets moved to Creator page
+  // Tab configuration - New 3-tab user journey structure
   const tabs = [
-    { id: 'create' as TabType, label: 'Create', icon: Plus, activeColor: 'bg-emerald-100 text-emerald-700' },
     { id: 'campaigns' as TabType, label: 'Campaigns', icon: Megaphone, badge: stats.activeCampaigns.toString(), badgeColor: 'bg-pink-500', activeColor: 'bg-pink-100 text-pink-700' },
-    { id: 'channels' as TabType, label: 'Channels', icon: Share2, activeColor: 'bg-purple-100 text-purple-700' },
-    { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3, activeColor: 'bg-indigo-100 text-indigo-700' },
+    { id: 'templates' as TabType, label: 'Templates', icon: FileText, activeColor: 'bg-purple-100 text-purple-700' },
+    { id: 'create' as TabType, label: 'Create', icon: Plus, activeColor: 'bg-emerald-100 text-emerald-700' },
   ];
 
   const pillTabs: Array<PillTab<TabType>> = tabs.map((tab) => ({
