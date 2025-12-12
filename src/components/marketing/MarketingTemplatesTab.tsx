@@ -15,11 +15,8 @@ import {
   DollarSign,
   Clock,
   Users,
-  Share2,
   RefreshCw,
   Briefcase,
-  Calendar,
-  Mail,
   Video,
   Zap,
   Grid3X3,
@@ -323,8 +320,7 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
                     key={template.id}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm hover:border-gray-300 transition-all group cursor-pointer"
-                    onClick={() => onSelectTemplate(template.id)}
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm hover:border-gray-300 transition-all"
                   >
                     {/* Icon */}
                     <div className={cn("p-2 rounded-lg", colors.badge.split(' ')[0], colors.text)}>
@@ -358,13 +354,19 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
                       </div>
                     </div>
 
-                    {/* Use Button */}
+                    {/* Build Button - matches Neptune button style */}
                     <Button
                       size="sm"
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-pink-600 hover:text-pink-700 hover:bg-pink-50"
+                      variant="surface"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectTemplate(template.id);
+                      }}
+                      className="shrink-0"
+                      aria-label={`Build ${template.name} campaign`}
                     >
-                      Use Template
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>Build</span>
                     </Button>
                   </motion.div>
                 );
@@ -382,10 +384,9 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
                     key={template.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="group relative rounded-xl border bg-white hover:shadow-lg transition-all cursor-pointer overflow-hidden"
-                    onClick={() => onSelectTemplate(template.id)}
+                    className="group relative rounded-xl border bg-white hover:shadow-md transition-all overflow-hidden"
                   >
-                    {/* Header area with icon and title */}
+                    {/* Header area with icon, title, and Build button */}
                     <div className={cn(
                       "relative px-3 py-2.5 bg-gradient-to-br flex items-center gap-2.5",
                       colors.bg
@@ -399,6 +400,21 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
                       <h4 className="font-semibold text-sm text-gray-900 line-clamp-1 flex-1 min-w-0">
                         {template.name}
                       </h4>
+
+                      {/* Build Button - matches Neptune button style */}
+                      <Button
+                        size="sm"
+                        variant="surface"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectTemplate(template.id);
+                        }}
+                        className="shrink-0 h-7 px-2.5 text-xs"
+                        aria-label={`Build ${template.name} campaign`}
+                      >
+                        <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>Build</span>
+                      </Button>
                     </div>
 
                     {/* Content */}
@@ -431,13 +447,6 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
                           {template.usageCount} uses
                         </div>
                       )}
-                    </div>
-
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-pink-600/0 group-hover:bg-pink-600/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <Button size="sm" className="bg-pink-600 hover:bg-pink-700 shadow-lg">
-                        Use Template
-                      </Button>
                     </div>
                   </motion.div>
                 );
