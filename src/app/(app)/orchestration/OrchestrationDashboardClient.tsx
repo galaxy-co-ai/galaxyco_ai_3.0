@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageTitle } from "@/components/ui/page-title";
 import {
   Network,
   UsersRound,
@@ -76,54 +77,21 @@ export default function OrchestrationDashboardClient({
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
+          <PageTitle title="Orchestration" icon={Network} />
+
           <div className="flex items-center gap-3">
-            <Network 
-              className="w-7 h-7"
-              style={{
-                stroke: 'url(#icon-gradient-orchestration)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient-orchestration" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <h1 
-              className="branded-page-title text-2xl uppercase"
-              style={{ 
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-              }}
-            >
-              <span className="hidden sm:inline">O R C H E S T R A T I O N</span>
-              <span className="sm:hidden">ORCHESTRATION</span>
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/orchestration/teams">
-              <Button
-                size="sm"
-                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
-                aria-label="Create new team"
-              >
-                <Plus className="h-4 w-4" />
+            <Button asChild size="sm" variant="surface" aria-label="Create new team">
+              <Link href="/orchestration/teams">
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 New Team
-              </Button>
-            </Link>
-            <Link href="/orchestration/workflows">
-              <Button
-                size="sm"
-                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
-                aria-label="Create new workflow"
-              >
-                <Workflow className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="surface" aria-label="Create new workflow">
+              <Link href="/orchestration/workflows">
+                <Workflow className="h-4 w-4" aria-hidden="true" />
                 New Workflow
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -202,12 +170,12 @@ export default function OrchestrationDashboardClient({
                 human oversight.
               </p>
             </div>
-            <Link href="/orchestration/teams">
-              <Button className="bg-violet-600 hover:bg-violet-700 text-white shrink-0">
+            <Button asChild className="shrink-0" aria-label="Create your first team">
+              <Link href="/orchestration/teams">
                 Create Your First Team
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
+                <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
+              </Link>
+            </Button>
           </div>
         </Card>
       </div>

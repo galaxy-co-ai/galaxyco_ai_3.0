@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageTitle } from "@/components/ui/page-title";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -300,51 +301,31 @@ export default function WorkflowsListClient({
       <div className="border-b bg-background px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
           <div className="flex items-center gap-4">
-            <Link href="/orchestration">
-              <Button
-                size="sm"
-                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
-                aria-label="Back to orchestration dashboard"
-              >
-                <ChevronLeft className="h-4 w-4" />
+            <Button
+              asChild
+              size="sm"
+              variant="surface"
+              aria-label="Back to orchestration dashboard"
+            >
+              <Link href="/orchestration">
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 Back
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-              <Workflow 
-                className="w-7 h-7"
-                style={{
-                  stroke: 'url(#icon-gradient-workflows)',
-                  strokeWidth: 2,
-                  filter: 'drop-shadow(0 2px 4px rgba(147, 51, 234, 0.15))'
-                }}
-              />
-              <svg width="0" height="0" className="absolute">
-                <defs>
-                  <linearGradient id="icon-gradient-workflows" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#9333ea" />
-                    <stop offset="100%" stopColor="#3b82f6" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <h1 
-                className="branded-page-title text-2xl uppercase"
-                style={{ 
-                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-                }}
-              >
-                <span className="hidden sm:inline">W O R K F L O W S</span>
-                <span className="sm:hidden">WORKFLOWS</span>
-              </h1>
-            </div>
+              </Link>
+            </Button>
+            <PageTitle
+              title="Workflows"
+              icon={Workflow}
+              gradientFrom="#9333ea"
+              gradientTo="#3b82f6"
+            />
           </div>
           <Button
             size="sm"
+            variant="surface"
             onClick={() => setShowCreateModal(true)}
-            className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
             aria-label="Create new workflow"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             New Workflow
           </Button>
         </div>
@@ -525,15 +506,12 @@ export default function WorkflowsListClient({
 
                       {/* Quick Actions */}
                       <div className="flex flex-wrap gap-2">
-                        <Link href={`/orchestration/workflows/${workflow.id}`}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                          >
-                            <Settings className="h-3 w-3 mr-1" />
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/orchestration/workflows/${workflow.id}`}>
+                            <Settings className="h-3 w-3 mr-1" aria-hidden="true" />
                             Edit
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                         {workflow.status === "active" ? (
                           <Button
                             size="sm"
