@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (57f10a4)  
+**Updated Through:** 2025-12-12 (d1957df)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 d1957df fix(proxy): rename middleware to proxy for Next.js 16 compatibility
 - 2025-12-12 57f10a4 feat(security): Week 1 critical security fixes
 - 2025-12-11 73337c1 fix(marketing): remove quotes from action button text in recommendations
 - 2025-12-11 e0066aa refactor(marketing): redesign Neptune recommendations as compact notifications
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 5dbf710 feat(observability): Phase 4A Day 2 - Admin Metrics API
 - 2025-12-11 f05a9f8 feat(observability): Phase 4A Day 1 - Sentry performance tracking
 - 2025-12-11 706ce9d docs: mark Phase 3 Deep Memory System complete
-- 2025-12-11 6302dac feat(neptune): Phase 3 Deep Memory System (#3)
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
