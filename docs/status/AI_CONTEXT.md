@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (863dbbc)  
+**Updated Through:** 2025-12-12 (c91481a)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 c91481a feat(admin): show all tasks in To-Do HQ with fade effect
 - 2025-12-12 863dbbc test(admin): add initial test suite for To-Do HQ API
 - 2025-12-12 f3e6a1c feat(admin): add To-Do HQ mission control tab
 - 2025-12-12 40fe15a docs(audit): complete Phase 2 Tasks 3 & 4
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 b81fe78 feat(marketing): restructure to 3-tab user journey (WIP)
 - 2025-12-11 5f8d86f feat(marketing): add new user journey-based Campaigns and Templates tabs
 - 2025-12-11 2f68f0f fix(crm): remove embedded Neptune chat to fix React hydration error #418
-- 2025-12-11 9488908 chore(automation): auto-update AI_CONTEXT on main
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
