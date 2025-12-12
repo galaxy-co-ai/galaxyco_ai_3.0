@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (1b19794)  
+**Updated Through:** 2025-12-12 (5b86da8)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 5b86da8 ci: trigger E2E tests with secrets configured
 - 2025-12-12 1b19794 feat(ci): add E2E tests to CI pipeline
 - 2025-12-12 d1957df fix(proxy): rename middleware to proxy for Next.js 16 compatibility
 - 2025-12-12 57f10a4 feat(security): Week 1 critical security fixes
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 d8bc7c0 docs(neptune): complete Phase 4A Day 4 - metrics documentation
 - 2025-12-11 06ee8ec feat(observability): Phase 4A Day 3 - Metrics validation test script
 - 2025-12-11 5dbf710 feat(observability): Phase 4A Day 2 - Admin Metrics API
-- 2025-12-11 f05a9f8 feat(observability): Phase 4A Day 1 - Sentry performance tracking
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
