@@ -69,7 +69,7 @@ import { toast } from "sonner";
 import MarketingAutomationsTab from "./MarketingAutomationsTab";
 import CampaignCreateTab from "./CampaignCreateTab";
 import MarketingCampaignsTab from "./MarketingCampaignsTab";
-import MarketingTemplatesTab from "./MarketingTemplatesTab";
+import MarketingTemplatesTab, { campaignTemplates as marketingCampaignTemplates } from "./MarketingTemplatesTab";
 import { logger } from "@/lib/logger";
 import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 import useSWR from 'swr';
@@ -135,6 +135,17 @@ interface MarketingDashboardProps {
 
 type TabType = 'campaigns' | 'templates' | 'create';
 
+// Selected template state for passing to Create tab
+interface SelectedTemplateState {
+  templateId: string;
+  templateName: string;
+  templateCategory: string;
+  templateDescription: string;
+  duration?: string;
+  budget?: string;
+  channels?: string[];
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -150,6 +161,7 @@ export default function MarketingDashboard({
   disableLiveData = false,
 }: MarketingDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('campaigns');
+  const [selectedTemplateForCreate, setSelectedTemplateForCreate] = useState<SelectedTemplateState | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNeptune, setShowNeptune] = useState(false);
   const [showCampaignChat, setShowCampaignChat] = useState(false);
@@ -1213,7 +1225,13 @@ Be creative, engaging, and write content that resonates!`;
         <div className={`flex flex-col min-h-0 transition-all duration-200 ${showNeptune ? 'flex-1' : 'flex-1'}`}>
           {/* Create tab needs full height - no max-width constraint */}
           {activeTab === 'create' ? (
-            <CampaignCreateTab onCampaignCreated={() => setActiveTab('campaigns')} />
+            <CampaignCreateTab 
+              selectedTemplate={selectedTemplateForCreate}
+              onCampaignCreated={() => {
+                setActiveTab('campaigns');
+                setSelectedTemplateForCreate(null); // Clear selected template after campaign is created
+              }} 
+            />
           ) : (
           <div className="max-w-7xl mx-auto w-full">
             <AnimatePresence mode="wait">
@@ -1237,9 +1255,22 @@ Be creative, engaging, and write content that resonates!`;
             {activeTab === 'templates' && (
               <MarketingTemplatesTab 
                 onSelectTemplate={(templateId) => {
+                  // Look up the template data
+                  const template = marketingCampaignTemplates.find(t => t.id === templateId);
+                  if (template) {
+                    // Set the selected template for the Create tab
+                    setSelectedTemplateForCreate({
+                      templateId: template.id,
+                      templateName: template.name,
+                      templateCategory: template.category,
+                      templateDescription: template.description,
+                      duration: template.duration,
+                      budget: template.budget,
+                      channels: template.channels,
+                    });
+                  }
                   // Navigate to Create tab with pre-selected template
                   setActiveTab('create');
-                  toast.success('Template selected! Configure your campaign details.');
                 }}
               />
             )}

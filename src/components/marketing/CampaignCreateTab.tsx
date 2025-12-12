@@ -14,15 +14,64 @@ import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { useNeptune } from '@/contexts/neptune-context';
 
-interface CampaignCreateTabProps {
-  onCampaignCreated: () => void;
+// Selected template data from MarketingDashboard
+interface SelectedTemplateData {
+  templateId: string;
+  templateName: string;
+  templateCategory: string;
+  templateDescription: string;
+  duration?: string;
+  budget?: string;
+  channels?: string[];
 }
 
-export default function CampaignCreateTab({ onCampaignCreated }: CampaignCreateTabProps) {
+interface CampaignCreateTabProps {
+  onCampaignCreated: () => void;
+  selectedTemplate?: SelectedTemplateData | null;
+}
+
+export default function CampaignCreateTab({ onCampaignCreated, selectedTemplate }: CampaignCreateTabProps) {
   const [roadmapItems, setRoadmapItems] = useState<CampaignRoadmapItem[]>([]);
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [isReady, setIsReady] = useState(false);
+  const [hasTriggeredTemplatePrompt, setHasTriggeredTemplatePrompt] = useState(false);
   const { messages } = useNeptune();
+
+  // When a template is selected, automatically trigger Neptune with the template context
+  useEffect(() => {
+    if (selectedTemplate && !hasTriggeredTemplatePrompt) {
+      // Mark as triggered to prevent re-triggering
+      setHasTriggeredTemplatePrompt(true);
+      
+      // Build a comprehensive prompt for Neptune with the template context
+      const templatePrompt = `I want to create a "${selectedTemplate.templateName}" campaign.
+
+**Campaign Type:** ${selectedTemplate.templateCategory}
+**Description:** ${selectedTemplate.templateDescription}
+${selectedTemplate.duration ? `**Suggested Duration:** ${selectedTemplate.duration}` : ''}
+${selectedTemplate.budget ? `**Suggested Budget:** ${selectedTemplate.budget}` : ''}
+${selectedTemplate.channels?.length ? `**Recommended Channels:** ${selectedTemplate.channels.join(', ')}` : ''}
+
+Please help me build out this campaign. First, let me know what information you need about my business and goals, then create a comprehensive campaign roadmap tailored to my specific needs.`;
+
+      // Small delay to ensure Neptune is ready
+      const timer = setTimeout(() => {
+        const event = new CustomEvent('neptune-prompt', {
+          detail: { prompt: templatePrompt }
+        });
+        window.dispatchEvent(event);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedTemplate, hasTriggeredTemplatePrompt]);
+
+  // Reset the trigger flag when no template is selected (for when user comes back)
+  useEffect(() => {
+    if (!selectedTemplate) {
+      setHasTriggeredTemplatePrompt(false);
+    }
+  }, [selectedTemplate]);
 
   // Calculate completion percentage
   useEffect(() => {

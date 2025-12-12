@@ -29,7 +29,8 @@ import {
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface CampaignTemplate {
+// Export campaign template interface for use in other components
+export interface CampaignTemplate {
   id: string;
   name: string;
   category: string;
@@ -52,8 +53,8 @@ const categoryColors: Record<string, { bg: string; text: string; badge: string }
   'ABM': { bg: 'from-slate-100 to-gray-100', text: 'text-slate-600', badge: 'bg-slate-100 text-slate-700 border-slate-200' },
 };
 
-// Campaign templates
-const campaignTemplates: CampaignTemplate[] = [
+// Campaign templates - exported for use in CampaignCreateTab
+export const campaignTemplates: CampaignTemplate[] = [
   {
     id: 'product-launch',
     name: 'Product Launch',
