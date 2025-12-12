@@ -1,22 +1,11 @@
 #!/usr/bin/env sh
 
-# Auto-update AI_CONTEXT.md after each commit.
+# NOTE:
+# We no longer update AI_CONTEXT.md on every commit because it:
+# - makes the working tree perpetually dirty
+# - encourages "docs(status)" spam commits
 #
-# IMPORTANT: Skip when the commit ONLY touched docs/status/AI_CONTEXT.md.
-# This allows a clean, 2-step workflow:
-# 1) Commit code changes -> hook regenerates AI_CONTEXT.md (uncommitted)
-# 2) Commit AI_CONTEXT.md -> hook skips regeneration (no infinite dirty state)
+# Instead, AI_CONTEXT.md is updated and auto-committed on push
+# (see .husky/pre-push).
 
-changed_files="$(git diff-tree --no-commit-id --name-only -r HEAD | tr -d '\r')"
-
-if [ "$changed_files" = "docs/status/AI_CONTEXT.md" ]; then
-  echo ""
-  echo "ℹ️  Skipping AI_CONTEXT auto-update (AI_CONTEXT.md commit)"
-  exit 0
-fi
-
-npm run update-context
-
-echo ""
-echo "✅ AI_CONTEXT.md updated (not committed)"
-echo "   Commit it with: git add docs/status/AI_CONTEXT.md && git commit -m \"docs(status): update AI context\""
+exit 0

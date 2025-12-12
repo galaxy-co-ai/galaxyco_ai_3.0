@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+set -e
+
+# Auto-update AI_CONTEXT.md on push (not on every commit).
+# Goal: keep a single, concise project snapshot + changelog available to any AI agent,
+# without bloating the repo with session logs or generating constant dirty diffs.
+
+npm run update-context
+
+# If AI_CONTEXT changed, commit it so the pushed branch always contains the latest snapshot.
+if ! git diff --quiet -- docs/status/AI_CONTEXT.md; then
+  git add docs/status/AI_CONTEXT.md
+  git commit -m "docs(status): update AI context" --no-verify
+fi
