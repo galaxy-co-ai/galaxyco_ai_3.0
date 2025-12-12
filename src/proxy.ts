@@ -35,15 +35,12 @@ const isPublicRoute = createRouteMatcher([
   '/api/public(.*)',
 ]);
 
-export function proxy(auth: any, request: any) {
+export default clerkMiddleware(async (auth, request) => {
   // Protect all non-public routes
   if (!isPublicRoute(request)) {
-    return auth.protect();
+    await auth.protect();
   }
-}
-
-// Clerk middleware wrapper
-export default clerkMiddleware(proxy);
+});
 
 export const config = {
   matcher: [
