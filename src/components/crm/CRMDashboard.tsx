@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { PillTabs, type PillTab } from "@/components/ui/pill-tabs";
 import { PageTitle } from "@/components/ui/page-title";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -32,9 +30,6 @@ import {
   MessageSquare,
   FileText,
   Zap,
-  Send,
-  RefreshCw,
-  Loader2,
   X,
   DollarSign,
   Globe,
@@ -140,7 +135,6 @@ export default function CRMDashboard({
   initialTab = 'leads',
   stats,
 }: CRMDashboardProps) {
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLead, setSelectedLead] = useState<string | null>(null);
@@ -204,25 +198,6 @@ export default function CRMDashboard({
     notes: "",
   });
 
-  // Neptune CRM Chat state
-  interface ChatMessage {
-    id: string;
-    role: 'user' | 'assistant';
-    content: string;
-    timestamp: Date;
-  }
-  
-  const [crmChatMessages, setCrmChatMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: "Hey! 👋 I'm Neptune, your CRM assistant. I can help you manage leads, analyze your pipeline, draft follow-up emails, schedule meetings, or find insights. What would you like to do?",
-      timestamp: new Date(),
-    },
-  ]);
-  const [crmChatInput, setCrmChatInput] = useState("");
-  const [isCrmChatLoading, setIsCrmChatLoading] = useState(false);
-  const crmChatEndRef = useRef<HTMLDivElement>(null);
   const [showNeptune, setShowNeptune] = useState(false);
 
   // Floating detail dialog states
@@ -231,10 +206,6 @@ export default function CRMDashboard({
   const [showContactDetailDialog, setShowContactDetailDialog] = useState(false);
   const [showDealDetailDialog, setShowDealDetailDialog] = useState(false);
 
-  // Auto-scroll chat
-  useEffect(() => {
-    crmChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [crmChatMessages]);
 
   // Update leads when initialLeads changes (from server refresh)
   useEffect(() => {
@@ -586,99 +557,6 @@ export default function CRMDashboard({
     },
   ];
 
-  // Handle Neptune CRM chat message
-  const handleSendCrmChatMessage = async () => {
-    if (!crmChatInput.trim() || isCrmChatLoading) return;
-
-    const userInput = crmChatInput.trim();
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: userInput,
-      timestamp: new Date(),
-    };
-
-    setCrmChatMessages(prev => [...prev, userMessage]);
-    setCrmChatInput("");
-    setIsCrmChatLoading(true);
-
-    try {
-      // Build context about current CRM view
-      let context = `[CRM Context]
-Current tab: ${activeTab}
-`;
-
-      if (activeTab === 'leads' && selectedLead) {
-        const lead = leads.find(l => l.id === selectedLead);
-        if (lead) {
-          context += `Selected lead: ${lead.name} (${lead.company || 'No company'}) - Stage: ${lead.stage}, Score: ${lead.score}
-`;
-        }
-      } else if (activeTab === 'organizations' && selectedOrg) {
-        const org = organizations.find(o => o.id === selectedOrg);
-        if (org) {
-          context += `Selected organization: ${org.name} - Status: ${org.status}
-`;
-        }
-      } else if (activeTab === 'contacts' && selectedContact) {
-        const contact = contacts.find(c => c.id === selectedContact);
-        if (contact) {
-          context += `Selected contact: ${contact.firstName} ${contact.lastName} (${contact.company || 'No company'})
-`;
-        }
-      } else if (activeTab === 'deals' && selectedDeal) {
-        const deal = deals.find(d => d.id === selectedDeal);
-        if (deal) {
-          context += `Selected deal: ${deal.title} - Value: $${(deal.value / 100).toLocaleString()}, Stage: ${deal.stage}
-`;
-        }
-      }
-
-      context += `
-Stats: ${stats.totalLeads} leads (${stats.hotLeads} hot), ${stats.totalOrgs} organizations, Pipeline value: $${(stats.totalValue / 100).toLocaleString()}
-
-User's request: "${userInput}"
-
-Help the user with their CRM tasks. You can:
-- Create leads, contacts, organizations, or deals
-- Search and analyze the pipeline
-- Draft follow-up emails
-- Schedule meetings
-- Provide insights and recommendations
-- Update records
-
-Be helpful, proactive, and use CRM tools when needed.`;
-
-      const response = await fetch('/api/assistant/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: context }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response from Neptune');
-      }
-
-      const data = await response.json();
-
-      setCrmChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.message.content,
-        timestamp: new Date(),
-      }]);
-    } catch (error) {
-      logger.error('CRM chat error', error);
-      setCrmChatMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: "I'm having trouble connecting right now. Please try again in a moment.",
-        timestamp: new Date(),
-      }]);
-    } finally {
-      setIsCrmChatLoading(false);
-    }
-  };
 
   // Handle item click - open floating dialog
   const handleLeadClick = (leadId: string) => {
@@ -773,8 +651,8 @@ Be helpful, proactive, and use CRM tools when needed.`;
           {/* LEADS TAB */}
           {activeTab === 'leads' && (
             <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-                {/* Left: Leads List */}
+              <div className="grid grid-cols-1">
+                {/* Leads List */}
                 <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex-shrink-0">
@@ -846,165 +724,6 @@ Be helpful, proactive, and use CRM tools when needed.`;
                     />
                   </div>
                 </div>
-
-                {/* Right: Neptune Chat */}
-                <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Chat Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-blue-100/50 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                        <Sparkles className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-sm text-gray-900">Neptune CRM Assistant</h3>
-                        <p className="text-xs text-blue-600">
-                          {selectedLead ? `Viewing: ${selectedLeadData?.name || 'Lead'}` : 'Ready to help with your leads'}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        setCrmChatMessages([{
-                          id: '1',
-                          role: 'assistant',
-                          content: "Hey! 👋 I'm Neptune, your CRM assistant. I can help you manage leads, analyze your pipeline, draft follow-up emails, schedule meetings, or find insights. What would you like to do?",
-                          timestamp: new Date(),
-                        }]);
-                      }}
-                      className="h-7 w-7"
-                      aria-label="Reset chat"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Chat Messages - Scrollable Area */}
-                  <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
-                    {crmChatMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        {message.role === 'assistant' && (
-                          <Avatar className="h-7 w-7 shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-                              <Sparkles className="h-3.5 w-3.5" />
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div className={`flex-1 min-w-0 ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
-                          <div
-                            className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] ${
-                              message.role === 'user'
-                                ? 'bg-blue-500 text-white ml-auto rounded-br-md'
-                                : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'
-                            }`}
-                          >
-                            <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
-                          </div>
-                          <span className="text-[10px] text-gray-400 mt-1 block">
-                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        {message.role === 'user' && (
-                          <Avatar className="h-7 w-7 shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-700 text-white text-xs">
-                              U
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                    ))}
-                    {isCrmChatLoading && (
-                      <div className="flex gap-2">
-                        <Avatar className="h-7 w-7 shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-                            <Sparkles className="h-3.5 w-3.5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-white shadow-sm border border-gray-100">
-                          <div className="flex gap-1">
-                            <motion.div
-                              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                              className="h-2 w-2 bg-blue-400 rounded-full"
-                            />
-                            <motion.div
-                              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                              className="h-2 w-2 bg-blue-400 rounded-full"
-                            />
-                            <motion.div
-                              animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
-                              className="h-2 w-2 bg-blue-400 rounded-full"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div ref={crmChatEndRef} />
-                  </div>
-
-                  {/* Quick Suggestions - Fixed at bottom */}
-                  {crmChatMessages.length === 1 && (
-                    <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50 shrink-0">
-                      <p className="text-[10px] text-gray-500 mb-2">Quick actions:</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          "Show me hot leads",
-                          "Who needs follow-up?",
-                          "Draft an email to this lead",
-                          "Analyze my pipeline"
-                        ].map((suggestion, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setCrmChatInput(suggestion);
-                              setTimeout(() => handleSendCrmChatMessage(), 100);
-                            }}
-                            className="text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all"
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Chat Input - Fixed at bottom */}
-                  <div className="px-4 py-3 border-t flex items-center gap-2 shrink-0 bg-white/80 backdrop-blur-sm">
-                    <Input
-                      placeholder="Ask Neptune anything about your CRM..."
-                      value={crmChatInput}
-                      onChange={(e) => setCrmChatInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey && !isCrmChatLoading) {
-                          e.preventDefault();
-                          handleSendCrmChatMessage();
-                        }
-                      }}
-                      className="flex-1 rounded-full"
-                      disabled={isCrmChatLoading}
-                      aria-label="Message Neptune"
-                    />
-                    <Button
-                      size="icon"
-                      onClick={handleSendCrmChatMessage}
-                      disabled={!crmChatInput.trim() || isCrmChatLoading}
-                      className="bg-blue-500 hover:bg-blue-600 rounded-full"
-                      aria-label="Send message"
-                    >
-                      {isCrmChatLoading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Send className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
               </div>
             </Card>
           )}
@@ -1012,8 +731,8 @@ Be helpful, proactive, and use CRM tools when needed.`;
           {/* ORGANIZATIONS TAB */}
           {activeTab === 'organizations' && (
             <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-                {/* Left: Organizations List */}
+              <div className="grid grid-cols-1">
+                {/* Organizations List */}
                 <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex-shrink-0">
@@ -1083,123 +802,6 @@ Be helpful, proactive, and use CRM tools when needed.`;
                     />
                   </div>
                 </div>
-
-                {/* Right: Neptune Chat */}
-                <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Chat Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-purple-50 to-purple-100/50 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-                        <Sparkles className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-sm text-gray-900">Neptune CRM Assistant</h3>
-                        <p className="text-xs text-purple-600">
-                          {selectedOrg ? `Viewing: ${selectedOrgData?.name || 'Organization'}` : 'Ready to help with accounts'}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        setCrmChatMessages([{
-                          id: '1',
-                          role: 'assistant',
-                          content: "Hey! 👋 I'm Neptune, your CRM assistant. I can help you manage organizations, analyze account health, find decision makers, or draft outreach. What would you like to do?",
-                          timestamp: new Date(),
-                        }]);
-                      }}
-                      className="h-7 w-7"
-                      aria-label="Reset chat"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
-                    {crmChatMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        {message.role === 'assistant' && (
-                          <Avatar className="h-7 w-7 shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-purple-700 text-white">
-                              <Sparkles className="h-3.5 w-3.5" />
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div className={`flex-1 min-w-0 ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
-                          <div
-                            className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] ${
-                              message.role === 'user'
-                                ? 'bg-purple-500 text-white ml-auto rounded-br-md'
-                                : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'
-                            }`}
-                          >
-                            <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
-                          </div>
-                          <span className="text-[10px] text-gray-400 mt-1 block">
-                            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                        </div>
-                        {message.role === 'user' && (
-                          <Avatar className="h-7 w-7 shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-700 text-white text-xs">
-                              U
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                    ))}
-                    {isCrmChatLoading && (
-                      <div className="flex gap-2">
-                        <Avatar className="h-7 w-7 shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-purple-600 to-purple-700 text-white">
-                            <Sparkles className="h-3.5 w-3.5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-white shadow-sm border border-gray-100">
-                          <div className="flex gap-1">
-                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="h-2 w-2 bg-purple-400 rounded-full" />
-                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="h-2 w-2 bg-purple-400 rounded-full" />
-                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="h-2 w-2 bg-purple-400 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div ref={crmChatEndRef} />
-                  </div>
-
-                  {/* Chat Input */}
-                  <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
-                    <Input
-                      placeholder="Ask Neptune about your accounts..."
-                      value={crmChatInput}
-                      onChange={(e) => setCrmChatInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey && !isCrmChatLoading) {
-                          e.preventDefault();
-                          handleSendCrmChatMessage();
-                        }
-                      }}
-                      className="flex-1 rounded-full"
-                      disabled={isCrmChatLoading}
-                      aria-label="Message Neptune"
-                    />
-                    <Button
-                      size="icon"
-                      onClick={handleSendCrmChatMessage}
-                      disabled={!crmChatInput.trim() || isCrmChatLoading}
-                      className="bg-purple-500 hover:bg-purple-600 rounded-full"
-                      aria-label="Send message"
-                    >
-                      {isCrmChatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
               </div>
             </Card>
           )}
@@ -1207,8 +809,8 @@ Be helpful, proactive, and use CRM tools when needed.`;
           {/* CONTACTS TAB */}
           {activeTab === 'contacts' && (
             <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-                {/* Left: Contacts List */}
+              <div className="grid grid-cols-1">
+                {/* Contacts List */}
                 <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-cyan-50 to-cyan-100/50 flex-shrink-0">
@@ -1259,89 +861,6 @@ Be helpful, proactive, and use CRM tools when needed.`;
                     />
                   </div>
                 </div>
-
-                {/* Right: Neptune Chat */}
-                <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  {/* Chat Header */}
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-cyan-50 to-cyan-100/50 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
-                        <Sparkles className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-sm text-gray-900">Neptune CRM Assistant</h3>
-                        <p className="text-xs text-cyan-600">
-                          {selectedContact ? `Viewing: ${selectedContactData?.firstName} ${selectedContactData?.lastName}` : 'Ready to help with contacts'}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => {
-                        setCrmChatMessages([{
-                          id: '1',
-                          role: 'assistant',
-                          content: "Hey! 👋 I'm Neptune. I can help you manage contacts, find people at companies, draft personalized outreach, or enrich contact data. What would you like to do?",
-                          timestamp: new Date(),
-                        }]);
-                      }}
-                      className="h-7 w-7"
-                      aria-label="Reset chat"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
-                    {crmChatMessages.map((message) => (
-                      <div key={message.id} className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        {message.role === 'assistant' && (
-                          <Avatar className="h-7 w-7 shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-cyan-700 text-white">
-                              <Sparkles className="h-3.5 w-3.5" />
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <div className={`flex-1 min-w-0 ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
-                          <div className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] ${message.role === 'user' ? 'bg-cyan-500 text-white ml-auto rounded-br-md' : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'}`}>
-                            <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
-                          </div>
-                          <span className="text-[10px] text-gray-400 mt-1 block">{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                        {message.role === 'user' && (
-                          <Avatar className="h-7 w-7 shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-700 text-white text-xs">U</AvatarFallback>
-                          </Avatar>
-                        )}
-                      </div>
-                    ))}
-                    {isCrmChatLoading && (
-                      <div className="flex gap-2">
-                        <Avatar className="h-7 w-7 shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-cyan-600 to-cyan-700 text-white"><Sparkles className="h-3.5 w-3.5" /></AvatarFallback>
-                        </Avatar>
-                        <div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-white shadow-sm border border-gray-100">
-                          <div className="flex gap-1">
-                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="h-2 w-2 bg-cyan-400 rounded-full" />
-                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="h-2 w-2 bg-cyan-400 rounded-full" />
-                            <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="h-2 w-2 bg-cyan-400 rounded-full" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div ref={crmChatEndRef} />
-                  </div>
-
-                  {/* Chat Input */}
-                  <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
-                    <Input placeholder="Ask Neptune about your contacts..." value={crmChatInput} onChange={(e) => setCrmChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !isCrmChatLoading) { e.preventDefault(); handleSendCrmChatMessage(); }}} className="flex-1 rounded-full" disabled={isCrmChatLoading} aria-label="Message Neptune" />
-                    <Button size="icon" onClick={handleSendCrmChatMessage} disabled={!crmChatInput.trim() || isCrmChatLoading} className="bg-cyan-500 hover:bg-cyan-600 rounded-full" aria-label="Send message">
-                      {isCrmChatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </div>
               </div>
             </Card>
           )}
@@ -1349,8 +868,8 @@ Be helpful, proactive, and use CRM tools when needed.`;
           {/* DEALS TAB */}
           {activeTab === 'deals' && (
             <Card className="p-4 sm:p-6 lg:p-8 shadow-lg border-0 mb-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
-                {/* Left: Deals List */}
+              <div className="grid grid-cols-1">
+                {/* Deals List */}
                 <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border bg-white overflow-hidden shadow-sm">
                   {/* Header */}
                   <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex-shrink-0">
@@ -1417,38 +936,6 @@ Be helpful, proactive, and use CRM tools when needed.`;
                       formatDate={formatDate}
                       formatCurrency={formatCurrency}
                     />
-                  </div>
-                </div>
-
-                {/* Right: Neptune Chat */}
-                <div className="flex flex-col h-[calc(100vh-380px)] min-h-[400px] rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  <div className="px-6 py-4 border-b bg-gradient-to-r from-green-50 to-green-100/50 flex items-center justify-between flex-shrink-0">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white"><Sparkles className="h-4 w-4" /></div>
-                      <div>
-                        <h3 className="font-semibold text-sm text-gray-900">Neptune CRM Assistant</h3>
-                        <p className="text-xs text-green-600">{selectedDeal ? `Viewing: ${selectedDealData?.title || 'Deal'}` : 'Ready to help with deals'}</p>
-                      </div>
-                    </div>
-                    <Button size="icon" variant="ghost" onClick={() => setCrmChatMessages([{ id: '1', role: 'assistant', content: "Hey! 👋 I'm Neptune. I can help you manage deals, forecast revenue, identify at-risk opportunities, or create winning proposals. What would you like to do?", timestamp: new Date() }])} className="h-7 w-7" aria-label="Reset chat"><RefreshCw className="h-4 w-4" /></Button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white">
-                    {crmChatMessages.map((message) => (
-                      <div key={message.id} className={`flex gap-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        {message.role === 'assistant' && <Avatar className="h-7 w-7 shrink-0"><AvatarFallback className="bg-gradient-to-br from-green-600 to-green-700 text-white"><Sparkles className="h-3.5 w-3.5" /></AvatarFallback></Avatar>}
-                        <div className={`flex-1 min-w-0 ${message.role === 'user' ? 'flex flex-col items-end' : ''}`}>
-                          <div className={`rounded-2xl px-3.5 py-2.5 max-w-[85%] ${message.role === 'user' ? 'bg-green-500 text-white ml-auto rounded-br-md' : 'bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100'}`}><p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p></div>
-                          <span className="text-[10px] text-gray-400 mt-1 block">{message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                        {message.role === 'user' && <Avatar className="h-7 w-7 shrink-0"><AvatarFallback className="bg-gradient-to-br from-gray-500 to-gray-700 text-white text-xs">U</AvatarFallback></Avatar>}
-                      </div>
-                    ))}
-                    {isCrmChatLoading && <div className="flex gap-2"><Avatar className="h-7 w-7 shrink-0"><AvatarFallback className="bg-gradient-to-br from-green-600 to-green-700 text-white"><Sparkles className="h-3.5 w-3.5" /></AvatarFallback></Avatar><div className="rounded-2xl rounded-bl-md px-3.5 py-2.5 bg-white shadow-sm border border-gray-100"><div className="flex gap-1"><motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="h-2 w-2 bg-green-400 rounded-full" /><motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="h-2 w-2 bg-green-400 rounded-full" /><motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="h-2 w-2 bg-green-400 rounded-full" /></div></div></div>}
-                    <div ref={crmChatEndRef} />
-                  </div>
-                  <div className="px-4 py-3 border-t flex items-center gap-2 flex-shrink-0 bg-white/80 backdrop-blur-sm">
-                    <Input placeholder="Ask Neptune about your deals..." value={crmChatInput} onChange={(e) => setCrmChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !isCrmChatLoading) { e.preventDefault(); handleSendCrmChatMessage(); }}} className="flex-1 rounded-full" disabled={isCrmChatLoading} aria-label="Message Neptune" />
-                    <Button size="icon" onClick={handleSendCrmChatMessage} disabled={!crmChatInput.trim() || isCrmChatLoading} className="bg-green-500 hover:bg-green-600 rounded-full" aria-label="Send message">{isCrmChatLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</Button>
                   </div>
                 </div>
               </div>
