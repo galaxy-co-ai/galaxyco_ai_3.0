@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PillTabs, type PillTab } from "@/components/ui/pill-tabs";
+import { PageTitle } from "@/components/ui/page-title";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -483,14 +485,6 @@ export default function MarketingDashboard({
     return channels[audienceId] || [];
   };
 
-  // Stat badges
-  const statBadges = [
-    { label: `${stats.activeCampaigns} Active Campaigns`, icon: Megaphone, color: "bg-pink-100 text-pink-700" },
-    { label: `${formatCurrency(stats.totalBudget)} Budget`, icon: TrendingUp, color: "bg-blue-100 text-blue-700" },
-    { label: `${stats.totalImpressions.toLocaleString()} Impressions`, icon: BarChart3, color: "bg-purple-100 text-purple-700" },
-    { label: `${stats.avgROI}% Avg ROI`, icon: ArrowUpRight, color: "bg-green-100 text-green-700" },
-  ];
-
   // Tab configuration - Content and Assets moved to Creator page
   const tabs = [
     { id: 'create' as TabType, label: 'Create', icon: Plus, activeColor: 'bg-emerald-100 text-emerald-700' },
@@ -498,6 +492,16 @@ export default function MarketingDashboard({
     { id: 'channels' as TabType, label: 'Channels', icon: Share2, activeColor: 'bg-purple-100 text-purple-700' },
     { id: 'analytics' as TabType, label: 'Analytics', icon: BarChart3, activeColor: 'bg-indigo-100 text-indigo-700' },
   ];
+
+  const pillTabs: Array<PillTab<TabType>> = tabs.map((tab) => ({
+    value: tab.id,
+    label: tab.label,
+    Icon: tab.icon,
+    activeClassName: tab.activeColor,
+    badgeClassName: tab.badgeColor,
+    badge: tab.badge ? Number(tab.badge) : undefined,
+    ariaLabel: `Switch to ${tab.label} tab`,
+  }));
 
   // Marketing Asset Templates
   const assetTemplates = [
@@ -1162,50 +1166,24 @@ Be creative, engaging, and write content that resonates!`;
       <div className="px-6 py-4 space-y-4 shrink-0">
         {/* Header */}
         <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-3">
-            <Megaphone 
-              className="w-7 h-7"
-              style={{
-                stroke: 'url(#icon-gradient-mkt)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient-mkt" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <h1 
-              className="branded-page-title text-2xl uppercase"
-              style={{ 
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
-              }}
-            >
-              <span className="hidden sm:inline">M A R K E T I N G</span>
-              <span className="sm:hidden">MARKETING</span>
-            </h1>
-          </div>
+          <PageTitle title="Marketing" icon={Megaphone} />
 
           {/* Stats Bar */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
-            <Badge className="px-3 py-1.5 bg-pink-50 text-pink-700 border border-pink-200 hover:bg-pink-100 transition-colors">
-              <Megaphone className="h-3.5 w-3.5 mr-1.5 text-pink-600" />
+            <Badge variant="soft" tone="pink" size="pill">
+              <Megaphone className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.activeCampaigns}</span>
-              <span className="ml-1 text-pink-600/70 font-normal">Active Campaigns</span>
+              <span className="ml-1 font-normal opacity-70">Active Campaigns</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-              <BarChart3 className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+            <Badge variant="soft" tone="violet" size="pill">
+              <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.totalImpressions.toLocaleString()}</span>
-              <span className="ml-1 text-purple-600/70 font-normal">Impressions</span>
+              <span className="ml-1 font-normal opacity-70">Impressions</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-              <ArrowUpRight className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+            <Badge variant="soft" tone="success" size="pill">
+              <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.avgROI}%</span>
-              <span className="ml-1 text-green-600/70 font-normal">Avg ROI</span>
+              <span className="ml-1 font-normal opacity-70">Avg ROI</span>
             </Badge>
           </div>
         </div>
@@ -1213,39 +1191,16 @@ Be creative, engaging, and write content that resonates!`;
         {/* Tab Bar with Ask Neptune Button */}
         <div className="mt-14 flex items-center justify-between gap-4">
           <div className="flex-1 flex items-center justify-center">
-            <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                    activeTab === tab.id
-                      ? `${tab.activeColor} shadow-sm`
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                  aria-label={`Switch to ${tab.label} tab`}
-                >
-                  <tab.icon className="h-4 w-4" />
-                  <span>{tab.label}</span>
-                  {tab.badge && (
-                    <Badge 
-                      className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
-                    >
-                      {tab.badge}
-                    </Badge>
-                  )}
-                </button>
-              ))}
-            </div>
+            <PillTabs value={activeTab} onValueChange={setActiveTab} tabs={pillTabs} />
           </div>
           <div className="flex-shrink-0">
             <Button
               size="sm"
+              variant="surface"
               onClick={() => setShowNeptune(!showNeptune)}
-              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
               aria-label="Toggle Neptune AI assistant"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
               <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>

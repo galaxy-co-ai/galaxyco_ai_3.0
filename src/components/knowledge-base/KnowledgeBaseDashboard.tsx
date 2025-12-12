@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PillTabs, type PillTab } from "@/components/ui/pill-tabs";
+import { PageTitle } from "@/components/ui/page-title";
 import {
   Dialog,
   DialogContent,
@@ -402,6 +404,16 @@ export default function KnowledgeBaseDashboard({
     { id: 'upload' as TabType, label: 'Upload', icon: Upload, activeColor: 'bg-blue-100 text-blue-700' },
   ];
 
+  const pillTabs: Array<PillTab<TabType>> = tabs.map((tab) => ({
+    value: tab.id,
+    label: tab.label,
+    Icon: tab.icon,
+    activeClassName: tab.activeColor,
+    badgeClassName: tab.badgeColor,
+    badge: tab.badge ? Number(tab.badge) : undefined,
+    ariaLabel: `Switch to ${tab.label} tab`,
+  }));
+
   // Toggle star
   const toggleStar = (itemId: string) => {
     setStarredItems((prev) => {
@@ -531,100 +543,51 @@ export default function KnowledgeBaseDashboard({
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-3">
-            <BookOpen 
-              className="w-7 h-7"
-              style={{
-                stroke: 'url(#icon-gradient-kb)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient-kb" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <h1 
-              className="text-2xl uppercase"
-              style={{ 
-                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
-                fontWeight: 700,
-                letterSpacing: '0.25em',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
-              }}
-            >
-              Library
-            </h1>
-          </div>
+          <PageTitle title="Library" icon={BookOpen} />
 
           {/* Stats Bar */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
-            <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
-              <FileText className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+            <Badge variant="soft" tone="success" size="pill">
+              <FileText className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.totalItems}</span>
-              <span className="ml-1 text-emerald-600/70 font-normal">Items</span>
+              <span className="ml-1 font-normal opacity-70">Items</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-              <Folder className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+            <Badge variant="soft" tone="violet" size="pill">
+              <Folder className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.totalCollections}</span>
-              <span className="ml-1 text-purple-600/70 font-normal">Collections</span>
+              <span className="ml-1 font-normal opacity-70">Collections</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition-colors">
-              <Clock className="h-3.5 w-3.5 mr-1.5 text-cyan-600" />
+            <Badge variant="soft" tone="teal" size="pill">
+              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.recentItems}</span>
-              <span className="ml-1 text-cyan-600/70 font-normal">Recent</span>
+              <span className="ml-1 font-normal opacity-70">Recent</span>
             </Badge>
           </div>
         </div>
 
         {/* Tab Bar with Ask Neptune Button */}
         <div className="mt-14 relative flex items-center justify-center overflow-x-auto pb-2 -mb-2">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  if (tab.id === 'upload') {
-                    setShowUploadDialog(true);
-                  } else {
-                    setActiveTab(tab.id);
-                  }
-                }}
-                className={cn(
-                  "relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
-                  activeTab === tab.id
-                    ? `${tab.activeColor} shadow-sm`
-                    : 'text-gray-600 hover:bg-gray-100'
-                )}
-                aria-label={`Switch to ${tab.label} tab`}
-              >
-                <tab.icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-                {tab.badge && tab.badge !== "0" && (
-                  <Badge
-                    className={cn(
-                      "text-xs px-1.5 py-0 h-4 min-w-[18px]",
-                      activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'
-                    )}
-                  >
-                    {tab.badge}
-                  </Badge>
-                )}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            value={activeTab}
+            onValueChange={(tab) => {
+              if (tab === "upload") {
+                setShowUploadDialog(true);
+                return;
+              }
+              setActiveTab(tab);
+            }}
+            tabs={pillTabs}
+            className="justify-start sm:justify-center"
+            listClassName="flex-nowrap"
+          />
           <div className="absolute right-0">
             <Button
               size="sm"
+              variant="surface"
               onClick={() => setShowNeptune(!showNeptune)}
-              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
               aria-label="Toggle Neptune AI assistant"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
               <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>

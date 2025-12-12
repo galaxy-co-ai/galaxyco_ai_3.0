@@ -17,6 +17,13 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  DollarSign,
+  Megaphone,
+  Headphones,
+  Settings2,
+  CreditCard,
+  Rocket,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { AgentDepartment } from "@/lib/orchestration/types";
@@ -24,46 +31,46 @@ import type { AgentDepartment } from "@/lib/orchestration/types";
 // Department icons and colors
 const departmentConfig: Record<
   AgentDepartment,
-  { icon: string; color: string; bgColor: string; borderColor: string }
+  { Icon: LucideIcon; color: string; bgColor: string; borderColor: string }
 > = {
   sales: {
-    icon: "💰",
+    Icon: DollarSign,
     color: "text-emerald-700",
     bgColor: "bg-emerald-50",
     borderColor: "border-emerald-200",
   },
   marketing: {
-    icon: "📢",
+    Icon: Megaphone,
     color: "text-blue-700",
     bgColor: "bg-blue-50",
     borderColor: "border-blue-200",
   },
   support: {
-    icon: "🎧",
+    Icon: Headphones,
     color: "text-purple-700",
     bgColor: "bg-purple-50",
     borderColor: "border-purple-200",
   },
   operations: {
-    icon: "⚙️",
+    Icon: Settings2,
     color: "text-amber-700",
     bgColor: "bg-amber-50",
     borderColor: "border-amber-200",
   },
   finance: {
-    icon: "💳",
+    Icon: CreditCard,
     color: "text-teal-700",
     bgColor: "bg-teal-50",
     borderColor: "border-teal-200",
   },
   product: {
-    icon: "🚀",
+    Icon: Rocket,
     color: "text-indigo-700",
     bgColor: "bg-indigo-50",
     borderColor: "border-indigo-200",
   },
   general: {
-    icon: "🤖",
+    Icon: Bot,
     color: "text-gray-700",
     bgColor: "bg-gray-50",
     borderColor: "border-gray-200",
@@ -119,6 +126,7 @@ export default function TeamCard({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const config = departmentConfig[team.department] || departmentConfig.general;
+  const DeptIcon = config.Icon;
   const successRate =
     team.totalExecutions > 0
       ? Math.round((team.successfulExecutions / team.totalExecutions) * 100)
@@ -177,13 +185,13 @@ export default function TeamCard({
           <div className="flex items-center gap-3">
             <div
               className={cn(
-                "w-10 h-10 rounded-lg flex items-center justify-center text-lg",
+                "w-10 h-10 rounded-lg flex items-center justify-center",
                 config.bgColor,
                 config.borderColor,
                 "border"
               )}
             >
-              {config.icon}
+              <DeptIcon className={cn("h-5 w-5", config.color)} aria-hidden="true" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">{team.name}</h3>

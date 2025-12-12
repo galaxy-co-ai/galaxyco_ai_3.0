@@ -17,7 +17,12 @@ import {
   Loader2,
   Play,
   RefreshCw,
-  Filter,
+  LayoutGrid,
+  DollarSign,
+  Megaphone,
+  Headphones,
+  Settings2,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -64,12 +69,12 @@ interface ApiAgent {
 }
 
 // Department filter options
-const departmentFilters: Array<{ value: string; label: string; icon: string }> = [
-  { value: "all", label: "All Teams", icon: "🔍" },
-  { value: "sales", label: "Sales", icon: "💰" },
-  { value: "marketing", label: "Marketing", icon: "📢" },
-  { value: "support", label: "Support", icon: "🎧" },
-  { value: "operations", label: "Operations", icon: "⚙️" },
+const departmentFilters: Array<{ value: string; label: string; Icon: LucideIcon }> = [
+  { value: "all", label: "All Teams", Icon: LayoutGrid },
+  { value: "sales", label: "Sales", Icon: DollarSign },
+  { value: "marketing", label: "Marketing", Icon: Megaphone },
+  { value: "support", label: "Support", Icon: Headphones },
+  { value: "operations", label: "Operations", Icon: Settings2 },
 ];
 
 // Transform API team to local format
@@ -345,26 +350,20 @@ export default function AgentTeamsTab({ neptuneOpen = false }: AgentTeamsTabProp
 
         {/* Stats Row */}
         <div className="flex items-center gap-3">
-          <Badge
-            variant="outline"
-            className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border-emerald-200"
-          >
-            <Activity className="h-3.5 w-3.5 mr-1.5" />
-            {stats.active} Active
+          <Badge variant="soft" tone="success" size="pill">
+            <Activity className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="font-semibold">{stats.active}</span>
+            <span className="ml-1 font-normal opacity-70">Active</span>
           </Badge>
-          <Badge
-            variant="outline"
-            className="px-3 py-1.5 bg-blue-50 text-blue-700 border-blue-200"
-          >
-            <Users className="h-3.5 w-3.5 mr-1.5" />
-            {stats.total} Teams
+          <Badge variant="soft" tone="info" size="pill">
+            <Users className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="font-semibold">{stats.total}</span>
+            <span className="ml-1 font-normal opacity-70">Teams</span>
           </Badge>
-          <Badge
-            variant="outline"
-            className="px-3 py-1.5 bg-purple-50 text-purple-700 border-purple-200"
-          >
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-            {stats.avgSuccessRate}% Success
+          <Badge variant="soft" tone="violet" size="pill">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="font-semibold">{stats.avgSuccessRate}%</span>
+            <span className="ml-1 font-normal opacity-70">Success</span>
           </Badge>
         </div>
 
@@ -379,23 +378,32 @@ export default function AgentTeamsTab({ neptuneOpen = false }: AgentTeamsTabProp
               className="pl-9"
             />
           </div>
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            {departmentFilters.map((filter) => (
-              <button
-                key={filter.value}
-                onClick={() => setDepartmentFilter(filter.value)}
-                className={cn(
-                  "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-                  departmentFilter === filter.value
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                )}
-                aria-label={`Filter by ${filter.label}`}
-              >
-                {filter.icon}
-                <span className="ml-1 hidden sm:inline">{filter.label}</span>
-              </button>
-            ))}
+          <div className="flex items-center gap-1 bg-muted/70 border border-border/60 rounded-lg p-1">
+            {departmentFilters.map((filter) => {
+              const isActive = departmentFilter === filter.value;
+              const Icon = filter.Icon;
+
+              return (
+                <Button
+                  key={filter.value}
+                  type="button"
+                  variant={isActive ? "surface" : "ghost"}
+                  size="sm"
+                  onClick={() => setDepartmentFilter(filter.value)}
+                  className={cn(
+                    "h-8 px-3 rounded-md text-sm font-medium shadow-none hover:translate-y-0 active:scale-100",
+                    isActive
+                      ? "text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-pressed={isActive}
+                  aria-label={`Filter by ${filter.label}`}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">{filter.label}</span>
+                </Button>
+              );
+            })}
           </div>
         </div>
       </div>
