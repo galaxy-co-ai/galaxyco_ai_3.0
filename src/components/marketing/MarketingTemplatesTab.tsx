@@ -429,24 +429,24 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
                         </p>
                       )}
 
-                      {/* Duration and Budget */}
-                      <div className="flex items-center gap-3 text-xs text-gray-400 mb-2">
+                      {/* Stats - all on one line */}
+                      <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {template.duration}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          {template.budget}
-                        </span>
+                        <span className="text-gray-300">•</span>
+                        <span>{template.budget}</span>
+                        {template.usageCount && template.usageCount > 0 && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {template.usageCount} uses
+                            </span>
+                          </>
+                        )}
                       </div>
-
-                      {template.usageCount && template.usageCount > 0 && (
-                        <div className="flex items-center text-xs text-gray-400">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          {template.usageCount} uses
-                        </div>
-                      )}
                     </div>
                   </motion.div>
                 );
