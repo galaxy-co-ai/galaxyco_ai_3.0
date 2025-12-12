@@ -22,6 +22,13 @@
       "when": 1733939744000,
       "tag": "0003_add_neptune_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765582649076,
+      "tag": "0004_perfect_triathlon",
+      "breakpoints": true
     }
   ]
 }

@@ -10,10 +10,11 @@ import {
   MessageSquareWarning, 
   Users, 
   Settings,
-  FolderOpen
+  FolderOpen,
+  ListTodo
 } from "lucide-react";
 
-export type AdminTabType = 'overview' | 'content' | 'categories' | 'analytics' | 'feedback' | 'users' | 'settings';
+export type AdminTabType = 'overview' | 'content' | 'categories' | 'analytics' | 'feedback' | 'users' | 'settings' | 'todo_hq';
 
 interface AdminTabsProps {
   counts?: Partial<Record<AdminTabType, number>>;
@@ -82,6 +83,14 @@ const tabs: Array<{
     icon: Settings, 
     activeColor: 'bg-zinc-100 text-zinc-700', 
     badgeColor: 'bg-zinc-500' 
+  },
+  { 
+    value: 'todo_hq', 
+    label: 'To-Do HQ', 
+    href: '/admin/todo-hq',
+    icon: ListTodo, 
+    activeColor: 'bg-pink-100 text-pink-700', 
+    badgeColor: 'bg-pink-500' 
   },
 ];
 

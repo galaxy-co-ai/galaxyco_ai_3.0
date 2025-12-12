@@ -558,6 +558,17 @@ export const teamAutonomyLevelEnum = pgEnum('team_autonomy_level', [
 ]);
 
 // ============================================================================
+// TO-DO HQ (Mission Control) ENUMS
+// ============================================================================
+
+export const todoHqEpicStatusEnum = pgEnum('todo_hq_epic_status', [
+  'not_started',
+  'in_progress',
+  'completed',
+  'on_hold',
+]);
+
+// ============================================================================
 // WORKSPACES (Tenant Boundary)
 // ============================================================================
 
@@ -5597,6 +5608,140 @@ export const platformFeedback = pgTable(
 export const platformFeedbackRelations = relations(platformFeedback, ({ one }) => ({
   assignee: one(users, {
     fields: [platformFeedback.assignedTo],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
+// MISSION CONTROL - TO-DO HQ
+// ============================================================================
+
+/**
+ * To-Do HQ Epics - High-level feature groupings for tracking development progress
+ * Admin-only feature for internal project management
+ */
+export const todoHqEpics = pgTable(
+  'todo_hq_epics',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Basic info
+    name: text('name').notNull(),
+    description: text('description'),
+    status: todoHqEpicStatusEnum('status').notNull().default('not_started'),
+
+    // Completion tracking
+    targetCompletionPercent: integer('target_completion_percent').notNull().default(100), // Usually 100%
+
+    // Metadata
+    sortOrder: integer('sort_order').notNull().default(0), // For manual ordering
+    tags: text('tags').array().default([]),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('todo_hq_epic_tenant_idx').on(table.workspaceId),
+    statusIdx: index('todo_hq_epic_status_idx').on(table.status),
+    sortOrderIdx: index('todo_hq_epic_sort_order_idx').on(table.sortOrder),
+  }),
+);
+
+/**
+ * To-Do HQ Tasks - Individual actionable items within epics
+ * Represents specific work items needed to complete a feature
+ */
+export const todoHqTasks = pgTable(
+  'todo_hq_tasks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Epic relationship
+    epicId: uuid('epic_id')
+      .notNull()
+      .references(() => todoHqEpics.id, { onDelete: 'cascade' }),
+
+    // Basic info
+    title: text('title').notNull(),
+    description: text('description'),
+    status: taskStatusEnum('status').notNull().default('todo'),
+    priority: taskPriorityEnum('priority').notNull().default('medium'),
+
+    // Assignment
+    assignedTo: uuid('assigned_to').references(() => users.id),
+
+    // Scheduling
+    dueDate: timestamp('due_date'),
+    completedAt: timestamp('completed_at'),
+
+    // Metadata
+    sortOrder: integer('sort_order').notNull().default(0), // For manual ordering within epic
+    tags: text('tags').array().default([]),
+    notes: text('notes'),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('todo_hq_task_tenant_idx').on(table.workspaceId),
+    epicIdx: index('todo_hq_task_epic_idx').on(table.epicId),
+    statusIdx: index('todo_hq_task_status_idx').on(table.status),
+    priorityIdx: index('todo_hq_task_priority_idx').on(table.priority),
+    assignedToIdx: index('todo_hq_task_assigned_to_idx').on(table.assignedTo),
+    sortOrderIdx: index('todo_hq_task_sort_order_idx').on(table.sortOrder),
+  }),
+);
+
+// Relations for To-Do HQ
+export const todoHqEpicsRelations = relations(todoHqEpics, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [todoHqEpics.workspaceId],
+    references: [workspaces.id],
+  }),
+  creator: one(users, {
+    fields: [todoHqEpics.createdBy],
+    references: [users.id],
+  }),
+  tasks: many(todoHqTasks),
+}));
+
+export const todoHqTasksRelations = relations(todoHqTasks, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [todoHqTasks.workspaceId],
+    references: [workspaces.id],
+  }),
+  epic: one(todoHqEpics, {
+    fields: [todoHqTasks.epicId],
+    references: [todoHqEpics.id],
+  }),
+  creator: one(users, {
+    fields: [todoHqTasks.createdBy],
+    references: [users.id],
+  }),
+  assignee: one(users, {
+    fields: [todoHqTasks.assignedTo],
     references: [users.id],
   }),
 }));
