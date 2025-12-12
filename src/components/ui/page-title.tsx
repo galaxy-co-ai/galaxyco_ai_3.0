@@ -64,7 +64,7 @@ export function PageTitle({
       </svg>
       <TitleTag
         className={cn(
-          "branded-page-title-compact md:branded-page-title text-base md:text-2xl uppercase drop-shadow-sm",
+          "branded-page-title-compact md:branded-page-title text-xl md:text-2xl uppercase drop-shadow-sm",
           titleClassName
         )}
       >
