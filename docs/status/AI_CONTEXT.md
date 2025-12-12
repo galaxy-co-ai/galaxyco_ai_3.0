@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-11 (e2ed690)  
+**Updated Through:** 2025-12-11 (96134f3)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-11 96134f3 fix(marketing): remove double dollar sign and consolidate stats to one line
 - 2025-12-11 e2ed690 refactor(marketing): replace hover overlay with Build button in template cards
 - 2025-12-11 a900e7a feat(marketing): auto-trigger Neptune with template context on template selection
 - 2025-12-11 e0741b6 fix(web): update Marketing Templates tab UI to match Creator Templates style
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 6269306 feat(neptune): Phase 2 RAG Enhancements (#2)
 - 2025-12-11 fa28ecd docs: mark Phase 1 Neptune optimization complete
 - 2025-12-11 b66dd7a feat(neptune): Phase 1 Performance Optimizations - 2-3x faster response times
-- 2025-12-11 211a8c9 chore: hide internal scripts and old files from public view
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
