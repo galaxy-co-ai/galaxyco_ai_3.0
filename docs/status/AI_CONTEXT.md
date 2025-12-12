@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-11 (e0741b6)  
+**Updated Through:** 2025-12-11 (a900e7a)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-11 a900e7a feat(marketing): auto-trigger Neptune with template context on template selection
 - 2025-12-11 e0741b6 fix(web): update Marketing Templates tab UI to match Creator Templates style
 - 2025-12-11 dc040db feat(marketing): complete 3-tab user journey integration
 - 2025-12-11 b81fe78 feat(marketing): restructure to 3-tab user journey (WIP)
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 b66dd7a feat(neptune): Phase 1 Performance Optimizations - 2-3x faster response times
 - 2025-12-11 211a8c9 chore: hide internal scripts and old files from public view
 - 2025-12-11 791e6f1 docs: remove tagline from README
-- 2025-12-11 8a424b2 docs: replace verbose README with professional public-facing version
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
