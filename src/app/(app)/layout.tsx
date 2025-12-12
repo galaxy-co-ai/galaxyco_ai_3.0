@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { AppLayout } from "@/components/galaxy/app-layout";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 
 export default async function AppLayoutWrapper({
   children,
@@ -27,15 +28,17 @@ export default async function AppLayoutWrapper({
       };
 
   return (
-    <AppLayout
-      user={userData}
-      headerProps={{
-        showSearch: true,
-        showNotifications: true,
-        notificationCount: 0,
-      }}
-    >
-      {children}
-    </AppLayout>
+    <ErrorBoundary>
+      <AppLayout
+        user={userData}
+        headerProps={{
+          showSearch: true,
+          showNotifications: true,
+          notificationCount: 0,
+        }}
+      >
+        {children}
+      </AppLayout>
+    </ErrorBoundary>
   );
 }
