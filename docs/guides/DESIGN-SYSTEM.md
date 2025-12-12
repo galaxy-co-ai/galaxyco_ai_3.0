@@ -84,18 +84,38 @@ Uses Tailwind's default spacing scale (0.25rem increments):
 ### Base UI Components (`@/components/ui`)
 
 #### Button
-- **Variants**: default, destructive, outline, secondary, ghost, link
+- **Canonical**: `src/components/ui/button.tsx` (`Button`)
+- **Variants**: default, surface, destructive, outline, secondary, ghost, link, success, warning
 - **Sizes**: default (h-9), sm (h-8), lg (h-10), icon (size-9)
-- **Features**: Focus states, disabled states, loading states, icon support
+- **Notes**:
+  - Use `variant="surface"` for Neptune-style low-emphasis buttons (headers, toggles, toolbars).
+  - `NeptuneButton` exists for backwards compatibility, but new code should import `Button`.
 
 #### Card
 - **Sub-components**: CardHeader, CardTitle, CardDescription, CardContent, CardFooter
 - **Features**: Hover effects, shadow transitions
 
 #### Badge
-- **Variants**: default, secondary, success, warning, error, info, outline, ghost, hot, warm, cold, active, draft, paused
-- **Sizes**: sm, md, lg
-- **Features**: Dot indicator support
+- **Canonical**: `src/components/ui/badge.tsx` (`Badge`)
+- **Visual variants**: default, secondary, destructive, outline, soft
+- **Tone** (for `variant="soft"`): neutral, success, info, warning, danger, violet, indigo, pink, orange, teal, lime
+- **Sizes**: sm, md, pill
+- **Usage**: Prefer `variant="soft" size="pill"` for dashboard header stats and compact status chips.
+
+#### PageTitle
+Standardized gradient icon + Space Grotesk branded title.
+- **File**: `src/components/ui/page-title.tsx`
+- **Use for**: dashboard headers (Creator, My Agents, CRM, Marketing, Library, Conversations)
+
+#### PillTabs
+Rounded segmented navigation (glass + pills).
+- **File**: `src/components/ui/pill-tabs.tsx`
+- **Use for**: dashboard-level tab bars (and any repeated segmented control)
+
+#### Chip
+Small filter pill built on Button.
+- **File**: `src/components/ui/chip.tsx`
+- **Use for**: filters (multi-select / toggles), not primary actions
 
 #### Input
 - **Features**: Focus states, disabled states, placeholder styling, file input support
@@ -155,6 +175,43 @@ import { Button } from "@/components/ui/button";
 </Button>
 ```
 
+### PageTitle
+```tsx
+import { PageTitle } from "@/components/ui/page-title";
+import { Sparkles } from "lucide-react";
+
+<PageTitle title="Dashboard" icon={Sparkles} />
+```
+
+### PillTabs
+```tsx
+import { useState } from "react";
+import { PillTabs, type PillTab } from "@/components/ui/pill-tabs";
+import { FolderOpen, PenTool } from "lucide-react";
+
+type Tab = "create" | "collections";
+
+const tabs: Array<PillTab<Tab>> = [
+  {
+    value: "create",
+    label: "Create",
+    Icon: PenTool,
+    activeClassName: "bg-violet-100 text-violet-700",
+  },
+  {
+    value: "collections",
+    label: "Collections",
+    Icon: FolderOpen,
+    activeClassName: "bg-emerald-100 text-emerald-700",
+  },
+];
+
+export function Example() {
+  const [value, setValue] = useState<Tab>("create");
+  return <PillTabs value={value} onValueChange={setValue} tabs={tabs} />;
+}
+```
+
 ### StatsCard
 ```tsx
 import { StatsCard } from "@/components/galaxy/stats-card";
@@ -177,7 +234,9 @@ import { ActionCard } from "@/components/galaxy/action-card";
   description="Save ~45 min • Drafts ready for review"
   action={{
     label: "Execute",
-    onClick: () => console.log("Action clicked")
+    onClick: () => {
+      // TODO: wire to an action handler
+    }
   }}
 />
 ```

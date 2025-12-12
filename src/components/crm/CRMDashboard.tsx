@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PillTabs, type PillTab } from "@/components/ui/pill-tabs";
+import { PageTitle } from "@/components/ui/page-title";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -21,8 +23,6 @@ import {
   Plus,
   Building2,
   Users,
-  TrendingUp,
-  ArrowUpRight,
   Mail,
   Phone,
   Sparkles,
@@ -530,13 +530,6 @@ export default function CRMDashboard({
     }
   };
 
-  // Stat badges
-  const statBadges = [
-    { label: `${stats.totalLeads} Total Leads`, icon: Users, color: "bg-blue-100 text-blue-700" },
-    { label: `${stats.hotLeads} Hot Leads`, icon: TrendingUp, color: "bg-red-100 text-red-700" },
-    { label: `${stats.totalOrgs} Organizations`, icon: Building2, color: "bg-purple-100 text-purple-700" },
-    { label: `${formatCurrency(stats.totalValue)} Pipeline`, icon: ArrowUpRight, color: "bg-green-100 text-green-700" },
-  ];
 
   // Tab configuration - dynamically calculate counts from state
   const tabs = useMemo(() => [
@@ -546,6 +539,18 @@ export default function CRMDashboard({
     { id: 'deals' as TabType, label: 'Deals', icon: Target, badge: deals.length.toString(), badgeColor: 'bg-green-500', activeColor: 'bg-green-100 text-green-700' },
     { id: 'insights' as TabType, label: 'Insights', icon: Sparkles, activeColor: 'bg-indigo-100 text-indigo-700' },
   ], [leads.length, organizations.length, contacts.length, deals.length]);
+
+  const pillTabs = useMemo<Array<PillTab<TabType>>>(() => {
+    return tabs.map((tab) => ({
+      value: tab.id,
+      label: tab.label,
+      Icon: tab.icon,
+      activeClassName: tab.activeColor,
+      badgeClassName: tab.badgeColor,
+      badge: tab.badge ? Number(tab.badge) : undefined,
+      ariaLabel: `Switch to ${tab.label} tab`,
+    }));
+  }, [tabs]);
 
   // Quick actions for CRM
   const quickActions = [
@@ -708,90 +713,45 @@ Be helpful, proactive, and use CRM tools when needed.`;
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4 w-full">
         {/* Header */}
         <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-3">
-            <Users 
-              className="w-7 h-7"
-              style={{
-                stroke: 'url(#icon-gradient-crm)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient-crm" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <h1 
-              className="text-2xl uppercase"
-              style={{ 
-                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
-                fontWeight: 700,
-                letterSpacing: '0.25em',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
-              }}
-            >
-              CRM
-            </h1>
-          </div>
+          <PageTitle title="CRM" icon={Users} />
 
           {/* Stats Bar */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
-            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-              <Users className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+            <Badge variant="soft" tone="info" size="pill">
+              <Users className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.totalLeads}</span>
-              <span className="ml-1 text-blue-600/70 font-normal">Leads</span>
+              <span className="ml-1 font-normal opacity-70">Leads</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-              <Target className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+            <Badge variant="soft" tone="violet" size="pill">
+              <Target className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{deals.length}</span>
-              <span className="ml-1 text-purple-600/70 font-normal">Deals</span>
+              <span className="ml-1 font-normal opacity-70">Deals</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-              <DollarSign className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+            <Badge variant="soft" tone="success" size="pill">
+              <DollarSign className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{formatCurrency(stats.totalValue)}</span>
-              <span className="ml-1 text-green-600/70 font-normal">Pipeline</span>
+              <span className="ml-1 font-normal opacity-70">Pipeline</span>
             </Badge>
           </div>
         </div>
 
         {/* Tab Bar with Ask Neptune Button */}
         <div className="mt-14 relative flex items-center justify-center overflow-x-auto pb-2 -mb-2">
-          <div className="bg-background/80 backdrop-blur-lg rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-1 inline-flex gap-1 flex-nowrap">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative h-8 px-3.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? `${tab.activeColor} shadow-sm`
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-                aria-label={`Switch to ${tab.label} tab`}
-              >
-                <tab.icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-                {tab.badge && (
-                  <Badge 
-                    className={`${activeTab === tab.id ? 'bg-white/90 text-gray-700' : tab.badgeColor + ' text-white'} text-xs px-1.5 py-0.5 h-4 min-w-[16px] flex items-center justify-center`}
-                  >
-                    {tab.badge}
-                  </Badge>
-                )}
-              </button>
-            ))}
-          </div>
+          <PillTabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            tabs={pillTabs}
+            className="justify-start sm:justify-center"
+            listClassName="flex-nowrap"
+          />
           <div className="absolute right-0">
             <Button
               size="sm"
+              variant="surface"
               onClick={() => setShowNeptune(!showNeptune)}
-              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
               aria-label="Toggle Neptune AI assistant"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
               <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>

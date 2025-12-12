@@ -13,6 +13,7 @@ import { FinanceFilterChips } from "./FinanceFilterChips";
 import { FinanceActionButtons, type FinanceAction } from "./FinanceActionButtons";
 import { DocumentCreatorDialog, type DocumentType } from "./document-creator";
 import { Button } from "@/components/ui/button";
+import { PageTitle } from "@/components/ui/page-title";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sparkles,
@@ -502,35 +503,7 @@ function FinanceHeader({
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         {/* Left: Title */}
         <div className="sm:flex-1">
-          <div className="flex items-center gap-3">
-            <DollarSign 
-              className="w-7 h-7"
-              style={{
-                stroke: 'url(#icon-gradient-fin)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient-fin" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <h1 
-              className="text-2xl uppercase"
-              style={{ 
-                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
-                fontWeight: 700,
-                letterSpacing: '0.25em',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
-              }}
-            >
-              Finance HQ
-            </h1>
-          </div>
+          <PageTitle title="Finance HQ" icon={DollarSign} />
         </div>
         {/* Center: Date Picker */}
         <div className="flex items-center justify-center gap-2">

@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageTitle } from "@/components/ui/page-title";
 import {
   Bot,
   Plus,
@@ -279,52 +280,24 @@ export default function MyAgentsDashboard({
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
         <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-3">
-            <Zap 
-              className="w-7 h-7"
-              style={{
-                stroke: 'url(#icon-gradient)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <h1 
-              className="text-2xl uppercase"
-              style={{ 
-                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
-                fontWeight: 700,
-                letterSpacing: '0.25em',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
-              }}
-            >
-              My Agents
-            </h1>
-          </div>
-          
+          <PageTitle title="My Agents" icon={Zap} />
+
           {/* Stats Bar */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
-            <Badge className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors">
-              <Activity className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+            <Badge variant="soft" tone="success" size="pill">
+              <Activity className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.activeAgents}</span>
-              <span className="ml-1 text-emerald-600/70 font-normal">Active</span>
+              <span className="ml-1 font-normal opacity-70">Active</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+            <Badge variant="soft" tone="info" size="pill">
+              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.totalTasks}</span>
-              <span className="ml-1 text-blue-600/70 font-normal">Tasks</span>
+              <span className="ml-1 font-normal opacity-70">Tasks</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
-              <TrendingUp className="h-3.5 w-3.5 mr-1.5 text-amber-600" />
+            <Badge variant="soft" tone="warning" size="pill">
+              <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.successRate}%</span>
-              <span className="ml-1 text-amber-600/70 font-normal">Success</span>
+              <span className="ml-1 font-normal opacity-70">Success</span>
             </Badge>
           </div>
         </div>
@@ -345,8 +318,8 @@ export default function MyAgentsDashboard({
           <div className="absolute right-0">
             <Button
               size="sm"
+              variant="surface"
               onClick={() => setShowNeptune(!showNeptune)}
-              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
               aria-label="Toggle Neptune AI assistant"
             >
               <Sparkles className="h-4 w-4" />

@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { PageTitle } from "@/components/ui/page-title";
 import { cn } from "@/lib/utils";
 import { useOAuth } from "@/hooks/useOAuth";
 import { toast } from "sonner";
@@ -347,42 +348,14 @@ export function GalaxyIntegrations() {
     <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4">
+        <PageTitle title="Connectors" icon={Plug} />
         <div className="flex items-center gap-3">
-          <Plug 
-            className="w-7 h-7"
-            style={{
-              stroke: 'url(#icon-gradient-int)',
-              strokeWidth: 2,
-              filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-            }}
-          />
-          <svg width="0" height="0" className="absolute">
-            <defs>
-              <linearGradient id="icon-gradient-int" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#8b5cf6" />
-                <stop offset="100%" stopColor="#3b82f6" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <h1 
-            className="text-2xl uppercase"
-            style={{ 
-              fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
-              fontWeight: 700,
-              letterSpacing: '0.25em',
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
-            }}
-          >
-            Connectors
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200">
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+          <Badge variant="soft" tone="success" size="pill">
+            <CheckCircle2 aria-hidden="true" />
             {connectedCount} Connected
           </Badge>
-          <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            <Plus className="h-4 w-4 mr-1.5" />
+          <Button size="sm">
+            <Plus aria-hidden="true" />
             Request App
           </Button>
         </div>

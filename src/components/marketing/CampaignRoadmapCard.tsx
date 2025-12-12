@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PageTitle } from '@/components/ui/page-title';
 import { Compass, CheckCircle2, ChevronDown, ChevronUp, Rocket } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
@@ -65,34 +66,13 @@ export default function CampaignRoadmapCard({
       {/* Branded Header */}
       <div className="border-b bg-background px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Compass 
-              className="w-6 h-6"
-              style={{
-                stroke: 'url(#icon-gradient-campaign-roadmap)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient-campaign-roadmap" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            {/* Responsive title - compact on mobile, spaced on desktop */}
-            <h2 
-              className="branded-page-title-compact md:branded-page-title text-base md:text-xl uppercase"
-              style={{ 
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-              }}
-            >
-              <span className="md:hidden">ROADMAP</span>
-              <span className="hidden md:inline">R O A D M A P</span>
-            </h2>
-          </div>
+          <PageTitle
+            title="Roadmap"
+            icon={Compass}
+            as="h2"
+            titleClassName="text-base md:text-xl"
+            iconClassName="w-6 h-6 md:w-6 md:h-6"
+          />
           {totalCount > 0 && (
             <Badge variant="outline" className="text-xs">
               {completedCount}/{totalCount}
@@ -132,7 +112,7 @@ export default function CampaignRoadmapCard({
               <div className="text-center py-4 mb-4 bg-emerald-50 rounded-lg border border-emerald-200">
                 <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
                 <p className="text-sm font-medium text-emerald-700 mb-3">
-                  Ready to launch! 🚀
+                  Ready to launch!
                 </p>
                 <Button
                   onClick={handleLaunch}

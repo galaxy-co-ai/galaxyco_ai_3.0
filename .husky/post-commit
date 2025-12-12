@@ -1,10 +1,26 @@
 #!/usr/bin/env sh
 
-# Auto-update AI_CONTEXT.md after each commit
-# Just update the file, don't auto-commit (prevents infinite loop)
+set -e
+
+# Auto-update AI_CONTEXT.md after each commit, and auto-commit the result.
+#
+# Why post-commit?
+# - Keeps a single committed snapshot for any new AI agent
+# - Avoids session-log file sprawl
+# - Avoids the working tree being left dirty
+#
+# Guard: skip when the last commit only touched AI_CONTEXT.md (prevents loops).
+changed_files="$(git diff-tree --no-commit-id --name-only -r HEAD | tr -d '\r')"
+last_subject="$(git log -1 --pretty=%s | tr -d '\r')"
+
+if [ "$changed_files" = "docs/status/AI_CONTEXT.md" ] || [ "$last_subject" = "docs(status): update AI context" ]; then
+  exit 0
+fi
+
 npm run update-context
 
-echo ""
-echo "✅ AI_CONTEXT.md updated (not committed)"
-echo "   Run 'git add docs/status/AI_CONTEXT.md && git commit --amend --no-edit' to include in this commit"
-echo "   Or commit it separately later"
+# Commit only if the generator actually changed the file.
+if ! git diff --quiet -- docs/status/AI_CONTEXT.md; then
+  git add docs/status/AI_CONTEXT.md
+  git commit -m "docs(status): update AI context" --no-verify
+fi

@@ -16,6 +16,13 @@ import {
   Bot,
   Settings,
   Loader2,
+  DollarSign,
+  Megaphone,
+  Headphones,
+  Settings2,
+  CreditCard,
+  Rocket,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -28,14 +35,59 @@ import {
 import type { AgentDepartment, TeamAutonomyLevel } from "@/lib/orchestration/types";
 
 // Department display config
-const departmentDisplay: Record<AgentDepartment, { icon: string; label: string }> = {
-  sales: { icon: "💰", label: "Sales" },
-  marketing: { icon: "📢", label: "Marketing" },
-  support: { icon: "🎧", label: "Support" },
-  operations: { icon: "⚙️", label: "Operations" },
-  finance: { icon: "💳", label: "Finance" },
-  product: { icon: "🚀", label: "Product" },
-  general: { icon: "🤖", label: "General" },
+const departmentDisplay: Record<
+  AgentDepartment,
+  { Icon: LucideIcon; label: string; color: string; bgColor: string; borderColor: string }
+> = {
+  sales: {
+    Icon: DollarSign,
+    label: "Sales",
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+  },
+  marketing: {
+    Icon: Megaphone,
+    label: "Marketing",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-200",
+  },
+  support: {
+    Icon: Headphones,
+    label: "Support",
+    color: "text-purple-700",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-200",
+  },
+  operations: {
+    Icon: Settings2,
+    label: "Operations",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+    borderColor: "border-amber-200",
+  },
+  finance: {
+    Icon: CreditCard,
+    label: "Finance",
+    color: "text-teal-700",
+    bgColor: "bg-teal-50",
+    borderColor: "border-teal-200",
+  },
+  product: {
+    Icon: Rocket,
+    label: "Product",
+    color: "text-indigo-700",
+    bgColor: "bg-indigo-50",
+    borderColor: "border-indigo-200",
+  },
+  general: {
+    Icon: Bot,
+    label: "General",
+    color: "text-gray-700",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-200",
+  },
 };
 
 const autonomyLevels: Array<{
@@ -261,6 +313,8 @@ export default function TeamCreationWizard({
             <div className="grid grid-cols-2 gap-4">
               {teamTemplates.map((template) => {
                 const dept = departmentDisplay[template.department];
+                const DeptIcon = dept.Icon;
+
                 return (
                   <button
                     key={template.id}
@@ -273,7 +327,16 @@ export default function TeamCreationWizard({
                     aria-label={`Select ${template.name} template`}
                   >
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-2xl">{dept.icon}</span>
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center border",
+                          dept.bgColor,
+                          dept.borderColor
+                        )}
+                        aria-hidden="true"
+                      >
+                        <DeptIcon className={cn("h-5 w-5", dept.color)} />
+                      </div>
                       <div>
                         <h4 className="font-semibold text-gray-900">
                           {template.name}
@@ -491,10 +554,17 @@ export default function TeamCreationWizard({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500">Department</span>
-                <Badge variant="outline" className="capitalize">
-                  {departmentDisplay[selectedTemplate?.department || "general"].icon}{" "}
-                  {selectedTemplate?.department}
-                </Badge>
+                {(() => {
+                  const dept = departmentDisplay[selectedTemplate?.department || "general"];
+                  const DeptIcon = dept.Icon;
+
+                  return (
+                    <Badge variant="outline" className="capitalize">
+                      <DeptIcon className={cn("h-3.5 w-3.5", dept.color)} aria-hidden="true" />
+                      {selectedTemplate?.department}
+                    </Badge>
+                  );
+                })()}
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500">Autonomy Level</span>

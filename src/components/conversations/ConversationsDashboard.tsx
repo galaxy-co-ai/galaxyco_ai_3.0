@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { PageTitle } from "@/components/ui/page-title";
 import {
   Search,
   Mail,
@@ -94,8 +95,6 @@ export default function ConversationsDashboard({
   const [showNeptune, setShowNeptune] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Debug: Log phone numbers
-  console.log('Phone Numbers in Dashboard:', phoneNumbers);
 
   // Filter conversations based on channel, department, and search
   const filteredConversations = useMemo(() => {
@@ -166,68 +165,47 @@ export default function ConversationsDashboard({
       {/* Header */}
       <div className="border-b bg-background px-6 py-4">
         <div className="flex items-center justify-between pt-4">
-          <div className="flex items-center gap-3">
-            <MessagesSquare 
-              className="w-7 h-7"
-              style={{
-                stroke: 'url(#icon-gradient-conv)',
-                strokeWidth: 2,
-                filter: 'drop-shadow(0 2px 4px rgba(139, 92, 246, 0.15))'
-              }}
-            />
-            <svg width="0" height="0" className="absolute">
-              <defs>
-                <linearGradient id="icon-gradient-conv" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" />
-                  <stop offset="100%" stopColor="#3b82f6" />
-                </linearGradient>
-              </defs>
-            </svg>
-            <h1 
-              className="text-2xl uppercase"
-              style={{ 
-                fontFamily: 'var(--font-space-grotesk), "Space Grotesk", sans-serif',
-                fontWeight: 700,
-                letterSpacing: '0.25em',
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' 
-              }}
-            >
-              Conversations
-            </h1>
-          </div>
+          <PageTitle title="Conversations" icon={MessagesSquare} />
 
           {/* Stats Bar */}
           <div className="flex flex-wrap items-center gap-3">
             {/* Phone Number Badge */}
             {phoneNumbers.length > 0 && (
-              <Badge className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
-                <Phone className="h-3.5 w-3.5 mr-1.5 text-green-600" />
+              <Badge variant="soft" tone="success" size="pill">
+                <Phone className="h-3.5 w-3.5" aria-hidden="true" />
                 <span className="font-semibold">
-                  {phoneNumbers[0].phoneNumber.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3')}
+                  {phoneNumbers[0].phoneNumber.replace(
+                    /^\+1(\d{3})(\d{3})(\d{4})$/,
+                    "($1) $2-$3"
+                  )}
                 </span>
                 {phoneNumbers[0].friendlyName && (
-                  <span className="ml-1 text-green-600/70 font-normal">• {phoneNumbers[0].friendlyName}</span>
+                  <span className="ml-1 font-normal opacity-70">
+                    • {phoneNumbers[0].friendlyName}
+                  </span>
                 )}
                 {phoneNumbers.length > 1 && (
-                  <span className="ml-1 text-green-600/70 font-normal">+{phoneNumbers.length - 1} more</span>
+                  <span className="ml-1 font-normal opacity-70">
+                    +{phoneNumbers.length - 1} more
+                  </span>
                 )}
               </Badge>
             )}
-            
-            <Badge className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">
-              <MessageSquare className="h-3.5 w-3.5 mr-1.5 text-blue-600" />
+
+            <Badge variant="soft" tone="info" size="pill">
+              <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.totalConversations}</span>
-              <span className="ml-1 text-blue-600/70 font-normal">Conversations</span>
+              <span className="ml-1 font-normal opacity-70">Conversations</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 transition-colors">
-              <Mail className="h-3.5 w-3.5 mr-1.5 text-orange-600" />
+            <Badge variant="soft" tone="warning" size="pill">
+              <Mail className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.unreadMessages}</span>
-              <span className="ml-1 text-orange-600/70 font-normal">Unread</span>
+              <span className="ml-1 font-normal opacity-70">Unread</span>
             </Badge>
-            <Badge className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">
-              <Users className="h-3.5 w-3.5 mr-1.5 text-purple-600" />
+            <Badge variant="soft" tone="violet" size="pill">
+              <Users className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="font-semibold">{stats.activeChannels}</span>
-              <span className="ml-1 text-purple-600/70 font-normal">Channels</span>
+              <span className="ml-1 font-normal opacity-70">Channels</span>
             </Badge>
           </div>
         </div>
@@ -249,11 +227,11 @@ export default function ConversationsDashboard({
           <div className="absolute right-0">
             <Button
               size="sm"
+              variant="surface"
               onClick={() => setShowNeptune(!showNeptune)}
-              className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
               aria-label="Toggle Neptune AI assistant"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
               <span className="hidden md:inline">Neptune</span>
             </Button>
           </div>

@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageTitle } from "@/components/ui/page-title";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -245,51 +246,31 @@ export default function TeamsListClient({
       <div className="border-b bg-background px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4">
           <div className="flex items-center gap-4">
-            <Link href="/orchestration">
-              <Button
-                size="sm"
-                className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
-                aria-label="Back to orchestration dashboard"
-              >
-                <ChevronLeft className="h-4 w-4" />
+            <Button
+              asChild
+              size="sm"
+              variant="surface"
+              aria-label="Back to orchestration dashboard"
+            >
+              <Link href="/orchestration">
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 Back
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-              <UsersRound 
-                className="w-7 h-7"
-                style={{
-                  stroke: 'url(#icon-gradient-teams)',
-                  strokeWidth: 2,
-                  filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.15))'
-                }}
-              />
-              <svg width="0" height="0" className="absolute">
-                <defs>
-                  <linearGradient id="icon-gradient-teams" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#3b82f6" />
-                    <stop offset="100%" stopColor="#8b5cf6" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <h1 
-                className="branded-page-title text-2xl uppercase"
-                style={{ 
-                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
-                }}
-              >
-                <span className="hidden sm:inline">A G E N T &nbsp; T E A M S</span>
-                <span className="sm:hidden">AGENT TEAMS</span>
-              </h1>
-            </div>
+              </Link>
+            </Button>
+            <PageTitle
+              title="Agent Teams"
+              icon={UsersRound}
+              gradientFrom="#3b82f6"
+              gradientTo="#8b5cf6"
+            />
           </div>
           <Button
             size="sm"
+            variant="surface"
             onClick={() => setShowWizard(true)}
-            className="bg-white hover:bg-white text-gray-700 shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:-translate-y-px hover:shadow-lg active:scale-[0.98] active:shadow-sm border border-gray-200 transition-all duration-150 gap-2"
             aria-label="Create new team"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             New Team
           </Button>
         </div>
@@ -469,15 +450,12 @@ export default function TeamsListClient({
                     <div className="px-4 pb-4 border-t pt-3 space-y-3">
                       {/* Quick Actions */}
                       <div className="flex flex-wrap gap-2">
-                        <Link href={`/orchestration/teams/${team.id}`}>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                          >
-                            <Settings className="h-3 w-3 mr-1" />
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/orchestration/teams/${team.id}`}>
+                            <Settings className="h-3 w-3 mr-1" aria-hidden="true" />
                             Manage
-                          </Button>
-                        </Link>
+                          </Link>
+                        </Button>
                         {team.status === "active" ? (
                           <Button
                             size="sm"

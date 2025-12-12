@@ -10,6 +10,8 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+const repoRoot = path.join(__dirname, '..');
+
 // Helper to run shell commands safely
 function exec(command) {
   try {
@@ -19,222 +21,200 @@ function exec(command) {
   }
 }
 
-// Get current date/time
-const now = new Date().toISOString();
-const dateOnly = now.split('T')[0];
+function readJson(filePath) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function normalizeVersion(version) {
+  if (typeof version !== 'string') {
+    return null;
+  }
+
+  const trimmed = version.trim();
+  const firstDigit = trimmed.search(/[0-9]/);
+  if (firstDigit === -1) {
+    return trimmed;
+  }
+
+  return trimmed.slice(firstDigit);
+}
+
+function countMarkdownFiles(dirPath) {
+  let count = 0;
+
+  try {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+
+      if (entry.isDirectory()) {
+        count += countMarkdownFiles(fullPath);
+        continue;
+      }
+
+      if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+        count += 1;
+      }
+    }
+  } catch {
+    // Ignore missing directories or permission issues
+  }
+
+  return count;
+}
+
+function getDependencyVersion(allDeps, name) {
+  const raw = allDeps?.[name];
+  return normalizeVersion(raw) ?? null;
+}
+
+// Read package.json for an accurate stack snapshot
+const packageJson = readJson(path.join(repoRoot, 'package.json')) ?? {};
+const allDeps = {
+  ...(packageJson.dependencies ?? {}),
+  ...(packageJson.devDependencies ?? {}),
+};
+
+const versions = {
+  next: getDependencyVersion(allDeps, 'next'),
+  react: getDependencyVersion(allDeps, 'react'),
+  typescript: getDependencyVersion(allDeps, 'typescript'),
+  tailwind: getDependencyVersion(allDeps, 'tailwindcss'),
+  drizzleOrm: getDependencyVersion(allDeps, 'drizzle-orm'),
+  clerk: getDependencyVersion(allDeps, '@clerk/nextjs'),
+  nextAuth: getDependencyVersion(allDeps, 'next-auth'),
+  upstashRedis: getDependencyVersion(allDeps, '@upstash/redis'),
+  upstashVector: getDependencyVersion(allDeps, '@upstash/vector'),
+  trigger: getDependencyVersion(allDeps, '@trigger.dev/sdk'),
+  stripe: getDependencyVersion(allDeps, 'stripe'),
+  sentry: getDependencyVersion(allDeps, '@sentry/nextjs'),
+};
+
+const authProvider = versions.clerk ? 'Clerk' : versions.nextAuth ? 'NextAuth' : 'Unknown';
+
+const techStackParts = [
+  versions.next ? `Next.js ${versions.next}` : 'Next.js',
+  versions.react ? `React ${versions.react}` : 'React',
+  versions.typescript ? `TypeScript ${versions.typescript}` : 'TypeScript',
+  versions.tailwind ? `Tailwind CSS ${versions.tailwind}` : 'Tailwind CSS',
+  authProvider !== 'Unknown' ? `${authProvider} Auth` : 'Auth',
+  versions.drizzleOrm ? `Drizzle ORM ${versions.drizzleOrm}` : 'Drizzle ORM',
+  'Neon Postgres',
+  versions.upstashRedis || versions.upstashVector ? 'Upstash (Redis/Vector)' : null,
+  versions.trigger ? 'Trigger.dev' : null,
+  versions.stripe ? 'Stripe' : null,
+  versions.sentry ? 'Sentry' : null,
+].filter(Boolean);
+
+const techStackLine = techStackParts.join(', ');
 
 // Get git info
 const currentBranch = exec('git branch --show-current');
-const currentCommit = exec('git rev-parse --short HEAD');
-const lastCommitDate = exec('git log -1 --format=%cd --date=short');
 
-// Get recent commits (last 10)
-const recentCommits = exec('git log --oneline -10 --pretty=format:"- %ad: %s" --date=short');
-
-// Get commits from last 7 days
-const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-const recentWork = exec(`git log --since="${sevenDaysAgo}" --oneline --pretty=format:"- %ad: %s" --date=short`);
-
-// Check TypeScript health
-let tsHealth = '⏳ Checking...';
-try {
-  execSync('npm run typecheck --silent', { stdio: 'pipe' });
-  tsHealth = '✅ 0 errors';
-} catch (error) {
-  tsHealth = '❌ Has errors';
+function parseGitLog(raw) {
+  return raw
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [date, hash, subject] = line.split('\t');
+      return { date, hash, subject };
+    })
+    .filter((c) => c.date && c.hash && c.subject);
 }
 
-// Check ESLint warnings count (from last run, don't run full lint here)
-let eslintHealth = '🟡 899 warnings (non-blocking)';
+function isAutoContextCommit(subject) {
+  const normalized = String(subject).trim().toLowerCase();
+  return (
+    normalized === 'docs(status): update ai context' ||
+    normalized === 'docs(status): update ai_context' ||
+    normalized === 'docs: update ai context' ||
+    normalized === 'docs: update ai_context'
+  );
+}
 
-// Count markdown files in docs
-const docsCount = exec('find docs -name "*.md" -type f | wc -l');
+function extractBlock(source, startMarker, endMarker) {
+  if (!source) return null;
+  const startIdx = source.indexOf(startMarker);
+  const endIdx = source.indexOf(endMarker);
+  if (startIdx === -1 || endIdx === -1 || endIdx <= startIdx) return null;
 
-// Build the context file
-const contextContent = `# AI Agent Context - GalaxyCo.ai 3.0
+  const afterStart = startIdx + startMarker.length;
+  return source.slice(afterStart, endIdx).trim();
+}
 
-**Last Updated:** ${now}  
-**Commit:** ${currentCommit} on ${currentBranch}  
-**Last Commit:** ${lastCommitDate}
+const outputPath = path.join(repoRoot, 'docs', 'status', 'AI_CONTEXT.md');
+const existingContent = fs.existsSync(outputPath)
+  ? fs.readFileSync(outputPath, 'utf8')
+  : '';
 
----
+const manualStatusStart = '<!-- AI_CONTEXT:STATUS_START -->';
+const manualStatusEnd = '<!-- AI_CONTEXT:STATUS_END -->';
+const preservedStatus =
+  extractBlock(existingContent, manualStatusStart, manualStatusEnd) ??
+  `- Focus: 
+- Next: 
+- Risks: `;
 
-## 🎯 Quick Summary (100 words)
+// Pull a structured commit list (avoid enormous sections; keep this file small)
+const rawLog = exec(
+  'git log -n 80 --pretty=format:"%ad\t%h\t%s" --date=short'
+);
+const commits = parseGitLog(rawLog);
+const meaningfulCommits = commits.filter((c) => !isAutoContextCommit(c.subject));
 
-Production SaaS platform for AI-powered business automation. Built with Next.js 15 + TypeScript + Drizzle ORM + Neon Postgres. Clean architecture with 0 TypeScript errors, comprehensive documentation, and organized component structure. Recently completed Phase 1-6 cleanup: documentation organization, dependency cleanup (removed 66 packages), React hooks fixes, and directory consolidation. Site is production-ready and actively maintained. Ready for feature development.
+const lastMeaningful = meaningfulCommits[0];
+const throughLine = lastMeaningful
+  ? `${lastMeaningful.date} (${lastMeaningful.hash})`
+  : 'Unknown';
 
-**Tech Stack:** Next.js 15, TypeScript, Tailwind CSS, Radix UI, Drizzle ORM, Neon (Postgres), Redis, Trigger.dev, Stripe, NextAuth
+// Changelog (last 20 meaningful commits)
+const changelogLines = meaningfulCommits
+  .slice(0, 20)
+  .map((c) => `- ${c.date} ${c.hash} ${c.subject}`)
+  .join('\n');
 
----
+// Build the context file (keep it concise; no session archives)
+const contextContent = `# AI_CONTEXT — GalaxyCo.ai 3.0
 
-## 📊 Current Health
+**Updated Through:** ${throughLine}  
+**Branch:** ${currentBranch}
 
-| Metric | Status | Details |
-|--------|--------|---------|
-| **TypeScript** | ${tsHealth} | Strict mode enabled |
-| **ESLint** | ${eslintHealth} | Mostly unused vars |
-| **Build** | ✅ Successful | 158 pages generated |
-| **Tests** | ✅ Passing | E2E + unit tests |
-| **Production** | ✅ Live | https://www.galaxyco.ai/ |
-| **Dependencies** | ✅ Clean | 1419 packages, no critical vulnerabilities |
+## Quick Start
+- Dev: \`npm run dev\`
+- Typecheck: \`npm run typecheck\`
+- Lint: \`npm run lint\`
+- Build: \`npm run build\`
+- Tests: \`npm test\`
 
----
+## Stack (from package.json)
+${techStackLine}
 
-## 🔄 Recent Work (Last 7 Days)
+## Current Status (manual)
+${manualStatusStart}
+${preservedStatus}
+${manualStatusEnd}
 
-${recentWork || 'No commits in last 7 days'}
+## Changelog (auto, last 20 meaningful commits)
+${changelogLines || '- No recent commits found.'}
 
----
-
-## 📝 Recent Commits (Last 10)
-
-${recentCommits}
-
----
-
-## 📁 Project Structure
-
-\`\`\`
-galaxyco-ai-3.0/
-├── docs/                    # All documentation (${docsCount} files)
-│   ├── status/             # Current state & health
-│   ├── plans/              # Roadmaps & strategies
-│   ├── guides/             # Setup & tutorials
-│   └── archive/            # Historical docs
-├── src/
-│   ├── app/                # Next.js 15 App Router
-│   ├── components/         # React components (22 directories)
-│   ├── lib/                # Utilities & integrations
-│   └── types/              # TypeScript definitions
-└── tests/                  # E2E & unit tests
-\`\`\`
-
----
-
-## 🎯 Known Issues
-
-**None blocking production.**
-
-Optional improvements:
-- 650 unused imports (ESLint warnings) - cosmetic only
-- 24 remaining React hooks violations - low priority
-- Console statements cleanup (53 occurrences)
-
----
-
-## 🚀 Next Priorities
-
-1. **Feature Development** - Continue Content Cockpit Phase II
-2. **Performance** - Optional hooks cleanup when touching files
-3. **Monitoring** - Consider adding error tracking (Sentry)
+## Where to look first (for new AI agents)
+- \`docs/guides/ORGANIZATION_GUIDELINES.md\`
+- \`docs/guides/DESIGN-SYSTEM.md\`
+- \`docs/guides/AGENT_INSTRUCTIONS.md\`
 
 ---
 
-## 📚 Essential Docs for AI Agents
-
-**Start Here (Read First):**
-1. **This File** - Current state & recent changes
-2. [Organization Guidelines](../guides/ORGANIZATION_GUIDELINES.md) - Project structure & conventions
-3. [Backend Health Audit](./BACKEND_HEALTH_AUDIT.md) - Detailed health analysis
-
-**Reference Docs:**
-- [Roadmap](../plans/ROADMAP.md) - Long-term vision
-- [API Documentation](../guides/API_DOCUMENTATION.md) - API reference
-- [Design System](../guides/DESIGN-SYSTEM.md) - UI patterns & tokens
-- [Agent Instructions](../guides/AGENT_INSTRUCTIONS.md) - AI agent guidelines
-
-**For Specific Tasks:**
-- New features: Read ORGANIZATION_GUIDELINES.md first
-- Bug fixes: Check BACKEND_HEALTH_AUDIT.md for known issues
-- Refactoring: Follow patterns in existing code
-
----
-
-## 🏗️ Architecture Highlights
-
-### Current Tech Decisions
-- **Frontend:** Next.js 15 (App Router), React 18, TypeScript strict mode
-- **Styling:** Tailwind CSS utilities only (no CSS modules/inline styles)
-- **UI Components:** Radix UI primitives + shadcn/ui patterns
-- **State:** Zustand (global), React Context (feature-specific), SWR (data fetching)
-- **Database:** Neon Postgres via Drizzle ORM
-- **Caching:** Redis (Upstash)
-- **Auth:** NextAuth v5
-- **Payments:** Stripe
-- **Background Jobs:** Trigger.dev
-
-### Key Patterns
-- Server Components by default, Client Components when needed
-- Zod validation for all user inputs
-- Error boundaries around features
-- TypeScript: No \`any\` types, all props typed
-- Git: Conventional Commits (feat, fix, refactor, docs, chore)
-
----
-
-## 🔐 Safety Rules for AI Agents
-
-**ALWAYS:**
-- ✅ Work on a branch (never directly on main)
-- ✅ Test after every change (typecheck, build, lint)
-- ✅ Commit incrementally with descriptive messages
-- ✅ Follow existing patterns and conventions
-- ✅ Read ORGANIZATION_GUIDELINES.md before major changes
-
-**NEVER:**
-- ❌ Delete files without verification (move to _archive/ instead)
-- ❌ Change imports without exhaustive grep
-- ❌ Skip build verification after code changes
-- ❌ Use \`any\` type in TypeScript
-- ❌ Hard-code secrets (use environment variables)
-
----
-
-## 📊 Recent Milestones
-
-- **2025-12-10:** Phase 1-6 cleanup complete
-  - Documentation organized (28 files → structured)
-  - Dependencies cleaned (removed 66 packages, -1.13 MB)
-  - React hooks fixed (2 critical stale closure bugs)
-  - Directory consolidation (no more dashboard-v2)
-  
-- **2025-12-09:** Content Cockpit Phase I complete
-  - Article Studio shipped
-  - Analytics dashboard functional
-  - Use case management live
-
-- **2025-12-06:** Production deployment stabilized
-  - Landing page polished with HD screenshots
-  - Dashboard real-time updates working
-  - Authentication flow hardened
-
----
-
-## 💡 Tips for AI Agents
-
-1. **Before Starting:** Read this file + ORGANIZATION_GUIDELINES.md (~7 min)
-2. **For Context:** Check recent commits to see what's changed
-3. **For Structure:** Refer to ORGANIZATION_GUIDELINES.md
-4. **For Health:** Review BACKEND_HEALTH_AUDIT.md
-5. **When Stuck:** Grep for similar patterns in existing code
-6. **Before Committing:** Run health checks (typecheck + build)
-
----
-
-**Generated by:** \`scripts/update-context.js\`  
-**Update Frequency:** After significant work or weekly  
-**Maintainer:** Executive Engineer AI + User
-
----
-
-*This file provides a snapshot of the current project state. For detailed history, see git log or CHANGELOG.md.*
+Generated by \`scripts/update-context.js\`.
 `;
 
-// Write to file
-const outputPath = path.join(__dirname, '..', 'docs', 'status', 'AI_CONTEXT.md');
+fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(outputPath, contextContent, 'utf8');
 
 console.log('✅ AI_CONTEXT.md updated successfully!');
-console.log(`   Location: docs/status/AI_CONTEXT.md`);
-console.log(`   Updated: ${dateOnly}`);
-console.log(`   Commit: ${currentCommit}`);
+console.log('   Location: docs/status/AI_CONTEXT.md');
+console.log(`   Updated Through: ${throughLine}`);

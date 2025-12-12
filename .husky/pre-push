@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# NOTE:
+# We intentionally do NOT create commits in pre-push.
+# Git computes the push refspecs before this hook runs, so commits created here
+# often won't be included in the same push.
+#
+# AI_CONTEXT.md is updated + auto-committed in post-commit instead.
+
+exit 0
