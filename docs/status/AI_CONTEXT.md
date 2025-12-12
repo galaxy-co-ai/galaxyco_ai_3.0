@@ -1,7 +1,7 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-11 (72e92e1)  
-**Branch:** chore/ui-button-family
+**Updated Through:** 2025-12-11 (ec6d97d)  
+**Branch:** main
 
 ## Quick Start
 - Dev: `npm run dev`
@@ -21,15 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
-- 2025-12-11 72e92e1 chore(automation): fix AI_CONTEXT hook strategy
-- 2025-12-11 98cd8ab chore(automation): streamline AI_CONTEXT changelog
-- 2025-12-11 f59b00a feat(ui): standardize remaining headers
-- 2025-12-11 4e82067 feat(ui): standardize orchestration headers
-- 2025-12-11 763dc2c docs(ui): update design system docs
-- 2025-12-11 3621425 chore(automation): improve AI_CONTEXT post-commit workflow
-- 2025-12-11 b67b4ba feat(ui): standardize headers and pill tabs
-- 2025-12-11 81432f1 chore: minor TypeScript cleanup
-- 2025-12-11 1fbcfc0 chore(automation): fix AI_CONTEXT generator stack
+- 2025-12-11 ec6d97d feat(ui): standardize UI headers + streamline AI_CONTEXT
 - 2025-12-11 88a3b62 chore: update AI context after Phase 4A completion
 - 2025-12-11 d8bc7c0 docs(neptune): complete Phase 4A Day 4 - metrics documentation
 - 2025-12-11 06ee8ec feat(observability): Phase 4A Day 3 - Metrics validation test script
@@ -41,6 +33,14 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 fa28ecd docs: mark Phase 1 Neptune optimization complete
 - 2025-12-11 b66dd7a feat(neptune): Phase 1 Performance Optimizations - 2-3x faster response times
 - 2025-12-11 211a8c9 chore: hide internal scripts and old files from public view
+- 2025-12-11 791e6f1 docs: remove tagline from README
+- 2025-12-11 8a424b2 docs: replace verbose README with professional public-facing version
+- 2025-12-11 ab9bccf security: hide internal status docs and remove token from remote URL
+- 2025-12-11 748dc58 docs: add changelog and update AI context with final system state
+- 2025-12-11 728b852 fix(phone-numbers): lazy load SignalWire SDK to avoid lodash dependency error
+- 2025-12-11 e865d29 debug(phone-numbers): add detailed logging to API routes
+- 2025-12-10 6a01484 feat(conversations): add department filtering UI
+- 2025-12-10 6d4efae fix(webhooks): add type assertion for nullable numberType
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
