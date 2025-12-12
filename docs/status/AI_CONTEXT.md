@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-11 (98cd8ab)  
+**Updated Through:** 2025-12-11 (72e92e1)  
 **Branch:** chore/ui-button-family
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-11 72e92e1 chore(automation): fix AI_CONTEXT hook strategy
 - 2025-12-11 98cd8ab chore(automation): streamline AI_CONTEXT changelog
 - 2025-12-11 f59b00a feat(ui): standardize remaining headers
 - 2025-12-11 4e82067 feat(ui): standardize orchestration headers
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 fa28ecd docs: mark Phase 1 Neptune optimization complete
 - 2025-12-11 b66dd7a feat(neptune): Phase 1 Performance Optimizations - 2-3x faster response times
 - 2025-12-11 211a8c9 chore: hide internal scripts and old files from public view
-- 2025-12-11 791e6f1 docs: remove tagline from README
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
