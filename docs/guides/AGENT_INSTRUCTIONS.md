@@ -1,5 +1,7 @@
 # Instructions for Cursor Agents
 
+Also see `AGENTS.md` (repo root) for the cross-agent, canonical setup commands and guardrails.
+
 ## ⚠️ CRITICAL: Document Size Management
 
 ### DO NOT add detailed implementation logs to:

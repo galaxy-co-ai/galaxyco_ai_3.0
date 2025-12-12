@@ -7,6 +7,8 @@
 
 An intelligent business automation platform combining AI agents, CRM, workflow automation, and knowledge management.
 
+> Working with an AI coding agent? Start with `AGENTS.md`.
+
 ## Overview
 
 GalaxyCo.ai is a comprehensive business platform that leverages AI to automate operations, manage customer relationships, and streamline workflows. Built for teams who want enterprise-grade features with modern developer experience.
