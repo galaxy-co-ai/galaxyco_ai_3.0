@@ -8,20 +8,15 @@ import { Badge } from "@/components/ui/badge";
 import {
   Sparkles,
   Search,
-  Play,
-  Pause,
-  Eye,
-  MousePointer,
   Target,
-  TrendingUp,
-  Calendar,
-  DollarSign,
   Mail,
   Linkedin,
   Twitter,
   Instagram,
   Globe,
   Share2,
+  X,
+  Lightbulb,
 } from "lucide-react";
 
 interface Campaign {
@@ -113,6 +108,16 @@ function formatCurrency(cents: number): string {
 export default function MarketingCampaignsTab({ campaigns, onCreateCampaign }: MarketingCampaignsTabProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dismissedRecommendations, setDismissedRecommendations] = useState<Set<string>>(new Set());
+
+  // Filter out dismissed recommendations
+  const visibleRecommendations = neptuneRecommendations.filter(
+    rec => !dismissedRecommendations.has(rec.id)
+  );
+
+  const dismissRecommendation = (id: string) => {
+    setDismissedRecommendations(prev => new Set(prev).add(id));
+  };
 
   // Filter campaigns
   const filteredCampaigns = campaigns.filter((campaign) => {
@@ -123,31 +128,46 @@ export default function MarketingCampaignsTab({ campaigns, onCreateCampaign }: M
 
   return (
     <div className="space-y-6">
-      {/* Neptune Recommendations Section */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="h-5 w-5 text-purple-500" />
-          <h2 className="text-lg font-semibold">Neptune's Daily Opportunities</h2>
-        </div>
-        {neptuneRecommendations.map((rec) => (
-          <Card key={rec.id} className="p-5 bg-gradient-to-br from-purple-50/50 to-blue-50/50 border-purple-200/50">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <p className="font-medium text-gray-900 mb-1">{rec.title}</p>
-                <p className="text-sm text-gray-600 mb-3">{rec.description}</p>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={onCreateCampaign} className="rounded-full">
-                    {rec.action}
-                  </Button>
-                  <Button size="sm" variant="outline" className="rounded-full">
-                    Schedule for Later
-                  </Button>
-                </div>
+      {/* Neptune Recommendations - Compact Notification Style */}
+      {visibleRecommendations.length > 0 && (
+        <div className="space-y-2">
+          {visibleRecommendations.map((rec) => (
+            <div 
+              key={rec.id} 
+              className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200/50 rounded-lg"
+            >
+              {/* Icon */}
+              <div className="shrink-0 p-1.5 rounded-md bg-purple-100">
+                <Lightbulb className="h-4 w-4 text-purple-600" />
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{rec.title}</p>
+                <p className="text-xs text-gray-500 truncate">{rec.description}</p>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex items-center gap-2 shrink-0">
+                <Button 
+                  size="sm" 
+                  onClick={onCreateCampaign} 
+                  className="h-7 text-xs rounded-full"
+                >
+                  {rec.action.replace('Create Campaign: ', '')}
+                </Button>
+                <button
+                  onClick={() => dismissRecommendation(rec.id)}
+                  className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  aria-label="Dismiss recommendation"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             </div>
-          </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Campaigns Section */}
       <div>
