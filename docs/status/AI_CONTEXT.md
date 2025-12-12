@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-11 (2f68f0f)  
+**Updated Through:** 2025-12-11 (dc040db)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,9 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-11 dc040db feat(marketing): complete 3-tab user journey integration
+- 2025-12-11 b81fe78 feat(marketing): restructure to 3-tab user journey (WIP)
+- 2025-12-11 5f8d86f feat(marketing): add new user journey-based Campaigns and Templates tabs
 - 2025-12-11 2f68f0f fix(crm): remove embedded Neptune chat to fix React hydration error #418
 - 2025-12-11 9488908 chore(automation): auto-update AI_CONTEXT on main
 - 2025-12-11 ec6d97d feat(ui): standardize UI headers + streamline AI_CONTEXT
@@ -38,9 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 791e6f1 docs: remove tagline from README
 - 2025-12-11 8a424b2 docs: replace verbose README with professional public-facing version
 - 2025-12-11 ab9bccf security: hide internal status docs and remove token from remote URL
-- 2025-12-11 748dc58 docs: add changelog and update AI context with final system state
-- 2025-12-11 728b852 fix(phone-numbers): lazy load SignalWire SDK to avoid lodash dependency error
-- 2025-12-11 e865d29 debug(phone-numbers): add detailed logging to API routes
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
