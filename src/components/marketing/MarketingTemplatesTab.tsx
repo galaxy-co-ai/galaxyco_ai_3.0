@@ -24,21 +24,33 @@ import {
   Zap,
   Grid3X3,
   List,
+  LayoutTemplate,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface CampaignTemplate {
   id: string;
   name: string;
   category: string;
   description: string;
-  icon: any;
-  color: string;
+  icon: React.ElementType;
   duration?: string;
   budget?: string;
   channels?: string[];
   usageCount?: number;
   avgRating?: string;
 }
+
+// Category colors for cards - soft pastel gradients matching Creator style
+const categoryColors: Record<string, { bg: string; text: string; badge: string }> = {
+  'Launch': { bg: 'from-pink-100 to-rose-100', text: 'text-pink-600', badge: 'bg-pink-100 text-pink-700 border-pink-200' },
+  'Lead Gen': { bg: 'from-blue-100 to-indigo-100', text: 'text-blue-600', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
+  'Sales': { bg: 'from-amber-100 to-orange-100', text: 'text-amber-600', badge: 'bg-amber-100 text-amber-700 border-amber-200' },
+  'Awareness': { bg: 'from-purple-100 to-violet-100', text: 'text-purple-600', badge: 'bg-purple-100 text-purple-700 border-purple-200' },
+  'Retention': { bg: 'from-emerald-100 to-green-100', text: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  'ABM': { bg: 'from-slate-100 to-gray-100', text: 'text-slate-600', badge: 'bg-slate-100 text-slate-700 border-slate-200' },
+};
 
 // Campaign templates
 const campaignTemplates: CampaignTemplate[] = [
@@ -48,7 +60,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Launch',
     description: 'Multi-channel launch campaign for new products',
     icon: Megaphone,
-    color: 'bg-gradient-to-br from-pink-500 to-pink-600',
     duration: '4 weeks',
     budget: '$15K',
     channels: ['Email', 'Social', 'Paid Ads'],
@@ -61,7 +72,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Lead Gen',
     description: 'Professional B2B outreach campaign',
     icon: UserPlus,
-    color: 'bg-gradient-to-br from-blue-500 to-blue-600',
     duration: '6 weeks',
     budget: '$8K',
     channels: ['LinkedIn Ads', 'Email'],
@@ -74,7 +84,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Sales',
     description: 'Seasonal promotion with urgency',
     icon: DollarSign,
-    color: 'bg-gradient-to-br from-orange-500 to-orange-600',
     duration: '2 weeks',
     budget: '$12K',
     channels: ['Email', 'Social', 'Web'],
@@ -87,7 +96,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Awareness',
     description: 'Increase brand recognition and reach',
     icon: Sparkles,
-    color: 'bg-gradient-to-br from-purple-500 to-purple-600',
     duration: '8 weeks',
     budget: '$20K',
     channels: ['Social', 'Content', 'Influencer'],
@@ -100,7 +108,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Lead Gen',
     description: 'Webinar promotion and registration campaign',
     icon: Video,
-    color: 'bg-gradient-to-br from-blue-500 to-indigo-600',
     duration: '3 weeks',
     budget: '$6K',
     channels: ['Email', 'LinkedIn', 'Paid Ads'],
@@ -113,7 +120,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Sales',
     description: 'Limited-time offer with high urgency',
     icon: Zap,
-    color: 'bg-gradient-to-br from-yellow-500 to-orange-600',
     duration: '48 hours',
     budget: '$5K',
     channels: ['Email', 'Social', 'SMS'],
@@ -126,7 +132,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Retention',
     description: 'Reward existing customers and increase LTV',
     icon: Users,
-    color: 'bg-gradient-to-br from-amber-500 to-amber-600',
     duration: '12 weeks',
     budget: '$10K',
     channels: ['Email', 'App', 'Web'],
@@ -139,7 +144,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'Retention',
     description: 'Re-engage inactive customers',
     icon: RefreshCw,
-    color: 'bg-gradient-to-br from-amber-500 to-red-600',
     duration: '4 weeks',
     budget: '$7K',
     channels: ['Email', 'Retargeting Ads'],
@@ -152,7 +156,6 @@ const campaignTemplates: CampaignTemplate[] = [
     category: 'ABM',
     description: 'Target specific high-value accounts',
     icon: Briefcase,
-    color: 'bg-gradient-to-br from-slate-600 to-slate-700',
     duration: '10 weeks',
     budget: '$25K',
     channels: ['LinkedIn', 'Direct Mail', 'Email'],
@@ -163,17 +166,6 @@ const campaignTemplates: CampaignTemplate[] = [
 
 const categories = ['All', 'Launch', 'Lead Gen', 'Sales', 'Awareness', 'Retention', 'ABM'];
 
-// Rating colors
-const ratingColors: Record<string, string> = {
-  'A+': 'text-green-600',
-  'A': 'text-green-600',
-  'A-': 'text-green-500',
-  'B+': 'text-blue-600',
-  'B': 'text-blue-500',
-  'B-': 'text-blue-400',
-  'C': 'text-orange-500',
-};
-
 interface MarketingTemplatesTabProps {
   onSelectTemplate: (templateId: string) => void;
 }
@@ -182,6 +174,15 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Count templates per category
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { 'All': campaignTemplates.length };
+    campaignTemplates.forEach(t => {
+      counts[t.category] = (counts[t.category] || 0) + 1;
+    });
+    return counts;
+  }, []);
 
   // Filter templates
   const filteredTemplates = useMemo(() => {
@@ -194,148 +195,256 @@ export default function MarketingTemplatesTab({ onSelectTemplate }: MarketingTem
   }, [searchQuery, selectedCategory]);
 
   return (
-    <div className="space-y-6">
+    <Card className="h-full rounded-2xl shadow-sm border bg-card overflow-hidden flex flex-col">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600 text-white">
-            <Megaphone className="h-5 w-5" />
+      <div className="px-6 py-5 border-b bg-gradient-to-r from-pink-50/80 to-orange-50/80">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-pink-500 to-orange-600 text-white shadow-lg">
+              <Megaphone className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg text-gray-900">Campaign Templates</h2>
+              <p className="text-sm text-gray-500">
+                Ready-to-use templates for every marketing need
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold">Campaign Templates</h2>
-            <p className="text-sm text-gray-600">Ready-to-use templates for every marketing need</p>
-          </div>
+          
+          <Badge className="bg-pink-100 text-pink-700 border-pink-200">
+            <Sparkles className="h-3 w-3 mr-1" />
+            {campaignTemplates.length} Templates
+          </Badge>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {categories.map((category) => (
-            <Button
-              key={category}
-              size="sm"
-              variant={selectedCategory === category ? 'default' : 'outline'}
-              onClick={() => setSelectedCategory(category)}
-              className="rounded-full"
-            >
-              {category}
-              {category !== 'All' && (
-                <Badge variant="secondary" className="ml-1.5 text-[10px] px-1">
-                  {campaignTemplates.filter(t => t.category === category).length}
-                </Badge>
-              )}
-            </Button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-64"
-            />
-          </div>
-
-          {/* View mode toggle */}
-          <div className="flex items-center gap-1 border rounded-lg p-1">
-            <Button
-              size="sm"
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              onClick={() => setViewMode('grid')}
-              className="h-7 w-7 p-0"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              onClick={() => setViewMode('list')}
-              className="h-7 w-7 p-0"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Templates Grid/List */}
-      {filteredTemplates.length > 0 ? (
-        <div className={viewMode === 'grid' ? 'grid gap-4 md:grid-cols-2 lg:grid-cols-3' : 'space-y-3'}>
-          {filteredTemplates.map((template) => (
-            <Card key={template.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className={`${template.color} p-4 text-white`}>
-                <div className="flex items-center justify-between mb-2">
-                  <template.icon className="h-8 w-8" />
-                  <Badge variant="secondary" className="text-xs">
-                    {template.category}
-                  </Badge>
-                </div>
-                <h3 className="font-semibold text-lg mb-1">{template.name}</h3>
-                <p className="text-sm text-white/90">{template.description}</p>
-              </div>
-
-              <div className="p-4 space-y-3">
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-gray-500 text-xs">Duration</p>
-                    <p className="font-medium">{template.duration}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">Budget</p>
-                    <p className="font-medium">{template.budget}</p>
-                  </div>
-                </div>
-
-                {/* Channels */}
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Channels</p>
-                  <div className="flex flex-wrap gap-1">
-                    {template.channels?.map((channel, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {channel}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Usage stats */}
-                <div className="flex items-center justify-between text-xs text-gray-600 pt-2 border-t">
-                  <span>→ {template.usageCount} uses</span>
-                  <span className={`font-semibold ${ratingColors[template.avgRating || 'B']}`}>
-                    Avg {template.avgRating} rating
-                  </span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    onClick={() => onSelectTemplate(template.id)}
-                    className="flex-1 rounded-full"
+      {/* Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Controls: Category Chips + Search + View Toggle */}
+        <div className="px-4 py-3 border-b">
+          <div className="flex items-center justify-between gap-4">
+            {/* Category Chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {categories.map((category) => {
+                const isSelected = selectedCategory === category;
+                const count = categoryCounts[category] || 0;
+                
+                return (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5",
+                      isSelected
+                        ? "bg-pink-600 text-white shadow-sm"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    )}
+                    aria-label={`Filter by ${category}`}
+                    aria-pressed={isSelected}
                   >
-                    Use Template
-                  </Button>
-                  <Button size="sm" variant="outline" className="flex-1 rounded-full">
-                    Preview
-                  </Button>
-                </div>
+                    {category}
+                    {category !== 'All' && (
+                      <span className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded-full",
+                        isSelected ? "bg-pink-500 text-white" : "bg-gray-200 text-gray-500"
+                      )}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search and View Toggle */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search templates..."
+                  className="pl-9 h-9 text-sm w-48"
+                  aria-label="Search templates"
+                />
               </div>
-            </Card>
-          ))}
+              <div className="flex items-center border rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setViewMode("grid")}
+                  className={cn(
+                    "p-1.5 transition-colors",
+                    viewMode === "grid" ? "bg-gray-100" : "hover:bg-gray-50"
+                  )}
+                  aria-label="Grid view"
+                  aria-pressed={viewMode === "grid"}
+                >
+                  <Grid3X3 className="h-4 w-4 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={cn(
+                    "p-1.5 transition-colors",
+                    viewMode === "list" ? "bg-gray-100" : "hover:bg-gray-50"
+                  )}
+                  aria-label="List view"
+                  aria-pressed={viewMode === "list"}
+                >
+                  <List className="h-4 w-4 text-gray-600" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      ) : (
-        <Card className="p-12 text-center">
-          <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No templates found</h3>
-          <p className="text-gray-600">Try adjusting your search or category filter</p>
-        </Card>
-      )}
-    </div>
+
+        {/* Templates */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {filteredTemplates.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center py-12">
+              <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+                <LayoutTemplate className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">No templates found</h3>
+              <p className="text-sm text-gray-500 max-w-xs">
+                {searchQuery 
+                  ? "Try adjusting your search to find what you're looking for."
+                  : "No templates available in this category yet."}
+              </p>
+            </div>
+          ) : viewMode === "list" ? (
+            // List View
+            <div className="space-y-2">
+              {filteredTemplates.map((template) => {
+                const colors = categoryColors[template.category] || categoryColors['Launch'];
+                const TemplateIcon = template.icon;
+                
+                return (
+                  <motion.div
+                    key={template.id}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-white hover:shadow-sm hover:border-gray-300 transition-all group cursor-pointer"
+                    onClick={() => onSelectTemplate(template.id)}
+                  >
+                    {/* Icon */}
+                    <div className={cn("p-2 rounded-lg", colors.badge.split(' ')[0], colors.text)}>
+                      <TemplateIcon className="h-4 w-4" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-sm text-gray-900 truncate">
+                          {template.name}
+                        </h4>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", colors.badge)}>
+                          {template.category}
+                        </Badge>
+                        <span className="text-gray-300">•</span>
+                        <span className="text-xs text-gray-500">{template.duration}</span>
+                        <span className="text-gray-300">•</span>
+                        <span className="text-xs text-gray-500">{template.budget}</span>
+                        {template.usageCount && template.usageCount > 0 && (
+                          <>
+                            <span className="text-gray-300">•</span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {template.usageCount} uses
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Use Button */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-pink-600 hover:text-pink-700 hover:bg-pink-50"
+                    >
+                      Use Template
+                    </Button>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            // Grid View
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {filteredTemplates.map((template) => {
+                const colors = categoryColors[template.category] || categoryColors['Launch'];
+                const TemplateIcon = template.icon;
+                
+                return (
+                  <motion.div
+                    key={template.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="group relative rounded-xl border bg-white hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+                    onClick={() => onSelectTemplate(template.id)}
+                  >
+                    {/* Header area with icon and title */}
+                    <div className={cn(
+                      "relative px-3 py-2.5 bg-gradient-to-br flex items-center gap-2.5",
+                      colors.bg
+                    )}>
+                      {/* Icon */}
+                      <div className={cn("p-1.5 rounded-md bg-white/60 backdrop-blur-sm shrink-0", colors.text)}>
+                        <TemplateIcon className="h-4 w-4" />
+                      </div>
+                      
+                      {/* Title */}
+                      <h4 className="font-semibold text-sm text-gray-900 line-clamp-1 flex-1 min-w-0">
+                        {template.name}
+                      </h4>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-3">
+                      <Badge className={cn("text-[10px] mb-2", colors.badge)}>
+                        {template.category}
+                      </Badge>
+                      
+                      {template.description && (
+                        <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                          {template.description}
+                        </p>
+                      )}
+
+                      {/* Duration and Budget */}
+                      <div className="flex items-center gap-3 text-xs text-gray-400 mb-2">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {template.duration}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          {template.budget}
+                        </span>
+                      </div>
+
+                      {template.usageCount && template.usageCount > 0 && (
+                        <div className="flex items-center text-xs text-gray-400">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          {template.usageCount} uses
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-pink-600/0 group-hover:bg-pink-600/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <Button size="sm" className="bg-pink-600 hover:bg-pink-700 shadow-lg">
+                        Use Template
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
