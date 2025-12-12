@@ -12,7 +12,7 @@
  * - SIGNALWIRE_WHATSAPP_NUMBER: Your SignalWire WhatsApp number (optional)
  */
 
-// @ts-ignore - SignalWire types need package.json update
+// @ts-expect-error - SignalWire compatibility API types are missing/incorrect; remove once upstream types are fixed
 import { RestClient } from '@signalwire/compatibility-api';
 import { logger } from '@/lib/logger';
 

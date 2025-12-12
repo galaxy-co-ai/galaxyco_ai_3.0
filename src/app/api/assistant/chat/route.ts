@@ -520,9 +520,9 @@ export async function POST(request: Request) {
       const toolCallsMade: Array<{ name: string; result: ToolResult }> = [];
       let iterations = 0;
       const maxIterations = 5;
-      let totalTokensUsed = 0; // Track token usage for observability
-      let wasResponseCached = false; // Track if response came from cache
-      let ragResultsCount = 0; // Track RAG results count
+      const totalTokensUsed = 0; // Track token usage for observability
+      const wasResponseCached = false; // Track if response came from cache
+      const ragResultsCount = 0; // Track RAG results count
 
       // Streaming with tool call loop
       let continueLoop = true;
