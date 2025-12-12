@@ -1,0 +1,40 @@
+name: Update AI_CONTEXT
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-ai-context:
+    name: Generate and commit AI_CONTEXT.md
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate AI_CONTEXT.md
+        run: node scripts/update-context.js
+
+      - name: Commit changes (if any)
+        run: |
+          if git diff --quiet -- docs/status/AI_CONTEXT.md; then
+            echo "AI_CONTEXT.md is already up to date"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add docs/status/AI_CONTEXT.md
+          git commit -m "docs(status): update AI context"
+          git push
