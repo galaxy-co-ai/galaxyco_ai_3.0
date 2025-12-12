@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (169cd15)  
+**Updated Through:** 2025-12-12 (fc90a73)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 fc90a73 fix(proxy): correct Clerk middleware signature for production
 - 2025-12-12 169cd15 feat(ui): standardize loading states across all pages
 - 2025-12-12 5b86da8 ci: trigger E2E tests with secrets configured
 - 2025-12-12 1b19794 feat(ci): add E2E tests to CI pipeline
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 ec6d97d feat(ui): standardize UI headers + streamline AI_CONTEXT
 - 2025-12-11 88a3b62 chore: update AI context after Phase 4A completion
 - 2025-12-11 d8bc7c0 docs(neptune): complete Phase 4A Day 4 - metrics documentation
-- 2025-12-11 06ee8ec feat(observability): Phase 4A Day 3 - Metrics validation test script
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
