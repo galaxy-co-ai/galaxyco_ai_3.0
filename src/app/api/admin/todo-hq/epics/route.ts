@@ -59,15 +59,13 @@ export async function GET(request: NextRequest) {
       const completedTasks = tasks.filter(t => t.status === 'done').length;
       const completionPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-      // Get open items (tasks that are not done or cancelled)
-      const openItems = tasks.filter(t => t.status !== 'done' && t.status !== 'cancelled');
-
+      // Return all tasks for display
       return {
         ...epic,
         taskCount: totalTasks,
         completedTaskCount: completedTasks,
         completionPercent,
-        openItems: openItems.map(t => ({
+        tasks: tasks.map(t => ({
           id: t.id,
           title: t.title,
           status: t.status,

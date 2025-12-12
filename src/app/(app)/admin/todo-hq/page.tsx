@@ -139,57 +139,63 @@ export default function TodoHQPage() {
               </div>
             </div>
 
-            {/* Open Tasks */}
-            {epic.openItems && epic.openItems.length > 0 && (
+            {/* All Tasks */}
+            {epic.tasks && epic.tasks.length > 0 ? (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Open Items:</h4>
-                {epic.openItems.map((task: any) => (
-                  <div
-                    key={task.id}
-                    className="flex items-start gap-2 p-2 rounded-md hover:bg-secondary/50 transition-colors"
-                  >
-                    <button
-                      onClick={() => handleToggleTask(task.id, task.status)}
-                      className="mt-0.5 flex-shrink-0"
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Tasks:</h4>
+                {epic.tasks.map((task: any) => {
+                  const isCompleted = task.status === 'done' || task.status === 'cancelled';
+                  return (
+                    <div
+                      key={task.id}
+                      className={`flex items-start gap-2 p-2 rounded-md hover:bg-secondary/50 transition-all duration-200 ${
+                        isCompleted ? 'opacity-40' : ''
+                      }`}
                     >
-                      {task.status === 'done' ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <Circle className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${task.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
-                        {task.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge variant="outline" className="text-xs">
-                          {task.status}
-                        </Badge>
-                        <Badge
-                          variant={
-                            task.priority === 'urgent'
-                              ? 'destructive'
-                              : task.priority === 'high'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                          className="text-xs"
+                      <button
+                        onClick={() => handleToggleTask(task.id, task.status)}
+                        className="mt-0.5 flex-shrink-0 hover:scale-110 transition-transform"
+                        title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
+                      >
+                        {task.status === 'done' ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <Circle className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm transition-all ${
+                            isCompleted ? 'line-through text-muted-foreground' : ''
+                          }`}
                         >
-                          {task.priority}
-                        </Badge>
+                          {task.title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {task.status}
+                          </Badge>
+                          <Badge
+                            variant={
+                              task.priority === 'urgent'
+                                ? 'destructive'
+                                : task.priority === 'high'
+                                ? 'default'
+                                : 'secondary'
+                            }
+                            className="text-xs"
+                          >
+                            {task.priority}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            )}
-
-            {/* No open tasks message */}
-            {(!epic.openItems || epic.openItems.length === 0) && epic.completionPercent === 100 && (
-              <div className="flex items-center gap-2 text-green-600 text-sm">
-                <CheckCircle2 className="h-4 w-4" />
-                <span>All tasks completed!</span>
+            ) : (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <span>No tasks yet</span>
               </div>
             )}
           </Card>
