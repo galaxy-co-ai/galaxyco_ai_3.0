@@ -154,7 +154,7 @@ export default function MarketingCampaignsTab({ campaigns, onCreateCampaign }: M
                   onClick={onCreateCampaign} 
                   className="h-7 text-xs rounded-full"
                 >
-                  {rec.action.replace('Create Campaign: ', '')}
+                  {rec.action.replace(/Create Campaign: "?/, '').replace(/"$/, '')}
                 </Button>
                 <button
                   onClick={() => dismissRecommendation(rec.id)}
