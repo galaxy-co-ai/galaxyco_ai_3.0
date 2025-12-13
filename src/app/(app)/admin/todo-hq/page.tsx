@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   CheckCircle2,
   Circle,
@@ -968,17 +969,26 @@ function TaskRow({
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <Badge className={`text-xs ${priorityColor}`}>{task.priority}</Badge>
-          <select
-            value={task.sprintId || ''}
-            onChange={(e) => onAssignToSprint(task.id, e.target.value || null)}
-            className="text-xs border rounded px-2 py-1 bg-white max-w-[120px]"
-            aria-label="Assign to sprint"
+          <Select
+            value={task.sprintId || 'backlog'}
+            onValueChange={(value) => onAssignToSprint(task.id, value === 'backlog' ? null : value)}
           >
-            <option value="">Backlog</option>
-            {sprints.filter(s => s.status !== 'completed').map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+            <SelectTrigger 
+              size="sm" 
+              className="w-[140px] text-xs"
+              aria-label="Assign to sprint"
+            >
+              <SelectValue placeholder="Backlog" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="backlog">Backlog</SelectItem>
+              {sprints.filter(s => s.status !== 'completed').map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </Card>
