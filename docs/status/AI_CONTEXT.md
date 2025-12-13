@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (c9f31f8)  
+**Updated Through:** 2025-12-12 (df77400)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 df77400 feat(dashboard): add command palette with Cmd/Ctrl+K shortcuts and recent items
 - 2025-12-12 c9f31f8 feat(dashboard): add activity feed with infinite scroll, filters, and mark as read
 - 2025-12-12 2fdff7e docs: update Phase 1 progress and create handoff document
 - 2025-12-12 6c1a1f8 feat(dashboard): add trend indicators to stats badges
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 73337c1 fix(marketing): remove quotes from action button text in recommendations
 - 2025-12-11 e0066aa refactor(marketing): redesign Neptune recommendations as compact notifications
 - 2025-12-11 96134f3 fix(marketing): remove double dollar sign and consolidate stats to one line
-- 2025-12-11 e2ed690 refactor(marketing): replace hover overlay with Build button in template cards
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
