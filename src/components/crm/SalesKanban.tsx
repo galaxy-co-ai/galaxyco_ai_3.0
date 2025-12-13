@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,10 +16,23 @@ import {
   User,
   Zap,
 } from "lucide-react";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+} from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface SalesKanbanProps {
   deals: Deal[];
   onSelectDeal?: (dealId: string) => void;
+  onDealStageChange?: (dealId: string, newStage: string) => Promise<void>;
 }
 
 const stageMeta = [
@@ -60,7 +73,35 @@ const stageMeta = [
   },
 ] as const;
 
-export function SalesKanban({ deals, onSelectDeal }: SalesKanbanProps) {
+export function SalesKanban({ deals, onSelectDeal, onDealStageChange }: SalesKanbanProps) {
+  const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Require 8px movement before drag starts
+      },
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const deal = deals.find((d) => d.id === event.active.id);
+    setActiveDeal(deal || null);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveDeal(null);
+
+    if (!over || active.id === over.id) return;
+
+    // Check if dropped over a stage column
+    const overStage = stageMeta.find((s) => over.id === s.id);
+    if (overStage && onDealStageChange) {
+      await onDealStageChange(active.id as string, overStage.id);
+    }
+  };
+
   const stats = useMemo(() => {
     const totalValue = deals.reduce((sum, deal) => sum + parseCurrency(deal.value), 0);
     const highRisk = deals.filter((deal) => deal.aiRisk === "high").length;
@@ -78,53 +119,68 @@ export function SalesKanban({ deals, onSelectDeal }: SalesKanbanProps) {
   }, [deals]);
 
   return (
-    <div className="space-y-4">
-      {/* Header Stats */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft md:flex-row md:items-center md:justify-between">
-        <div className="grid w-full grid-cols-2 gap-3 md:flex md:flex-row md:gap-4">
-          <StatTile label="Pipeline Value" value={stats.totalValue} caption="AI forecast +6.4%" accent="from-indigo-500 to-purple-600" />
-          <StatTile label="Deals at Risk" value={stats.highRisk.toString()} caption="AI flagged follow-ups" accent="from-rose-500 to-orange-400" />
-          <StatTile label="Win Rate" value={`${stats.winRate}%`} caption="Rolling 30 days" accent="from-emerald-500 to-teal-500" />
-          <StatTile label="Closing Soon" value={stats.closingSoon.toString()} caption="Negotiation & proposal" accent="from-blue-500 to-cyan-500" />
-        </div>
-        <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
-          <Button
-            variant="outline"
-            className="h-9 rounded-xl border-purple-200 bg-purple-50/60 text-sm font-medium text-purple-600 hover:bg-purple-100"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Auto-prioritize
-          </Button>
-          <Button className="h-9 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-soft hover:bg-indigo-700">
-            <Plus className="mr-1.5 h-4 w-4" />
-            New Deal
-          </Button>
-        </div>
-      </div>
-
-      {/* Pipeline */}
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {stageMeta.map((stage) => {
-          const items = deals.filter((deal) => deal.stage === stage.id);
-
-          return (
-            <div
-              key={stage.id}
-              className={`min-w-[240px] flex-shrink-0 rounded-3xl border ${stage.border} bg-gradient-to-b ${stage.accent} p-3 shadow-soft`}
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="space-y-4">
+        {/* Header Stats */}
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft md:flex-row md:items-center md:justify-between">
+          <div className="grid w-full grid-cols-2 gap-3 md:flex md:flex-row md:gap-4">
+            <StatTile label="Pipeline Value" value={stats.totalValue} caption="AI forecast +6.4%" accent="from-indigo-500 to-purple-600" />
+            <StatTile label="Deals at Risk" value={stats.highRisk.toString()} caption="AI flagged follow-ups" accent="from-rose-500 to-orange-400" />
+            <StatTile label="Win Rate" value={`${stats.winRate}%`} caption="Rolling 30 days" accent="from-emerald-500 to-teal-500" />
+            <StatTile label="Closing Soon" value={stats.closingSoon.toString()} caption="Negotiation & proposal" accent="from-blue-500 to-cyan-500" />
+          </div>
+          <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+            <Button
+              variant="outline"
+              className="h-9 rounded-xl border-purple-200 bg-purple-50/60 text-sm font-medium text-purple-600 hover:bg-purple-100"
             >
-              <ColumnHeader label={stage.label} count={items.length} />
-              <div className="mt-3 space-y-3">
-                {items.length === 0 ? (
-                  <EmptyState message={stage.emptyMessage} />
-                ) : (
-                  items.map((deal) => <DealCard key={deal.id} deal={deal} onSelectDeal={onSelectDeal} />)
-                )}
-              </div>
-            </div>
-          );
-        })}
+              <Sparkles className="mr-2 h-4 w-4" />
+              Auto-prioritize
+            </Button>
+            <Button className="h-9 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-soft hover:bg-indigo-700">
+              <Plus className="mr-1.5 h-4 w-4" />
+              New Deal
+            </Button>
+          </div>
+        </div>
+
+        {/* Pipeline */}
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          {stageMeta.map((stage) => {
+            const items = deals.filter((deal) => deal.stage === stage.id);
+
+            return (
+              <DroppableColumn
+                key={stage.id}
+                stageId={stage.id}
+                label={stage.label}
+                count={items.length}
+                accent={stage.accent}
+                border={stage.border}
+                emptyMessage={stage.emptyMessage}
+              >
+                {items.map((deal) => (
+                  <DraggableDealCard
+                    key={deal.id}
+                    deal={deal}
+                    onSelectDeal={onSelectDeal}
+                  />
+                ))}
+              </DroppableColumn>
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      {/* Drag Overlay */}
+      <DragOverlay>
+        {activeDeal ? <DealCard deal={activeDeal} onSelectDeal={onSelectDeal} /> : null}
+      </DragOverlay>
+    </DndContext>
   );
 }
 
@@ -226,6 +282,64 @@ function DealCard({ deal, onSelectDeal }: { deal: Deal; onSelectDeal?: (dealId: 
         </span>
       </div>
     </button>
+  );
+}
+
+function DroppableColumn({
+  stageId,
+  label,
+  count,
+  accent,
+  border,
+  emptyMessage,
+  children,
+}: {
+  stageId: string;
+  label: string;
+  count: number;
+  accent: string;
+  border: string;
+  emptyMessage: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: stageId });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-w-[240px] flex-shrink-0 rounded-3xl border ${border} bg-gradient-to-b ${accent} p-3 shadow-soft transition-colors ${
+        isOver ? "ring-2 ring-indigo-400 ring-offset-2" : ""
+      }`}
+    >
+      <ColumnHeader label={label} count={count} />
+      <div className="mt-3 space-y-3">
+        {count === 0 ? <EmptyState message={emptyMessage} /> : children}
+      </div>
+    </div>
+  );
+}
+
+function DraggableDealCard({
+  deal,
+  onSelectDeal,
+}: {
+  deal: Deal;
+  onSelectDeal?: (dealId: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: deal.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <DealCard deal={deal} onSelectDeal={onSelectDeal} />
+    </div>
   );
 }
 
