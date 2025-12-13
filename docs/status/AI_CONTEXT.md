@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (4c739ba)  
+**Updated Through:** 2025-12-12 (a3d7c7d)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 a3d7c7d refactor(admin): redesign To-Do HQ with phase-based sidebar navigation
 - 2025-12-12 4c739ba feat(crm): add handleDealStageChange for pipeline drag-and-drop
 - 2025-12-12 265dd6d feat(crm): add drag-and-drop to SalesKanban pipeline
 - 2025-12-12 a4cb64c feat(crm): integrate DealDialog and DealDetailView into CRMDashboard
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 60c05db feat(notifications): add comprehensive toast notification system
 - 2025-12-12 7d15532 docs: update progress tracker for Group 6 completion
 - 2025-12-12 0e72472 feat(mobile): add responsive table component
-- 2025-12-12 d8ff82c feat(mobile): add touch interaction components
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
