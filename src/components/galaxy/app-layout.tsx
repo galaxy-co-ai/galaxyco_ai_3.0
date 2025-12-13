@@ -6,6 +6,7 @@ import { Sidebar } from "./sidebar";
 import { Header, HeaderProps } from "./header";
 import { Toaster } from "@/components/ui/sonner";
 import { FeedbackPanel } from "@/components/shared/FeedbackButton";
+import CommandPalette from "@/components/shared/CommandPalette";
 import { NeptuneProvider, useNeptune } from "@/contexts/neptune-context";
 import { FeedbackProvider } from "@/contexts/feedback-context";
 import { AnalyticsProvider } from "@/providers/AnalyticsProvider";
@@ -51,6 +52,7 @@ export interface AppLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
     avatar?: string;
     initials?: string;
   };
+  workspaceId?: string | null;
   showSidebar?: boolean;
   sidebarCollapsed?: boolean;
 }
@@ -59,6 +61,7 @@ export function AppLayout({
   children,
   headerProps,
   user,
+  workspaceId,
   showSidebar = true,
   sidebarCollapsed: initialCollapsed = false,
   className,
@@ -92,6 +95,9 @@ export function AppLayout({
             
             {/* Feedback Panel (triggered from sidebar) */}
             <FeedbackPanel />
+            
+            {/* Command Palette (Cmd/Ctrl+K) */}
+            {workspaceId && <CommandPalette workspaceId={workspaceId} />}
           </div>
         </AnalyticsProvider>
       </FeedbackProvider>

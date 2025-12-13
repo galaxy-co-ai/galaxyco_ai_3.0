@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { AppLayout } from "@/components/galaxy/app-layout";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { getCurrentWorkspace } from "@/lib/auth";
 
 export default async function AppLayoutWrapper({
   children,
@@ -8,6 +9,16 @@ export default async function AppLayoutWrapper({
   children: React.ReactNode;
 }) {
   const user = await currentUser();
+  
+  // Get workspace context
+  let workspaceId: string | null = null;
+  try {
+    const workspace = await getCurrentWorkspace();
+    workspaceId = workspace.workspaceId;
+  } catch (error) {
+    // Workspace context not available (e.g., public pages)
+    console.warn('Workspace context not available', error);
+  }
 
   // Build user data for the layout
   const userData = user
@@ -31,6 +42,7 @@ export default async function AppLayoutWrapper({
     <ErrorBoundary>
       <AppLayout
         user={userData}
+        workspaceId={workspaceId}
         headerProps={{
           showSearch: true,
           showNotifications: true,
