@@ -15,6 +15,12 @@ import { z } from 'zod';
  * Dashboard statistics schema
  * Tracks key metrics across the platform
  */
+export const StatTrendSchema = z.object({
+  value: z.number(),
+  change: z.number(), // Percentage change from previous period
+  isIncrease: z.boolean(),
+});
+
 export const DashboardStatsSchema = z.object({
   activeAgents: z.number().int().nonnegative(),
   totalAgents: z.number().int().nonnegative(),
@@ -23,6 +29,12 @@ export const DashboardStatsSchema = z.object({
   crmContacts: z.number().int().nonnegative(),
   hotLeads: z.number().int().nonnegative(),
   financeConnections: z.number().int().nonnegative(),
+  // Trends (comparing last 7 days vs previous 7 days)
+  trends: z.object({
+    agents: StatTrendSchema.optional(),
+    contacts: StatTrendSchema.optional(),
+    tasks: StatTrendSchema.optional(),
+  }).optional(),
 });
 
 /**

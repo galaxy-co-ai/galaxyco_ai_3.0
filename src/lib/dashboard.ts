@@ -36,6 +36,7 @@ export async function getDashboardData(workspaceId: string, userName: string = '
   // Calculate date thresholds
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
   // Fetch data with individual error handling for resilience
   const safeQuery = async <T>(query: Promise<T>, fallback: T, name: string): Promise<T> => {
@@ -55,6 +56,10 @@ export async function getDashboardData(workspaceId: string, userName: string = '
       crmData,
       financeIntegrations,
       recentExecutions,
+      // Previous period data for trends
+      agentsDataPrevious,
+      tasksDataPrevious,
+      crmDataPrevious,
     ] = await Promise.all([
       // Fetch all agents
       safeQuery(
@@ -121,17 +126,88 @@ export async function getDashboardData(workspaceId: string, userName: string = '
         [],
         'executions'
       ),
+
+      // Previous period: Agents (7-14 days ago)
+      safeQuery(
+        db.query.agents.findMany({
+          where: and(
+            eq(agents.workspaceId, workspaceId),
+            gte(agents.createdAt, fourteenDaysAgo)
+          ),
+        }),
+        [],
+        'agents-previous'
+      ),
+
+      // Previous period: Tasks (7-14 days ago)
+      safeQuery(
+        db.query.tasks.findMany({
+          where: and(
+            eq(tasks.workspaceId, workspaceId),
+            eq(tasks.status, 'done'),
+            gte(tasks.completedAt, fourteenDaysAgo)
+          ),
+        }),
+        [],
+        'tasks-previous'
+      ),
+
+      // Previous period: CRM contacts (7-14 days ago)
+      safeQuery(
+        db.select({ total: count() })
+          .from(contacts)
+          .where(and(
+            eq(contacts.workspaceId, workspaceId),
+            gte(contacts.createdAt, fourteenDaysAgo)
+          )),
+        [{ total: 0 }],
+        'contacts-previous'
+      ),
     ]);
 
-    // Calculate statistics
+    // Helper to calculate trend
+    const calculateTrend = (current: number, previous: number) => {
+      if (previous === 0) {
+        return current > 0 ? { value: current, change: 100, isIncrease: true } : undefined;
+      }
+      const change = ((current - previous) / previous) * 100;
+      return {
+        value: current,
+        change: Math.abs(Math.round(change)),
+        isIncrease: change >= 0,
+      };
+    };
+
+    // Calculate current stats
+    const currentAgents = agentsData.filter(a => a.status === 'active').length;
+    const currentTasks = tasksData.length;
+    const currentContacts = crmData[0]?.total ?? 0;
+
+    // Calculate previous stats (for 7-14 days ago)
+    const previousAgents = agentsDataPrevious.filter(a => {
+      const createdAt = new Date(a.createdAt);
+      return createdAt >= fourteenDaysAgo && createdAt < sevenDaysAgo && a.status === 'active';
+    }).length;
+    const previousTasks = tasksDataPrevious.filter(t => {
+      const completedAt = t.completedAt ? new Date(t.completedAt) : null;
+      return completedAt && completedAt >= fourteenDaysAgo && completedAt < sevenDaysAgo;
+    }).length;
+    const previousContacts = crmDataPrevious[0]?.total ?? 0;
+
+    // Calculate statistics with trends
     const stats: DashboardStats = {
-      activeAgents: agentsData.filter(a => a.status === 'active').length,
+      activeAgents: currentAgents,
       totalAgents: agentsData.length,
-      completedTasks: tasksData.length,
-      hoursSaved: tasksData.length * 2, // Estimate: 2 hours per task
-      crmContacts: crmData[0]?.total ?? 0,
+      completedTasks: currentTasks,
+      hoursSaved: currentTasks * 2, // Estimate: 2 hours per task
+      crmContacts: currentContacts,
       hotLeads: 0, // TODO: Implement hot leads tracking when leadStatus field is added
       financeConnections: financeIntegrations.length,
+      trends: {
+        agents: calculateTrend(currentAgents, previousAgents),
+        tasks: calculateTrend(currentTasks, previousTasks),
+        contacts: calculateTrend(currentContacts, previousContacts),
+      },
     };
 
     // Determine next step

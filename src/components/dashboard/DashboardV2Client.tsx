@@ -18,6 +18,8 @@ import {
   Bot, 
   Plug,
   Compass,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 import { DashboardV2Data } from '@/types/dashboard';
 import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
@@ -129,17 +131,41 @@ export default function DashboardV2Client({
         <div className="flex items-center justify-between pt-4">
           <PageTitle title="Dashboard" icon={Globe} />
 
-          {/* Stats Bar */}
+          {/* Stats Bar with Trends */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
             <Badge variant="soft" tone="violet" size="pill">
               <Bot aria-hidden="true" />
               <span className="font-semibold">{stats.activeAgents}</span>
               <span className="opacity-70 font-normal">Agents</span>
+              {stats.trends?.agents && stats.trends.agents.change > 0 && (
+                <span className={`ml-1 text-xs flex items-center gap-0.5 ${
+                  stats.trends.agents.isIncrease ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {stats.trends.agents.isIncrease ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  {stats.trends.agents.change}%
+                </span>
+              )}
             </Badge>
             <Badge variant="soft" tone="info" size="pill">
               <Users aria-hidden="true" />
               <span className="font-semibold">{stats.crmContacts}</span>
               <span className="opacity-70 font-normal">Contacts</span>
+              {stats.trends?.contacts && stats.trends.contacts.change > 0 && (
+                <span className={`ml-1 text-xs flex items-center gap-0.5 ${
+                  stats.trends.contacts.isIncrease ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {stats.trends.contacts.isIncrease ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  {stats.trends.contacts.change}%
+                </span>
+              )}
             </Badge>
             <Badge variant="soft" tone="success" size="pill">
               <Plug aria-hidden="true" />
