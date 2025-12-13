@@ -17,7 +17,6 @@ import {
   Edit,
   MoreVertical,
   Trash2,
-  User,
   Target,
   Clock,
   FileText,

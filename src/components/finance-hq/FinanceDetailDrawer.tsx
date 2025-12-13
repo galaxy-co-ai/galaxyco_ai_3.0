@@ -2,15 +2,6 @@
 
 import * as React from "react";
 import {
-  Receipt,
-  ArrowUpRight,
-  ArrowDownRight,
-  ShoppingCart,
-  CreditCard,
-  RefreshCw,
-  Calendar,
-  Mail,
-  ExternalLink,
   Copy,
   Check,
 } from "lucide-react";

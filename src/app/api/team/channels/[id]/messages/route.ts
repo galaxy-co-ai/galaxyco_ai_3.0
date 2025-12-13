@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { teamChannels, teamMessages, teamChannelMembers, users } from '@/db/schema';
-import { eq, and, desc, asc } from 'drizzle-orm';
+import { teamChannels, teamMessages, teamChannelMembers } from '@/db/schema';
+import { eq, and, asc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';

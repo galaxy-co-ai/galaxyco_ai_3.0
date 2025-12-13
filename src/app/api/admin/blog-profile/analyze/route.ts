@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import { blogVoiceProfiles, blogPosts } from '@/db/schema';
 import { isSystemAdmin, getCurrentWorkspace } from '@/lib/auth';
 import { getOpenAI } from '@/lib/ai-providers';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 

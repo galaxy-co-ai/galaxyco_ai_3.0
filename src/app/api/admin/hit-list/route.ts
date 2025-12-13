@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { topicIdeas, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { eq, and, desc, asc, sql, ilike, isNotNull, or } from "drizzle-orm";
+import { eq, and, desc, asc, sql, ilike, isNotNull } from "drizzle-orm";
 
 /**
  * GET /api/admin/hit-list

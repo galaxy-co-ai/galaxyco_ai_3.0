@@ -8,19 +8,15 @@ import {
   blogBookmarks,
   users 
 } from '@/db/schema';
-import { desc, eq, count, sql, and, gte, lt, avg } from 'drizzle-orm';
+import { desc, eq, count, sql, and, gte, lt } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { 
-  BarChart3, 
   Eye, 
   Users, 
   Clock,
-  TrendingUp,
   Smartphone,
   Monitor,
   Tablet,
-  FileText,
-  BookmarkPlus,
   Activity
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,19 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/ui/page-title";
 import {
-  Bot,
-  Plus,
-  Pause,
-  Play,
   CheckCircle2,
-  Clock,
   TrendingUp,
   Activity,
   Sparkles,

@@ -11,9 +11,6 @@ import {
   Search,
   FileText,
   Image as ImageIcon,
-  Link as LinkIcon,
-  Type,
-  Hash,
   BookOpen,
   Shield,
   ShieldAlert,
@@ -21,7 +18,6 @@ import {
   Monitor,
   ExternalLink,
   Eye,
-  RefreshCw,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';

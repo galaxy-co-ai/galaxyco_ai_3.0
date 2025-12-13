@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
   Bot,
@@ -19,11 +18,9 @@ import {
   TrendingDown,
   Clock,
   CheckCircle2,
-  XCircle,
   Zap,
   BarChart3,
   Activity,
-  Timer,
   Loader2,
   RefreshCw,
   ArrowUpRight,

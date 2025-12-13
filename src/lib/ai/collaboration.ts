@@ -6,8 +6,8 @@
  */
 
 import { db } from '@/lib/db';
-import { users, tasks, workspaces, workspaceMembers } from '@/db/schema';
-import { eq, and, ilike } from 'drizzle-orm';
+import { tasks, workspaceMembers } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 // ============================================================================

@@ -11,7 +11,7 @@
 import { task, schedules } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
 import { agentWorkflows, agentWorkflowExecutions } from "@/db/schema";
-import { eq, and, sql, lte } from "drizzle-orm";
+import { eq, and, lte } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import { WorkflowEngine } from "@/lib/orchestration/workflow-engine";
 import type {

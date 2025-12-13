@@ -17,7 +17,6 @@ import {
   detectDealNegotiationInsights,
 } from '@/lib/ai/proactive-engine';
 import { db } from '@/lib/db';
-import { workspaces } from '@/db/schema';
 
 // ============================================================================
 // EVENT HANDLERS

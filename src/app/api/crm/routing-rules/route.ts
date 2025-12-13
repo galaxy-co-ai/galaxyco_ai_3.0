@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { leadRoutingRules, users } from '@/db/schema';
+import { leadRoutingRules } from '@/db/schema';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { eq, desc, asc } from 'drizzle-orm';
 import { z } from 'zod';

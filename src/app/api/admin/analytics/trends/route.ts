@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { articleAnalytics, blogPosts } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { eq, and, sql, gte, lte, desc } from "drizzle-orm";
+import { eq, and, sql, gte, lte } from "drizzle-orm";
 
 const querySchema = z.object({
   period: z.enum(["daily", "weekly", "monthly"]).optional().default("daily"),

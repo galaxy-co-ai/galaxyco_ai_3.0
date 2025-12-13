@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
-import { CheckCircle2, Circle, Loader2, Sparkles, ArrowRight } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface IntegrationCardProps {

@@ -4,7 +4,7 @@ import { Contact } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, Building2, Users, UserPlus, Trash2 } from "lucide-react";
+import { Mail, Phone, Users, UserPlus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ContactsTableProps {

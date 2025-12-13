@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "../ui/button";
 import { Rocket, LogIn, Menu, X } from "lucide-react";

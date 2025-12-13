@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   CheckCircle2, 
-  Clock, 
   Eye, 
   Lightbulb, 
   PlayCircle, 

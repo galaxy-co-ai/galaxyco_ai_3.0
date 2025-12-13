@@ -16,7 +16,6 @@ import type {
   MarketingContext,
   FinanceContext,
   ProactiveInsightsContext,
-  ContentCockpitContext,
 } from './context';
 
 // ============================================================================

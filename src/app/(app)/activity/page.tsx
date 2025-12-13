@@ -1,7 +1,7 @@
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { agents, agentExecutions } from "@/db/schema";
-import { eq, desc, count, and, sql } from "drizzle-orm";
+import { eq, desc, count, and } from "drizzle-orm";
 import { MyAgentsDashboard } from "@/components/agents";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";

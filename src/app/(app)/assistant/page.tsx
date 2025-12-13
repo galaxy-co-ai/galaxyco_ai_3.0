@@ -10,23 +10,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Sparkles, 
   MessageSquare, 
-  Zap, 
   Brain,
   Target,
   FileText,
   Calendar,
-  Mail,
-  TrendingUp,
   Users,
   Bot,
   Send,
   Loader2,
   ChevronRight,
   Clock,
-  CheckCircle2,
   Lightbulb,
   Workflow,
-  Database,
   BarChart3,
   History,
   Plus,
@@ -288,7 +283,7 @@ export default function AssistantPage() {
         const data = await res.json();
         setPendingAttachments(prev => [...prev, data.attachment]);
         toast.success("Image pasted");
-      } catch (error) {
+      } catch {
         toast.error("Failed to upload pasted image");
       } finally {
         setIsUploading(false);

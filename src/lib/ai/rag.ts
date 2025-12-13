@@ -10,7 +10,6 @@ import { knowledgeItems } from '@/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { searchKnowledge, isVectorConfigured } from '@/lib/vector';
 import { logger } from '@/lib/logger';
-import { trackCacheHit } from '@/lib/observability';
 
 // ============================================================================
 // TYPES

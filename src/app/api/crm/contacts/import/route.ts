@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { contacts } from '@/db/schema';
-import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 

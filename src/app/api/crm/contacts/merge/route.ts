@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { contacts, crmInteractions, deals, conversationParticipants } from '@/db/schema';
-import { eq, and, or, inArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { invalidateCRMCache } from '@/actions/crm';

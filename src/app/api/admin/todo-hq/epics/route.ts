@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { todoHqEpics, todoHqTasks } from '@/db/schema';
+import { todoHqEpics } from '@/db/schema';
 import { isSystemAdmin, getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
-import { eq, and, count, ne } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 

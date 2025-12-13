@@ -7,7 +7,7 @@
 
 import { db } from '@/lib/db';
 import { integrations, oauthTokens, contacts, conversations, conversationMessages, conversationParticipants } from '@/db/schema';
-import { eq, and, or, inArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { refreshAccessToken, OAuthProvider } from '@/lib/oauth';
 

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Send, Paperclip, Mic, Sparkles } from "lucide-react";
+import { Send, Paperclip, Mic } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

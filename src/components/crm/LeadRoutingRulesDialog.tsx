@@ -19,8 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Plus, 
   Trash2, 
-  Route, 
-  Users,
+  Route,
   User,
   RefreshCw,
   ChevronDown,

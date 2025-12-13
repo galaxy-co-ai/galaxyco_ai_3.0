@@ -9,7 +9,7 @@ import {
   contacts,
   prospects,
 } from '@/db/schema';
-import { eq, and, desc, asc, ilike, or, inArray, count, sql } from 'drizzle-orm';
+import { eq, and, desc, asc, ilike, or, inArray, count } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';

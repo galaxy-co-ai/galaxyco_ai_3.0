@@ -14,9 +14,6 @@
  * - Reduced context token usage
  */
 
-import { db } from '@/lib/db';
-import { aiMessages, aiConversations } from '@/db/schema';
-import { eq, desc, and, gte } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
 import { getCache, setCache } from '@/lib/cache';

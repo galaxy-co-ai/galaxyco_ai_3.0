@@ -7,13 +7,12 @@
  * roadmap based on the conversation and checks off items as they're completed.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageTitle } from '@/components/ui/page-title';
 import { Compass, CheckCircle2, ChevronDown, ChevronUp, Rocket } from 'lucide-react';
-import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 
 export interface CampaignRoadmapItem {

@@ -12,7 +12,7 @@
 
 import { db } from '@/lib/db';
 import { agentMessages, agentTeamMembers } from '@/db/schema';
-import { eq, and, desc, or, isNull, gte, sql } from 'drizzle-orm';
+import { eq, and, desc, or, gte, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import type {
   AgentMessage,

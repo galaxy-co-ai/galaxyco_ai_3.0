@@ -14,7 +14,7 @@ import { generateSystemPrompt } from '@/lib/ai/system-prompt';
 import { trackFrequentQuestion, analyzeConversationForLearning, updateUserPreferencesFromInsights } from '@/lib/ai/memory';
 import { processDocuments } from '@/lib/document-processing';
 import { shouldAutoExecute, recordActionExecution } from '@/lib/ai/autonomy-learning';
-import { getCachedResponse, cacheResponse, isCacheAvailable } from '@/lib/ai/cache';
+import { getCachedResponse, cacheResponse } from '@/lib/ai/cache';
 import { trackNeptuneRequest, trackNeptuneError } from '@/lib/observability';
 
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';

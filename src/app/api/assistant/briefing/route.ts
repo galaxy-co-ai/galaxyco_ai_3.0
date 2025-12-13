@@ -9,7 +9,6 @@ import { generateProactiveInsights } from '@/lib/ai/proactive-engine';
 import { db } from '@/lib/db';
 import { proactiveInsights } from '@/db/schema';
 import { eq, and, gte, sql, desc } from 'drizzle-orm';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getOpenAI } from '@/lib/ai-providers';
 

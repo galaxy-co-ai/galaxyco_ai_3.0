@@ -7,10 +7,9 @@
 
 import { schedules, task } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
-import { workspaces, proactiveInsights, prospects, campaigns, tasks, calendarEvents } from "@/db/schema";
-import { eq, and, gte, lte, count, sql, desc } from "drizzle-orm";
+import { proactiveInsights, prospects, campaigns, tasks, calendarEvents } from "@/db/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-import { getOpenAI } from "@/lib/ai-providers";
 
 // ============================================================================
 // TYPES

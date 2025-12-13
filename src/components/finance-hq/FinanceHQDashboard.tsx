@@ -14,17 +14,14 @@ import { FinanceActionButtons, type FinanceAction } from "./FinanceActionButtons
 import { DocumentCreatorDialog, type DocumentType } from "./document-creator";
 import { Button } from "@/components/ui/button";
 import { PageTitle } from "@/components/ui/page-title";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sparkles,
   AlertCircle,
   RefreshCw,
   Plug,
-  TrendingUp,
   FlaskConical,
   DollarSign,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type {
   FinanceOverviewResponse,

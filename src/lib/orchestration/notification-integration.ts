@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db';
-import { notifications, workspaceMembers, users, agentPendingActions, agentTeams } from '@/db/schema';
+import { notifications, workspaceMembers, agentTeams } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import type { ActionRiskLevel, PendingAction, ActionAuditEntry } from './types';

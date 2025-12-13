@@ -14,7 +14,6 @@ import {
   Sparkles,
   Users,
   Bot,
-  Settings,
   Loader2,
   DollarSign,
   Megaphone,
@@ -30,7 +29,6 @@ import { logger } from "@/lib/logger";
 import {
   teamTemplates,
   type TeamTemplate,
-  type AgentTemplate,
 } from "@/lib/orchestration/team-templates";
 import type { AgentDepartment, TeamAutonomyLevel } from "@/lib/orchestration/types";
 

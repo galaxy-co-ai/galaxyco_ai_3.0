@@ -13,7 +13,6 @@ import {
   FileText, 
   MessageSquare, 
   BarChart3,
-  Settings,
   Zap,
 } from 'lucide-react';
 import WidgetCard from './WidgetCard';

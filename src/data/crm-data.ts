@@ -1,12 +1,5 @@
-import { 
-  Phone, 
-  Mail, 
-  Video, 
-  MessageSquare, 
-  TrendingUp, 
-  AlertCircle, 
-  TrendingDown 
-} from "lucide-react";
+
+
 
 export interface Contact {
   id: string;

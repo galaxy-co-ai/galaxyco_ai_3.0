@@ -4,7 +4,7 @@ import { Organization } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Building2, Mail, Phone, Globe, Plus, Briefcase, Trash2 } from "lucide-react";
+import { Mail, Phone, Globe, Plus, Briefcase, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OrganizationsTableProps {

@@ -13,7 +13,7 @@
 import 'dotenv/config';
 import { db } from '@/lib/db';
 import { users, workspaceMembers } from '@/db/schema';
-import { eq, sql, desc } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 interface DuplicateGroup {
   clerkUserId: string;

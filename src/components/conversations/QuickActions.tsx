@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Lightbulb, FileText, Heart, Calendar, CheckSquare, Mail } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface QuickActionsProps {
   conversationId: string | null;

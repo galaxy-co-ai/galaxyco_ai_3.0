@@ -1,8 +1,8 @@
 'use server'
 
 import { db } from '@/lib/db';
-import { contacts, projects, prospects, calendarEvents, users } from '@/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { contacts, projects, prospects, calendarEvents } from '@/db/schema';
+import { desc } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 import { getCacheOrFetch, invalidateCache } from '@/lib/cache';
 import { logger } from '@/lib/logger';

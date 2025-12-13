@@ -22,7 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { LayoutPicker, OutlineEditor, type OutlineData, type OutlineSection } from '@/components/admin/ArticleStudio';
+import { LayoutPicker, OutlineEditor, type OutlineData } from '@/components/admin/ArticleStudio';
 import { type LayoutTemplate } from '@/lib/ai/article-layouts';
 import { useHitListProgress } from '@/lib/hooks';
 

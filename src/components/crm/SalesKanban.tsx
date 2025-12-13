@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Deal } from "@/types/crm";
 import {
   ArrowRight,
@@ -14,7 +13,6 @@ import {
   TrendingDown,
   TrendingUp,
   User,
-  Zap,
 } from "lucide-react";
 import {
   DndContext,
@@ -26,7 +24,7 @@ import {
   useSensors,
   useDroppable,
 } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 interface SalesKanbanProps {

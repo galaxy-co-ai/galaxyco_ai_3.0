@@ -16,7 +16,6 @@ import {
   agentTeamMembers,
   agentWorkflows,
   agentWorkflowExecutions,
-  agentMessages,
 } from '@/db/schema';
 import { eq, and, desc, asc, sql, inArray } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -28,7 +27,6 @@ import type {
   DelegationResult,
   TeamExecutionResult,
   WorkflowResult,
-  AgentTeam,
   WorkflowExecution,
   ExecuteWorkflowInput,
   WorkflowStep,

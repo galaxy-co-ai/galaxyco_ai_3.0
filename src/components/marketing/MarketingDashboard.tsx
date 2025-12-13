@@ -4,26 +4,13 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { PillTabs, type PillTab } from "@/components/ui/pill-tabs";
 import { PageTitle } from "@/components/ui/page-title";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+
+
+
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { 
-  Search,
   Plus,
   TrendingUp,
   ArrowUpRight,
@@ -36,37 +23,25 @@ import {
   Mail,
   Share2,
   Target,
-  Send,
-  X,
   UserPlus,
-  TrendingDown,
   Clock,
   DollarSign,
-  CheckCircle2,
   Video,
   Image as ImageIcon,
-  Palette,
   MessageSquare,
   Globe,
   Presentation,
   Newspaper,
   RefreshCw,
-  Loader2,
-  Eye,
-  Copy,
   Twitter,
   Linkedin,
   Instagram,
-  ChevronDown,
   Facebook,
-  Youtube,
   Briefcase,
   Calendar,
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import MarketingAutomationsTab from "./MarketingAutomationsTab";
 import CampaignCreateTab from "./CampaignCreateTab";
 import MarketingCampaignsTab from "./MarketingCampaignsTab";
 import MarketingTemplatesTab, { campaignTemplates as marketingCampaignTemplates } from "./MarketingTemplatesTab";

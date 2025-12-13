@@ -39,8 +39,8 @@ export function BookmarkButton({
           );
           setIsBookmarked(isBookmarkedPost);
         }
-      } catch (error) {
-        logger.debug('Failed to check bookmark status', { error });
+      } catch (err) {
+        logger.debug('Failed to check bookmark status', { error: err });
       }
     };
 
@@ -71,7 +71,7 @@ export function BookmarkButton({
       } else {
         throw new Error('Failed to update bookmark');
       }
-    } catch (error) {
+    } catch {
       toast.error('Could not update bookmark');
     } finally {
       setIsLoading(false);

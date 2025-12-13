@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import useSWR, { mutate } from "swr";
+import { useState, useCallback } from "react";
+import useSWR from "swr";
 import {
   Plus,
   Sparkles,

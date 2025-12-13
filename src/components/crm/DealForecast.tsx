@@ -33,7 +33,6 @@ import {
   PieChart,
   RefreshCw,
   Calendar,
-  ChevronRight,
   CheckCircle2,
   XCircle,
   Clock,

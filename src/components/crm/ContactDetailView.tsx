@@ -15,7 +15,6 @@ import {
   Phone,
   Calendar,
   Building2,
-  MessageSquare,
   Tag,
   Edit,
   MoreVertical,

@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { AnimatePresence, motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Components

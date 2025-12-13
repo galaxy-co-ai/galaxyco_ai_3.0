@@ -8,7 +8,6 @@ import { PageTitle } from "@/components/ui/page-title";
 import {
   Sparkles,
   Send,
-  RefreshCw,
   FileText,
   Paperclip,
   X,

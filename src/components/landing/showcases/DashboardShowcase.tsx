@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Badge } from "../../ui/badge";
 import { Card } from "../../ui/card";
-import { Bot, CheckCircle2, Clock, TrendingUp, Mail, Users, FileText, Sparkles, Database, Bell, Activity, MessageSquare, CalendarDays, Zap, Lightbulb } from "lucide-react";
+import { Bot, CheckCircle2, Clock, TrendingUp, Mail, Users, FileText, Sparkles, Database, Activity, MessageSquare, CalendarDays, Lightbulb } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../../ui/tabs";
 
 const stats = [

@@ -10,7 +10,7 @@ config({ path: resolve(process.cwd(), '.env.local') });
 
 import { db } from '../src/lib/db';
 import { workspaces, workspaceMembers, users, workspacePhoneNumbers } from '../src/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 async function upgradeAccount() {
   console.log('🚀 Starting account upgrade for dalton@galaxyco.ai...\n');

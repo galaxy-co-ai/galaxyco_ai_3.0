@@ -11,7 +11,6 @@ import { db } from '@/lib/db';
 import { agents, contacts, knowledgeItems, integrations } from '@/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
-import { Bot, Users, FolderOpen, Plug, Sparkles, Calendar, Mail } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 

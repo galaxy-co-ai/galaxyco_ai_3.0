@@ -4,7 +4,7 @@ import { Lead } from "./CRMDashboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sparkles, Mail, Phone, UserPlus, Target, ArrowRight, Trash2 } from "lucide-react";
+import { Sparkles, Mail, Phone, UserPlus, Target, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LeadsTableProps {

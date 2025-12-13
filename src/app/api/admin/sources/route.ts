@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { articleSources, blogPosts } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 // Create source schema

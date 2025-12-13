@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import unusedImports from "eslint-plugin-unused-imports";
 
 /**
  * ESLint Configuration for GalaxyCo.ai 3.0
@@ -26,7 +27,24 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Project-wide rule adjustments to keep lint actionable on a large codebase.
   {
+    plugins: {
+      "unused-imports": unusedImports,
+    },
     rules: {
+      // Auto-remove unused imports (the main source of warnings)
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
+      // Disable the base rule to avoid duplicate warnings
+      "@typescript-eslint/no-unused-vars": "off",
+
       // Keep React Compiler-style rules as warnings for now so lint can pass
       // while we progressively address violations.
       "react-hooks/purity": "warn",
@@ -68,6 +86,9 @@ const eslintConfig = defineConfig([
     // Phase 4 cleanup: ignore legacy, archive, and deletion-pending directories.
     "_to-delete/**",
     "docs/archive/**",
+    "src/legacy-pages/**",
+    "src/components/_archive/**",
+    "src/types/_archive*",
     "**/node_modules/**",
     "**/.git/**",
   ]),

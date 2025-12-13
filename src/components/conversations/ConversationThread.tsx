@@ -13,11 +13,9 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
-  Image as ImageIcon,
   Download,
   Play,
   Pause,
-  ExternalLink,
   Mic,
 } from "lucide-react";
 

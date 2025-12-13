@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { projects } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 const projectSchema = z.object({

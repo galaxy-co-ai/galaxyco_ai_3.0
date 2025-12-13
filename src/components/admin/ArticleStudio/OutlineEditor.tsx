@@ -1,16 +1,13 @@
 "use client";
 
 import { useState, useCallback } from 'react';
-import { 
-  GripVertical,
-  Edit3,
+import {
   RefreshCw,
   Trash2,
   Plus,
   Sparkles,
   ChevronUp,
   ChevronDown,
-  FileText,
   Loader2,
   Check,
   X,
@@ -19,7 +16,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';

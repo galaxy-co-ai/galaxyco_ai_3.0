@@ -1,7 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { ChevronRight, FormInput, GitBranch, Settings2 } from "lucide-react";
 
 export const metadata: Metadata = {

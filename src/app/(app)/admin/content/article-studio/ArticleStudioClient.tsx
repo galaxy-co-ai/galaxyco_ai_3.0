@@ -18,8 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { TopicGenerator, BrainstormChat } from '@/components/admin/ArticleStudio';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
-import { useHitListProgress, WIZARD_STAGES, type WizardStage } from '@/lib/hooks';
+import { useHitListProgress } from '@/lib/hooks';
 
 // Types
 interface GeneratedTopic {
@@ -118,7 +117,7 @@ export function ArticleStudioClient() {
         updateProgress('topic_selected');
         
         toast.success('Topic loaded from Hit List');
-      } catch (error) {
+      } catch {
         toast.error('Failed to load topic from Hit List');
       } finally {
         setIsLoadingHitListTopic(false);

@@ -6,9 +6,8 @@
  */
 
 import { db } from '@/lib/db';
-import { deals, pipelineStages, dealPipelines } from '@/db/schema';
+import { deals, dealPipelines } from '@/db/schema';
 import { eq, and, gte, lte } from 'drizzle-orm';
-import { logger } from '@/lib/logger';
 
 // ============================================================================
 // TYPES

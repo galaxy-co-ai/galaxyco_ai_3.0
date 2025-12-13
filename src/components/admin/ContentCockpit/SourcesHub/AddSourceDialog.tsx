@@ -6,7 +6,6 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle,
-  ExternalLink,
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";

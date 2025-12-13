@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { knowledgeItems, knowledgeItemShares, users } from '@/db/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 

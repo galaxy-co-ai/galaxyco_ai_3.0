@@ -15,21 +15,15 @@ import {
 } from "@/components/ui/dialog";
 import { 
   FolderOpen,
-  Search,
-  Plus, 
+  Search, 
   Folder, 
   FolderPlus,
   Edit2, 
   Trash2,
   Loader2,
   Check,
-  X,
   Grid3X3,
   List,
-  FileText,
-  Clock,
-  Sparkles,
-  MoreHorizontal,
   Tag,
 } from 'lucide-react';
 import { motion } from "framer-motion";

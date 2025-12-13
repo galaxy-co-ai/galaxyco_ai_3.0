@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { LineItemsEditor } from "../LineItemsEditor";
 import type { InvoiceDocument, LineItem, FinanceDocument } from "../types";
 

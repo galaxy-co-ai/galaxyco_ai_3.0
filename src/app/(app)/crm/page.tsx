@@ -1,7 +1,7 @@
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { contacts, customers, prospects } from "@/db/schema";
-import { eq, desc, sql, count, and, gte, sum } from "drizzle-orm";
+import { eq, desc, count, and, gte, sum } from "drizzle-orm";
 import CRMDashboard from "@/components/crm/CRMDashboard";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';

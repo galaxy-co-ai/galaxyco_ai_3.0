@@ -5,7 +5,7 @@
  */
 
 import { db } from '@/lib/db';
-import { integrations, oauthTokens, socialMediaPosts } from '@/db/schema';
+import { integrations, oauthTokens } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { decryptApiKey } from '@/lib/encryption';
 import { refreshAccessToken } from '@/lib/oauth';

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { GET as getEpics, POST as createEpic, PATCH as updateEpic } from '@/app/api/admin/todo-hq/epics/route';
-import { GET as getTasks, POST as createTask, PATCH as updateTask } from '@/app/api/admin/todo-hq/tasks/route';
+import { GET as getEpics, POST as createEpic } from '@/app/api/admin/todo-hq/epics/route';
+import { PATCH as updateTask } from '@/app/api/admin/todo-hq/tasks/route';
 import { POST as bootstrap } from '@/app/api/admin/todo-hq/bootstrap/route';
 
 // Mock auth module
@@ -17,6 +17,7 @@ vi.mock('@/lib/db', () => ({
     query: {
       todoHqEpics: {
         findMany: vi.fn(),
+        findFirst: vi.fn(),
       },
       todoHqTasks: {
         findMany: vi.fn(),
@@ -35,6 +36,38 @@ vi.mock('@/lib/db', () => ({
       })),
     })),
   },
+}));
+
+// Mock bootstrap template
+vi.mock('@/app/api/admin/todo-hq/bootstrap/template', () => ({
+  BOOTSTRAP_TEMPLATE: {
+    epics: [
+      {
+        name: 'Test Epic',
+        description: 'Test description',
+        status: 'not_started',
+        sortOrder: 0,
+        tags: ['test'],
+        tasks: [
+          {
+            title: 'Test Task',
+            description: 'Test task description',
+            status: 'todo',
+            priority: 'medium',
+            sortOrder: 0,
+            tags: ['test'],
+          },
+        ],
+      },
+    ],
+  },
+}));
+
+// Mock drizzle schema
+vi.mock('@/db/schema', () => ({
+  todoHqEpics: { workspaceId: 'workspaceId' },
+  todoHqTasks: { workspaceId: 'workspaceId', epicId: 'epicId' },
+  todoHqSprints: { workspaceId: 'workspaceId' },
 }));
 
 // Mock logger
@@ -164,6 +197,9 @@ describe('To-Do HQ API - Epics', () => {
 });
 
 describe('To-Do HQ API - Tasks', () => {
+  // Valid UUID for tests
+  const VALID_TASK_UUID = '550e8400-e29b-41d4-a716-446655440000';
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -176,7 +212,7 @@ describe('To-Do HQ API - Tasks', () => {
       } as any);
 
       const mockTask = {
-        id: 'task-1',
+        id: VALID_TASK_UUID,
         title: 'Test Task',
         status: 'done',
         completedAt: new Date(),
@@ -192,7 +228,7 @@ describe('To-Do HQ API - Tasks', () => {
 
       const request = new NextRequest('http://localhost/api/admin/todo-hq/tasks', {
         method: 'PATCH',
-        body: JSON.stringify({ id: 'task-1', status: 'done' }),
+        body: JSON.stringify({ id: VALID_TASK_UUID, status: 'done' }),
       });
 
       const response = await updateTask(request);
@@ -209,7 +245,7 @@ describe('To-Do HQ API - Tasks', () => {
       } as any);
 
       const mockTask = {
-        id: 'task-1',
+        id: VALID_TASK_UUID,
         title: 'Test Task',
         status: 'todo',
         completedAt: null,
@@ -225,7 +261,7 @@ describe('To-Do HQ API - Tasks', () => {
 
       const request = new NextRequest('http://localhost/api/admin/todo-hq/tasks', {
         method: 'PATCH',
-        body: JSON.stringify({ id: 'task-1', status: 'todo' }),
+        body: JSON.stringify({ id: VALID_TASK_UUID, status: 'todo' }),
       });
 
       const response = await updateTask(request);
@@ -248,7 +284,8 @@ describe('To-Do HQ API - Bootstrap', () => {
       workspace: { id: 'workspace-123' },
     } as any);
 
-    vi.mocked(db.query.todoHqEpics.findMany).mockResolvedValue([{ id: 'existing' }] as any);
+    // Use findFirst (not findMany) - matches actual API implementation
+    vi.mocked(db.query.todoHqEpics.findFirst).mockResolvedValue({ id: 'existing' } as any);
 
     const request = new NextRequest('http://localhost/api/admin/todo-hq/bootstrap', {
       method: 'POST',
@@ -258,7 +295,7 @@ describe('To-Do HQ API - Bootstrap', () => {
     const data = await response.json();
 
     expect(response.status).toBe(409);
-    expect(data.error).toContain('already exists');
+    expect(data.error).toContain('already');
   });
 
   it('should create epics and tasks from template', async () => {
@@ -268,12 +305,13 @@ describe('To-Do HQ API - Bootstrap', () => {
     } as any);
     vi.mocked(getCurrentUser).mockResolvedValue({ id: 'user-123' } as any);
 
-    vi.mocked(db.query.todoHqEpics.findMany).mockResolvedValue([]);
+    // No existing data - use findFirst
+    vi.mocked(db.query.todoHqEpics.findFirst).mockResolvedValue(null as any);
 
-    // Mock insert for epics
+    // Mock insert for sprints, epics, and tasks
     vi.mocked(db.insert).mockReturnValue({
       values: vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([{ id: 'new-epic-id' }]),
+        returning: vi.fn().mockResolvedValue([{ id: 'new-id' }]),
       }),
     } as any);
 
@@ -285,8 +323,9 @@ describe('To-Do HQ API - Bootstrap', () => {
     const data = await response.json();
 
     expect(response.status).toBe(201);
-    expect(data.message).toContain('bootstrapped');
-    expect(data.created.epics).toBeGreaterThan(0);
-    expect(data.created.tasks).toBeGreaterThan(0);
+    // API returns epicsCreated/tasksCreated, not created.epics
+    expect(data.message).toContain('initialized');
+    expect(data.epicsCreated).toBeGreaterThan(0);
+    expect(data.tasksCreated).toBeGreaterThan(0);
   });
 });

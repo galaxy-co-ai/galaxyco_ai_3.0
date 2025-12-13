@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { calendarEvents, users } from '@/db/schema';
-import { eq, and, gte, lte, desc, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';

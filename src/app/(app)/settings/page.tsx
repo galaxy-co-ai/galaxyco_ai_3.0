@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useUser, OrganizationProfile, useOrganization } from "@clerk/nextjs";
+import { useUser, OrganizationProfile } from "@clerk/nextjs";
 import useSWR from "swr";
 import { 
   User, 
@@ -12,10 +12,8 @@ import {
   Bell, 
   Key,
   ChevronRight,
-  ChevronDown,
   Camera,
   Mail,
-  Phone,
   Globe,
   Check,
   Copy,
@@ -31,14 +29,12 @@ import {
   Smartphone,
   Monitor,
   Loader2,
-  Pause,
   Play,
   X,
   Palette,
   Sun,
   Moon,
   Webhook,
-  type LucideIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,12 +44,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useTheme } from "@/lib/theme-provider";
@@ -1215,7 +1207,7 @@ export default function SettingsPage() {
 
             await mutateWebhooks();
             toast.success(enabled ? 'Webhook enabled' : 'Webhook disabled');
-          } catch (error) {
+          } catch {
             toast.error('Failed to update webhook');
           }
         };
@@ -1234,7 +1226,7 @@ export default function SettingsPage() {
             } else {
               toast.error(result.message || 'Test webhook failed');
             }
-          } catch (error) {
+          } catch {
             toast.error('Failed to test webhook');
           } finally {
             setTestingWebhook(null);
@@ -1253,7 +1245,7 @@ export default function SettingsPage() {
 
             await mutateWebhooks();
             toast.success('Webhook deleted');
-          } catch (error) {
+          } catch {
             toast.error('Failed to delete webhook');
           }
         };
@@ -1518,7 +1510,7 @@ export default function SettingsPage() {
                           if (!res.ok) throw new Error('Failed to delete API key');
                           await mutateApiKeys();
                           toast.success('API key deleted');
-                        } catch (error) {
+                        } catch {
                           toast.error('Failed to delete API key');
                         }
                       }}

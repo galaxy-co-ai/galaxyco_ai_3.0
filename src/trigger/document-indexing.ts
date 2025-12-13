@@ -1,7 +1,7 @@
 import { task } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
 import { knowledgeItems } from "@/db/schema";
-import { eq, and, isNull, or } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { indexKnowledgeDocument, isVectorConfigured } from "@/lib/vector";
 import { logger } from "@/lib/logger";
 

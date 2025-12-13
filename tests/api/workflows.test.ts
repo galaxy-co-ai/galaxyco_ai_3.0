@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { GET, POST } from '@/app/api/workflows/route';
-import { GET as GET_BY_ID, PUT, DELETE } from '@/app/api/workflows/[id]/route';
+import { GET as GET_BY_ID, PATCH, DELETE } from '@/app/api/workflows/[id]/route';
 import { POST as EXECUTE } from '@/app/api/workflows/[id]/execute/route';
 import { NextRequest } from 'next/server';
 
@@ -102,6 +102,19 @@ vi.mock('@/lib/workflow-executor', () => ({
   executeWorkflow: vi.fn(() => Promise.resolve({
     success: true,
     result: 'Workflow executed successfully',
+  })),
+}));
+
+// Mock AI providers for execute tests
+vi.mock('@/lib/ai-providers', () => ({
+  getOpenAI: vi.fn(() => ({
+    chat: {
+      completions: {
+        create: vi.fn(() => Promise.resolve({
+          choices: [{ message: { content: 'Test execution result' } }],
+        })),
+      },
+    },
   })),
 }));
 
@@ -248,7 +261,7 @@ describe('GET /api/workflows/[id]', () => {
 
   it('should return workflow by ID', async () => {
     const request = new NextRequest('http://localhost:3000/api/workflows/workflow-1');
-    const response = await GET_BY_ID(request, { params: { id: 'workflow-1' } });
+    const response = await GET_BY_ID(request, { params: Promise.resolve({ id: 'workflow-1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -262,27 +275,27 @@ describe('GET /api/workflows/[id]', () => {
     vi.mocked(db.query.agents.findFirst).mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/workflows/nonexistent');
-    const response = await GET_BY_ID(request, { params: { id: 'nonexistent' } });
+    const response = await GET_BY_ID(request, { params: Promise.resolve({ id: 'nonexistent' }) });
 
     expect(response.status).toBe(404);
   });
 });
 
-describe('PUT /api/workflows/[id]', () => {
+describe('PATCH /api/workflows/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should update workflow successfully', async () => {
     const request = new NextRequest('http://localhost:3000/api/workflows/workflow-1', {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify({
         name: 'Updated Workflow',
         status: 'active',
       }),
     });
 
-    const response = await PUT(request, { params: { id: 'workflow-1' } });
+    const response = await PATCH(request, { params: Promise.resolve({ id: 'workflow-1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -294,13 +307,13 @@ describe('PUT /api/workflows/[id]', () => {
     vi.mocked(db.query.agents.findFirst).mockResolvedValueOnce(null);
 
     const request = new NextRequest('http://localhost:3000/api/workflows/nonexistent', {
-      method: 'PUT',
+      method: 'PATCH',
       body: JSON.stringify({
         name: 'Updated Workflow',
       }),
     });
 
-    const response = await PUT(request, { params: { id: 'nonexistent' } });
+    const response = await PATCH(request, { params: Promise.resolve({ id: 'nonexistent' }) });
     expect(response.status).toBe(404);
   });
 });
@@ -315,7 +328,7 @@ describe('DELETE /api/workflows/[id]', () => {
       method: 'DELETE',
     });
 
-    const response = await DELETE(request, { params: { id: 'workflow-1' } });
+    const response = await DELETE(request, { params: Promise.resolve({ id: 'workflow-1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -330,7 +343,7 @@ describe('DELETE /api/workflows/[id]', () => {
       method: 'DELETE',
     });
 
-    const response = await DELETE(request, { params: { id: 'nonexistent' } });
+    const response = await DELETE(request, { params: Promise.resolve({ id: 'nonexistent' }) });
     expect(response.status).toBe(404);
   });
 });
@@ -344,16 +357,16 @@ describe('POST /api/workflows/[id]/execute', () => {
     const request = new NextRequest('http://localhost:3000/api/workflows/workflow-1/execute', {
       method: 'POST',
       body: JSON.stringify({
-        input: 'Test input',
+        input: { message: 'Test input' },
       }),
     });
 
-    const response = await EXECUTE(request, { params: { id: 'workflow-1' } });
+    const response = await EXECUTE(request, { params: Promise.resolve({ id: 'workflow-1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toHaveProperty('success');
-    expect(data.success).toBe(true);
+    expect(data).toHaveProperty('executionId');
+    expect(data).toHaveProperty('status');
   });
 
   it('should handle workflow not found on execute', async () => {
@@ -363,11 +376,11 @@ describe('POST /api/workflows/[id]/execute', () => {
     const request = new NextRequest('http://localhost:3000/api/workflows/nonexistent/execute', {
       method: 'POST',
       body: JSON.stringify({
-        input: 'Test input',
+        input: { message: 'Test input' },
       }),
     });
 
-    const response = await EXECUTE(request, { params: { id: 'nonexistent' } });
+    const response = await EXECUTE(request, { params: Promise.resolve({ id: 'nonexistent' }) });
     expect(response.status).toBe(404);
   });
 
@@ -377,10 +390,11 @@ describe('POST /api/workflows/[id]/execute', () => {
       body: JSON.stringify({}),
     });
 
-    const response = await EXECUTE(request, { params: { id: 'workflow-1' } });
+    const response = await EXECUTE(request, { params: Promise.resolve({ id: 'workflow-1' }) });
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toHaveProperty('success');
+    expect(data).toHaveProperty('executionId');
+    expect(data).toHaveProperty('status');
   });
 });

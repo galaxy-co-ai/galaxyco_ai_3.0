@@ -15,7 +15,6 @@
 
 import type {
   AgentDepartment,
-  TeamAutonomyLevel,
   AgentTeamRole,
   TeamConfig,
   WorkflowStep,

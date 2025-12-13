@@ -6,9 +6,6 @@ import {
   Search,
   Plus,
   BarChart3,
-  Mail,
-  MessageSquare,
-  Target,
 } from 'lucide-react';
 
 export function MarketingHeader() {

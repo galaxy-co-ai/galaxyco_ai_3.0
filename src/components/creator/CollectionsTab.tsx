@@ -23,7 +23,6 @@ import {
   Mail,
   PenLine,
   MessageSquare,
-  MoreHorizontal,
   Clock,
   Sparkles,
   Grid3X3,

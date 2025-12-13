@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agentExecutions, agents } from '@/db/schema';
+import { agentExecutions } from '@/db/schema';
 import { eq, and, desc, count, sql, gte, lte } from 'drizzle-orm';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';

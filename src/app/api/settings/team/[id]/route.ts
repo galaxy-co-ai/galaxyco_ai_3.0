@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
+import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { workspaceMembers } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';

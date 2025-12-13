@@ -8,8 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
-import { Sparkles, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Insight {

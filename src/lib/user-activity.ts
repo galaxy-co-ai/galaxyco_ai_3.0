@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db';
-import { users, workspaces, workspaceMembers, agents, contacts, knowledgeItems, integrations } from '@/db/schema';
+import { users, agents, contacts, knowledgeItems, integrations } from '@/db/schema';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 

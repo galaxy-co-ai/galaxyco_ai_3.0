@@ -1,6 +1,5 @@
 import { 
   Sparkles, 
-  ArrowRight, 
   CheckCircle2, 
   XCircle,
   Loader2,
@@ -36,7 +35,7 @@ export function AIActionCard({
     try {
       await onExecute();
       setStatus("success");
-    } catch (error) {
+    } catch {
       setStatus("error");
       setTimeout(() => setStatus("idle"), 3000);
     }

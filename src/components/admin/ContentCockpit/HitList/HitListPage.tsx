@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import {
   Plus,
   Sparkles,

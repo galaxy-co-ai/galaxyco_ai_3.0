@@ -21,7 +21,6 @@ import {
 } from '@/db/schema';
 import { eq, and, lt, gte, lte, desc, sql, or, isNotNull } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
-import { getOpenAI } from '@/lib/ai-providers';
 
 // ============================================================================
 // TYPES

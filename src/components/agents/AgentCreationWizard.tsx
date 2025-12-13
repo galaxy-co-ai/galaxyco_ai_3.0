@@ -24,17 +24,14 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
-  Bot,
   Mail,
   MessageSquare,
   FileText,
-  CheckCircle2,
   Target,
   Brain,
   Calendar,
   Database,
   Workflow,
-  TrendingUp,
   Search,
   Sparkles,
   ChevronLeft,

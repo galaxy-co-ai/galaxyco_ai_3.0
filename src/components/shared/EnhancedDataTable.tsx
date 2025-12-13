@@ -42,12 +42,7 @@ import {
 } from '@/components/ui/select';
 import {
   Filter,
-  SlidersHorizontal,
   Columns3,
-  Download,
-  Trash2,
-  CheckSquare,
-  Square,
   MoreHorizontal,
   ArrowUpDown,
   ArrowUp,

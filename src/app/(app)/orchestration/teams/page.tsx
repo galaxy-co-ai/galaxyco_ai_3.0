@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { agentTeams, agentTeamMembers, agents } from "@/db/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { agentTeams, agents } from "@/db/schema";
+import { eq, desc } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import TeamsListClient from "./TeamsListClient";
 

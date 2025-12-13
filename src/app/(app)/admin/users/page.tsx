@@ -1,14 +1,12 @@
 import { Metadata } from 'next';
 import { db } from '@/lib/db';
-import { users, workspaces, workspaceMembers } from '@/db/schema';
-import { desc, count, eq, sql } from 'drizzle-orm';
+import { users, workspaces } from '@/db/schema';
+import { desc, count, sql } from 'drizzle-orm';
 import { 
   Users, 
   Mail, 
   Calendar,
   Building2,
-  Crown,
-  Shield,
   User,
   Key,
   AlertTriangle,

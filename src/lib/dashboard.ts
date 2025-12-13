@@ -6,7 +6,7 @@
 
 import { db } from '@/lib/db';
 import { agents, tasks, contacts, integrations, agentExecutions } from '@/db/schema';
-import { eq, and, desc, count, sql, gte, inArray } from 'drizzle-orm';
+import { eq, and, desc, count, gte } from 'drizzle-orm';
 import {
   DashboardV2Data,
   DashboardStats,

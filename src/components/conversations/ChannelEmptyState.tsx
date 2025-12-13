@@ -9,7 +9,6 @@ import {
   Globe,
   ExternalLink,
   ArrowRight,
-  Inbox,
   Sparkles,
   Settings,
   Users,

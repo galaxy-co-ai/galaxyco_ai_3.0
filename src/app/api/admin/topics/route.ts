@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { topicIdeas, workspaces, users } from '@/db/schema';
+import { topicIdeas } from '@/db/schema';
 import { isSystemAdmin, getCurrentWorkspace } from '@/lib/auth';
-import { currentUser } from '@clerk/nextjs/server';
 import { eq, desc, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';

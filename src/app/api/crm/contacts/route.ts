@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { contacts } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';

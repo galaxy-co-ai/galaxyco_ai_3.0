@@ -2,12 +2,8 @@ import { Metadata } from 'next';
 import { 
   Settings, 
   Bell, 
-  Shield, 
-  Database,
+  Shield,
   Globe,
-  Mail,
-  Palette,
-  Key,
   Brain,
   ArrowRight,
 } from 'lucide-react';

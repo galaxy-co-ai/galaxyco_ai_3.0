@@ -8,9 +8,6 @@
  */
 
 import { task } from "@trigger.dev/sdk/v3";
-import { db } from "@/lib/db";
-import { workspaceIntelligence } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import { analyzeWebsiteFull } from "@/lib/ai/website-analyzer";
 

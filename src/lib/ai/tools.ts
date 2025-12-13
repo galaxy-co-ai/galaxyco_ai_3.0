@@ -5,17 +5,14 @@
  * Each tool is mapped to a real API action in the platform.
  */
 
-import { z } from 'zod';
 import { db } from '@/lib/db';
 import {
   prospects,
   contacts,
-  customers,
   calendarEvents,
   tasks,
   campaigns,
   agents,
-  aiConversations,
   knowledgeItems,
   knowledgeCollections,
   agentTeams,
@@ -23,9 +20,8 @@ import {
   agentWorkflows,
   agentWorkflowExecutions,
   agentMessages,
-  agentSharedMemory,
 } from '@/db/schema';
-import { eq, and, desc, gte, lte, like, or, sql, lt, inArray, asc } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, like, or, sql, inArray, asc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import type { ChatCompletionTool } from 'openai/resources/chat/completions';
 import { generateWithGamma, pollGammaGeneration, isGammaConfigured } from '@/lib/gamma';

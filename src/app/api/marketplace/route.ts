@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { marketplaceListings, agents, agentWorkflows, workspaces } from '@/db/schema';
+import { marketplaceListings, agents, agentWorkflows } from '@/db/schema';
 import { eq, and, desc, sql, ilike, or } from 'drizzle-orm';
 import { z } from 'zod';
 

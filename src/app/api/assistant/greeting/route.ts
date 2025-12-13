@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { logger } from '@/lib/logger';
-import { createErrorResponse } from '@/lib/api-error-handler';
 import { gatherAIContext } from '@/lib/ai/context';
 import { generateGreeting } from '@/lib/ai/system-prompt';
 

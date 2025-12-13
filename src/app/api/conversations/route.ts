@@ -3,7 +3,6 @@ import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { aiConversations, aiMessages } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { z } from 'zod';
 

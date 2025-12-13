@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { agentTeams, agentTeamMembers, agents, agentWorkflowExecutions } from "@/db/schema";
+import { agentTeams, agents } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import TeamDetailClient from "./TeamDetailClient";

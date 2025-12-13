@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { SectionDivider } from "@/components/shared/SectionDivider";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Sparkles, Bot, Workflow, BarChart3, ArrowRight, Zap, Shield, Users } from "lucide-react";
+import { Bot, Workflow, BarChart3, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function FeaturesPage() {

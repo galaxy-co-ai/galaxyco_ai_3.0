@@ -2,13 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { rateLimit, apiRateLimit, expensiveOperationLimit } from '@/lib/rate-limit';
 import { redis } from '@/lib/upstash';
 
-// Mock redis
+// Mock the entire upstash module including health tracking functions
 vi.mock('@/lib/upstash', () => ({
   redis: {
     incr: vi.fn(),
     expire: vi.fn(),
     ttl: vi.fn(),
   },
+  shouldUseRedis: vi.fn(() => true),
+  markRedisHealthy: vi.fn(),
+  markRedisUnhealthy: vi.fn(),
 }));
 
 describe('rateLimit', () => {

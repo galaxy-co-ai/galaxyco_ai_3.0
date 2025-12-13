@@ -1,7 +1,7 @@
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { aiConversations, aiMessages, aiUserPreferences } from '@/db/schema';
-import { eq, and, desc, asc, sql, ne } from 'drizzle-orm';
+import { eq, and, desc, asc, ne } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';

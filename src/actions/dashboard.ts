@@ -1,8 +1,8 @@
 'use server'
 
 import { db } from '@/lib/db';
-import { agents, tasks, agentExecutions, chatMessages, calendarEvents, users } from '@/db/schema';
-import { eq, count, desc, and } from 'drizzle-orm';
+import { agents, tasks, chatMessages, calendarEvents } from '@/db/schema';
+import { eq, count, desc } from 'drizzle-orm';
 import { auth } from '@clerk/nextjs/server';
 import { getCacheOrFetch, invalidateCache } from '@/lib/cache';
 import { logger } from '@/lib/logger';
@@ -121,7 +121,7 @@ export async function getUpcomingEvents() {
           time: e.startTime.toLocaleTimeString(),
           type: 'meeting'
         }));
-      } catch (error) {
+      } catch {
         return [];
       }
     },

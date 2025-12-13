@@ -6,14 +6,11 @@ import { Textarea } from "../ui/textarea";
 import { Switch } from "../ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { ScrollArea } from "../ui/scroll-area";
-import { Badge } from "../ui/badge";
 import { Separator } from "../ui/separator";
 import { 
   X, 
   GitBranch, 
-  Filter, 
   Code,
-  Clock,
   AlertTriangle,
   Zap,
   ArrowRight,

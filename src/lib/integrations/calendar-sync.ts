@@ -7,7 +7,7 @@
 
 import { db } from '@/lib/db';
 import { calendarEvents, contacts } from '@/db/schema';
-import { eq, and, gte, lte, inArray } from 'drizzle-orm';
+import { eq, and, gte, lte } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { 
   getGoogleCalendarEvents, 

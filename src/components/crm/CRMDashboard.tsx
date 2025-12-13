@@ -22,21 +22,12 @@ import {
   Building2,
   Users,
   Mail,
-  Phone,
   Sparkles,
   Target,
-  Filter,
   Calendar,
-  MessageSquare,
   FileText,
   Zap,
-  X,
   DollarSign,
-  Globe,
-  Briefcase,
-  Clock,
-  Tag,
-  ChevronRight,
   Upload,
   Download,
 } from "lucide-react";
@@ -51,7 +42,6 @@ import ContactDetailView from "./ContactDetailView";
 import DealDetailView from "./DealDetailView";
 import { DealDialog } from "./DealDialog";
 import InsightsTab from "./InsightsTab";
-import AutomationsTab from "./AutomationsTab";
 import { ImportContactsDialog } from "./ImportContactsDialog";
 import { LeadScoringRulesDialog } from "./LeadScoringRulesDialog";
 import { LeadRoutingRulesDialog } from "./LeadRoutingRulesDialog";

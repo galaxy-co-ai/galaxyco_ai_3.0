@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { contacts, customers, prospects, projects, tasks, calendarEvents } from '@/db/schema';
-import { eq, and, desc, or, like } from 'drizzle-orm';
+import { contacts, customers, prospects, projects } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { getCacheOrFetch } from '@/lib/cache';
 import { rateLimit } from '@/lib/rate-limit';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(request: Request) {

@@ -9,7 +9,6 @@ import {
   Search,
   Megaphone,
   Sparkles,
-  Target,
   UserPlus,
   TrendingUp,
   DollarSign,

@@ -16,14 +16,11 @@
 
 import { db } from '@/lib/db';
 import { 
-  workspaceIntelligence, 
-  neptuneActionHistory, 
-  aiUserPreferences,
+  neptuneActionHistory,
   aiConversations,
-  aiMessages,
   workspaceMembers,
 } from '@/db/schema';
-import { eq, and, gte, sql, desc, count } from 'drizzle-orm';
+import { eq, and, gte } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getCache, setCache } from '@/lib/cache';
 

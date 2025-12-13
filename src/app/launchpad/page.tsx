@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { blogPosts, blogCategories } from '@/db/schema';
 import { eq, desc, and, gte } from 'drizzle-orm';
 import { Rocket } from 'lucide-react';
-import { Clock, ArrowRight, Sparkles, BookOpen, Zap } from 'lucide-react';
+import { Clock, ArrowRight, Sparkles, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';

@@ -27,14 +27,12 @@ import {
   Edit3,
   X,
   Send,
-  FileText,
   FolderOpen,
   ExternalLink,
-  MoreHorizontal,
   Wand2,
   FileCode,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { type DocumentTypeConfig } from "./documentRequirements";

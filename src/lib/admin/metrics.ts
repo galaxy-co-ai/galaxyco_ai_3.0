@@ -7,7 +7,7 @@
 
 import { db } from '@/lib/db';
 import { aiMessages, aiConversations } from '@/db/schema';
-import { gte, and, sql, count, desc } from 'drizzle-orm';
+import { gte, and, sql, count } from 'drizzle-orm';
 import { redis } from '@/lib/upstash';
 import { logger } from '@/lib/logger';
 

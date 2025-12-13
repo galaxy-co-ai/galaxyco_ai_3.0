@@ -24,7 +24,6 @@ import type {
   WorkflowExecution,
   StepResult,
   ExecutionStatus,
-  StepStatus,
   WorkflowStepCondition,
   WorkflowTriggerType,
 } from './types';

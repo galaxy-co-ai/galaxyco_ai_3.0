@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOAuthUrl, generatePKCE } from '@/lib/oauth';
-import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 import { redis } from '@/lib/upstash';
-import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * Initiate OAuth flow for Google, Microsoft, or Twitter

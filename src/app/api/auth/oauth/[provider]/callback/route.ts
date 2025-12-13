@@ -6,7 +6,6 @@ import { integrations, oauthTokens } from '@/db/schema';
 import { encryptApiKey } from '@/lib/encryption';
 import { logger } from '@/lib/logger';
 import { redis } from '@/lib/upstash';
-import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * OAuth callback handler

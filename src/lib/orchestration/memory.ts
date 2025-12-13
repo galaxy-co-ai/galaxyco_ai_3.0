@@ -15,7 +15,7 @@
 
 import { db } from '@/lib/db';
 import { agentSharedMemory } from '@/db/schema';
-import { eq, and, desc, gte, lte, or, sql, like, isNull } from 'drizzle-orm';
+import { eq, and, desc, gte, lte, or, like, isNull } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import type {
   SharedMemory,

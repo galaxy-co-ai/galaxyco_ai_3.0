@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { prospects, deals, contacts, customers } from '@/db/schema';
+import { prospects, deals, contacts } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { eq, and, gte, lte, count, sum, sql, desc } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';

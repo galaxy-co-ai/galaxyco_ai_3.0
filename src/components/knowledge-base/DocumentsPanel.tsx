@@ -11,7 +11,6 @@ import {
   Search,
   Clock,
   Sparkles,
-  ChevronRight,
   File
 } from "lucide-react";
 import { useState } from "react";

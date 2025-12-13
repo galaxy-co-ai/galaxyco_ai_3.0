@@ -15,7 +15,6 @@ import { StepIndicatorCompact } from "@/components/creator/StepIndicator";
 
 import type { AgentConfig, AgentTemplate } from "./types";
 import { DEFAULT_AGENT_CONFIG } from "./types";
-import { getTemplateById } from "./templates";
 
 const STEPS = [
   { number: 1, label: "Choose" },

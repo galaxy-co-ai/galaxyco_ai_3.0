@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { campaigns, prospects, contacts } from '@/db/schema';
-import { eq, and, desc, or, ne } from 'drizzle-orm';
+import { campaigns } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { logger } from '@/lib/logger';

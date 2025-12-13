@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   MessageSquare, 
   Send, 
   Loader2, 
-  Lightbulb, 
-  ArrowRight,
+  Lightbulb,
   Trash2,
   FileText,
   Sparkles

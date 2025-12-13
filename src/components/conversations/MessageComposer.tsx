@@ -3,10 +3,9 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Smile, X, FileText, Image as ImageIcon, Loader2, Mic } from "lucide-react";
+import { Send, Paperclip, X, FileText, Image as ImageIcon, Loader2, Mic } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
-import { cn } from "@/lib/utils";
 import VoiceRecorder from "./VoiceRecorder";
 
 interface Attachment {

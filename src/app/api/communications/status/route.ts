@@ -35,7 +35,7 @@ export async function GET() {
         resend: 'https://resend.com - Create API key',
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to get channel status' },
       { status: 500 }

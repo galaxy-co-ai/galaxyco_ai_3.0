@@ -6,9 +6,7 @@ import Link from 'next/link';
 import { 
   ArrowLeft, 
   Save, 
-  Eye, 
-  Clock, 
-  Send,
+  Clock,
   Loader2,
   Image as ImageIcon,
   Settings2,
@@ -23,7 +21,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { TiptapEditor, InsertImageFunction, CitationData } from './TiptapEditor';
 import { AIImageModal } from './ArticleStudio/AIImageModal';
 import { PrePublishChecklist } from './ArticleStudio/PrePublishChecklist';

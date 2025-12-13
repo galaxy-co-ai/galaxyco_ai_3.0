@@ -15,8 +15,8 @@
 
 import { db } from '@/lib/db';
 import { knowledgeItems } from '@/db/schema';
-import { eq, and, or, sql, desc, ilike } from 'drizzle-orm';
-import { searchKnowledge, isVectorConfigured, generateEmbedding } from '@/lib/vector';
+import { eq, and, or, ilike } from 'drizzle-orm';
+import { searchKnowledge, isVectorConfigured } from '@/lib/vector';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
 import { getCache, setCache, CONTEXT_CACHE_TTL, ContextCacheKeys } from '@/lib/cache';

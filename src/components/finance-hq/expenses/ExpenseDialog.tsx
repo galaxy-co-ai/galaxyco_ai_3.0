@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Upload, Receipt } from "lucide-react";
+import { Loader2, Receipt } from "lucide-react";
 import { toast } from "sonner";
 
 const EXPENSE_CATEGORIES = [

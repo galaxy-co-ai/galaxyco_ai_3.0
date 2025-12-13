@@ -5,7 +5,6 @@ import {
   Brain,
   Loader2,
   Sparkles,
-  Plus,
   X,
   AlertCircle,
   CheckCircle2,

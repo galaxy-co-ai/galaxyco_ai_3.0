@@ -5,7 +5,6 @@ import { contacts, prospects, projects } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { z } from 'zod';
 

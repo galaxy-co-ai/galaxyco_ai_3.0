@@ -16,7 +16,6 @@ import {
   agents,
   aiUserPreferences,
   aiConversations,
-  aiMessages,
   users,
   workspaceIntelligence,
   proactiveInsights,

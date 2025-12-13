@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Activity, Circle, Filter, Pause, Play, Radio, Search, Trash2, Wifi, WifiOff, Zap } from 'lucide-react';
+import { Activity, Circle, Pause, Play, Radio, Search, Trash2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { isSystemAdmin, getAdminContext } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { blogPosts, platformFeedback, users, newsletterSubscribers, todoHqTasks } from '@/db/schema';
+import { blogPosts, platformFeedback, todoHqTasks } from '@/db/schema';
 import { eq, count, and, gte, ne } from 'drizzle-orm';
 import AdminHeader from '@/components/admin/AdminHeader';
 

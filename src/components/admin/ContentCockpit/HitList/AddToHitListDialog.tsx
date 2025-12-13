@@ -6,7 +6,7 @@ import useSWR from "swr";
 import { cn } from "@/lib/utils";
 import { NeptuneButton } from "@/components/ui/neptune-button";
 import { toast } from "sonner";
-import type { TopicIdea, HitListDifficulty } from "@/db/schema";
+import type { HitListDifficulty } from "@/db/schema";
 
 // Derive TaskPriority type from the enum values
 type TaskPriority = "low" | "medium" | "high" | "urgent";

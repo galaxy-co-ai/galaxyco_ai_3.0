@@ -8,7 +8,7 @@
 import { getOpenAI } from '@/lib/ai-providers';
 import { logger } from '@/lib/logger';
 import type { CrawledPage as LiteCrawledPage } from '@/lib/website-crawler-lite';
-import { crawlWebsiteLite, fetchSinglePage } from '@/lib/website-crawler-lite';
+import { crawlWebsiteLite } from '@/lib/website-crawler-lite';
 
 // Support both crawler types
 type CrawledPage = LiteCrawledPage;

@@ -148,7 +148,7 @@ export function FloatingAIAssistant() {
     };
     // Empty deps array is intentional - we only set up the listener once
     // The event handler uses direct state updates to avoid stale closures
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const handleSendMessage = useCallback(async (messageText?: string) => {

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { conversations, conversationMessages, conversationParticipants } from '@/db/schema';
-import { eq, and, or, ilike, desc, sql, inArray } from 'drizzle-orm';
+import { eq, and, ilike, desc, sql, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';

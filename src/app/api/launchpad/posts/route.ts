@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { blogPosts, blogCategories } from '@/db/schema';
 import { logger } from '@/lib/logger';
-import { eq, desc, and, like, or } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 
 /**
  * Public API for Launchpad posts

@@ -5,9 +5,7 @@ import {
   X,
   Sparkles,
   Loader2,
-  RefreshCw,
   Check,
-  Image as ImageIcon,
   Wand2,
   Camera,
   Palette,
@@ -18,7 +16,6 @@ import {
   RectangleVertical,
   AlertCircle,
   Download,
-  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

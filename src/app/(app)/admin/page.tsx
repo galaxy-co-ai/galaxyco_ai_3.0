@@ -3,12 +3,11 @@ import { getAdminContext } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { 
   blogPosts, 
-  platformFeedback, 
-  analyticsEvents,
+  platformFeedback,
   newsletterSubscribers,
   users 
 } from '@/db/schema';
-import { eq, count, sql, desc, and, gte } from 'drizzle-orm';
+import { eq, count, desc, and, gte } from 'drizzle-orm';
 import { 
   FileText, 
   MessageSquareWarning, 

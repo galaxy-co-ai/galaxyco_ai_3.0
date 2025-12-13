@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import {
   Dialog,
@@ -20,7 +19,6 @@ import {
   BarChart3,
   FileSearch,
   Play,
-  X,
 } from "lucide-react";
 
 interface HeroSectionProps {

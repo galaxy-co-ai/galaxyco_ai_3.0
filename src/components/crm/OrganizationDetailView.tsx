@@ -8,7 +8,6 @@ import {
   Mail,
   Phone,
   Calendar,
-  Building2,
   Globe,
   TrendingUp,
   Tag,
