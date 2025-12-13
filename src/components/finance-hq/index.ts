@@ -41,6 +41,9 @@ export {
   CashFlowChartSkeleton,
 } from "./charts";
 
+// Expense management components
+export { ExpenseDialog, ExpenseList } from "./expenses";
+
 
 
 
