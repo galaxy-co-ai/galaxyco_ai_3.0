@@ -1,19 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import useSWR from 'swr';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, Circle, AlertCircle, Rocket, ListTodo, Trash2 } from 'lucide-react';
+import { CheckCircle2, Circle, AlertCircle, Rocket, ListTodo, Trash2, Layers, ChevronRight } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+// Phase definitions (manually curated, not from bootstrap)
+const PHASES = [
+  { id: 'phase-1', name: 'Phase 1: Foundation', status: 'completed', epicIds: [] },
+  { id: 'phase-2', name: 'Phase 2: CRM Real Data', status: 'in_progress', epicIds: ['crm-dashboard', 'contacts-management', 'deals-pipeline'] },
+  { id: 'phase-3', name: 'Phase 3: Integrations', status: 'not_started', epicIds: ['email-sync', 'calendar-sync'] },
+  { id: 'phase-4', name: 'Phase 4: Automations', status: 'not_started', epicIds: ['workflow-builder', 'ai-agents'] },
+  { id: 'phase-5', name: 'Phase 5: Analytics', status: 'not_started', epicIds: ['reporting', 'dashboards'] },
+];
 
 export default function TodoHQPage() {
   const { data, error, isLoading, mutate } = useSWR('/api/admin/todo-hq/epics', fetcher);
   const [bootstrapping, setBootstrapping] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [selectedPhase, setSelectedPhase] = useState('phase-2');
 
   const epics = data?.epics || [];
 
@@ -126,127 +135,145 @@ export default function TodoHQPage() {
     );
   }
 
+  const selectedPhaseData = PHASES.find(p => p.id === selectedPhase);
+  const phaseEpics = epics.filter((e: any) => 
+    selectedPhaseData?.epicIds.some(id => e.name.toLowerCase().includes(id.replace(/-/g, ' ')))
+  );
+
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <ListTodo className="h-8 w-8 text-pink-600" />
+    <div className="flex h-screen bg-gray-50">
+      {/* Left Sidebar - Phases */}
+      <div className="w-64 bg-white border-r flex flex-col">
+        <div className="p-4 border-b">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <ListTodo className="h-6 w-6 text-pink-600" />
             To-Do HQ
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Track feature completion and manage development tasks
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Phase Tracker</p>
         </div>
-        <Button
-          onClick={handleClearAndRebootstrap}
-          disabled={clearing}
-          variant="destructive"
-          size="sm"
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          {clearing ? 'Clearing...' : 'Clear & Re-Bootstrap'}
-        </Button>
+        
+        <div className="flex-1 overflow-y-auto p-2">
+          {PHASES.map((phase) => {
+            const phaseEpicsList = epics.filter((e: any) => 
+              phase.epicIds.some(id => e.name.toLowerCase().includes(id.replace(/-/g, ' ')))
+            );
+            const totalTasks = phaseEpicsList.reduce((sum: number, e: any) => sum + (e.taskCount || 0), 0);
+            const completedTasks = phaseEpicsList.reduce((sum: number, e: any) => sum + (e.completedTaskCount || 0), 0);
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            return (
+              <button
+                key={phase.id}
+                onClick={() => setSelectedPhase(phase.id)}
+                className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${
+                  selectedPhase === phase.id
+                    ? 'bg-pink-50 border border-pink-200'
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium">{phase.name}</span>
+                  <ChevronRight className={`h-4 w-4 transition-transform ${selectedPhase === phase.id ? 'rotate-90' : ''}`} />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{completedTasks}/{totalTasks} tasks</span>
+                    <span className="font-semibold">{progress}%</span>
+                  </div>
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-pink-600 transition-all"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="p-2 border-t space-y-1">
+          <Button
+            onClick={handleClearAndRebootstrap}
+            disabled={clearing}
+            variant="outline"
+            size="sm"
+            className="w-full text-xs"
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            {clearing ? 'Clearing...' : 'Reset All'}
+          </Button>
+        </div>
       </div>
 
-      {/* Epics Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {epics.map((epic: any) => (
-          <Card key={epic.id} className="p-6">
-            {/* Epic Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold mb-1">{epic.name}</h3>
-                {epic.description && (
-                  <p className="text-sm text-muted-foreground">{epic.description}</p>
-                )}
-              </div>
-              <Badge
-                variant={epic.status === 'completed' ? 'default' : 'secondary'}
-                className="ml-2"
-              >
-                {epic.status.replace('_', ' ')}
-              </Badge>
-            </div>
+      {/* Main Content - Phase Tasks */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6 max-w-5xl">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold">{selectedPhaseData?.name}</h2>
+            <p className="text-muted-foreground mt-1">
+              {phaseEpics.length} epic{phaseEpics.length !== 1 ? 's' : ''} • {phaseEpics.reduce((sum: number, e: any) => sum + (e.taskCount || 0), 0)} total tasks
+            </p>
+          </div>
 
-            {/* Completion Progress */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-muted-foreground">
-                  {epic.completedTaskCount} of {epic.taskCount} tasks completed
-                </span>
-                <span className="font-semibold">{epic.completionPercent}%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-pink-600 transition-all duration-300"
-                  style={{ width: `${epic.completionPercent}%` }}
-                />
-              </div>
-            </div>
-
-            {/* All Tasks */}
-            {epic.tasks && epic.tasks.length > 0 ? (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Tasks:</h4>
-                {epic.tasks.map((task: any) => {
-                  const isCompleted = task.status === 'done' || task.status === 'cancelled';
-                  return (
-                    <div
-                      key={task.id}
-                      className={`flex items-start gap-2 p-2 rounded-md hover:bg-secondary/50 transition-all duration-200 ${
-                        isCompleted ? 'opacity-40' : ''
-                      }`}
-                    >
-                      <button
-                        onClick={() => handleToggleTask(task.id, task.status)}
-                        className="mt-0.5 flex-shrink-0 hover:scale-110 transition-transform"
-                        title={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
-                      >
-                        {task.status === 'done' ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : (
-                          <Circle className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-sm transition-all ${
-                            isCompleted ? 'line-through text-muted-foreground' : ''
-                          }`}
-                        >
-                          {task.title}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {task.status}
-                          </Badge>
-                          <Badge
-                            variant={
-                              task.priority === 'urgent'
-                                ? 'destructive'
-                                : task.priority === 'high'
-                                ? 'default'
-                                : 'secondary'
-                            }
-                            className="text-xs"
-                          >
-                            {task.priority}
-                          </Badge>
-                        </div>
-                      </div>
+          {phaseEpics.length === 0 ? (
+            <Card className="p-12 text-center">
+              <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+              <p className="text-muted-foreground">No epics in this phase yet</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {phaseEpics.map((epic: any) => (
+                <Card key={epic.id} className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold mb-1">{epic.name}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {epic.completedTaskCount}/{epic.taskCount} tasks • {epic.completionPercent}% complete
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <span>No tasks yet</span>
-              </div>
-            )}
-          </Card>
-        ))}
+                    <div className="h-2 w-24 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-600" style={{ width: `${epic.completionPercent}%` }} />
+                    </div>
+                  </div>
+
+                  {epic.tasks && epic.tasks.length > 0 && (
+                    <div className="space-y-1">
+                      {epic.tasks.map((task: any) => {
+                        const isCompleted = task.status === 'done';
+                        return (
+                          <div
+                            key={task.id}
+                            className={`flex items-center gap-2 p-2 rounded hover:bg-gray-50 ${
+                              isCompleted ? 'opacity-50' : ''
+                            }`}
+                          >
+                            <button
+                              onClick={() => handleToggleTask(task.id, task.status)}
+                              className="flex-shrink-0"
+                            >
+                              {isCompleted ? (
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <Circle className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+                            <span className={`text-sm flex-1 ${isCompleted ? 'line-through' : ''}`}>
+                              {task.title}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {task.priority}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
