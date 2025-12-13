@@ -46,6 +46,8 @@ import DealsTable from "./DealsTable";
 import LeadDetailView from "./LeadDetailView";
 import OrganizationDetailView from "./OrganizationDetailView";
 import ContactDetailView from "./ContactDetailView";
+import DealDetailView from "./DealDetailView";
+import { DealDialog } from "./DealDialog";
 import InsightsTab from "./InsightsTab";
 import AutomationsTab from "./AutomationsTab";
 import { toast } from "sonner";
@@ -185,6 +187,8 @@ export default function CRMDashboard({
     phone: "",
   });
   const [showAddDealDialog, setShowAddDealDialog] = useState(false);
+  const [showDealDialog, setShowDealDialog] = useState(false);
+  const [editingDeal, setEditingDeal] = useState<any>(null);
   const [isAddingDeal, setIsAddingDeal] = useState(false);
   const [deals, setDeals] = useState<Deal[]>(initialDeals);
   const [newDeal, setNewDeal] = useState({
@@ -498,6 +502,76 @@ export default function CRMDashboard({
     } catch (error) {
       logger.error('Failed to delete organization', error);
       // Silently fail - item already removed optimistically
+    }
+  };
+
+  const handleDealEdit = (deal: Deal) => {
+    setEditingDeal(deal);
+    setShowDealDialog(true);
+  };
+
+  const handleDealDelete = async (dealId: string) => {
+    try {
+      const response = await fetch(`/api/crm/deals/${dealId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete deal' }));
+        throw new Error(errorData.error || `Failed to delete deal: ${response.status}`);
+      }
+
+      // Optimistically remove from list
+      setDeals(prev => prev.filter(deal => deal.id !== dealId));
+      
+      // Clear selection if this was the selected deal
+      if (selectedDeal === dealId) {
+        setSelectedDeal(null);
+      }
+
+      toast.success('Deal deleted successfully');
+
+      // Refresh server data after a delay
+      setTimeout(() => refreshDeals(), 1000);
+    } catch (error) {
+      logger.error('Failed to delete deal', error);
+      // Silently fail - item already removed optimistically
+    }
+  };
+
+  const handleDealSuccess = () => {
+    setShowDealDialog(false);
+    setEditingDeal(null);
+    // Refresh deals list after mutation
+    setTimeout(() => refreshDeals(), 1000);
+  };
+
+  const refreshDeals = async () => {
+    try {
+      const response = await fetch('/api/crm/deals');
+      if (response.ok) {
+        const fresh = await response.json();
+        const transformed = fresh.map((deal: any) => ({
+          id: deal.id,
+          title: deal.name,
+          company: deal.company || '',
+          value: deal.estimatedValue || 0,
+          stage: deal.stage === 'closed_won' ? 'closed' : deal.stage === 'closed_lost' ? 'lost' : deal.stage,
+          probability: deal.score || 0,
+          closeDate: deal.nextFollowUpAt,
+          source: deal.source || '',
+          tags: deal.tags || [],
+          notes: deal.notes,
+        }));
+        setDeals(prev => {
+          const map = new Map(prev.map(d => [d.id, d]));
+          const merged = transformed.map((sd: Deal) => map.get(sd.id) || sd);
+          const localOnly = prev.filter(d => !transformed.some((sd: Deal) => sd.id === d.id));
+          return [...merged, ...localOnly];
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to refresh deals', error);
     }
   };
 
@@ -888,7 +962,10 @@ export default function CRMDashboard({
                       </div>
                       <Button
                         size="icon"
-                        onClick={() => setShowAddDealDialog(true)}
+                        onClick={() => {
+                          setEditingDeal(null);
+                          setShowDealDialog(true);
+                        }}
                         className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
                         aria-label="Add deal"
                       >
@@ -932,7 +1009,10 @@ export default function CRMDashboard({
                       deals={filteredDeals}
                       selectedId={selectedDeal}
                       onSelect={handleDealClick}
-                      onAddNew={() => setShowAddDealDialog(true)}
+                      onAddNew={() => {
+                        setEditingDeal(null);
+                        setShowDealDialog(true);
+                      }}
                       formatDate={formatDate}
                       formatCurrency={formatCurrency}
                     />
@@ -1954,53 +2034,41 @@ export default function CRMDashboard({
             </div>
           </div>
           {selectedDealData && (
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Company</p>
-                  <p className="text-sm font-medium">{selectedDealData.company}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Stage</p>
-                  <Badge variant="outline" className="capitalize">{selectedDealData.stage}</Badge>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Value</p>
-                  <p className="text-sm font-medium text-green-600">{formatCurrency(selectedDealData.value)}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Probability</p>
-                  <p className="text-sm font-medium">{selectedDealData.probability}%</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Close Date</p>
-                  <p className="text-sm font-medium">{selectedDealData.closeDate ? formatDate(selectedDealData.closeDate) : 'Not set'}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Source</p>
-                  <p className="text-sm font-medium">{selectedDealData.source || 'Unknown'}</p>
-                </div>
-              </div>
-              {selectedDealData.tags && selectedDealData.tags.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-500">Tags</p>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedDealData.tags.map((tag, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">{tag}</Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {selectedDealData.notes && (
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-500">Notes</p>
-                  <p className="text-sm text-gray-700">{selectedDealData.notes}</p>
-                </div>
-              )}
-            </div>
+            <DealDetailView
+              deal={{
+                id: selectedDealData.id,
+                name: selectedDealData.title,
+                company: selectedDealData.company,
+                estimatedValue: selectedDealData.value,
+                stage: selectedDealData.stage,
+                score: selectedDealData.probability,
+                nextFollowUpAt: selectedDealData.closeDate,
+                notes: selectedDealData.notes,
+                tags: selectedDealData.tags,
+              }}
+              onEdit={() => {
+                handleDealEdit(selectedDealData);
+                setShowDealDetailDialog(false);
+              }}
+              onDelete={(id) => {
+                handleDealDelete(id);
+                setShowDealDetailDialog(false);
+              }}
+            />
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Deal Dialog (Create/Edit) */}
+      <DealDialog
+        open={showDealDialog}
+        onOpenChange={(open) => {
+          setShowDealDialog(open);
+          if (!open) setEditingDeal(null);
+        }}
+        deal={editingDeal}
+        onSuccess={handleDealSuccess}
+      />
     </div>
   );
 }
