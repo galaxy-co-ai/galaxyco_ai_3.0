@@ -95,7 +95,7 @@ export async function GET(request: Request) {
     });
 
     // Get creator info for each event (batch query for efficiency)
-    const creatorIds = [...new Set(events.map(e => e.createdBy))];
+    const creatorIds = [...new Set(events.map(e => e.createdBy).filter((id): id is string => id !== null))];
     let creators: Array<{ id: string; firstName: string | null; lastName: string | null; email: string }> = [];
     
     if (creatorIds.length > 0) {
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
 
     const eventsWithCreators = events.map((event) => ({
       ...event,
-      creator: creatorMap.get(event.createdBy) || null,
+      creator: event.createdBy ? creatorMap.get(event.createdBy) || null : null,
     }));
 
     return NextResponse.json({
