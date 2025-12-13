@@ -6,13 +6,14 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, Circle, AlertCircle, Rocket, ListTodo } from 'lucide-react';
+import { CheckCircle2, Circle, AlertCircle, Rocket, ListTodo, Trash2 } from 'lucide-react';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function TodoHQPage() {
   const { data, error, isLoading, mutate } = useSWR('/api/admin/todo-hq/epics', fetcher);
   const [bootstrapping, setBootstrapping] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const epics = data?.epics || [];
 
@@ -33,6 +34,43 @@ export default function TodoHQPage() {
       alert('Failed to bootstrap To-Do HQ');
     } finally {
       setBootstrapping(false);
+    }
+  };
+
+  const handleClearAndRebootstrap = async () => {
+    if (!confirm('Are you sure? This will delete all current epics and tasks and re-create them from the template. This cannot be undone!')) {
+      return;
+    }
+
+    setClearing(true);
+    try {
+      // Step 1: Clear existing data
+      const clearRes = await fetch('/api/admin/todo-hq/clear', {
+        method: 'DELETE',
+      });
+
+      if (!clearRes.ok) {
+        const error = await clearRes.json();
+        alert(error.error || 'Failed to clear data');
+        return;
+      }
+
+      // Step 2: Bootstrap with fresh data
+      const bootstrapRes = await fetch('/api/admin/todo-hq/bootstrap', {
+        method: 'POST',
+      });
+
+      if (bootstrapRes.ok) {
+        mutate(); // Refresh the data
+        alert('Successfully cleared and re-bootstrapped To-Do HQ!');
+      } else {
+        const error = await bootstrapRes.json();
+        alert(error.error || 'Failed to bootstrap after clearing');
+      }
+    } catch (err) {
+      alert('Failed to clear and re-bootstrap');
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -101,6 +139,15 @@ export default function TodoHQPage() {
             Track feature completion and manage development tasks
           </p>
         </div>
+        <Button
+          onClick={handleClearAndRebootstrap}
+          disabled={clearing}
+          variant="destructive"
+          size="sm"
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          {clearing ? 'Clearing...' : 'Clear & Re-Bootstrap'}
+        </Button>
       </div>
 
       {/* Epics Grid */}
