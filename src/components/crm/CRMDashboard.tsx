@@ -37,6 +37,8 @@ import {
   Clock,
   Tag,
   ChevronRight,
+  Upload,
+  Download,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import LeadsTable from "./LeadsTable";
@@ -50,6 +52,7 @@ import DealDetailView from "./DealDetailView";
 import { DealDialog } from "./DealDialog";
 import InsightsTab from "./InsightsTab";
 import AutomationsTab from "./AutomationsTab";
+import { ImportContactsDialog } from "./ImportContactsDialog";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
 import { logger } from "@/lib/logger";
@@ -176,6 +179,7 @@ export default function CRMDashboard({
     notes: "",
   });
   const [showAddContactDialog, setShowAddContactDialog] = useState(false);
+  const [showImportContactsDialog, setShowImportContactsDialog] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [newContact, setNewContact] = useState({
@@ -450,6 +454,57 @@ export default function CRMDashboard({
     } catch (error) {
       logger.error('Failed to delete contact', error);
       // Silently fail - item already removed optimistically
+    }
+  };
+
+  const handleExportContacts = async () => {
+    try {
+      const response = await fetch('/api/crm/contacts/export');
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Export failed');
+      }
+      
+      // Get the CSV content
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contacts-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Exported ${contacts.length} contacts`);
+    } catch (error) {
+      logger.error('Failed to export contacts', error);
+      toast.error('Failed to export contacts');
+    }
+  };
+
+  const refreshContacts = async () => {
+    try {
+      const response = await fetch('/api/crm/contacts');
+      if (response.ok) {
+        const fresh = await response.json();
+        const transformed = fresh.map((contact: any) => ({
+          id: contact.id,
+          firstName: contact.firstName || '',
+          lastName: contact.lastName || '',
+          email: contact.email,
+          company: contact.company || '',
+          title: contact.title,
+          phone: contact.phone,
+          tags: contact.tags || [],
+        }));
+        setContacts(transformed);
+      }
+    } catch (error) {
+      logger.error('Failed to refresh contacts', error);
     }
   };
 
@@ -944,14 +999,36 @@ export default function CRMDashboard({
                           {filteredContacts.length} contacts
                         </p>
                       </div>
-                      <Button
-                        size="icon"
-                        onClick={() => setShowAddContactDialog(true)}
-                        className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
-                        aria-label="Add contact"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowImportContactsDialog(true)}
+                          className="h-8 px-2 text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50"
+                          aria-label="Import contacts"
+                        >
+                          <Upload className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Import</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleExportContacts}
+                          className="h-8 px-2 text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50"
+                          aria-label="Export contacts"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Export</span>
+                        </Button>
+                        <Button
+                          size="icon"
+                          onClick={() => setShowAddContactDialog(true)}
+                          className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
+                          aria-label="Add contact"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Search */}
@@ -1754,6 +1831,13 @@ export default function CRMDashboard({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Import Contacts Dialog */}
+      <ImportContactsDialog
+        open={showImportContactsDialog}
+        onOpenChange={setShowImportContactsDialog}
+        onSuccess={refreshContacts}
+      />
 
       {/* Add Deal Dialog */}
       <Dialog open={showAddDealDialog} onOpenChange={setShowAddDealDialog}>
