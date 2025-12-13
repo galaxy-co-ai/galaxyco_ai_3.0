@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (d9f78f1)  
+**Updated Through:** 2025-12-12 (29ac2b5)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,9 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 29ac2b5 feat(crm): add DealDetailView component
+- 2025-12-12 02c0599 feat(crm): add DealDialog component for create/edit
+- 2025-12-12 5dbf273 feat(crm): add deal UPDATE/DELETE/PATCH API endpoints
 - 2025-12-12 d9f78f1 docs: create Phase 2 kickoff document for next Warp session
 - 2025-12-12 d5fc97d feat(todo-hq): add Clear & Re-Bootstrap functionality
 - 2025-12-12 f6f2fbc feat(todo-hq): mark Phase 1 Quick Wins tasks as done in bootstrap template
@@ -38,9 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 85ec2dd docs: update progress tracker - Group 5 complete (15/24 tasks, 62.5%)
 - 2025-12-12 3befe36 feat(search): add global search with multi-entity, debounce, and recent searches
 - 2025-12-12 323c013 feat(ui): add empty states, loading skeletons, and accessibility utilities
-- 2025-12-12 1f4b463 docs: update progress tracker - Group 3 complete (9/24 tasks, 37.5%)
-- 2025-12-12 28afaa7 feat(tables): add enhanced data table with filtering, bulk ops, and column customization
-- 2025-12-12 258378f docs: update progress tracker - Group 2 complete (6/24 tasks, 25%)
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
