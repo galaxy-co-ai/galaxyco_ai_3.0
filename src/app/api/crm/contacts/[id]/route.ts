@@ -7,6 +7,7 @@ import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { broadcastActivity } from '@/lib/pusher-server';
 
 const updateContactSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -100,6 +101,19 @@ export async function PUT(
     // Invalidate cache
     await invalidateCRMCache(userId);
 
+    // Broadcast real-time event (non-blocking)
+    broadcastActivity(workspaceId, {
+      id: updated.id,
+      type: 'contact:updated',
+      title: 'Contact updated',
+      description: `${updated.firstName} ${updated.lastName || ''} was updated`,
+      entityType: 'contact',
+      entityId: updated.id,
+      userId,
+    }).catch(err => {
+      logger.error('Broadcast failed (non-critical)', err);
+    });
+
     return NextResponse.json(updated);
   } catch (error) {
     return createErrorResponse(error, 'Update contact error');
@@ -139,6 +153,19 @@ export async function DELETE(
 
     // Invalidate cache
     await invalidateCRMCache(userId);
+
+    // Broadcast real-time event (non-blocking)
+    broadcastActivity(workspaceId, {
+      id: contactId,
+      type: 'contact:deleted',
+      title: 'Contact deleted',
+      description: `${existing.firstName} ${existing.lastName || ''} was removed`,
+      entityType: 'contact',
+      entityId: contactId,
+      userId,
+    }).catch(err => {
+      logger.error('Broadcast failed (non-critical)', err);
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

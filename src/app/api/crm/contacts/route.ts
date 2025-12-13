@@ -7,6 +7,7 @@ import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { broadcastActivity } from '@/lib/pusher-server';
 
 const contactSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -95,6 +96,19 @@ export async function POST(request: Request) {
     // Invalidate cache in background (non-blocking)
     invalidateCRMCache(userId).catch(err => {
       logger.error('Cache invalidation failed (non-critical)', err);
+    });
+
+    // Broadcast real-time event (non-blocking)
+    broadcastActivity(workspaceId, {
+      id: contact.id,
+      type: 'contact:created',
+      title: 'New contact added',
+      description: `${contact.firstName} ${contact.lastName || ''} was added to CRM`,
+      entityType: 'contact',
+      entityId: contact.id,
+      userId,
+    }).catch(err => {
+      logger.error('Broadcast failed (non-critical)', err);
     });
 
     return NextResponse.json({

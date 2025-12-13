@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { sendMessage, type Channel } from '@/lib/communications/channels';
+import { triggerWorkspaceEvent } from '@/lib/pusher-server';
 
 const messageSchema = z.object({
   body: z.string().min(1, 'Message body is required'),
@@ -202,6 +203,21 @@ export async function POST(
         updatedAt: new Date(),
       })
       .where(eq(conversations.id, conversationId));
+
+    // Broadcast real-time message event (non-blocking)
+    triggerWorkspaceEvent(workspaceId, 'chat:message', {
+      conversationId,
+      messageId: message.id,
+      body: message.body,
+      direction: message.direction,
+      senderId: user.id,
+      senderName: message.senderName,
+      senderEmail: message.senderEmail,
+      createdAt: message.createdAt,
+      channel: conversation.channel,
+    }).catch(err => {
+      logger.error('Message broadcast failed (non-critical)', err);
+    });
 
     return NextResponse.json({
       message: {

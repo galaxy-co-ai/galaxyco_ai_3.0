@@ -7,11 +7,13 @@
  * - Infinite scroll with intersection observer
  * - Filter by type (agent, task, CRM, all)
  * - Mark as read functionality
- * - Real-time updates via polling
+ * - Real-time updates via Pusher WebSocket
  * - Loading states and error handling
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRealtime } from '@/hooks/use-realtime';
+import type { PusherEvent } from '@/lib/pusher-client';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,10 +54,11 @@ interface ActivityEvent {
 
 interface ActivityFeedProps {
   workspaceId: string;
+  userId?: string;
   className?: string;
 }
 
-export default function ActivityFeed({ workspaceId, className }: ActivityFeedProps) {
+export default function ActivityFeed({ workspaceId, userId, className }: ActivityFeedProps) {
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [filterType, setFilterType] = useState<ActivityType>('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -66,9 +69,58 @@ export default function ActivityFeed({ workspaceId, className }: ActivityFeedPro
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const limit = 20;
+
+  // Real-time activity handler - prepend new activities to the list
+  const handleRealtimeActivity = useCallback((event: PusherEvent) => {
+    const data = event.data as {
+      id?: string;
+      agentId?: string;
+      agentName?: string;
+      agentType?: string;
+      status?: ActivityStatus;
+      timestamp?: string;
+      durationMs?: number | null;
+      cost?: number | null;
+      error?: { message: string } | null;
+      triggeredBy?: { id: string; name: string };
+    };
+    
+    if (!data.id) return;
+    
+    const newActivity: ActivityEvent = {
+      id: data.id,
+      agentId: data.agentId || '',
+      agentName: data.agentName || 'Unknown Agent',
+      agentType: data.agentType || 'agent',
+      status: data.status || 'pending',
+      createdAt: data.timestamp || new Date().toISOString(),
+      durationMs: data.durationMs,
+      cost: data.cost,
+      error: data.error,
+      triggeredBy: data.triggeredBy,
+    };
+
+    setActivities((prev) => {
+      // Avoid duplicates
+      if (prev.some((a) => a.id === newActivity.id)) {
+        // Update existing activity (e.g., status change)
+        return prev.map((a) => (a.id === newActivity.id ? newActivity : a));
+      }
+      // Prepend new activity
+      return [newActivity, ...prev];
+    });
+  }, []);
+
+  // Subscribe to real-time events
+  useRealtime({
+    workspaceId,
+    userId,
+    onActivity: handleRealtimeActivity,
+    onAgentUpdate: handleRealtimeActivity, // Agent events also update activity feed
+    enabled: !!workspaceId,
+  });
 
   // Load read items from localStorage on mount
   useEffect(() => {
@@ -127,21 +179,8 @@ export default function ActivityFeed({ workspaceId, className }: ActivityFeedPro
     fetchActivities(0, false);
   }, [fetchActivities]);
 
-  // Real-time updates - poll every 30 seconds for new activities
-  useEffect(() => {
-    pollingIntervalRef.current = setInterval(() => {
-      if (offset === 0) {
-        // Only refresh if we're at the top
-        fetchActivities(0, false);
-      }
-    }, 30000); // 30 seconds
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, [fetchActivities, offset]);
+  // Note: Real-time updates now handled by useRealtime hook above
+  // Removed polling in favor of WebSocket push
 
   // Infinite scroll observer
   useEffect(() => {

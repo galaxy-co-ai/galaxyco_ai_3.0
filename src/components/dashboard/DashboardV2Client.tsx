@@ -8,7 +8,7 @@
  * Roadmap is built dynamically by Neptune based on user's goals.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { PageTitle } from '@/components/ui/page-title';
@@ -21,12 +21,14 @@ import {
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
-import { DashboardV2Data } from '@/types/dashboard';
+import { DashboardV2Data, DashboardStats } from '@/types/dashboard';
 import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
 import NeptuneDashboardWelcome from './NeptuneDashboardWelcome';
 import RoadmapCard, { DashboardRoadmapItem } from './RoadmapCard';
 import ActivityFeed from './ActivityFeed';
 import { useNeptune } from '@/contexts/neptune-context';
+import { useRealtime } from '@/hooks/use-realtime';
+import type { PusherEvent } from '@/lib/pusher-client';
 
 interface DashboardV2ClientProps {
   initialData: DashboardV2Data;
@@ -41,12 +43,53 @@ export default function DashboardV2Client({
   workspaceId, 
   userName 
 }: DashboardV2ClientProps) {
-  const { stats } = initialData;
   const { messages } = useNeptune();
+  
+  // Real-time stats state - initialized from server data
+  const [stats, setStats] = useState<DashboardStats>(initialData.stats);
   
   // Dynamic roadmap state
   const [roadmapItems, setRoadmapItems] = useState<DashboardRoadmapItem[]>([]);
   const [completionPercentage, setCompletionPercentage] = useState(0);
+
+  // Real-time event handlers for optimistic stats updates
+  const handleAgentUpdate = useCallback((event: PusherEvent) => {
+    const eventType = event.type as string;
+    setStats((prev) => {
+      if (eventType === 'agent:started' || eventType === 'agent:completed') {
+        return { ...prev, activeAgents: prev.activeAgents }; // Activity tracked elsewhere
+      }
+      if (eventType === 'agent:created') {
+        return { ...prev, totalAgents: prev.totalAgents + 1, activeAgents: prev.activeAgents + 1 };
+      }
+      if (eventType === 'agent:deleted') {
+        return { ...prev, totalAgents: Math.max(0, prev.totalAgents - 1) };
+      }
+      return prev;
+    });
+  }, []);
+
+  const handleLeadUpdate = useCallback((event: PusherEvent) => {
+    const eventType = event.type as string;
+    setStats((prev) => {
+      if (eventType === 'lead:created' || eventType === 'contact:created') {
+        return { ...prev, crmContacts: prev.crmContacts + 1 };
+      }
+      if (eventType === 'lead:deleted' || eventType === 'contact:deleted') {
+        return { ...prev, crmContacts: Math.max(0, prev.crmContacts - 1) };
+      }
+      return prev;
+    });
+  }, []);
+
+  // Subscribe to real-time workspace events
+  useRealtime({
+    workspaceId,
+    userId,
+    onAgentUpdate: handleAgentUpdate,
+    onLeadUpdate: handleLeadUpdate,
+    enabled: !!workspaceId,
+  });
 
   // Calculate completion percentage when items change
   useEffect(() => {
@@ -232,7 +275,7 @@ export default function DashboardV2Client({
             {/* Activity Feed - Bottom of right column */}
             <div className="min-w-0 flex-1 overflow-hidden" style={{ minHeight: '400px' }}>
               {workspaceId && workspaceId.trim() !== '' ? (
-                <ActivityFeed workspaceId={workspaceId} />
+                <ActivityFeed workspaceId={workspaceId} userId={userId} />
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <p className="text-sm text-muted-foreground">Unable to load activity</p>

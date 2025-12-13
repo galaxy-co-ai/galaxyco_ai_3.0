@@ -5,6 +5,8 @@ import { agents } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { broadcastActivity } from '@/lib/pusher-server';
+import { logger } from '@/lib/logger';
 
 const updateAgentSchema = z.object({
   name: z.string().min(1).optional(),
@@ -92,6 +94,18 @@ export async function PATCH(
       ))
       .returning();
 
+    // Broadcast real-time activity event (non-blocking)
+    broadcastActivity(workspaceId, {
+      id: updatedAgent.id,
+      type: 'agent:updated',
+      title: 'Agent updated',
+      description: `${updatedAgent.name} was updated`,
+      entityType: 'agent',
+      entityId: updatedAgent.id,
+    }).catch(err => {
+      logger.error('Activity broadcast failed (non-critical)', err);
+    });
+
     return NextResponse.json({
       id: updatedAgent.id,
       name: updatedAgent.name,
@@ -137,6 +151,18 @@ export async function DELETE(
         eq(agents.id, id),
         eq(agents.workspaceId, workspaceId)
       ));
+
+    // Broadcast real-time activity event (non-blocking)
+    broadcastActivity(workspaceId, {
+      id,
+      type: 'agent:deleted',
+      title: 'Agent deleted',
+      description: `${existingAgent.name} was deleted`,
+      entityType: 'agent',
+      entityId: id,
+    }).catch(err => {
+      logger.error('Activity broadcast failed (non-critical)', err);
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

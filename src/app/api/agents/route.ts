@@ -5,6 +5,8 @@ import { agents } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { broadcastActivity } from '@/lib/pusher-server';
+import { logger } from '@/lib/logger';
 
 // Valid agent types from schema
 const agentTypeValues = [
@@ -113,6 +115,19 @@ export async function POST(request: Request) {
         createdBy: creatorId,
       })
       .returning();
+
+    // Broadcast real-time activity event (non-blocking)
+    broadcastActivity(workspaceId, {
+      id: newAgent.id,
+      type: 'agent:created',
+      title: 'New agent created',
+      description: `${newAgent.name} was created`,
+      entityType: 'agent',
+      entityId: newAgent.id,
+      userId: creatorId,
+    }).catch(err => {
+      logger.error('Activity broadcast failed (non-critical)', err);
+    });
 
     return NextResponse.json({
       id: newAgent.id,
