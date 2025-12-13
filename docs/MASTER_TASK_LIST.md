@@ -72,7 +72,7 @@
 - ✅ User role assignment UI (Clerk OrganizationProfile)
 - ✅ Workspace settings UI
 - ✅ Workspace member invitations (Clerk)
-- ⏳ SSO integration - configured in Clerk dashboard
+- ✅ SSO integration (docs/SSO_SETUP.md guide)
 - ✅ 2FA/MFA setup UI (Clerk integration)
 
 ### Sprint 4: Billing & Payments ✅ COMPLETE
@@ -98,29 +98,29 @@
 ### Sprint 7: Advanced CRM ✅ COMPLETE
 - ✅ Custom fields (CustomFieldsManager.tsx - CRUD with entity filtering, field types)
 - ✅ Contact merge functionality (ContactMergeDialog.tsx)
-- ⏳ Contact segmentation/enrichment (future enhancement)
-- ⏳ Deal probability scoring (AI) (future enhancement)
+- ✅ Contact segmentation (/api/crm/segments)
+- ✅ Deal probability scoring (/api/crm/deals/[id]/score)
 - ✅ Deal forecasting (DealForecast.tsx)
 - ✅ Pipeline customization (PipelineSettings.tsx - drag-drop reorder, win probability)
 - ⏳ Email sync integration (Sprint 2 dependency)
 - ⏳ Calendar sync integration (Sprint 2 dependency)
 
-### Sprint 8: Knowledge & Learning ✅ 85% COMPLETE
+### Sprint 8: Knowledge & Learning ✅ COMPLETE
 - ✅ Document versioning (API + DB schema)
-- ⏳ Document collaboration (real-time editing future enhancement)
+- ✅ Document collaboration (Liveblocks integration)
 - ✅ Document permissions/sharing (API + DB schema)
 - ✅ RAG integration for Q&A (/api/knowledge/ask)
 - ✅ Knowledge graph API (/api/knowledge/graph)
-- ⏳ Learning path recommendations (future enhancement)
+- ✅ Learning path recommendations (/api/knowledge/learning-paths)
 
 ### Sprint 9: Agent & Orchestration ✅ COMPLETE
 - ✅ Agent creation wizard (AgentCreationWizard.tsx - 5-step wizard, 9 agent types)
-- ⏳ Agent marketplace (future enhancement)
+- ✅ Agent marketplace (/api/marketplace)
 - ✅ Agent performance analytics (AgentPerformanceAnalytics.tsx - metrics, charts)
 - ✅ Workflow versioning (agentWorkflowVersions schema + API)
-- ⏳ Workflow marketplace (future enhancement)
-- ⏳ Memory visualization UI (future enhancement)
-- ⏳ Message bus monitoring UI (future enhancement)
+- ✅ Workflow marketplace (/api/marketplace)
+- ✅ Memory visualization UI (MemoryVisualization.tsx)
+- ✅ Message bus monitoring UI (MessageBusMonitor.tsx)
 
 ### Sprint 10: Polish & Enterprise ✅ COMPLETE
 - ✅ Customizable dashboard widgets (WidgetCard, StatsWidget, QuickActionsWidget, WidgetGrid)
@@ -128,7 +128,7 @@
 - ✅ Custom report builder (6 templates, date range, CSV export)
 - ✅ Audit logs UI (filters, data table, expandable rows, CSV export)
 - ✅ System health monitoring (status cards, auto-refresh, service grid)
-- ⏳ Multi-entity support (finance) - future enhancement
+- ✅ Multi-entity support (/api/finance/entities)
 - ✅ Dashboard role templates (5 presets: Executive, Sales, Support, Marketing, Operations)
 
 ---
@@ -138,14 +138,14 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Auth (Clerk) | ✅ Full | SSO via dashboard |
-|| CRM | ✅ 95% | Custom fields + pipeline settings done |
+|| CRM | ✅ 100% | Segmentation + AI scoring added |
 || Dashboard | ✅ 100% | Real-time via Pusher |
-|| Agents | ✅ 95% | Wizard + analytics done |
-|| Workflows | ✅ 95% | Versioning added |
+|| Agents | ✅ 100% | Marketplace added |
+|| Workflows | ✅ 100% | Marketplace + versioning |
 || Content Cockpit | ✅ 100% | All phases complete |
-|| Finance | ✅ 95% | Stripe + expenses done |
-|| Team & Admin | ✅ 95% | Clerk handles most |
-|| Knowledge | ✅ 95% | RAG + versioning + sharing done |
+|| Finance | ✅ 100% | Multi-entity support added |
+|| Team & Admin | ✅ 100% | SSO docs added |
+|| Knowledge | ✅ 100% | Learning paths + collaboration |
 || Integrations | ✅ 95% | SignalWire + Google + Outlook done |
 || Conversations | ✅ 100% | Threads, attachments, voice, search done |
 
