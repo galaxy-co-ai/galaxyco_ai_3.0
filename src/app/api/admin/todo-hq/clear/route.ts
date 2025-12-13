@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { todoHqEpics, todoHqTasks } from '@/db/schema';
+import { todoHqEpics, todoHqTasks, todoHqSprints } from '@/db/schema';
 import { isSystemAdmin, getCurrentWorkspace } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -34,14 +34,22 @@ export async function DELETE(request: NextRequest) {
       .where(eq(todoHqEpics.workspaceId, context.workspace.id))
       .returning();
 
+    // Delete all sprints
+    const deletedSprints = await db
+      .delete(todoHqSprints)
+      .where(eq(todoHqSprints.workspaceId, context.workspace.id))
+      .returning();
+
     logger.info(`Cleared To-Do HQ data`, {
       workspaceId: context.workspace.id,
+      sprintsDeleted: deletedSprints.length,
       epicsDeleted: deletedEpics.length,
       tasksDeleted: deletedTasks.length,
     });
 
     return NextResponse.json({
       success: true,
+      sprintsDeleted: deletedSprints.length,
       epicsDeleted: deletedEpics.length,
       tasksDeleted: deletedTasks.length,
       message: 'To-Do HQ data cleared successfully',

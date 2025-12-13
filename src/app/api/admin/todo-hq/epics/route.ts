@@ -68,8 +68,12 @@ export async function GET(request: NextRequest) {
         tasks: tasks.map(t => ({
           id: t.id,
           title: t.title,
+          description: t.description,
           status: t.status,
           priority: t.priority,
+          sprintId: t.sprintId,
+          tags: t.tags,
+          notes: t.notes,
         })),
       };
     });

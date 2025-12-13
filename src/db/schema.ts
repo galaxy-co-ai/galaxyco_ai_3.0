@@ -568,6 +568,13 @@ export const todoHqEpicStatusEnum = pgEnum('todo_hq_epic_status', [
   'on_hold',
 ]);
 
+export const todoHqSprintStatusEnum = pgEnum('todo_hq_sprint_status', [
+  'planned',
+  'in_progress',
+  'completed',
+  'cancelled',
+]);
+
 // ============================================================================
 // WORKSPACES (Tenant Boundary)
 // ============================================================================
@@ -5620,6 +5627,52 @@ export const platformFeedbackRelations = relations(platformFeedback, ({ one }) =
 // ============================================================================
 
 /**
+ * To-Do HQ Sprints - Time-boxed work periods containing grouped tasks
+ * Used for organizing work into manageable chunks
+ */
+export const todoHqSprints = pgTable(
+  'todo_hq_sprints',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Basic info
+    name: text('name').notNull(),
+    description: text('description'),
+    status: todoHqSprintStatusEnum('status').notNull().default('planned'),
+
+    // Goal/objective for this sprint
+    goal: text('goal'),
+
+    // Timing
+    startDate: timestamp('start_date'),
+    endDate: timestamp('end_date'),
+
+    // Metadata
+    sortOrder: integer('sort_order').notNull().default(0),
+    color: text('color').default('blue'), // For UI styling
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('todo_hq_sprint_tenant_idx').on(table.workspaceId),
+    statusIdx: index('todo_hq_sprint_status_idx').on(table.status),
+    sortOrderIdx: index('todo_hq_sprint_sort_order_idx').on(table.sortOrder),
+  }),
+);
+
+/**
  * To-Do HQ Epics - High-level feature groupings for tracking development progress
  * Admin-only feature for internal project management
  */
@@ -5680,6 +5733,10 @@ export const todoHqTasks = pgTable(
       .notNull()
       .references(() => todoHqEpics.id, { onDelete: 'cascade' }),
 
+    // Sprint relationship (optional - tasks can be unassigned to a sprint)
+    sprintId: uuid('sprint_id')
+      .references(() => todoHqSprints.id, { onDelete: 'set null' }),
+
     // Basic info
     title: text('title').notNull(),
     description: text('description'),
@@ -5710,6 +5767,7 @@ export const todoHqTasks = pgTable(
   (table) => ({
     tenantIdx: index('todo_hq_task_tenant_idx').on(table.workspaceId),
     epicIdx: index('todo_hq_task_epic_idx').on(table.epicId),
+    sprintIdx: index('todo_hq_task_sprint_idx').on(table.sprintId),
     statusIdx: index('todo_hq_task_status_idx').on(table.status),
     priorityIdx: index('todo_hq_task_priority_idx').on(table.priority),
     assignedToIdx: index('todo_hq_task_assigned_to_idx').on(table.assignedTo),
@@ -5718,6 +5776,18 @@ export const todoHqTasks = pgTable(
 );
 
 // Relations for To-Do HQ
+export const todoHqSprintsRelations = relations(todoHqSprints, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [todoHqSprints.workspaceId],
+    references: [workspaces.id],
+  }),
+  creator: one(users, {
+    fields: [todoHqSprints.createdBy],
+    references: [users.id],
+  }),
+  tasks: many(todoHqTasks),
+}));
+
 export const todoHqEpicsRelations = relations(todoHqEpics, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [todoHqEpics.workspaceId],
@@ -5738,6 +5808,10 @@ export const todoHqTasksRelations = relations(todoHqTasks, ({ one }) => ({
   epic: one(todoHqEpics, {
     fields: [todoHqTasks.epicId],
     references: [todoHqEpics.id],
+  }),
+  sprint: one(todoHqSprints, {
+    fields: [todoHqTasks.sprintId],
+    references: [todoHqSprints.id],
   }),
   creator: one(users, {
     fields: [todoHqTasks.createdBy],

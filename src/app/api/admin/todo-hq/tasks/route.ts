@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 // Validation schemas
 const createTaskSchema = z.object({
   epicId: z.string().uuid('Invalid epic ID'),
+  sprintId: z.string().uuid().optional().nullable(), // Optional sprint assignment
   title: z.string().min(1, 'Title is required').max(255),
   description: z.string().optional(),
   status: z.enum(['todo', 'in_progress', 'done', 'cancelled']).optional(),
@@ -27,6 +28,7 @@ const updateTaskSchema = z.object({
   status: z.enum(['todo', 'in_progress', 'done', 'cancelled']).optional(),
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
   assignedTo: z.string().uuid().optional().nullable(),
+  sprintId: z.string().uuid().optional().nullable(), // Sprint assignment
   dueDate: z.string().datetime().optional().nullable(),
   sortOrder: z.number().optional(),
   tags: z.array(z.string()).optional(),
@@ -113,6 +115,7 @@ export async function POST(request: NextRequest) {
         workspaceId: context.workspace.id,
         createdBy: user.id,
         epicId: data.epicId,
+        sprintId: data.sprintId || null,
         title: data.title,
         description: data.description || null,
         status: data.status || 'todo',
@@ -162,7 +165,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const { id, dueDate, ...data } = validationResult.data;
+    const { id, dueDate, sprintId, ...data } = validationResult.data;
 
     // Build update data
     const updateData: any = {
@@ -173,6 +176,11 @@ export async function PATCH(request: NextRequest) {
     // Handle dueDate conversion
     if (dueDate !== undefined) {
       updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    }
+
+    // Handle sprintId (can be set to null to move to backlog)
+    if (sprintId !== undefined) {
+      updateData.sprintId = sprintId;
     }
 
     // Handle completedAt when status changes to done
