@@ -1,0 +1,141 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { leadRoutingRules } from '@/db/schema';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { eq, and } from 'drizzle-orm';
+import { z } from 'zod';
+import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
+
+const conditionSchema = z.object({
+  field: z.string().min(1),
+  operator: z.enum(['equals', 'not_equals', 'contains', 'greater_than', 'less_than', 'in']),
+  value: z.union([z.string(), z.number(), z.array(z.string())]),
+});
+
+const updateRuleSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  criteria: z.object({
+    conditions: z.array(conditionSchema).min(1),
+    matchType: z.enum(['all', 'any']),
+  }).optional(),
+  assignToUserId: z.string().uuid().nullable().optional(),
+  roundRobinUserIds: z.array(z.string().uuid()).optional(),
+  priority: z.number().int().optional(),
+  isEnabled: z.boolean().optional(),
+});
+
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
+/**
+ * GET /api/crm/routing-rules/[id]
+ */
+export async function GET(request: NextRequest, context: RouteParams) {
+  try {
+    const { workspaceId } = await getCurrentWorkspace();
+    const { id } = await context.params;
+    
+    const rule = await db.query.leadRoutingRules.findFirst({
+      where: and(
+        eq(leadRoutingRules.id, id),
+        eq(leadRoutingRules.workspaceId, workspaceId)
+      ),
+    });
+    
+    if (!rule) {
+      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ rule });
+  } catch (error) {
+    return createErrorResponse(error, 'Get routing rule error');
+  }
+}
+
+/**
+ * PUT /api/crm/routing-rules/[id]
+ */
+export async function PUT(request: NextRequest, context: RouteParams) {
+  try {
+    const { workspaceId } = await getCurrentWorkspace();
+    const { id } = await context.params;
+    
+    const body = await request.json();
+    const validation = updateRuleSchema.safeParse(body);
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validation.error.errors },
+        { status: 400 }
+      );
+    }
+    
+    const data = validation.data;
+    
+    // Build update object
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.criteria !== undefined) updateData.criteria = data.criteria;
+    if (data.assignToUserId !== undefined) updateData.assignToUserId = data.assignToUserId;
+    if (data.roundRobinUserIds !== undefined) updateData.roundRobinUserIds = data.roundRobinUserIds;
+    if (data.priority !== undefined) updateData.priority = data.priority;
+    if (data.isEnabled !== undefined) updateData.isEnabled = data.isEnabled;
+    
+    const [rule] = await db
+      .update(leadRoutingRules)
+      .set(updateData)
+      .where(
+        and(
+          eq(leadRoutingRules.id, id),
+          eq(leadRoutingRules.workspaceId, workspaceId)
+        )
+      )
+      .returning();
+    
+    if (!rule) {
+      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+    }
+    
+    logger.info('Updated lead routing rule', { workspaceId, ruleId: id });
+    
+    return NextResponse.json({ rule });
+  } catch (error) {
+    return createErrorResponse(error, 'Update routing rule error');
+  }
+}
+
+/**
+ * DELETE /api/crm/routing-rules/[id]
+ */
+export async function DELETE(request: NextRequest, context: RouteParams) {
+  try {
+    const { workspaceId } = await getCurrentWorkspace();
+    const { id } = await context.params;
+    
+    const [deleted] = await db
+      .delete(leadRoutingRules)
+      .where(
+        and(
+          eq(leadRoutingRules.id, id),
+          eq(leadRoutingRules.workspaceId, workspaceId)
+        )
+      )
+      .returning({ id: leadRoutingRules.id });
+    
+    if (!deleted) {
+      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+    }
+    
+    logger.info('Deleted lead routing rule', { workspaceId, ruleId: id });
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return createErrorResponse(error, 'Delete routing rule error');
+  }
+}
+

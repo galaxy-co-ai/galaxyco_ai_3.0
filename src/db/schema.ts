@@ -3481,6 +3481,69 @@ export const leadScoringRules = pgTable(
   }),
 );
 
+// Lead routing rules for auto-assignment
+export const leadRoutingRules = pgTable(
+  'lead_routing_rules',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Rule info
+    name: text('name').notNull(),
+    description: text('description'),
+
+    // Matching criteria (when to apply this rule)
+    criteria: jsonb('criteria')
+      .$type<{
+        conditions: Array<{
+          field: string; // e.g., 'source', 'industry', 'companySize', 'score'
+          operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in';
+          value: string | number | string[];
+        }>;
+        matchType: 'all' | 'any'; // AND vs OR for multiple conditions
+      }>()
+      .notNull(),
+
+    // Assignment target
+    assignToUserId: uuid('assign_to_user_id')
+      .references(() => users.id, { onDelete: 'set null' }),
+    
+    // Alternative: round-robin among team members
+    roundRobinUserIds: jsonb('round_robin_user_ids')
+      .$type<string[]>()
+      .default([]),
+    roundRobinIndex: integer('round_robin_index').default(0),
+
+    // Priority (higher = evaluated first, first match wins)
+    priority: integer('priority').notNull().default(0),
+
+    // Status
+    isEnabled: boolean('is_enabled').notNull().default(true),
+
+    // Stats
+    matchCount: integer('match_count').notNull().default(0),
+    lastMatchedAt: timestamp('last_matched_at'),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('lead_routing_rule_tenant_idx').on(table.workspaceId),
+    enabledIdx: index('lead_routing_rule_enabled_idx').on(table.isEnabled),
+    priorityIdx: index('lead_routing_rule_priority_idx').on(table.priority),
+  }),
+);
+
 // Lead scoring tiers configuration
 export const leadScoringTiers = pgTable(
   'lead_scoring_tiers',

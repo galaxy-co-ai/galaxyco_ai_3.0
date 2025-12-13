@@ -54,6 +54,7 @@ import InsightsTab from "./InsightsTab";
 import AutomationsTab from "./AutomationsTab";
 import { ImportContactsDialog } from "./ImportContactsDialog";
 import { LeadScoringRulesDialog } from "./LeadScoringRulesDialog";
+import { LeadRoutingRulesDialog } from "./LeadRoutingRulesDialog";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
 import { logger } from "@/lib/logger";
@@ -182,6 +183,7 @@ export default function CRMDashboard({
   const [showAddContactDialog, setShowAddContactDialog] = useState(false);
   const [showImportContactsDialog, setShowImportContactsDialog] = useState(false);
   const [showLeadScoringDialog, setShowLeadScoringDialog] = useState(false);
+  const [showLeadRoutingDialog, setShowLeadRoutingDialog] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [newContact, setNewContact] = useState({
@@ -853,6 +855,16 @@ export default function CRMDashboard({
                         >
                           <Target className="h-4 w-4 mr-1" />
                           <span className="hidden sm:inline">Scoring</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowLeadRoutingDialog(true)}
+                          className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          aria-label="Configure lead routing"
+                        >
+                          <Zap className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Routing</span>
                         </Button>
                         <Button
                           size="icon"
@@ -1857,6 +1869,12 @@ export default function CRMDashboard({
       <LeadScoringRulesDialog
         open={showLeadScoringDialog}
         onOpenChange={setShowLeadScoringDialog}
+      />
+
+      {/* Lead Routing Rules Dialog */}
+      <LeadRoutingRulesDialog
+        open={showLeadRoutingDialog}
+        onOpenChange={setShowLeadRoutingDialog}
       />
 
       {/* Add Deal Dialog */}
