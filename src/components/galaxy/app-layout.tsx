@@ -7,6 +7,8 @@ import { Header, HeaderProps } from "./header";
 import { Toaster } from "@/components/ui/sonner";
 import { FeedbackPanel } from "@/components/shared/FeedbackButton";
 import CommandPalette from "@/components/shared/CommandPalette";
+import { MobileBottomNav } from "@/components/mobile/MobileBottomNav";
+import { MobileMenu } from "@/components/mobile/MobileMenu";
 import { NeptuneProvider, useNeptune } from "@/contexts/neptune-context";
 import { FeedbackProvider } from "@/contexts/feedback-context";
 import { AnalyticsProvider } from "@/providers/AnalyticsProvider";
@@ -67,6 +69,8 @@ export function AppLayout({
   className,
   ...props
 }: AppLayoutProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
   return (
     <NeptuneProvider>
       <FeedbackProvider>
@@ -81,14 +85,24 @@ export function AppLayout({
 
             {/* Content Area with Floating Sidebar */}
             <div className="flex flex-1 overflow-hidden">
-              {/* Floating Sidebar */}
+              {/* Floating Sidebar (hidden on mobile) */}
               {showSidebar && <Sidebar />}
 
               {/* Main Content */}
-              <main className="flex-1 overflow-y-auto bg-background">
+              <main className={cn(
+                "flex-1 overflow-y-auto bg-background",
+                "pb-16 lg:pb-0" // Bottom padding on mobile for bottom nav
+              )}>
                 {children}
               </main>
             </div>
+
+            {/* Mobile Navigation */}
+            <MobileBottomNav onMenuClick={() => setIsMobileMenuOpen(true)} />
+            <MobileMenu 
+              isOpen={isMobileMenuOpen} 
+              onClose={() => setIsMobileMenuOpen(false)} 
+            />
 
             {/* Toast Notifications */}
             <Toaster />
