@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-13 (8794475)  
+**Updated Through:** 2025-12-13 (09ac50c)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-13 09ac50c feat(enhancements): add role templates, workflow versioning, contact merge, deal forecast
 - 2025-12-13 8794475 docs: all sprints complete - 100% done
 - 2025-12-13 877823c feat(conversations): complete Sprint 6 - Conversations Platform
 - 2025-12-13 f7d9cb3 docs: update task list - Sprint 10 complete, 99% done
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-13 6604a54 fix(todo-hq): add sprint-1 tag to Sprint 1 matchTags for proper assignment
 - 2025-12-13 04a2a76 docs(todo-hq): mark Sprint 1 completed tasks as done in template
 - 2025-12-12 b64fb59 feat(crm): add comprehensive revenue reports API
-- 2025-12-12 43ba45e feat(crm): add lead routing automation with rules engine
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
