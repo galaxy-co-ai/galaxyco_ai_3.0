@@ -494,6 +494,30 @@ export const dealPriorityEnum = pgEnum('deal_priority', [
   'critical',
 ]);
 
+// Custom field type enum
+export const customFieldTypeEnum = pgEnum('custom_field_type', [
+  'text',
+  'number',
+  'date',
+  'datetime',
+  'select',
+  'multiselect',
+  'checkbox',
+  'url',
+  'email',
+  'phone',
+  'currency',
+  'textarea',
+]);
+
+// Custom field entity type enum
+export const customFieldEntityTypeEnum = pgEnum('custom_field_entity_type', [
+  'contact',
+  'deal',
+  'customer',
+  'prospect',
+]);
+
 // ============================================================================
 // AGENT ORCHESTRATION ENUMS
 // ============================================================================
@@ -2874,9 +2898,7 @@ export const calendarEvents = pgTable(
     recurrenceRule: text('recurrence_rule'), // RRULE format
 
     // Relationships
-    createdBy: uuid('created_by')
-      .notNull()
-      .references(() => users.id),
+    createdBy: uuid('created_by').references(() => users.id), // Optional for synced events
     attendees: jsonb('attendees')
       .$type<Array<{ userId?: string; email: string; name: string; status: string }>>()
       .default([]),
@@ -2888,6 +2910,14 @@ export const calendarEvents = pgTable(
     projectId: uuid('project_id').references(() => projects.id, {
       onDelete: 'set null',
     }),
+    contactId: uuid('contact_id').references(() => contacts.id, {
+      onDelete: 'set null',
+    }),
+
+    // External sync
+    externalId: text('external_id'), // ID from external provider (Google, Microsoft)
+    externalMetadata: jsonb('external_metadata').$type<{ provider: string; [key: string]: unknown }>(),
+    source: text('source'), // 'google', 'microsoft', or null for manual
 
     // Metadata
     tags: text('tags').array().default([]),
@@ -2901,6 +2931,8 @@ export const calendarEvents = pgTable(
     tenantIdx: index('calendar_event_tenant_idx').on(table.workspaceId),
     startTimeIdx: index('calendar_event_start_time_idx').on(table.startTime),
     createdByIdx: index('calendar_event_created_by_idx').on(table.createdBy),
+    externalIdIdx: index('calendar_event_external_id_idx').on(table.externalId),
+    contactIdIdx: index('calendar_event_contact_id_idx').on(table.contactId),
   }),
 );
 
@@ -3626,6 +3658,180 @@ export const automationExecutions = pgTable(
 );
 
 // ============================================================================
+// CRM - CUSTOM FIELD DEFINITIONS
+// ============================================================================
+
+export const customFieldDefinitions = pgTable(
+  'custom_field_definitions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Field identity
+    name: text('name').notNull(), // System name: 'industry_focus', 'revenue_band'
+    label: text('label').notNull(), // Display name: 'Industry Focus', 'Revenue Band'
+    entityType: customFieldEntityTypeEnum('entity_type').notNull(), // 'contact', 'deal', 'customer', 'prospect'
+    fieldType: customFieldTypeEnum('field_type').notNull(), // 'text', 'number', 'date', 'select', etc.
+
+    // Field configuration
+    description: text('description'),
+    placeholder: text('placeholder'),
+    helpText: text('help_text'),
+
+    // For select/multiselect fields
+    options: jsonb('options')
+      .$type<Array<{ value: string; label: string; color?: string }>>()
+      .default([]),
+
+    // Validation
+    required: boolean('required').notNull().default(false),
+    defaultValue: text('default_value'),
+    validation: jsonb('validation')
+      .$type<{
+        minLength?: number;
+        maxLength?: number;
+        min?: number;
+        max?: number;
+        pattern?: string;
+        patternMessage?: string;
+      }>()
+      .default({}),
+
+    // Display
+    displayOrder: integer('display_order').notNull().default(0),
+    showInList: boolean('show_in_list').notNull().default(true), // Show in table view
+    showInCard: boolean('show_in_card').notNull().default(true), // Show in card/detail view
+    section: text('section'), // Group fields into sections: 'Basic Info', 'Financial', etc.
+
+    // Status
+    isActive: boolean('is_active').notNull().default(true),
+    isSystem: boolean('is_system').notNull().default(false), // System fields can't be deleted
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('custom_field_def_tenant_idx').on(table.workspaceId),
+    entityTypeIdx: index('custom_field_def_entity_type_idx').on(table.entityType),
+    uniqueNameIdx: uniqueIndex('custom_field_def_unique_name_idx').on(
+      table.workspaceId,
+      table.entityType,
+      table.name,
+    ),
+    displayOrderIdx: index('custom_field_def_display_order_idx').on(table.displayOrder),
+    activeIdx: index('custom_field_def_active_idx').on(table.isActive),
+  }),
+);
+
+// ============================================================================
+// CRM - DEAL PIPELINES
+// ============================================================================
+
+export const dealPipelines = pgTable(
+  'deal_pipelines',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Pipeline info
+    name: text('name').notNull(),
+    description: text('description'),
+    color: text('color'), // For visual identification
+
+    // Settings
+    isDefault: boolean('is_default').notNull().default(false),
+    displayOrder: integer('display_order').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+
+    // Stage count cache
+    stageCount: integer('stage_count').notNull().default(0),
+    dealCount: integer('deal_count').notNull().default(0),
+    totalValue: integer('total_value').notNull().default(0), // In cents
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('deal_pipeline_tenant_idx').on(table.workspaceId),
+    defaultIdx: index('deal_pipeline_default_idx').on(table.workspaceId, table.isDefault),
+    displayOrderIdx: index('deal_pipeline_display_order_idx').on(table.displayOrder),
+    activeIdx: index('deal_pipeline_active_idx').on(table.isActive),
+  }),
+);
+
+// ============================================================================
+// CRM - PIPELINE STAGES
+// ============================================================================
+
+export const pipelineStages = pgTable(
+  'pipeline_stages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Pipeline reference
+    pipelineId: uuid('pipeline_id')
+      .notNull()
+      .references(() => dealPipelines.id, { onDelete: 'cascade' }),
+
+    // Stage info
+    name: text('name').notNull(),
+    description: text('description'),
+    color: text('color').notNull().default('#6366f1'), // Indigo default
+
+    // Pipeline position
+    displayOrder: integer('display_order').notNull().default(0),
+
+    // Probability for forecasting
+    probability: integer('probability').notNull().default(50), // 0-100 percentage
+
+    // Stage type for special handling
+    stageType: text('stage_type').notNull().default('open'), // 'open', 'won', 'lost'
+
+    // Metrics cache
+    dealCount: integer('deal_count').notNull().default(0),
+    totalValue: integer('total_value').notNull().default(0), // In cents
+
+    // Automation triggers
+    rottenAfterDays: integer('rotten_after_days'), // Days before deal is marked stale
+    autoMoveAfterDays: integer('auto_move_after_days'), // Auto-move to next stage after N days
+    autoMoveToStageId: uuid('auto_move_to_stage_id'), // Target stage for auto-move
+
+    // Status
+    isActive: boolean('is_active').notNull().default(true),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    pipelineIdx: index('pipeline_stage_pipeline_idx').on(table.pipelineId),
+    displayOrderIdx: index('pipeline_stage_display_order_idx').on(table.pipelineId, table.displayOrder),
+    stageTypeIdx: index('pipeline_stage_type_idx').on(table.stageType),
+    activeIdx: index('pipeline_stage_active_idx').on(table.isActive),
+  }),
+);
+
+// ============================================================================
 // CRM - DEALS (Sales Pipeline)
 // ============================================================================
 
@@ -3643,9 +3849,13 @@ export const deals = pgTable(
     title: text('title').notNull(),
     description: text('description'),
 
-    // Pipeline stage
+    // Pipeline stage (legacy enum - for backward compatibility)
     stage: dealStageEnum('stage').notNull().default('qualification'),
     priority: dealPriorityEnum('priority').notNull().default('medium'),
+
+    // Custom pipeline support (new)
+    pipelineId: uuid('pipeline_id').references(() => dealPipelines.id, { onDelete: 'set null' }),
+    stageId: uuid('stage_id').references(() => pipelineStages.id, { onDelete: 'set null' }),
 
     // Financial
     value: integer('value').notNull().default(0), // In cents
@@ -3713,6 +3923,8 @@ export const deals = pgTable(
   (table) => ({
     tenantIdx: index('deal_tenant_idx').on(table.workspaceId),
     stageIdx: index('deal_stage_idx').on(table.stage),
+    pipelineIdx: index('deal_pipeline_idx').on(table.pipelineId),
+    stageIdIdx: index('deal_stage_id_idx').on(table.stageId),
     ownerIdx: index('deal_owner_idx').on(table.ownerId),
     customerIdx: index('deal_customer_idx').on(table.customerId),
     contactIdx: index('deal_contact_idx').on(table.contactId),
@@ -5484,7 +5696,51 @@ export const dealsRelations = relations(deals, ({ one, many }) => ({
     fields: [deals.ownerId],
     references: [users.id],
   }),
+  pipeline: one(dealPipelines, {
+    fields: [deals.pipelineId],
+    references: [dealPipelines.id],
+  }),
+  stage: one(pipelineStages, {
+    fields: [deals.stageId],
+    references: [pipelineStages.id],
+  }),
   interactions: many(crmInteractions),
+}));
+
+// ============================================================================
+// CUSTOM FIELDS, PIPELINES, STAGES - RELATIONS
+// ============================================================================
+
+export const customFieldDefinitionsRelations = relations(customFieldDefinitions, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [customFieldDefinitions.workspaceId],
+    references: [workspaces.id],
+  }),
+  createdByUser: one(users, {
+    fields: [customFieldDefinitions.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const dealPipelinesRelations = relations(dealPipelines, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [dealPipelines.workspaceId],
+    references: [workspaces.id],
+  }),
+  createdByUser: one(users, {
+    fields: [dealPipelines.createdBy],
+    references: [users.id],
+  }),
+  stages: many(pipelineStages),
+  deals: many(deals),
+}));
+
+export const pipelineStagesRelations = relations(pipelineStages, ({ one, many }) => ({
+  pipeline: one(dealPipelines, {
+    fields: [pipelineStages.pipelineId],
+    references: [dealPipelines.id],
+  }),
+  deals: many(deals),
 }));
 
 // ============================================================================
@@ -7217,14 +7473,19 @@ export type AlertBadgeType = (typeof alertBadgeTypeEnum.enumValues)[number];
 export type AlertBadgeStatus = (typeof alertBadgeStatusEnum.enumValues)[number];
 export type HitListDifficulty = (typeof hitListDifficultyEnum.enumValues)[number];
 
+// Custom Fields & Pipeline Types
+export type CustomFieldDefinition = typeof customFieldDefinitions.$inferSelect;
+export type NewCustomFieldDefinition = typeof customFieldDefinitions.$inferInsert;
 
+export type DealPipeline = typeof dealPipelines.$inferSelect;
+export type NewDealPipeline = typeof dealPipelines.$inferInsert;
 
+export type PipelineStage = typeof pipelineStages.$inferSelect;
+export type NewPipelineStage = typeof pipelineStages.$inferInsert;
 
-
-
-
-
-
+// Custom Field Enum Types
+export type CustomFieldType = (typeof customFieldTypeEnum.enumValues)[number];
+export type CustomFieldEntityType = (typeof customFieldEntityTypeEnum.enumValues)[number];
 
 
 
