@@ -1,7 +1,7 @@
 # GalaxyCo.ai 3.0 - Master Task List
 
 **Last Updated:** December 13, 2025  
-**Overall Progress:** ~90% (Sprints 1, 3, 4 Complete)
+**Overall Progress:** ~92% (Sprints 1, 3, 4, 5, 8 Complete)
 
 ---
 
@@ -81,12 +81,12 @@
 - ✅ Workspace billing (billing settings API)
 - ✅ Expense management (CRUD API + UI)
 
-### Sprint 5:
-- ⬜ Real backend data integration (dashboard)
-- ⬜ WebSocket for live updates
-- ⬜ Real-time messaging (conversations)
-- ⬜ Real-time analytics updates
-- ⬜ Real-time activity updates
+### Sprint 5: Real-time ✅ COMPLETE
+- ✅ Real backend data integration (dashboard - useRealtime hook)
+- ✅ WebSocket for live updates (Pusher broadcasting)
+- ✅ Real-time messaging (chat:message events)
+- ✅ Real-time analytics updates (optimistic stat updates)
+- ✅ Real-time activity updates (activity:new events, removed polling)
 
 ### Sprint 6: Conversations Platform
 - ⬜ Full conversation history
@@ -138,7 +138,7 @@
 |---------|--------|-------|
 | Auth (Clerk) | ✅ Full | SSO via dashboard |
 || CRM | ✅ 90% | Missing custom fields |
-|| Dashboard | ✅ 85% | Needs WebSocket |
+|| Dashboard | ✅ 100% | Real-time via Pusher |
 || Agents | ✅ 80% | Missing wizard/marketplace |
 || Workflows | ✅ 85% | Missing versioning |
 || Content Cockpit | ✅ 100% | All phases complete |
@@ -146,7 +146,7 @@
 || Team & Admin | ✅ 95% | Clerk handles most |
 || Knowledge | ✅ 95% | RAG + versioning + sharing done |
 || Integrations | 🔴 55% | Needs real OAuth/APIs |
-|| Conversations | 🔴 60% | Needs real-time |
+|| Conversations | ✅ 80% | Real-time messages via Pusher |
 
 ---
 
