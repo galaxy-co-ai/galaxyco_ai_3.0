@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 export interface PageTitleProps {
   title: string;
   icon: LucideIcon;
+  description?: string;
   className?: string;
   iconClassName?: string;
   titleClassName?: string;
+  descriptionClassName?: string;
   gradientFrom?: string;
   gradientTo?: string;
   as?: "h1" | "h2" | "h3";
@@ -31,9 +33,11 @@ function sanitizeId(raw: string) {
 export function PageTitle({
   title,
   icon: Icon,
+  description,
   className,
   iconClassName,
   titleClassName,
+  descriptionClassName,
   gradientFrom = "#8b5cf6",
   gradientTo = "#3b82f6",
   as = "h1",
@@ -62,14 +66,21 @@ export function PageTitle({
           </linearGradient>
         </defs>
       </svg>
-      <TitleTag
-        className={cn(
-          "branded-page-title-compact md:branded-page-title text-xl md:text-2xl uppercase drop-shadow-sm",
-          titleClassName
+      <div className="flex flex-col">
+        <TitleTag
+          className={cn(
+            "branded-page-title-compact md:branded-page-title text-xl md:text-2xl uppercase drop-shadow-sm",
+            titleClassName
+          )}
+        >
+          {title}
+        </TitleTag>
+        {description && (
+          <p className={cn("text-sm text-muted-foreground mt-0.5", descriptionClassName)}>
+            {description}
+          </p>
         )}
-      >
-        {title}
-      </TitleTag>
+      </div>
     </div>
   );
 }
