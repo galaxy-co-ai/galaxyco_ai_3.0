@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-13 (503b9c4)  
+**Updated Through:** 2025-12-13 (de68e1b)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-13 de68e1b feat(knowledge): complete Sprint 8 - RAG Q&A, versioning, permissions, graph
 - 2025-12-13 503b9c4 feat(agents): add Sprint 9 Agent Polish components
 - 2025-12-13 3f418a1 feat(crm): add Sprint 7 Advanced CRM UI components
 - 2025-12-13 e667733 fix(calendar): handle nullable createdBy in events API
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 18ba1fd feat(todo-hq): add sprint-based task management with enhanced UI
 - 2025-12-12 210a0c5 fix(todo-hq): replace phase filtering with category-based filtering to show all epics
 - 2025-12-12 a3d7c7d refactor(admin): redesign To-Do HQ with phase-based sidebar navigation
-- 2025-12-12 4c739ba feat(crm): add handleDealStageChange for pipeline drag-and-drop
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
