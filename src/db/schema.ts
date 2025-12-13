@@ -1453,6 +1453,50 @@ export const agentWorkflowExecutions = pgTable(
 );
 
 /**
+ * Agent Workflow Versions - Version history for workflows
+ * Tracks changes to workflow definitions over time
+ */
+export const agentWorkflowVersions = pgTable(
+  'agent_workflow_versions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Workflow reference
+    workflowId: uuid('workflow_id')
+      .notNull()
+      .references(() => agentWorkflows.id, { onDelete: 'cascade' }),
+
+    // Version number
+    version: integer('version').notNull(),
+
+    // Snapshot of workflow state at this version
+    name: text('name').notNull(),
+    description: text('description'),
+    triggerType: text('trigger_type').notNull(),
+    triggerConfig: jsonb('trigger_config').$type<Record<string, unknown>>().default({}),
+    steps: jsonb('steps').$type<Array<Record<string, unknown>>>().notNull().default([]),
+
+    // Change metadata
+    changeDescription: text('change_description'),
+    changedBy: uuid('changed_by')
+      .notNull()
+      .references(() => users.id),
+    changedAt: timestamp('changed_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('agent_workflow_version_tenant_idx').on(table.workspaceId),
+    workflowIdx: index('agent_workflow_version_workflow_idx').on(table.workflowId),
+    versionIdx: index('agent_workflow_version_version_idx').on(table.workflowId, table.version),
+    changedAtIdx: index('agent_workflow_version_changed_at_idx').on(table.changedAt),
+  }),
+);
+
+/**
  * Agent Shared Memory - Three-tier memory system
  * Stores context, patterns, and knowledge that agents can share
  */

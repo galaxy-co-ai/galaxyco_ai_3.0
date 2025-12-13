@@ -7,9 +7,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentWorkspace } from '@/lib/auth';
+import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agentWorkflows, agentWorkflowExecutions, agentTeams, agents } from '@/db/schema';
+import { agentWorkflows, agentWorkflowExecutions, agentWorkflowVersions, agentTeams, agents } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
@@ -215,6 +215,37 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     if (steps !== undefined) updateData.steps = steps;
     if (status !== undefined) updateData.status = status;
 
+    // Check if this is a meaningful change that should be versioned
+    const shouldSaveVersion = steps !== undefined || triggerType !== undefined || triggerConfig !== undefined;
+
+    if (shouldSaveVersion) {
+      // Get the latest version number
+      const latestVersion = await db.query.agentWorkflowVersions.findFirst({
+        where: and(
+          eq(agentWorkflowVersions.workflowId, workflowId),
+          eq(agentWorkflowVersions.workspaceId, workspaceId)
+        ),
+        orderBy: [desc(agentWorkflowVersions.version)],
+      });
+
+      const user = await getCurrentUser();
+      const newVersionNumber = (latestVersion?.version || 0) + 1;
+
+      // Save current state as a version snapshot before updating
+      await db.insert(agentWorkflowVersions).values({
+        workspaceId,
+        workflowId,
+        version: newVersionNumber,
+        name: existingWorkflow.name,
+        description: existingWorkflow.description,
+        triggerType: existingWorkflow.triggerType,
+        triggerConfig: existingWorkflow.triggerConfig as Record<string, unknown>,
+        steps: existingWorkflow.steps as Array<Record<string, unknown>>,
+        changeDescription: name ? `Updated to "${name}"` : 'Workflow updated',
+        changedBy: user.id,
+      });
+    }
+
     // Update workflow
     const [updatedWorkflow] = await db
       .update(agentWorkflows)
@@ -225,6 +256,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     logger.info('[Workflows API] Workflow updated', {
       workflowId: updatedWorkflow.id,
       name: updatedWorkflow.name,
+      versionSaved: shouldSaveVersion,
     });
 
     return NextResponse.json({ workflow: updatedWorkflow });

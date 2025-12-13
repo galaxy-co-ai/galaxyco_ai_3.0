@@ -26,6 +26,10 @@ import {
   Calendar,
   Bot,
   ArrowRight,
+  History,
+  RotateCcw,
+  GitBranch,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -168,6 +172,7 @@ export default function WorkflowDetailClient({
   const [editedDescription, setEditedDescription] = useState(initialWorkflow.description || "");
   const [editedSteps, setEditedSteps] = useState<WorkflowStep[]>(initialWorkflow.steps);
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(null);
+  const [isRestoringVersion, setIsRestoringVersion] = useState(false);
 
   // Fetch workflow data with SWR
   const { data: workflowData, mutate } = useSWR(
@@ -179,12 +184,19 @@ export default function WorkflowDetailClient({
     }
   );
 
+  // Fetch version history
+  const { data: versionsData, mutate: mutateVersions } = useSWR(
+    `/api/orchestration/workflows/${initialWorkflow.id}/versions`,
+    fetcher
+  );
+
   // Use initial executions (fetched server-side) - no separate API call needed
   const executionsData = { executions: initialExecutions };
   const mutateExecutions = mutate;
 
   const workflow = workflowData?.workflow || initialWorkflow;
   const executions = executionsData?.executions || initialExecutions;
+  const versions = versionsData?.versions || [];
   const trigger = triggerConfig[workflow.triggerType] || triggerConfig.manual;
   const status = statusConfig[workflow.status] || statusConfig.draft;
 
@@ -304,9 +316,39 @@ export default function WorkflowDetailClient({
       setEditedDescription(savedWorkflow.description);
       toast.success("Workflow saved");
       mutate();
+      mutateVersions();
     },
-    [mutate]
+    [mutate, mutateVersions]
   );
+
+  // Restore workflow to a specific version
+  const restoreVersion = useCallback(async (versionId: string, versionNumber: number) => {
+    if (!confirm(`Restore workflow to version ${versionNumber}? The current state will be saved as a new version.`)) {
+      return;
+    }
+
+    setIsRestoringVersion(true);
+    try {
+      const response = await fetch(`/api/orchestration/workflows/${workflow.id}/versions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ versionId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to restore version");
+      }
+
+      toast.success(`Restored to version ${versionNumber}`);
+      mutate();
+      mutateVersions();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to restore version");
+    } finally {
+      setIsRestoringVersion(false);
+    }
+  }, [workflow.id, mutate, mutateVersions]);
 
   return (
     <div className="flex h-full flex-col bg-gray-50/50">
@@ -440,6 +482,10 @@ export default function WorkflowDetailClient({
             <TabsTrigger value="builder">Workflow Builder</TabsTrigger>
             <TabsTrigger value="executions">
               Executions ({executions.length})
+            </TabsTrigger>
+            <TabsTrigger value="versions">
+              <History className="h-4 w-4 mr-1" />
+              Versions ({versions.length})
             </TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -583,6 +629,116 @@ export default function WorkflowDetailClient({
                   </div>
                 )}
               </>
+            )}
+          </TabsContent>
+
+          {/* Version History Tab */}
+          <TabsContent value="versions" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">Version History</h3>
+                <p className="text-sm text-muted-foreground">
+                  Track changes and restore previous versions of this workflow
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => mutateVersions()}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+
+            {versions.length === 0 ? (
+              <Card className="p-12 text-center">
+                <GitBranch className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No Version History</h3>
+                <p className="text-muted-foreground">
+                  Version history will be tracked automatically when you make changes to the workflow steps or triggers.
+                </p>
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {/* Current version indicator */}
+                <Card className="p-4 border-purple-200 bg-purple-50/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-purple-100">
+                        <GitBranch className="h-5 w-5 text-purple-700" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">Current Version</span>
+                          <Badge className="bg-purple-100 text-purple-700 border border-purple-200">
+                            Latest
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {workflow.name} • {workflow.steps.length} steps
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Version history */}
+                {versions.map((version: {
+                  id: string;
+                  version: number;
+                  name: string;
+                  description: string | null;
+                  triggerType: string;
+                  steps: unknown[];
+                  changeDescription: string | null;
+                  changedAt: string;
+                  changedBy: { id: string; name: string; email: string | null };
+                }) => (
+                  <Card key={version.id} className="p-4 hover:border-gray-300 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-gray-100">
+                          <History className="h-5 w-5 text-gray-600" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">Version {version.version}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {Array.isArray(version.steps) ? version.steps.length : 0} steps
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {version.changeDescription || version.name}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                            <User className="h-3 w-3" />
+                            <span>{version.changedBy?.name || 'Unknown'}</span>
+                            <span>•</span>
+                            <span>
+                              {formatDistanceToNow(new Date(version.changedAt), { addSuffix: true })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => restoreVersion(version.id, version.version)}
+                        disabled={isRestoringVersion}
+                        className="gap-2"
+                      >
+                        {isRestoringVersion ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RotateCcw className="h-4 w-4" />
+                        )}
+                        Restore
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             )}
           </TabsContent>
 

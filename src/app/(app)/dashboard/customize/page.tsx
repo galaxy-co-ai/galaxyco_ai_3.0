@@ -31,7 +31,21 @@ import {
   TrendingUp,
   Clock,
   CheckCircle2,
+  Briefcase,
+  HeadphonesIcon,
+  Megaphone,
+  Settings2,
+  ChevronDown,
+  Sparkles,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface WidgetConfig {
   id: string;
@@ -119,9 +133,57 @@ const DEFAULT_WIDGETS: WidgetConfig[] = [
 
 const STORAGE_KEY = 'dashboard-widget-config';
 
+// Role-based dashboard templates
+interface RoleTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: typeof Bot;
+  widgets: string[];
+}
+
+const ROLE_TEMPLATES: RoleTemplate[] = [
+  {
+    id: 'executive',
+    name: 'Executive',
+    description: 'High-level KPIs and performance metrics',
+    icon: Briefcase,
+    widgets: ['agents-stat', 'contacts-stat', 'tasks-stat', 'performance-chart', 'roadmap', 'uptime'],
+  },
+  {
+    id: 'sales',
+    name: 'Sales',
+    description: 'CRM-focused with contacts and quick actions',
+    icon: TrendingUp,
+    widgets: ['contacts-stat', 'tasks-stat', 'quick-actions', 'activity-feed', 'roadmap'],
+  },
+  {
+    id: 'support',
+    name: 'Support',
+    description: 'Activity monitoring and task management',
+    icon: HeadphonesIcon,
+    widgets: ['tasks-stat', 'activity-feed', 'quick-actions', 'recent-docs', 'uptime'],
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing',
+    description: 'Content and engagement focused',
+    icon: Megaphone,
+    widgets: ['contacts-stat', 'activity-feed', 'performance-chart', 'recent-docs', 'roadmap'],
+  },
+  {
+    id: 'operations',
+    name: 'Operations',
+    description: 'System health and automation monitoring',
+    icon: Settings2,
+    widgets: ['agents-stat', 'uptime', 'performance-chart', 'activity-feed', 'tasks-stat'],
+  },
+];
+
 export default function DashboardCustomizePage() {
   const [widgets, setWidgets] = useState<WidgetConfig[]>(DEFAULT_WIDGETS);
   const [hasChanges, setHasChanges] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
 
   // Load saved config on mount
   useEffect(() => {
@@ -158,7 +220,21 @@ export default function DashboardCustomizePage() {
     setWidgets(DEFAULT_WIDGETS);
     localStorage.removeItem(STORAGE_KEY);
     setHasChanges(false);
+    setActiveTemplate(null);
   };
+
+  const applyTemplate = (template: RoleTemplate) => {
+    setWidgets((prev) =>
+      prev.map((w) => ({
+        ...w,
+        enabled: template.widgets.includes(w.id),
+      }))
+    );
+    setActiveTemplate(template.id);
+    setHasChanges(true);
+  };
+
+  const currentTemplate = ROLE_TEMPLATES.find((t) => t.id === activeTemplate);
 
   const enabledCount = widgets.filter((w) => w.enabled).length;
 
@@ -190,6 +266,43 @@ export default function DashboardCustomizePage() {
             <Badge variant="soft" tone="neutral" size="md">
               {enabledCount} widgets enabled
             </Badge>
+            
+            {/* Role Template Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  {currentTemplate ? currentTemplate.name : 'Apply Template'}
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Role Templates</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {ROLE_TEMPLATES.map((template) => (
+                  <DropdownMenuItem
+                    key={template.id}
+                    onClick={() => applyTemplate(template)}
+                    className="flex items-start gap-3 py-2.5"
+                  >
+                    <div className={`p-1.5 rounded-md mt-0.5 ${
+                      activeTemplate === template.id ? 'bg-primary/20' : 'bg-muted'
+                    }`}>
+                      <template.icon className={`h-4 w-4 ${
+                        activeTemplate === template.id ? 'text-primary' : 'text-muted-foreground'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{template.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {template.description}
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button variant="outline" size="sm" onClick={resetConfig}>
               <RotateCcw className="h-4 w-4 mr-2" />
               Reset
