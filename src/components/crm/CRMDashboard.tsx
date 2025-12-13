@@ -53,6 +53,7 @@ import { DealDialog } from "./DealDialog";
 import InsightsTab from "./InsightsTab";
 import AutomationsTab from "./AutomationsTab";
 import { ImportContactsDialog } from "./ImportContactsDialog";
+import { LeadScoringRulesDialog } from "./LeadScoringRulesDialog";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
 import { logger } from "@/lib/logger";
@@ -180,6 +181,7 @@ export default function CRMDashboard({
   });
   const [showAddContactDialog, setShowAddContactDialog] = useState(false);
   const [showImportContactsDialog, setShowImportContactsDialog] = useState(false);
+  const [showLeadScoringDialog, setShowLeadScoringDialog] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [newContact, setNewContact] = useState({
@@ -841,14 +843,26 @@ export default function CRMDashboard({
                           {filteredLeads.length} leads
                         </p>
                       </div>
-                      <Button
-                        size="icon"
-                        onClick={() => setShowAddLeadDialog(true)}
-                        className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
-                        aria-label="Add lead"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowLeadScoringDialog(true)}
+                          className="h-8 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          aria-label="Configure lead scoring"
+                        >
+                          <Target className="h-4 w-4 mr-1" />
+                          <span className="hidden sm:inline">Scoring</span>
+                        </Button>
+                        <Button
+                          size="icon"
+                          onClick={() => setShowAddLeadDialog(true)}
+                          className="h-8 w-8 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:bg-white/90 text-blue-600 hover:text-blue-700 shadow-sm"
+                          aria-label="Add lead"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Search */}
@@ -1837,6 +1851,12 @@ export default function CRMDashboard({
         open={showImportContactsDialog}
         onOpenChange={setShowImportContactsDialog}
         onSuccess={refreshContacts}
+      />
+
+      {/* Lead Scoring Rules Dialog */}
+      <LeadScoringRulesDialog
+        open={showLeadScoringDialog}
+        onOpenChange={setShowLeadScoringDialog}
       />
 
       {/* Add Deal Dialog */}

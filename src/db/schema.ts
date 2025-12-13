@@ -3411,6 +3411,104 @@ export const automationRules = pgTable(
 );
 
 // ============================================================================
+// CRM - LEAD SCORING RULES
+// ============================================================================
+
+export const leadScoringRuleTypeEnum = pgEnum('lead_scoring_rule_type', [
+  'property',     // Based on a contact property (e.g., company size)
+  'behavior',     // Based on activity (e.g., email opens)
+  'engagement',   // Based on engagement metrics
+  'demographic',  // Based on demographic info
+  'firmographic', // Based on company info
+]);
+
+export const leadScoringRuleOperatorEnum = pgEnum('lead_scoring_rule_operator', [
+  'equals',
+  'not_equals',
+  'contains',
+  'not_contains',
+  'greater_than',
+  'less_than',
+  'between',
+  'is_set',
+  'is_not_set',
+]);
+
+export const leadScoringRules = pgTable(
+  'lead_scoring_rules',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Rule info
+    name: text('name').notNull(),
+    description: text('description'),
+    type: leadScoringRuleTypeEnum('type').notNull().default('property'),
+
+    // Rule condition
+    field: text('field').notNull(), // e.g., 'companySize', 'emailOpens', 'lastActivityDays'
+    operator: leadScoringRuleOperatorEnum('operator').notNull(),
+    value: text('value'), // The value to compare against (serialized JSON for complex values)
+    valueSecondary: text('value_secondary'), // For 'between' operator
+
+    // Score adjustment
+    scoreChange: integer('score_change').notNull(), // Positive or negative points
+
+    // Priority (higher = evaluated first)
+    priority: integer('priority').notNull().default(0),
+
+    // Status
+    isEnabled: boolean('is_enabled').notNull().default(true),
+
+    // Ownership
+    createdBy: uuid('created_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('lead_scoring_rule_tenant_idx').on(table.workspaceId),
+    typeIdx: index('lead_scoring_rule_type_idx').on(table.type),
+    enabledIdx: index('lead_scoring_rule_enabled_idx').on(table.isEnabled),
+    priorityIdx: index('lead_scoring_rule_priority_idx').on(table.priority),
+  }),
+);
+
+// Lead scoring tiers configuration
+export const leadScoringTiers = pgTable(
+  'lead_scoring_tiers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Tier info
+    name: text('name').notNull(), // e.g., 'A - Hot Lead', 'B - Warm Lead'
+    minScore: integer('min_score').notNull(),
+    maxScore: integer('max_score').notNull(),
+    color: text('color').notNull().default('gray'),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('lead_scoring_tier_tenant_idx').on(table.workspaceId),
+    scoreIdx: index('lead_scoring_tier_score_idx').on(table.minScore, table.maxScore),
+  }),
+);
+
+// ============================================================================
 // CRM - AUTOMATION EXECUTIONS (Audit Trail)
 // ============================================================================
 
