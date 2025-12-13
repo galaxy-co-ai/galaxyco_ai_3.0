@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (f6f2fbc)  
+**Updated Through:** 2025-12-12 (d5fc97d)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 d5fc97d feat(todo-hq): add Clear & Re-Bootstrap functionality
 - 2025-12-12 f6f2fbc feat(todo-hq): mark Phase 1 Quick Wins tasks as done in bootstrap template
 - 2025-12-12 1a3ea72 docs: update FEATURES_MAP with Phase 1 Quick Wins Sprint completion
 - 2025-12-12 90c042e docs: update roadmap with Phase 1 Quick Wins Sprint completion
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 28afaa7 feat(tables): add enhanced data table with filtering, bulk ops, and column customization
 - 2025-12-12 258378f docs: update progress tracker - Group 2 complete (6/24 tasks, 25%)
 - 2025-12-12 df77400 feat(dashboard): add command palette with Cmd/Ctrl+K shortcuts and recent items
-- 2025-12-12 c9f31f8 feat(dashboard): add activity feed with infinite scroll, filters, and mark as read
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
