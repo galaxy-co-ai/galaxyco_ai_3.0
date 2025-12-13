@@ -9,20 +9,24 @@ import { CheckCircle2, Circle, AlertCircle, Rocket, ListTodo, Trash2, Layers, Ch
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-// Phase definitions (manually curated, not from bootstrap)
-const PHASES = [
-  { id: 'phase-1', name: 'Phase 1: Foundation', status: 'completed', epicIds: [] },
-  { id: 'phase-2', name: 'Phase 2: CRM Real Data', status: 'in_progress', epicIds: ['crm-dashboard', 'contacts-management', 'deals-pipeline'] },
-  { id: 'phase-3', name: 'Phase 3: Integrations', status: 'not_started', epicIds: ['email-sync', 'calendar-sync'] },
-  { id: 'phase-4', name: 'Phase 4: Automations', status: 'not_started', epicIds: ['workflow-builder', 'ai-agents'] },
-  { id: 'phase-5', name: 'Phase 5: Analytics', status: 'not_started', epicIds: ['reporting', 'dashboards'] },
+// Categories for organizing epics (derived from tags in bootstrap template)
+const CATEGORIES = [
+  { id: 'core', name: 'Core Platform', color: 'blue' },
+  { id: 'crm', name: 'CRM & Sales', color: 'green' },
+  { id: 'marketing', name: 'Marketing', color: 'purple' },
+  { id: 'support', name: 'Customer Support', color: 'orange' },
+  { id: 'finance', name: 'Finance & Billing', color: 'yellow' },
+  { id: 'analytics', name: 'Analytics & Reports', color: 'indigo' },
+  { id: 'integrations', name: 'Integrations', color: 'pink' },
+  { id: 'automation', name: 'Automation & Workflows', color: 'teal' },
+  { id: 'all', name: 'All Epics', color: 'gray' },
 ];
 
 export default function TodoHQPage() {
   const { data, error, isLoading, mutate } = useSWR('/api/admin/todo-hq/epics', fetcher);
   const [bootstrapping, setBootstrapping] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [selectedPhase, setSelectedPhase] = useState('phase-2');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const epics = data?.epics || [];
 
@@ -135,45 +139,43 @@ export default function TodoHQPage() {
     );
   }
 
-  const selectedPhaseData = PHASES.find(p => p.id === selectedPhase);
-  const phaseEpics = epics.filter((e: any) => 
-    selectedPhaseData?.epicIds.some(id => e.name.toLowerCase().includes(id.replace(/-/g, ' ')))
-  );
+  const selectedCategoryData = CATEGORIES.find(c => c.id === selectedCategory);
+  const filteredEpics = selectedCategory === 'all'
+    ? epics
+    : epics.filter((e: any) => e.tags?.includes(selectedCategory));
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Left Sidebar - Phases */}
+      {/* Left Sidebar - Categories */}
       <div className="w-64 bg-white border-r flex flex-col">
         <div className="p-4 border-b">
           <h1 className="text-xl font-bold flex items-center gap-2">
             <ListTodo className="h-6 w-6 text-pink-600" />
             To-Do HQ
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">Phase Tracker</p>
+          <p className="text-xs text-muted-foreground mt-1">Epic Categories</p>
         </div>
         
         <div className="flex-1 overflow-y-auto p-2">
-          {PHASES.map((phase) => {
-            const phaseEpicsList = epics.filter((e: any) => 
-              phase.epicIds.some(id => e.name.toLowerCase().includes(id.replace(/-/g, ' ')))
-            );
-            const totalTasks = phaseEpicsList.reduce((sum: number, e: any) => sum + (e.taskCount || 0), 0);
-            const completedTasks = phaseEpicsList.reduce((sum: number, e: any) => sum + (e.completedTaskCount || 0), 0);
+          {CATEGORIES.map((cat) => {
+            const categoryEpicsList = cat.id === 'all' ? epics : epics.filter((e: any) => e.tags?.includes(cat.id));
+            const totalTasks = categoryEpicsList.reduce((sum: number, e: any) => sum + (e.taskCount || 0), 0);
+            const completedTasks = categoryEpicsList.reduce((sum: number, e: any) => sum + (e.completedTaskCount || 0), 0);
             const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
             return (
               <button
-                key={phase.id}
-                onClick={() => setSelectedPhase(phase.id)}
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
                 className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${
-                  selectedPhase === phase.id
+                  selectedCategory === cat.id
                     ? 'bg-pink-50 border border-pink-200'
                     : 'hover:bg-gray-50'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">{phase.name}</span>
-                  <ChevronRight className={`h-4 w-4 transition-transform ${selectedPhase === phase.id ? 'rotate-90' : ''}`} />
+                  <span className="text-sm font-medium">{cat.name}</span>
+                  <ChevronRight className={`h-4 w-4 transition-transform ${selectedCategory === cat.id ? 'rotate-90' : ''}`} />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -210,20 +212,20 @@ export default function TodoHQPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 max-w-5xl">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold">{selectedPhaseData?.name}</h2>
+            <h2 className="text-2xl font-bold">{selectedCategoryData?.name}</h2>
             <p className="text-muted-foreground mt-1">
-              {phaseEpics.length} epic{phaseEpics.length !== 1 ? 's' : ''} • {phaseEpics.reduce((sum: number, e: any) => sum + (e.taskCount || 0), 0)} total tasks
+              {filteredEpics.length} epic{filteredEpics.length !== 1 ? 's' : ''} • {filteredEpics.reduce((sum: number, e: any) => sum + (e.taskCount || 0), 0)} total tasks
             </p>
           </div>
 
-          {phaseEpics.length === 0 ? (
+          {filteredEpics.length === 0 ? (
             <Card className="p-12 text-center">
               <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No epics in this phase yet</p>
+              <p className="text-muted-foreground">No epics in this category yet</p>
             </Card>
           ) : (
             <div className="space-y-4">
-              {phaseEpics.map((epic: any) => (
+              {filteredEpics.map((epic: any) => (
                 <Card key={epic.id} className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
