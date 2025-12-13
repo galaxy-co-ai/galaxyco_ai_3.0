@@ -110,6 +110,7 @@ export default function SettingsPage() {
   const { data: notificationsData, mutate: mutateNotifications } = useSWR('/api/settings/notifications', fetcher);
   const { data: appearanceData, mutate: mutateAppearance } = useSWR('/api/settings/appearance', fetcher);
   const { data: webhooksData, mutate: mutateWebhooks } = useSWR('/api/settings/webhooks', fetcher);
+  const { data: billingData, isLoading: billingLoading } = useSWR('/api/settings/billing', fetcher);
   
   // Build user profile from Clerk data and API
   const userProfile = React.useMemo(() => {
@@ -507,26 +508,134 @@ export default function SettingsPage() {
         );
 
       case "billing":
+        const handleUpgrade = async (planName: string, priceId: string) => {
+          setIsSaving(true);
+          try {
+            const res = await fetch('/api/stripe/checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ priceId, planName }),
+            });
+            const data = await res.json();
+            if (data.url) {
+              window.location.href = data.url;
+            } else {
+              toast.error(data.error || 'Failed to start checkout');
+            }
+          } catch {
+            toast.error('Failed to start checkout');
+          } finally {
+            setIsSaving(false);
+          }
+        };
+
+        const handleManageBilling = async () => {
+          setIsSaving(true);
+          try {
+            const res = await fetch('/api/stripe/portal', { method: 'POST' });
+            const data = await res.json();
+            if (data.url) {
+              window.location.href = data.url;
+            } else {
+              toast.error(data.error || 'Failed to open billing portal');
+            }
+          } catch {
+            toast.error('Failed to open billing portal');
+          } finally {
+            setIsSaving(false);
+          }
+        };
+
+        if (billingLoading) {
+          return (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            </div>
+          );
+        }
+
+        const plan = billingData?.plan || { id: 'free', name: 'Free', price: 0 };
+        const usage = billingData?.usage || {
+          aiCredits: { used: 0, limit: 100 },
+          storage: { used: 0, limit: 1 },
+          teamMembers: { used: 1, limit: 1 },
+        };
+        const paymentMethod = billingData?.paymentMethod;
+        const renewalDate = billingData?.currentPeriodEnd 
+          ? new Date(billingData.currentPeriodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : null;
+
+        const planGradients: Record<string, string> = {
+          free: 'from-gray-400 to-gray-600',
+          starter: 'from-blue-500 to-cyan-500',
+          professional: 'from-indigo-500 to-purple-600',
+          enterprise: 'from-amber-500 to-orange-600',
+        };
+
         return (
           <div className="space-y-6">
             {/* Current Plan */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+            <div className={`p-4 rounded-xl bg-gradient-to-r ${planGradients[plan.id] || planGradients.free} text-white`}>
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm opacity-90">Current Plan</p>
                   <h3 className="text-xl font-semibold flex items-center gap-2">
-                    <Sparkles className="h-5 w-5" />
-                    Pro Plan
+                    {plan.id !== 'free' && <Sparkles className="h-5 w-5" />}
+                    {plan.name}
                   </h3>
                 </div>
-                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-                  Upgrade
-                </Button>
+                {plan.id === 'free' ? (
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="bg-white/20 hover:bg-white/30 text-white border-0"
+                    onClick={() => handleUpgrade('starter', process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || '')}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Upgrade'}
+                  </Button>
+                ) : (
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="bg-white/20 hover:bg-white/30 text-white border-0"
+                    onClick={handleManageBilling}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Manage'}
+                  </Button>
+                )}
               </div>
               <div className="text-sm opacity-90">
-                $49/month • Renews Dec 26, 2024
+                {plan.price > 0 ? `$${plan.price}/month` : 'No charge'}
+                {renewalDate && ` • Renews ${renewalDate}`}
+                {billingData?.cancelAtPeriodEnd && ' • Cancels at period end'}
               </div>
             </div>
+
+            {/* Upgrade Options (for free users) */}
+            {plan.id === 'free' && (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleUpgrade('starter', process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || '')}
+                  className="p-4 rounded-lg border-2 border-blue-200 bg-blue-50 hover:border-blue-400 transition-colors text-left"
+                  disabled={isSaving}
+                >
+                  <p className="font-semibold text-blue-900">Starter</p>
+                  <p className="text-sm text-blue-700">$19/month</p>
+                  <p className="text-xs text-blue-600 mt-1">1,000 AI credits, 5GB storage</p>
+                </button>
+                <button
+                  onClick={() => handleUpgrade('professional', process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || '')}
+                  className="p-4 rounded-lg border-2 border-indigo-200 bg-indigo-50 hover:border-indigo-400 transition-colors text-left"
+                  disabled={isSaving}
+                >
+                  <p className="font-semibold text-indigo-900">Professional</p>
+                  <p className="text-sm text-indigo-700">$49/month</p>
+                  <p className="text-xs text-indigo-600 mt-1">10,000 AI credits, 25GB storage</p>
+                </button>
+              </div>
+            )}
 
             {/* Usage */}
             <div className="space-y-3">
@@ -535,44 +644,63 @@ export default function SettingsPage() {
                 <div>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="text-gray-600">AI Credits</span>
-                    <span className="text-gray-900">8,234 / 10,000</span>
+                    <span className="text-gray-900">{usage.aiCredits.used.toLocaleString()} / {usage.aiCredits.limit.toLocaleString()}</span>
                   </div>
-                  <Progress value={82} className="h-1.5" />
+                  <Progress value={usage.aiCredits.limit > 0 ? (usage.aiCredits.used / usage.aiCredits.limit) * 100 : 0} className="h-1.5" />
                 </div>
                 <div>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="text-gray-600">Storage</span>
-                    <span className="text-gray-900">2.4 GB / 10 GB</span>
+                    <span className="text-gray-900">{usage.storage.used} GB / {usage.storage.limit} GB</span>
                   </div>
-                  <Progress value={24} className="h-1.5" />
+                  <Progress value={usage.storage.limit > 0 ? (usage.storage.used / usage.storage.limit) * 100 : 0} className="h-1.5" />
                 </div>
                 <div>
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="text-gray-600">Team Members</span>
-                    <span className="text-gray-900">5 / 10</span>
+                    <span className="text-gray-900">{usage.teamMembers.used} / {usage.teamMembers.limit}</span>
                   </div>
-                  <Progress value={50} className="h-1.5" />
+                  <Progress value={usage.teamMembers.limit > 0 ? (usage.teamMembers.used / usage.teamMembers.limit) * 100 : 0} className="h-1.5" />
                 </div>
               </div>
             </div>
 
             {/* Payment Method */}
-            <div className="p-4 rounded-lg bg-gray-50 border border-gray-100">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-white border border-gray-200">
-                    <CreditCard className="h-4 w-4 text-gray-600" />
+            {paymentMethod ? (
+              <div className="p-4 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-white border border-gray-200">
+                      <CreditCard className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 capitalize">
+                        {paymentMethod.brand} •••• {paymentMethod.last4}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Expires {paymentMethod.expMonth}/{paymentMethod.expYear}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">•••• •••• •••• 4242</p>
-                    <p className="text-xs text-gray-500">Expires 12/25</p>
-                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-xs text-gray-600"
+                    onClick={handleManageBilling}
+                    disabled={isSaving}
+                  >
+                    Update
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs text-gray-600">
-                  Update
-                </Button>
               </div>
-            </div>
+            ) : plan.id !== 'free' && (
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                <div className="flex items-center gap-2 text-amber-800">
+                  <CreditCard className="h-4 w-4" />
+                  <p className="text-sm">No payment method on file</p>
+                </div>
+              </div>
+            )}
           </div>
         );
 
