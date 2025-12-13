@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { isSystemAdmin, getAdminContext } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { blogPosts, platformFeedback, todoHqTasks } from '@/db/schema';
-import { eq, count, and, gte, ne } from 'drizzle-orm';
+import { blogPosts, platformFeedback } from '@/db/schema';
+import { eq, count, and, gte } from 'drizzle-orm';
 import AdminHeader from '@/components/admin/AdminHeader';
 
 /**
@@ -21,7 +21,6 @@ async function getAdminCounts() {
   
   let draftPosts = 0;
   let newFeedback = 0;
-  let openTodoHqTasks = 0;
 
   try {
     const result = await db
@@ -48,25 +47,9 @@ async function getAdminCounts() {
     // Table may not exist
   }
 
-  try {
-    const result = await db
-      .select({ count: count() })
-      .from(todoHqTasks)
-      .where(
-        and(
-          ne(todoHqTasks.status, 'done'),
-          ne(todoHqTasks.status, 'cancelled')
-        )
-      );
-    openTodoHqTasks = result[0]?.count ?? 0;
-  } catch {
-    // Table may not exist
-  }
-
   return {
     content: draftPosts,
     feedback: newFeedback,
-    todo_hq: openTodoHqTasks,
   };
 }
 
