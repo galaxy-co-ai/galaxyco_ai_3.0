@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (c6d9737)  
+**Updated Through:** 2025-12-12 (db19834)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 db19834 feat(settings): add appearance theme, enhanced notifications, and webhook management
 - 2025-12-12 c6d9737 feat(admin): expand To-Do HQ bootstrap to include all Features Map items
 - 2025-12-12 c91481a feat(admin): show all tasks in To-Do HQ with fade effect
 - 2025-12-12 863dbbc test(admin): add initial test suite for To-Do HQ API
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-11 e0741b6 fix(web): update Marketing Templates tab UI to match Creator Templates style
 - 2025-12-11 dc040db feat(marketing): complete 3-tab user journey integration
 - 2025-12-11 b81fe78 feat(marketing): restructure to 3-tab user journey (WIP)
-- 2025-12-11 5f8d86f feat(marketing): add new user journey-based Campaigns and Templates tabs
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
