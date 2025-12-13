@@ -638,7 +638,10 @@ export const users = pgTable(
     // Preferences
     preferences: jsonb('preferences')
       .$type<{
-        theme?: 'light' | 'dark' | 'auto';
+        theme?: 'light' | 'dark' | 'system';
+        accentColor?: 'indigo' | 'purple' | 'blue' | 'teal' | 'pink' | 'amber';
+        fontSize?: 'small' | 'medium' | 'large';
+        timezone?: string;
         notifications?: { email?: boolean; push?: boolean };
         language?: string;
       }>()
