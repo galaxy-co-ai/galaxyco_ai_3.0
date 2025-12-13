@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (7d15532)  
+**Updated Through:** 2025-12-12 (18e9f37)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,9 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 18e9f37 feat(notifications): add browser push notifications support
+- 2025-12-12 6bee317 feat(notifications): add in-app notification center
+- 2025-12-12 60c05db feat(notifications): add comprehensive toast notification system
 - 2025-12-12 7d15532 docs: update progress tracker for Group 6 completion
 - 2025-12-12 0e72472 feat(mobile): add responsive table component
 - 2025-12-12 d8ff82c feat(mobile): add touch interaction components
@@ -38,9 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 6717ead docs: add Phase 1 progress tracker
 - 2025-12-12 db19834 feat(settings): add appearance theme, enhanced notifications, and webhook management
 - 2025-12-12 c6d9737 feat(admin): expand To-Do HQ bootstrap to include all Features Map items
-- 2025-12-12 c91481a feat(admin): show all tasks in To-Do HQ with fade effect
-- 2025-12-12 863dbbc test(admin): add initial test suite for To-Do HQ API
-- 2025-12-12 f3e6a1c feat(admin): add To-Do HQ mission control tab
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
