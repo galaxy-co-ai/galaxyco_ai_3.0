@@ -25,6 +25,8 @@ import {
   Archive,
   Inbox,
   Zap,
+  RefreshCw,
+  Info,
 } from 'lucide-react';
 import {
   Dialog,
@@ -33,16 +35,22 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // Sprint status icons and colors
 const SPRINT_STATUS_CONFIG = {
-  planned: { icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-  in_progress: { icon: Play, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-  completed: { icon: CheckCircle2, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200' },
-  cancelled: { icon: Pause, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200' },
+  planned: { icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', label: 'Planned' },
+  in_progress: { icon: Play, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200', label: 'In Progress' },
+  completed: { icon: CheckCircle2, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', label: 'Completed' },
+  cancelled: { icon: Pause, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Cancelled' },
 };
 
 // Priority colors
@@ -105,6 +113,7 @@ export default function TodoHQPage() {
   const [isCreatingSprint, setIsCreatingSprint] = useState(false);
   const [bootstrapping, setBootstrapping] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const sprints: Sprint[] = sprintsData?.sprints || [];
   const backlog = sprintsData?.backlog || { taskCount: 0, completedTaskCount: 0, completionPercent: 0 };
@@ -126,21 +135,19 @@ export default function TodoHQPage() {
       if (res.ok) {
         mutateEpics();
         mutateSprints();
-        toast.success('To-Do HQ bootstrapped successfully!');
+        toast.success('To-Do HQ initialized successfully!');
       } else {
         const error = await res.json();
-        toast.error(error.error || 'Failed to bootstrap');
+        toast.error(error.error || 'Failed to initialize');
       }
     } catch {
-      toast.error('Failed to bootstrap To-Do HQ');
+      toast.error('Failed to initialize To-Do HQ');
     } finally {
       setBootstrapping(false);
     }
   };
 
   const handleClearAndRebootstrap = async () => {
-    if (!confirm('Are you sure? This will delete all data and re-create from template.')) return;
-
     setClearing(true);
     try {
       await fetch('/api/admin/todo-hq/clear', { method: 'DELETE' });
@@ -149,7 +156,8 @@ export default function TodoHQPage() {
         mutateEpics();
         mutateSprints();
         setSelectedSprint(null);
-        toast.success('Successfully reset To-Do HQ!');
+        setShowResetConfirm(false);
+        toast.success('To-Do HQ reset successfully!');
       }
     } catch {
       toast.error('Failed to reset To-Do HQ');
@@ -212,6 +220,7 @@ export default function TodoHQPage() {
       mutateEpics();
       mutateSprints();
       if (selectedSprint) mutateSprintDetail();
+      toast.success(newStatus === 'done' ? 'Task completed!' : 'Task reopened');
     } catch {
       toast.error('Failed to update task');
     }
@@ -233,9 +242,16 @@ export default function TodoHQPage() {
     }
   };
 
+  const refreshAll = () => {
+    mutateEpics();
+    mutateSprints();
+    if (selectedSprint) mutateSprintDetail();
+    toast.success('Data refreshed');
+  };
+
   if (sprintsError || epicsError) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full p-6">
         <Card className="p-6">
           <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
           <p className="text-center text-muted-foreground">Failed to load To-Do HQ data</p>
@@ -246,7 +262,7 @@ export default function TodoHQPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full p-6">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
     );
@@ -259,10 +275,10 @@ export default function TodoHQPage() {
           <Rocket className="h-12 w-12 text-primary mx-auto mb-4" />
           <h2 className="text-2xl font-semibold mb-2">Welcome to To-Do HQ</h2>
           <p className="text-muted-foreground mb-6">
-            Get started by bootstrapping your To-Do HQ with initial epics and tasks.
+            Initialize your project management system with all tasks organized into sprints.
           </p>
           <Button onClick={handleBootstrap} disabled={bootstrapping} size="lg">
-            {bootstrapping ? 'Bootstrapping...' : 'Bootstrap To-Do HQ'}
+            {bootstrapping ? 'Initializing...' : 'Initialize To-Do HQ'}
           </Button>
         </Card>
       </div>
@@ -274,240 +290,281 @@ export default function TodoHQPage() {
   const completedTasks = epics.reduce((sum, e) => sum + e.completedTaskCount, 0);
   const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Get active/in-progress sprints
+  // Get sprints by status
   const activeSprints = sprints.filter((s) => s.status === 'in_progress');
   const plannedSprints = sprints.filter((s) => s.status === 'planned');
   const completedSprints = sprints.filter((s) => s.status === 'completed');
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left Sidebar */}
-      <div className="w-72 bg-white border-r flex flex-col">
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <ListTodo className="h-6 w-6 text-pink-600" />
-              To-Do HQ
-            </h1>
-          </div>
-          <div className="mt-3 space-y-1">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Overall Progress</span>
-              <span className="font-semibold">{overallProgress}%</span>
+    <TooltipProvider>
+      <div className="flex h-full">
+        {/* Left Sidebar */}
+        <div className="w-72 bg-white border-r flex flex-col shrink-0">
+          <div className="p-4 border-b">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold flex items-center gap-2">
+                <ListTodo className="h-6 w-6 text-pink-600" />
+                To-Do HQ
+              </h1>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={refreshAll} className="h-8 w-8">
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Refresh data</TooltipContent>
+              </Tooltip>
             </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all" style={{ width: `${overallProgress}%` }} />
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Overall Progress</span>
+                <span className="font-semibold">{overallProgress}%</span>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 transition-all" style={{ width: `${overallProgress}%` }} />
+              </div>
+              <p className="text-xs text-muted-foreground">{completedTasks}/{totalTasks} tasks complete</p>
             </div>
-            <p className="text-xs text-muted-foreground">{completedTasks}/{totalTasks} tasks complete</p>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="flex-1 flex flex-col">
-          <TabsList className="mx-2 mt-2 grid grid-cols-3">
-            <TabsTrigger value="sprints" className="text-xs">
-              <Zap className="h-3 w-3 mr-1" />
-              Sprints
-            </TabsTrigger>
-            <TabsTrigger value="backlog" className="text-xs">
-              <Inbox className="h-3 w-3 mr-1" />
-              Backlog
-            </TabsTrigger>
-            <TabsTrigger value="all" className="text-xs">
-              <Layers className="h-3 w-3 mr-1" />
-              All
-            </TabsTrigger>
-          </TabsList>
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as typeof activeTab); setSelectedSprint(null); }} className="flex-1 flex flex-col min-h-0">
+            <TabsList className="mx-2 mt-2 grid grid-cols-3">
+              <TabsTrigger value="sprints" className="text-xs">
+                <Zap className="h-3 w-3 mr-1" />
+                Sprints
+              </TabsTrigger>
+              <TabsTrigger value="backlog" className="text-xs">
+                <Inbox className="h-3 w-3 mr-1" />
+                Backlog
+              </TabsTrigger>
+              <TabsTrigger value="all" className="text-xs">
+                <Layers className="h-3 w-3 mr-1" />
+                All
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="sprints" className="flex-1 overflow-y-auto p-2 m-0">
-            {/* Create Sprint Button */}
+            <TabsContent value="sprints" className="flex-1 overflow-y-auto p-2 m-0">
+              {/* Create Sprint Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mb-3"
+                onClick={() => setShowCreateSprintDialog(true)}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                New Sprint
+              </Button>
+
+              {/* Active Sprints */}
+              {activeSprints.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-green-600 mb-2 px-1 flex items-center gap-1">
+                    <Play className="h-3 w-3" />
+                    IN PROGRESS ({activeSprints.length})
+                  </p>
+                  {activeSprints.map((sprint) => (
+                    <SprintCard
+                      key={sprint.id}
+                      sprint={sprint}
+                      isSelected={selectedSprint === sprint.id}
+                      onSelect={() => setSelectedSprint(sprint.id)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Planned Sprints */}
+              {plannedSprints.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-blue-600 mb-2 px-1 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    PLANNED ({plannedSprints.length})
+                  </p>
+                  {plannedSprints.map((sprint) => (
+                    <SprintCard
+                      key={sprint.id}
+                      sprint={sprint}
+                      isSelected={selectedSprint === sprint.id}
+                      onSelect={() => setSelectedSprint(sprint.id)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Completed Sprints */}
+              {completedSprints.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-gray-500 mb-2 px-1 flex items-center gap-1">
+                    <Archive className="h-3 w-3" />
+                    COMPLETED ({completedSprints.length})
+                  </p>
+                  {completedSprints.map((sprint) => (
+                    <SprintCard
+                      key={sprint.id}
+                      sprint={sprint}
+                      isSelected={selectedSprint === sprint.id}
+                      onSelect={() => setSelectedSprint(sprint.id)}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {sprints.length === 0 && (
+                <div className="text-center p-4 text-muted-foreground text-sm">
+                  <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No sprints yet</p>
+                  <p className="text-xs">Create a sprint to organize your work</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="backlog" className="flex-1 overflow-y-auto p-2 m-0">
+              <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-amber-800">Unassigned Tasks</span>
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-800">{backlog.taskCount}</Badge>
+                </div>
+                <p className="text-xs text-amber-700">Tasks not yet assigned to a sprint</p>
+              </div>
+              <p className="text-xs text-muted-foreground px-1">
+                Click on tasks in the main panel to assign them to sprints.
+              </p>
+            </TabsContent>
+
+            <TabsContent value="all" className="flex-1 overflow-y-auto p-2 m-0">
+              <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">ALL EPICS ({epics.length})</p>
+              {epics.map((epic) => (
+                <div
+                  key={epic.id}
+                  className="p-2 rounded-lg mb-1 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium truncate">{epic.name}</span>
+                    <span className="text-xs text-muted-foreground">{epic.completionPercent}%</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500" style={{ width: `${epic.completionPercent}%` }} />
+                    </div>
+                    <span className="text-xs text-muted-foreground">{epic.completedTaskCount}/{epic.taskCount}</span>
+                  </div>
+                </div>
+              ))}
+            </TabsContent>
+          </Tabs>
+
+          <div className="p-2 border-t space-y-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground px-1">
+              <Info className="h-3 w-3" />
+              <span>Changes save automatically</span>
+            </div>
             <Button
+              onClick={() => setShowResetConfirm(true)}
               variant="outline"
               size="sm"
-              className="w-full mb-3"
-              onClick={() => setShowCreateSprintDialog(true)}
+              className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
             >
-              <Plus className="h-4 w-4 mr-1" />
-              New Sprint
-            </Button>
-
-            {/* Active Sprints */}
-            {activeSprints.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">IN PROGRESS</p>
-                {activeSprints.map((sprint) => (
-                  <SprintCard
-                    key={sprint.id}
-                    sprint={sprint}
-                    isSelected={selectedSprint === sprint.id}
-                    onSelect={() => setSelectedSprint(sprint.id)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Planned Sprints */}
-            {plannedSprints.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">PLANNED</p>
-                {plannedSprints.map((sprint) => (
-                  <SprintCard
-                    key={sprint.id}
-                    sprint={sprint}
-                    isSelected={selectedSprint === sprint.id}
-                    onSelect={() => setSelectedSprint(sprint.id)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Completed Sprints */}
-            {completedSprints.length > 0 && (
-              <div className="mb-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-2 px-1 flex items-center gap-1">
-                  <Archive className="h-3 w-3" />
-                  COMPLETED
-                </p>
-                {completedSprints.map((sprint) => (
-                  <SprintCard
-                    key={sprint.id}
-                    sprint={sprint}
-                    isSelected={selectedSprint === sprint.id}
-                    onSelect={() => setSelectedSprint(sprint.id)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {sprints.length === 0 && (
-              <div className="text-center p-4 text-muted-foreground text-sm">
-                <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p>No sprints yet</p>
-                <p className="text-xs">Create a sprint to organize your work</p>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="backlog" className="flex-1 overflow-y-auto p-2 m-0">
-            <div className="mb-3 p-3 bg-gray-100 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium">Backlog</span>
-                <Badge variant="secondary">{backlog.taskCount} tasks</Badge>
-              </div>
-              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gray-500" style={{ width: `${backlog.completionPercent}%` }} />
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground px-1">
-              Tasks not assigned to any sprint. View in the main panel.
-            </p>
-          </TabsContent>
-
-          <TabsContent value="all" className="flex-1 overflow-y-auto p-2 m-0">
-            <p className="text-xs font-semibold text-muted-foreground mb-2 px-1">ALL EPICS</p>
-            {epics.map((epic) => (
-              <button
-                key={epic.id}
-                className="w-full text-left p-2 rounded-lg mb-1 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium truncate">{epic.name}</span>
-                  <span className="text-xs text-muted-foreground">{epic.completionPercent}%</span>
-                </div>
-                <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500" style={{ width: `${epic.completionPercent}%` }} />
-                </div>
-              </button>
-            ))}
-          </TabsContent>
-        </Tabs>
-
-        <div className="p-2 border-t">
-          <Button
-            onClick={handleClearAndRebootstrap}
-            disabled={clearing}
-            variant="outline"
-            size="sm"
-            className="w-full text-xs"
-          >
-            <Trash2 className="h-3 w-3 mr-1" />
-            {clearing ? 'Resetting...' : 'Reset All'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 max-w-5xl">
-          {selectedSprint && sprintDetail ? (
-            <SprintDetailView
-              sprint={sprintDetail.sprint}
-              tasks={sprintDetail.tasks}
-              allSprints={sprints}
-              onToggleTask={handleToggleTask}
-              onUpdateStatus={handleUpdateSprintStatus}
-              onAssignToSprint={handleAssignToSprint}
-            />
-          ) : activeTab === 'backlog' ? (
-            <BacklogView
-              epics={epics}
-              sprints={sprints}
-              onToggleTask={handleToggleTask}
-              onAssignToSprint={handleAssignToSprint}
-            />
-          ) : (
-            <OverviewView
-              sprints={sprints}
-              epics={epics}
-              overallProgress={overallProgress}
-              completedTasks={completedTasks}
-              totalTasks={totalTasks}
-              onSelectSprint={setSelectedSprint}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Create Sprint Dialog */}
-      <Dialog open={showCreateSprintDialog} onOpenChange={setShowCreateSprintDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Sprint</DialogTitle>
-            <DialogDescription>Organize your work into focused sprints.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <label htmlFor="sprint-name" className="text-sm font-medium">Sprint Name</label>
-              <Input
-                id="sprint-name"
-                value={newSprintName}
-                onChange={(e) => setNewSprintName(e.target.value)}
-                placeholder="e.g., Sprint 1: CRM Polish"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label htmlFor="sprint-goal" className="text-sm font-medium">Goal (optional)</label>
-              <Input
-                id="sprint-goal"
-                value={newSprintGoal}
-                onChange={(e) => setNewSprintGoal(e.target.value)}
-                placeholder="e.g., Complete CRM CRUD operations"
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setShowCreateSprintDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateSprint} disabled={isCreatingSprint || !newSprintName.trim()}>
-              {isCreatingSprint ? 'Creating...' : 'Create Sprint'}
+              <Trash2 className="h-3 w-3 mr-1" />
+              Reset All Data
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="p-6 max-w-5xl">
+            {selectedSprint && sprintDetail ? (
+              <SprintDetailView
+                sprint={sprintDetail.sprint}
+                tasks={sprintDetail.tasks}
+                allSprints={sprints}
+                onToggleTask={handleToggleTask}
+                onUpdateStatus={handleUpdateSprintStatus}
+                onAssignToSprint={handleAssignToSprint}
+              />
+            ) : activeTab === 'backlog' ? (
+              <BacklogView
+                epics={epics}
+                sprints={sprints}
+                onToggleTask={handleToggleTask}
+                onAssignToSprint={handleAssignToSprint}
+              />
+            ) : (
+              <OverviewView
+                sprints={sprints}
+                epics={epics}
+                overallProgress={overallProgress}
+                completedTasks={completedTasks}
+                totalTasks={totalTasks}
+                onSelectSprint={setSelectedSprint}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Create Sprint Dialog */}
+        <Dialog open={showCreateSprintDialog} onOpenChange={setShowCreateSprintDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Sprint</DialogTitle>
+              <DialogDescription>Organize your work into focused sprints.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <label htmlFor="sprint-name" className="text-sm font-medium">Sprint Name</label>
+                <Input
+                  id="sprint-name"
+                  value={newSprintName}
+                  onChange={(e) => setNewSprintName(e.target.value)}
+                  placeholder="e.g., Sprint 1: CRM Polish"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label htmlFor="sprint-goal" className="text-sm font-medium">Goal (optional)</label>
+                <Input
+                  id="sprint-goal"
+                  value={newSprintGoal}
+                  onChange={(e) => setNewSprintGoal(e.target.value)}
+                  placeholder="e.g., Complete CRM CRUD operations"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowCreateSprintDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateSprint} disabled={isCreatingSprint || !newSprintName.trim()}>
+                {isCreatingSprint ? 'Creating...' : 'Create Sprint'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reset Confirmation Dialog */}
+        <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-red-600">Reset All Data?</DialogTitle>
+              <DialogDescription>
+                This will delete ALL sprints, epics, and tasks, then recreate them from the template.
+                Any progress you&apos;ve made will be lost. This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowResetConfirm(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleClearAndRebootstrap} disabled={clearing}>
+                {clearing ? 'Resetting...' : 'Yes, Reset Everything'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
   );
 }
 
@@ -527,14 +584,14 @@ function SprintCard({
   return (
     <button
       onClick={onSelect}
-      className={`w-full text-left p-3 rounded-lg mb-1 transition-colors ${
-        isSelected ? `${config.bg} border ${config.border}` : 'hover:bg-gray-50'
+      className={`w-full text-left p-3 rounded-lg mb-1 transition-all ${
+        isSelected ? `${config.bg} border ${config.border} shadow-sm` : 'hover:bg-gray-50 border border-transparent'
       }`}
     >
       <div className="flex items-center gap-2 mb-2">
         <StatusIcon className={`h-4 w-4 ${config.color}`} />
         <span className="text-sm font-medium flex-1 truncate">{sprint.name}</span>
-        <ChevronRight className={`h-4 w-4 transition-transform ${isSelected ? 'rotate-90' : ''}`} />
+        <ChevronRight className={`h-4 w-4 text-gray-400 transition-transform ${isSelected ? 'rotate-90' : ''}`} />
       </div>
       <div className="space-y-1">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -542,7 +599,10 @@ function SprintCard({
           <span className="font-semibold">{sprint.completionPercent}%</span>
         </div>
         <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-          <div className="h-full bg-green-500 transition-all" style={{ width: `${sprint.completionPercent}%` }} />
+          <div 
+            className={`h-full transition-all ${sprint.completionPercent === 100 ? 'bg-green-500' : 'bg-blue-500'}`} 
+            style={{ width: `${sprint.completionPercent}%` }} 
+          />
         </div>
       </div>
     </button>
@@ -567,24 +627,31 @@ function SprintDetailView({
 }) {
   const config = SPRINT_STATUS_CONFIG[sprint.status];
 
+  // Group tasks by status
+  const todoTasks = tasks.filter(t => t.status === 'todo' || t.status === 'in_progress');
+  const doneTasks = tasks.filter(t => t.status === 'done');
+
   return (
     <div>
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <h2 className="text-2xl font-bold">{sprint.name}</h2>
-          <Badge className={config.bg + ' ' + config.color + ' border ' + config.border}>
-            {sprint.status.replace('_', ' ')}
+          <Badge className={`${config.bg} ${config.color} border ${config.border}`}>
+            {config.label}
           </Badge>
         </div>
         {sprint.goal && <p className="text-muted-foreground">{sprint.goal}</p>}
         <div className="flex items-center gap-4 mt-4">
           <div className="flex-1">
             <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all" style={{ width: `${sprint.completionPercent}%` }} />
+              <div 
+                className={`h-full transition-all ${sprint.completionPercent === 100 ? 'bg-green-500' : 'bg-gradient-to-r from-blue-400 to-blue-600'}`} 
+                style={{ width: `${sprint.completionPercent}%` }} 
+              />
             </div>
           </div>
-          <span className="text-sm font-semibold">{sprint.completionPercent}%</span>
+          <span className="text-lg font-semibold">{sprint.completionPercent}%</span>
         </div>
         <p className="text-sm text-muted-foreground mt-1">
           {sprint.completedTaskCount} of {sprint.taskCount} tasks complete
@@ -610,29 +677,67 @@ function SprintDetailView({
               </Button>
             </>
           )}
+          {sprint.status === 'completed' && (
+            <Button size="sm" variant="outline" onClick={() => onUpdateStatus(sprint.id, 'in_progress')}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Reopen Sprint
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Tasks */}
-      <div className="space-y-2">
-        {tasks.length === 0 ? (
-          <Card className="p-8 text-center">
-            <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No tasks in this sprint yet</p>
-            <p className="text-sm text-muted-foreground">Assign tasks from the backlog</p>
-          </Card>
-        ) : (
-          tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              sprints={allSprints}
-              onToggle={() => onToggleTask(task.id, task.status)}
-              onAssignToSprint={onAssignToSprint}
-            />
-          ))
-        )}
-      </div>
+      {tasks.length === 0 ? (
+        <Card className="p-8 text-center">
+          <Inbox className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+          <p className="text-muted-foreground font-medium">No tasks in this sprint yet</p>
+          <p className="text-sm text-muted-foreground mt-1">Assign tasks from the backlog tab</p>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {/* To Do */}
+          {todoTasks.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                <Circle className="h-4 w-4" />
+                TO DO ({todoTasks.length})
+              </h3>
+              <div className="space-y-2">
+                {todoTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    sprints={allSprints}
+                    onToggle={() => onToggleTask(task.id, task.status)}
+                    onAssignToSprint={onAssignToSprint}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Done */}
+          {doneTasks.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-green-600 mb-2 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                COMPLETED ({doneTasks.length})
+              </h3>
+              <div className="space-y-2">
+                {doneTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={task}
+                    sprints={allSprints}
+                    onToggle={() => onToggleTask(task.id, task.status)}
+                    onAssignToSprint={onAssignToSprint}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -649,15 +754,15 @@ function BacklogView({
   onToggleTask: (taskId: string, status: string) => void;
   onAssignToSprint: (taskId: string, sprintId: string | null) => void;
 }) {
-  // Get tasks without sprint assignment
-  const backlogTasks: Task[] = [];
-  epics.forEach((epic) => {
-    epic.tasks?.forEach((task) => {
-      if (!task.sprintId) {
-        backlogTasks.push({ ...task, epicName: epic.name });
-      }
-    });
-  });
+  // Get tasks without sprint assignment grouped by epic
+  const epicBacklogs = epics
+    .map((epic) => ({
+      ...epic,
+      backlogTasks: (epic.tasks || []).filter((task) => !task.sprintId),
+    }))
+    .filter((epic) => epic.backlogTasks.length > 0);
+
+  const totalBacklogTasks = epicBacklogs.reduce((sum, e) => sum + e.backlogTasks.length, 0);
 
   return (
     <div>
@@ -667,30 +772,40 @@ function BacklogView({
           Backlog
         </h2>
         <p className="text-muted-foreground mt-1">
-          {backlogTasks.length} unassigned tasks. Drag or assign to a sprint.
+          {totalBacklogTasks} unassigned tasks across {epicBacklogs.length} epics
         </p>
       </div>
 
-      <div className="space-y-2">
-        {backlogTasks.length === 0 ? (
-          <Card className="p-8 text-center">
-            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
-            <p className="font-semibold">Backlog is empty!</p>
-            <p className="text-sm text-muted-foreground">All tasks are assigned to sprints</p>
-          </Card>
-        ) : (
-          backlogTasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              sprints={sprints}
-              onToggle={() => onToggleTask(task.id, task.status)}
-              onAssignToSprint={onAssignToSprint}
-              showEpic
-            />
-          ))
-        )}
-      </div>
+      {totalBacklogTasks === 0 ? (
+        <Card className="p-8 text-center">
+          <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-3" />
+          <p className="font-semibold">Backlog is empty!</p>
+          <p className="text-sm text-muted-foreground">All tasks are assigned to sprints</p>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {epicBacklogs.map((epic) => (
+            <div key={epic.id}>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                <Flag className="h-4 w-4" />
+                {epic.name} ({epic.backlogTasks.length})
+              </h3>
+              <div className="space-y-2">
+                {epic.backlogTasks.map((task) => (
+                  <TaskRow
+                    key={task.id}
+                    task={{ ...task, epicName: epic.name }}
+                    sprints={sprints}
+                    onToggle={() => onToggleTask(task.id, task.status)}
+                    onAssignToSprint={onAssignToSprint}
+                    showEpic={false}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -712,19 +827,20 @@ function OverviewView({
   onSelectSprint: (id: string) => void;
 }) {
   const activeSprint = sprints.find((s) => s.status === 'in_progress');
+  const plannedSprints = sprints.filter((s) => s.status === 'planned');
 
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold">Overview</h2>
-        <p className="text-muted-foreground mt-1">Project progress and sprint summary</p>
+        <h2 className="text-2xl font-bold">Project Overview</h2>
+        <p className="text-muted-foreground mt-1">Sprint progress and task distribution</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <Card className="p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card className="p-4 bg-gradient-to-br from-pink-50 to-purple-50 border-pink-200">
           <p className="text-sm text-muted-foreground">Overall Progress</p>
-          <p className="text-3xl font-bold">{overallProgress}%</p>
+          <p className="text-3xl font-bold text-pink-600">{overallProgress}%</p>
           <p className="text-xs text-muted-foreground">{completedTasks}/{totalTasks} tasks</p>
         </Card>
         <Card className="p-4">
@@ -733,24 +849,25 @@ function OverviewView({
           <p className="text-xs text-muted-foreground">{sprints.length} total sprints</p>
         </Card>
         <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Epics</p>
+          <p className="text-sm text-muted-foreground">Feature Areas</p>
           <p className="text-3xl font-bold">{epics.length}</p>
-          <p className="text-xs text-muted-foreground">feature areas</p>
+          <p className="text-xs text-muted-foreground">epics to complete</p>
         </Card>
       </div>
 
-      {/* Active Sprint */}
+      {/* Active Sprint Highlight */}
       {activeSprint && (
         <Card className="p-4 mb-6 border-green-200 bg-green-50/50">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Play className="h-5 w-5 text-green-600" />
-              <h3 className="font-semibold">Active Sprint: {activeSprint.name}</h3>
+              <h3 className="font-semibold">Active: {activeSprint.name}</h3>
             </div>
             <Button size="sm" variant="outline" onClick={() => onSelectSprint(activeSprint.id)}>
-              View Details
+              View Tasks
             </Button>
           </div>
+          {activeSprint.goal && <p className="text-sm text-muted-foreground mb-3">{activeSprint.goal}</p>}
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <div className="h-2 bg-green-200 rounded-full overflow-hidden">
@@ -762,23 +879,47 @@ function OverviewView({
         </Card>
       )}
 
-      {/* Quick Actions */}
-      <h3 className="font-semibold mb-3">Quick Actions</h3>
-      <div className="grid grid-cols-2 gap-3">
-        {sprints.filter((s) => s.status === 'planned').slice(0, 2).map((sprint) => (
-          <Card
-            key={sprint.id}
-            className="p-3 cursor-pointer hover:bg-gray-50 transition-colors"
-            onClick={() => onSelectSprint(sprint.id)}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="h-4 w-4 text-blue-600" />
-              <span className="font-medium text-sm">{sprint.name}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">{sprint.taskCount} tasks planned</p>
-          </Card>
-        ))}
-      </div>
+      {/* Upcoming Sprints */}
+      {plannedSprints.length > 0 && (
+        <div>
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Upcoming Sprints
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {plannedSprints.map((sprint) => (
+              <Card
+                key={sprint.id}
+                className="p-3 cursor-pointer hover:bg-gray-50 hover:border-blue-200 transition-all"
+                onClick={() => onSelectSprint(sprint.id)}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-sm">{sprint.name}</span>
+                </div>
+                {sprint.goal && <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{sprint.goal}</p>}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{sprint.taskCount} tasks</span>
+                  <span>{sprint.completedTaskCount} done</span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No Active Sprint Warning */}
+      {!activeSprint && plannedSprints.length > 0 && (
+        <Card className="p-4 mt-6 border-amber-200 bg-amber-50/50">
+          <div className="flex items-center gap-2 text-amber-700">
+            <AlertCircle className="h-5 w-5" />
+            <p className="font-medium">No sprint is currently active</p>
+          </div>
+          <p className="text-sm text-amber-600 mt-1">
+            Select a planned sprint and click &quot;Start Sprint&quot; to begin tracking progress.
+          </p>
+        </Card>
+      )}
     </div>
   );
 }
@@ -789,9 +930,9 @@ function TaskRow({
   sprints,
   onToggle,
   onAssignToSprint,
-  showEpic = false,
+  showEpic = true,
 }: {
-  task: Task;
+  task: Task & { epicName?: string };
   sprints: Sprint[];
   onToggle: () => void;
   onAssignToSprint: (taskId: string, sprintId: string | null) => void;
@@ -801,13 +942,17 @@ function TaskRow({
   const priorityColor = PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium;
 
   return (
-    <Card className={`p-3 ${isCompleted ? 'opacity-60' : ''}`}>
-      <div className="flex items-center gap-3">
-        <button onClick={onToggle} className="flex-shrink-0" aria-label={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}>
+    <Card className={`p-3 transition-all ${isCompleted ? 'opacity-60 bg-gray-50' : 'hover:shadow-sm'}`}>
+      <div className="flex items-start gap-3">
+        <button 
+          onClick={onToggle} 
+          className="flex-shrink-0 mt-0.5 hover:scale-110 transition-transform" 
+          aria-label={isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
+        >
           {isCompleted ? (
             <CheckCircle2 className="h-5 w-5 text-green-600" />
           ) : (
-            <Circle className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+            <Circle className="h-5 w-5 text-gray-400 hover:text-green-600" />
           )}
         </button>
         <div className="flex-1 min-w-0">
@@ -815,21 +960,26 @@ function TaskRow({
             {task.title}
           </p>
           {showEpic && task.epicName && (
-            <p className="text-xs text-muted-foreground">{task.epicName}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{task.epicName}</p>
+          )}
+          {task.description && !isCompleted && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{task.description}</p>
           )}
         </div>
-        <Badge className={`text-xs ${priorityColor}`}>{task.priority}</Badge>
-        <select
-          value={task.sprintId || ''}
-          onChange={(e) => onAssignToSprint(task.id, e.target.value || null)}
-          className="text-xs border rounded px-2 py-1 bg-white"
-          aria-label="Assign to sprint"
-        >
-          <option value="">Backlog</option>
-          {sprints.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Badge className={`text-xs ${priorityColor}`}>{task.priority}</Badge>
+          <select
+            value={task.sprintId || ''}
+            onChange={(e) => onAssignToSprint(task.id, e.target.value || null)}
+            className="text-xs border rounded px-2 py-1 bg-white max-w-[120px]"
+            aria-label="Assign to sprint"
+          >
+            <option value="">Backlog</option>
+            {sprints.filter(s => s.status !== 'completed').map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </div>
       </div>
     </Card>
   );
