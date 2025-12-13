@@ -1788,6 +1788,91 @@ export const knowledgeItemTags = pgTable(
   }),
 );
 
+// Knowledge item versions (document versioning)
+export const knowledgeItemVersions = pgTable(
+  'knowledge_item_versions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Parent item reference
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => knowledgeItems.id, { onDelete: 'cascade' }),
+
+    // Version info
+    version: integer('version').notNull(),
+    title: text('title').notNull(),
+    content: text('content'),
+    summary: text('summary'),
+
+    // Change tracking
+    changeDescription: text('change_description'),
+    changedBy: uuid('changed_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Metadata
+    metadata: jsonb('metadata')
+      .$type<{
+        wordCount?: number;
+        characterDiff?: number;
+        previousVersionId?: string;
+      }>()
+      .default({}),
+
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    itemVersionIdx: index('knowledge_item_version_item_idx').on(table.itemId),
+    versionIdx: index('knowledge_item_version_idx').on(table.itemId, table.version),
+  }),
+);
+
+// Knowledge item permission enums
+export const knowledgeSharePermissionEnum = pgEnum('knowledge_share_permission', [
+  'view',
+  'edit',
+  'admin',
+]);
+
+// Knowledge item shares (document permissions/sharing)
+export const knowledgeItemShares = pgTable(
+  'knowledge_item_shares',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Item reference
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => knowledgeItems.id, { onDelete: 'cascade' }),
+
+    // Share target (user or workspace-wide)
+    sharedWithUserId: uuid('shared_with_user_id')
+      .references(() => users.id, { onDelete: 'cascade' }),
+    sharedWithWorkspaceId: uuid('shared_with_workspace_id')
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Permission level
+    permission: knowledgeSharePermissionEnum('permission').notNull().default('view'),
+
+    // Share metadata
+    sharedBy: uuid('shared_by')
+      .notNull()
+      .references(() => users.id),
+    expiresAt: timestamp('expires_at'),
+    message: text('message'),
+
+    // Tracking
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    itemShareIdx: index('knowledge_item_share_item_idx').on(table.itemId),
+    userShareIdx: index('knowledge_item_share_user_idx').on(table.sharedWithUserId),
+    workspaceShareIdx: index('knowledge_item_share_workspace_idx').on(table.sharedWithWorkspaceId),
+  }),
+);
+
 // ============================================================================
 // RELATIONS
 // ============================================================================
@@ -2065,6 +2150,8 @@ export const knowledgeItemsRelations = relations(knowledgeItems, ({ one, many })
     references: [knowledgeCollections.id],
   }),
   itemTags: many(knowledgeItemTags),
+  versions: many(knowledgeItemVersions),
+  shares: many(knowledgeItemShares),
 }));
 
 export const knowledgeItemTagsRelations = relations(knowledgeItemTags, ({ one }) => ({
@@ -2075,6 +2162,36 @@ export const knowledgeItemTagsRelations = relations(knowledgeItemTags, ({ one })
   tag: one(knowledgeTags, {
     fields: [knowledgeItemTags.tagId],
     references: [knowledgeTags.id],
+  }),
+}));
+
+export const knowledgeItemVersionsRelations = relations(knowledgeItemVersions, ({ one }) => ({
+  item: one(knowledgeItems, {
+    fields: [knowledgeItemVersions.itemId],
+    references: [knowledgeItems.id],
+  }),
+  changedByUser: one(users, {
+    fields: [knowledgeItemVersions.changedBy],
+    references: [users.id],
+  }),
+}));
+
+export const knowledgeItemSharesRelations = relations(knowledgeItemShares, ({ one }) => ({
+  item: one(knowledgeItems, {
+    fields: [knowledgeItemShares.itemId],
+    references: [knowledgeItems.id],
+  }),
+  sharedWithUser: one(users, {
+    fields: [knowledgeItemShares.sharedWithUserId],
+    references: [users.id],
+  }),
+  sharedWithWorkspace: one(workspaces, {
+    fields: [knowledgeItemShares.sharedWithWorkspaceId],
+    references: [workspaces.id],
+  }),
+  sharedByUser: one(users, {
+    fields: [knowledgeItemShares.sharedBy],
+    references: [users.id],
   }),
 }));
 

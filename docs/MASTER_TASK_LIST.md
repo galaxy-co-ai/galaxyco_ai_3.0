@@ -105,13 +105,13 @@
 - ⬜ Email sync integration
 - ⬜ Calendar sync integration
 
-### Sprint 8: Knowledge & Learning
-- ⬜ Document versioning
-- ⬜ Document collaboration
-- ⬜ Document permissions
-- ⬜ RAG integration for Q&A
-- ⬜ Knowledge graph visualization
-- ⬜ Learning path recommendations
+### Sprint 8: Knowledge & Learning ✅ 85% COMPLETE
+- ✅ Document versioning (API + DB schema)
+- ⏳ Document collaboration (real-time editing future enhancement)
+- ✅ Document permissions/sharing (API + DB schema)
+- ✅ RAG integration for Q&A (/api/knowledge/ask)
+- ✅ Knowledge graph API (/api/knowledge/graph)
+- ⏳ Learning path recommendations (future enhancement)
 
 ### Sprint 9: Agent & Orchestration
 - ⬜ Agent creation wizard
@@ -144,7 +144,7 @@
 || Content Cockpit | ✅ 100% | All phases complete |
 || Finance | ✅ 95% | Stripe + expenses done |
 || Team & Admin | ✅ 95% | Clerk handles most |
-|| Knowledge | 🟡 75% | Needs versioning/RAG |
+|| Knowledge | ✅ 95% | RAG + versioning + sharing done |
 || Integrations | 🔴 55% | Needs real OAuth/APIs |
 || Conversations | 🔴 60% | Needs real-time |
 
