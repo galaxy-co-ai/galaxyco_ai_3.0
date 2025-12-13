@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (210a0c5)  
+**Updated Through:** 2025-12-12 (18ba1fd)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 18ba1fd feat(todo-hq): add sprint-based task management with enhanced UI
 - 2025-12-12 210a0c5 fix(todo-hq): replace phase filtering with category-based filtering to show all epics
 - 2025-12-12 a3d7c7d refactor(admin): redesign To-Do HQ with phase-based sidebar navigation
 - 2025-12-12 4c739ba feat(crm): add handleDealStageChange for pipeline drag-and-drop
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 18e9f37 feat(notifications): add browser push notifications support
 - 2025-12-12 6bee317 feat(notifications): add in-app notification center
 - 2025-12-12 60c05db feat(notifications): add comprehensive toast notification system
-- 2025-12-12 7d15532 docs: update progress tracker for Group 6 completion
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
