@@ -575,6 +575,49 @@ export default function CRMDashboard({
     }
   };
 
+  const handleDealStageChange = async (dealId: string, newStage: string) => {
+    try {
+      // Optimistically update UI
+      setDeals(prev => prev.map(deal => 
+        deal.id === dealId ? { ...deal, stage: newStage } : deal
+      ));
+
+      // Map UI stages to API stages
+      const stageMap: Record<string, string> = {
+        'lead': 'new',
+        'qualified': 'qualified',
+        'proposal': 'proposal',
+        'negotiation': 'negotiation',
+        'closed': 'won',
+      };
+
+      const apiStage = stageMap[newStage] || newStage;
+
+      // Call PATCH endpoint to update stage
+      const response = await fetch(`/api/crm/deals/${dealId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: apiStage }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update deal stage' }));
+        throw new Error(errorData.error || `Failed to update deal stage: ${response.status}`);
+      }
+
+      toast.success(`Deal moved to ${newStage}`);
+
+      // Refresh to ensure consistency
+      setTimeout(() => refreshDeals(), 500);
+    } catch (error) {
+      logger.error('Failed to update deal stage', error);
+      toast.error('Failed to move deal. Please try again.');
+      
+      // Revert optimistic update on error
+      setTimeout(() => refreshDeals(), 500);
+    }
+  };
+
 
   // Tab configuration - dynamically calculate counts from state
   const tabs = useMemo(() => [
