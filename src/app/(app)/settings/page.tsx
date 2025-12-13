@@ -705,6 +705,16 @@ export default function SettingsPage() {
         );
 
       case "security":
+        const twoFactorEnabled = user?.twoFactorEnabled ?? false;
+        
+        const handleManageSecurity = () => {
+          // Open Clerk's user profile to security settings
+          if (user) {
+            // Clerk provides openUserProfile for managing security
+            window.location.href = '/user';
+          }
+        };
+        
         return (
           <div className="space-y-6">
             {/* Password */}
@@ -713,9 +723,9 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100">
                 <div>
                   <p className="text-sm text-gray-900">Password</p>
-                  <p className="text-xs text-gray-500">Last changed 30 days ago</p>
+                  <p className="text-xs text-gray-500">Managed via your account settings</p>
                 </div>
-                <Button variant="outline" size="sm" className="text-xs">
+                <Button variant="outline" size="sm" className="text-xs" onClick={handleManageSecurity}>
                   Change Password
                 </Button>
               </div>
@@ -726,18 +736,30 @@ export default function SettingsPage() {
               <h4 className="text-sm font-medium text-gray-900">Two-Factor Authentication</h4>
               <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-green-50">
-                    <Shield className="h-4 w-4 text-green-600" />
+                  <div className={cn("p-2 rounded-md", twoFactorEnabled ? "bg-green-50" : "bg-amber-50")}>
+                    <Shield className={cn("h-4 w-4", twoFactorEnabled ? "text-green-600" : "text-amber-600")} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-900">2FA Enabled</p>
-                    <p className="text-xs text-gray-500">Using authenticator app</p>
+                    <p className="text-sm text-gray-900">
+                      {twoFactorEnabled ? "2FA Enabled" : "2FA Not Enabled"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {twoFactorEnabled 
+                        ? "Your account is protected with two-factor authentication" 
+                        : "Add an extra layer of security to your account"}
+                    </p>
                   </div>
                 </div>
-                <Badge className="bg-green-100 text-green-700 border-0 text-[10px]">
-                  <Check className="h-3 w-3 mr-0.5" />
-                  Active
-                </Badge>
+                {twoFactorEnabled ? (
+                  <Badge className="bg-green-100 text-green-700 border-0 text-[10px]">
+                    <Check className="h-3 w-3 mr-0.5" />
+                    Active
+                  </Badge>
+                ) : (
+                  <Button variant="outline" size="sm" className="text-xs" onClick={handleManageSecurity}>
+                    Enable 2FA
+                  </Button>
+                )}
               </div>
             </div>
 
