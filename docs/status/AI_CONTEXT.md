@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-13 (32fc168)  
+**Updated Through:** 2025-12-13 (e667733)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-13 e667733 fix(calendar): handle nullable createdBy in events API
 - 2025-12-13 32fc168 feat(crm): add Sprint 7 Advanced CRM backend
 - 2025-12-13 8ae9a04 feat(admin): complete Sprint 3 Team & Admin features
 - 2025-12-13 c7bd2e4 feat(billing): add expense management CRUD API and UI components
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 4c739ba feat(crm): add handleDealStageChange for pipeline drag-and-drop
 - 2025-12-12 265dd6d feat(crm): add drag-and-drop to SalesKanban pipeline
 - 2025-12-12 a4cb64c feat(crm): integrate DealDialog and DealDetailView into CRMDashboard
-- 2025-12-12 e3fb7f8 docs: add Phase 2 Week 1 completion summary
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
