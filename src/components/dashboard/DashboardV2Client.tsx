@@ -25,6 +25,7 @@ import { DashboardV2Data } from '@/types/dashboard';
 import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
 import NeptuneDashboardWelcome from './NeptuneDashboardWelcome';
 import RoadmapCard, { DashboardRoadmapItem } from './RoadmapCard';
+import ActivityFeed from './ActivityFeed';
 import { useNeptune } from '@/contexts/neptune-context';
 
 interface DashboardV2ClientProps {
@@ -189,9 +190,9 @@ export default function DashboardV2Client({
           </div>
         )}
 
-        {/* Content Split: 2/3 Neptune, 1/3 Roadmap */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 px-6 pt-4 pb-6">
-          {/* Neptune Chat Interface - 2/3 width */}
+        {/* Content Grid: Neptune (main), Roadmap (right), Activity (right bottom) */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 px-6 pt-4 pb-6">
+          {/* Neptune Chat Interface - Main column */}
           <div className="min-w-0 min-h-0 flex flex-col">
             <NeptuneAssistPanel
               conversationId={null}
@@ -201,29 +202,43 @@ export default function DashboardV2Client({
             />
           </div>
 
-          {/* Roadmap Card - 1/3 width */}
-          <div className="min-w-0 min-h-0 overflow-hidden flex flex-col">
-            {workspaceId && workspaceId.trim() !== '' ? (
-              <RoadmapCard 
-                items={roadmapItems}
-                completionPercentage={completionPercentage}
-              />
-            ) : (
-              <Card className="h-full flex flex-col overflow-hidden">
-                <div className="border-b bg-background px-6 py-4 shrink-0">
-                  <PageTitle
-                    title="Roadmap"
-                    icon={Compass}
-                    as="h2"
-                    titleClassName="text-base md:text-xl"
-                    iconClassName="w-6 h-6 md:w-6 md:h-6"
-                  />
-                </div>
-                <div className="flex-1 flex items-center justify-center p-6">
-                  <p className="text-sm text-muted-foreground">Unable to load roadmap</p>
-                </div>
-              </Card>
-            )}
+          {/* Right Column: Roadmap + Activity Feed */}
+          <div className="min-w-0 min-h-0 flex flex-col gap-6">
+            {/* Roadmap Card - Top of right column */}
+            <div className="min-w-0 overflow-hidden flex flex-col" style={{ minHeight: '300px', maxHeight: '45%' }}>
+              {workspaceId && workspaceId.trim() !== '' ? (
+                <RoadmapCard 
+                  items={roadmapItems}
+                  completionPercentage={completionPercentage}
+                />
+              ) : (
+                <Card className="h-full flex flex-col overflow-hidden">
+                  <div className="border-b bg-background px-6 py-4 shrink-0">
+                    <PageTitle
+                      title="Roadmap"
+                      icon={Compass}
+                      as="h2"
+                      titleClassName="text-base md:text-xl"
+                      iconClassName="w-6 h-6 md:w-6 md:h-6"
+                    />
+                  </div>
+                  <div className="flex-1 flex items-center justify-center p-6">
+                    <p className="text-sm text-muted-foreground">Unable to load roadmap</p>
+                  </div>
+                </Card>
+              )}
+            </div>
+
+            {/* Activity Feed - Bottom of right column */}
+            <div className="min-w-0 flex-1 overflow-hidden" style={{ minHeight: '400px' }}>
+              {workspaceId && workspaceId.trim() !== '' ? (
+                <ActivityFeed workspaceId={workspaceId} />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <p className="text-sm text-muted-foreground">Unable to load activity</p>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </div>
