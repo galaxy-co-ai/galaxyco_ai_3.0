@@ -538,3 +538,400 @@ erDiagram
 │ data (JSONB), isRead, readAt                                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+
+### 8. AI / NEPTUNE ASSISTANT
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      aiConversations                            │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ title, model                                                    │
+│ context (JSONB: page, entity, userData)                         │
+│ messageCount, lastMessageAt                                     │
+│ isArchived, isPinned                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        aiMessages                               │
+├─────────────────────────────────────────────────────────────────┤
+│ conversationId (FK)                                             │
+│ role (user/assistant/system)                                    │
+│ content, model                                                  │
+│ tokens (JSONB: prompt, completion)                              │
+│ metadata (JSONB: context, tools, functionCalls)                 │
+│ responseTimeMs                                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     aiUserPreferences                           │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ preferences (JSONB: tone, context, shortcuts)                   │
+│ shortcuts (JSONB array: command, action)                        │
+│ recentSearches (text array), favoriteAgents (text array)        │
+│ learningData (JSONB)                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    neptuneActionHistory                         │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ actionType, target                                              │
+│ input, output (JSONB)                                           │
+│ success, error, durationMs                                      │
+│ aiModel, tokensUsed                                             │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     proactiveInsights                           │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ type (opportunity/warning/recommendation/milestone)             │
+│ title, description, priority                                    │
+│ data (JSONB), actions (JSONB)                                   │
+│ status (pending/seen/acted/dismissed), expiresAt                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 9. KNOWLEDGE BASE
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                   knowledgeCollections                          │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, createdBy (FKs)                                    │
+│ name, description                                               │
+│ isDefault, isPublic, itemCount                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      knowledgeItems                             │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, collectionId, createdBy (FKs)                      │
+│ name, type (document/url/image/text)                            │
+│ content, sourceUrl, mimeType, fileSize                          │
+│ status (processing/ready/failed)                                │
+│ vectorId (for embedding lookup)                                 │
+│ metadata (JSONB: extractedText, summary, entities)              │
+│ lastIndexedAt                                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      knowledgeTags                              │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId (FK)                                                │
+│ name, color, itemCount                                          │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    knowledgeItemTags                            │
+├─────────────────────────────────────────────────────────────────┤
+│ itemId (FK → knowledgeItems)                                    │
+│ tagId (FK → knowledgeTags)                                      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 10. CONTENT / BLOG / LAUNCHPAD
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         blogPosts                               │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, categoryId, authorId (FKs)                         │
+│ title, slug (unique), excerpt, content                          │
+│ contentType (article/tool-spotlight)                            │
+│ status (draft/published/scheduled/archived)                     │
+│ publishedAt, scheduledAt                                        │
+│ featuredImageUrl, readingTime                                   │
+│ seoTitle, seoDescription, seoKeywords                           │
+│ viewCount, likeCount, commentCount                              │
+│ isFeatured, isHeroPost                                          │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        topicIdeas                               │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ title, description, angle, targetAudience                       │
+│ status (saved/in_progress/published/archived)                   │
+│ generatedBy (ai/user), sourceData (JSONB)                       │
+│ searchVolume, competitionLevel                                  │
+│ priority, layoutTemplate                                        │
+│ outline (JSONB), sources (JSONB array)                          │
+│ workingDraft (JSONB), publishedPostId                           │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                       contentSources                            │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, addedBy (FKs)                                      │
+│ name, url, type (news/research/competitor/inspiration/...)      │
+│ status (active/suggested/rejected/archived)                     │
+│ description, frequency                                          │
+│ aiAnalysis (JSONB), lastCheckedAt, articlesFound                │
+│ relevanceScore, qualityScore                                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      articleAnalytics                           │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, postId (FKs)                                       │
+│ date, views, uniqueVisitors, avgTimeOnPage                      │
+│ bounceRate, scrollDepth, socialShares                           │
+│ trafficSources (JSONB), deviceBreakdown (JSONB)                 │
+│ conversionCount, conversionRate                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         useCases                                │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, createdBy (FKs)                                    │
+│ title, slug, description                                        │
+│ category (b2b_saas/b2c_app/agency/enterprise/...)               │
+│ status (draft/complete/published/archived)                      │
+│ persona (JSONB), problemStatement, solutionOverview             │
+│ features (JSONB array), implementationSteps (JSONB array)       │
+│ expectedOutcomes (JSONB), metrics (JSONB)                       │
+│ relatedAgentIds, relatedWorkflowIds                             │
+│ testimonial (JSONB), publishedAt                                │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        alertBadges                              │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ type (trend/opportunity/warning/milestone/suggestion)           │
+│ status (unread/read/dismissed/actioned)                         │
+│ title, message, data (JSONB), actions (JSONB)                   │
+│ priority, expiresAt                                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+
+### 11. CREATOR STUDIO
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       creatorItems                              │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, createdBy (FKs)                                    │
+│ title, type, content (JSONB)                                    │
+│ status (draft/published), isPublic                              │
+│ viewCount, shareCount                                           │
+│ settings (JSONB: style, permissions)                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    creatorCollections                           │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, createdBy (FKs)                                    │
+│ name, description, isPublic                                     │
+│ itemCount                                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     creatorTemplates                            │
+├─────────────────────────────────────────────────────────────────┤
+│ name, description, category                                     │
+│ content (JSONB), previewImageUrl                                │
+│ isPublic, usageCount                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     sharedDocuments                             │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, creatorItemId, createdBy (FKs)                     │
+│ shareToken (unique), permission (view/comment)                  │
+│ password (hashed), expiresAt                                    │
+│ viewCount, isActive                                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 12. GALAXY GRIDS (Visual Workflow Builder)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        galaxyGrids                              │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, createdBy (FKs)                                    │
+│ name, description                                               │
+│ status (draft/published/archived)                               │
+│ triggerType, triggerConfig (JSONB)                              │
+│ settings (JSONB: timeout, retryPolicy, errorHandling)           │
+│ version, publishedAt                                            │
+│ executionCount, successRate, avgDuration                        │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        gridNodes                                │
+├─────────────────────────────────────────────────────────────────┤
+│ gridId (FK → galaxyGrids)                                       │
+│ nodeId (unique within grid), type                               │
+│ (trigger/action/condition/loop/ai/webhook/delay/transform/...)  │
+│ label, description                                              │
+│ config (JSONB: params, inputs, outputs)                         │
+│ position (JSONB: x, y), dimensions (JSONB: width, height)       │
+│ status (idle/pending/running/success/error/skipped)             │
+│ isEnabled, executionOrder                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        gridEdges                                │
+├─────────────────────────────────────────────────────────────────┤
+│ gridId (FK → galaxyGrids)                                       │
+│ edgeId (unique), sourceNodeId, targetNodeId                     │
+│ type (default/conditional/loop/error)                           │
+│ label, config (JSONB: condition, priority)                      │
+│ isEnabled                                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                       gridExecutions                            │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, gridId (FKs)                                       │
+│ status (pending/running/completed/failed/cancelled)             │
+│ triggerType, triggerData (JSONB)                                │
+│ context (JSONB), result (JSONB), error (JSONB)                  │
+│ startedAt, completedAt, durationMs                              │
+│ nodesExecuted, nodesSucceeded, nodesFailed                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      executionSteps                             │
+├─────────────────────────────────────────────────────────────────┤
+│ executionId (FK → gridExecutions)                               │
+│ nodeId, nodeName, nodeType                                      │
+│ status (pending/running/completed/failed/skipped)               │
+│ input, output, error (JSONB)                                    │
+│ startedAt, completedAt, durationMs                              │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                       gridTemplates                             │
+├─────────────────────────────────────────────────────────────────┤
+│ name, slug (unique), description, category                      │
+│ nodes (JSONB), edges (JSONB)                                    │
+│ settings (JSONB), previewImageUrl                               │
+│ isPublished, isFeatured, usageCount                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 13. ADMIN / SYSTEM
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     platformFeedback                            │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ type (bug/suggestion/general/feature_request)                   │
+│ status (new/in_review/planned/in_progress/done/closed/wont_fix) │
+│ title, description, url, userAgent                              │
+│ sentiment (very_negative → very_positive)                       │
+│ priority, assignedTo (FK), category                             │
+│ screenshot, metadata (JSONB)                                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                       todoHqSprints                             │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId (FK)                                                │
+│ name, description                                               │
+│ status (planned/in_progress/completed/cancelled)                │
+│ startDate, endDate                                              │
+│ goals (text array), sortOrder                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        todoHqEpics                              │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId (FK)                                                │
+│ name, description                                               │
+│ status (not_started/in_progress/completed/on_hold)              │
+│ targetCompletionPercent, tags (text array)                      │
+│ sortOrder                                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        todoHqTasks                              │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, epicId, sprintId (FKs)                             │
+│ title, description                                              │
+│ status (todo/in_progress/done/cancelled)                        │
+│ priority (low/medium/high/urgent)                               │
+│ sortOrder, tags (text array), notes                             │
+│ dueDate, completedAt                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                          webhooks                               │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, createdBy (FKs)                                    │
+│ name, url, events (text array)                                  │
+│ secret (HMAC signing key)                                       │
+│ isActive, lastTriggeredAt                                       │
+│ successCount, failureCount                                      │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      webhookDeliveries                          │
+├─────────────────────────────────────────────────────────────────┤
+│ webhookId (FK)                                                  │
+│ event, payload (JSONB)                                          │
+│ responseStatus, responseBody                                    │
+│ success, attempts, lastAttemptAt                                │
+│ error                                                           │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         auditLogs                               │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId (FKs)                                       │
+│ action, entityType, entityId                                    │
+│ changes (JSONB: before, after)                                  │
+│ ipAddress, userAgent                                            │
+│ metadata (JSONB)                                                │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        integrations                             │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId (FK)                                                │
+│ provider (google/microsoft/slack/salesforce/hubspot/...)        │
+│ status (active/inactive/error/expired)                          │
+│ config (JSONB)                                                  │
+│ scopes (text array), lastSyncAt                                 │
+│ errorMessage, retryCount                                        │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        oauthTokens                              │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, integrationId (FKs)                                │
+│ accessToken, refreshToken (encrypted)                           │
+│ expiresAt, scopes (text array)                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      analyticsEvents                            │
+├─────────────────────────────────────────────────────────────────┤
+│ workspaceId, userId, sessionId                                  │
+│ event, page, referrer, userAgent                                │
+│ data (JSONB), timestamp                                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Key Security Notes
+
+⚠️ **MULTI-TENANT SECURITY RULE (4kR94Z3XhqK4C54vwDDwnq):**
+- ALL queries MUST include `workspaceId` filter in WHERE clauses
+- NEVER expose data across tenant boundaries
+- Validate `workspaceId` matches authenticated user's tenant
+- Encrypted fields use AES-256-GCM
+
+---
+
+*Generated from schema.ts — update this map when schema changes significantly.*
