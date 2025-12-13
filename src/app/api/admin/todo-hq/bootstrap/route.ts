@@ -44,7 +44,7 @@ const SPRINT_DEFINITIONS: SprintDefinition[] = [
     status: 'in_progress' as const,
     color: 'blue',
     sortOrder: 1,
-    matchTags: ['crm', 'contacts', 'sales', 'leads', 'deals', 'phase-2'],
+    matchTags: ['crm', 'contacts', 'sales', 'leads', 'deals', 'phase-2', 'sprint-1'],
     matchEpics: ['CRM Dashboard', 'Contacts Management', 'Deals Pipeline', 'Lead Qualification', 'Sales Analytics'],
   },
   {
