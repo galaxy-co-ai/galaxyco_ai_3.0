@@ -97,10 +97,10 @@
 
 ### Sprint 7: Advanced CRM ✅ COMPLETE
 - ✅ Custom fields (CustomFieldsManager.tsx - CRUD with entity filtering, field types)
-- ⏳ Contact merge functionality (future enhancement)
+- ✅ Contact merge functionality (ContactMergeDialog.tsx)
 - ⏳ Contact segmentation/enrichment (future enhancement)
 - ⏳ Deal probability scoring (AI) (future enhancement)
-- ⏳ Deal forecasting (future enhancement)
+- ✅ Deal forecasting (DealForecast.tsx)
 - ✅ Pipeline customization (PipelineSettings.tsx - drag-drop reorder, win probability)
 - ⏳ Email sync integration (Sprint 2 dependency)
 - ⏳ Calendar sync integration (Sprint 2 dependency)
@@ -117,7 +117,7 @@
 - ✅ Agent creation wizard (AgentCreationWizard.tsx - 5-step wizard, 9 agent types)
 - ⏳ Agent marketplace (future enhancement)
 - ✅ Agent performance analytics (AgentPerformanceAnalytics.tsx - metrics, charts)
-- ⏳ Workflow versioning (future enhancement)
+- ✅ Workflow versioning (agentWorkflowVersions schema + API)
 - ⏳ Workflow marketplace (future enhancement)
 - ⏳ Memory visualization UI (future enhancement)
 - ⏳ Message bus monitoring UI (future enhancement)
@@ -129,7 +129,7 @@
 - ✅ Audit logs UI (filters, data table, expandable rows, CSV export)
 - ✅ System health monitoring (status cards, auto-refresh, service grid)
 - ⏳ Multi-entity support (finance) - future enhancement
-- ⏳ Dashboard templates for roles - future enhancement
+- ✅ Dashboard role templates (5 presets: Executive, Sales, Support, Marketing, Operations)
 
 ---
 
@@ -141,7 +141,7 @@
 || CRM | ✅ 95% | Custom fields + pipeline settings done |
 || Dashboard | ✅ 100% | Real-time via Pusher |
 || Agents | ✅ 95% | Wizard + analytics done |
-|| Workflows | ✅ 85% | Versioning future enhancement |
+|| Workflows | ✅ 95% | Versioning added |
 || Content Cockpit | ✅ 100% | All phases complete |
 || Finance | ✅ 95% | Stripe + expenses done |
 || Team & Admin | ✅ 95% | Clerk handles most |
