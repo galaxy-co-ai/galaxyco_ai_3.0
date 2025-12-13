@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-12 (85ec2dd)  
+**Updated Through:** 2025-12-12 (87e9f37)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-12 87e9f37 feat(mobile): add mobile navigation with bottom bar and drawer menu
 - 2025-12-12 85ec2dd docs: update progress tracker - Group 5 complete (15/24 tasks, 62.5%)
 - 2025-12-12 3befe36 feat(search): add global search with multi-entity, debounce, and recent searches
 - 2025-12-12 323c013 feat(ui): add empty states, loading skeletons, and accessibility utilities
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-12 40fe15a docs(audit): complete Phase 2 Tasks 3 & 4
 - 2025-12-12 fc90a73 fix(proxy): correct Clerk middleware signature for production
 - 2025-12-12 169cd15 feat(ui): standardize loading states across all pages
-- 2025-12-12 5b86da8 ci: trigger E2E tests with secrets configured
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
