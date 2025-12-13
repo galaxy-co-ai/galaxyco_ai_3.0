@@ -68,6 +68,7 @@ export async function GET(
         callTranscription: msg.callTranscription,
         externalId: msg.externalId,
         deliveryStatus: msg.externalMetadata?.deliveryStatus,
+        replyToId: msg.replyToId,
       })),
     });
   } catch (error) {
