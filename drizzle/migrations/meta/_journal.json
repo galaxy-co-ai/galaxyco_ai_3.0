@@ -36,6 +36,13 @@
       "when": 1765621335560,
       "tag": "0005_lonely_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1765628054670,
+      "tag": "0006_loose_ends_features",
+      "breakpoints": true
     }
   ]
 }

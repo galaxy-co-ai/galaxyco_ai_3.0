@@ -7353,6 +7353,421 @@ export const conversationParticipantsRelations = relations(conversationParticipa
 }));
 
 // ============================================================================
+// MARKETPLACE - Agent & Workflow Marketplace
+// ============================================================================
+
+export const marketplaceListingStatusEnum = pgEnum('marketplace_listing_status', [
+  'draft',
+  'pending_review',
+  'published',
+  'rejected',
+  'archived',
+]);
+
+export const marketplaceListingTypeEnum = pgEnum('marketplace_listing_type', [
+  'agent',
+  'workflow',
+]);
+
+export const marketplaceListings = pgTable(
+  'marketplace_listings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Listing type
+    type: marketplaceListingTypeEnum('type').notNull(),
+
+    // Basic info
+    name: text('name').notNull(),
+    description: text('description').notNull(),
+    shortDescription: text('short_description'),
+    icon: text('icon'), // Lucide icon name
+    coverImage: text('cover_image'), // URL
+
+    // Categorization
+    category: text('category').notNull(), // 'sales', 'marketing', 'support', etc.
+    tags: text('tags').array().default([]),
+
+    // Source reference (what's being shared)
+    sourceAgentId: uuid('source_agent_id').references(() => agents.id, { onDelete: 'cascade' }),
+    sourceWorkflowId: uuid('source_workflow_id').references(() => agentWorkflows.id, { onDelete: 'cascade' }),
+
+    // Template data (snapshot of agent/workflow config)
+    templateData: jsonb('template_data').$type<Record<string, unknown>>().notNull(),
+
+    // Publisher info
+    publishedBy: uuid('published_by')
+      .notNull()
+      .references(() => users.id),
+    publisherWorkspaceId: uuid('publisher_workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    publisherName: text('publisher_name').notNull(),
+
+    // Status
+    status: marketplaceListingStatusEnum('status').notNull().default('draft'),
+    rejectionReason: text('rejection_reason'),
+
+    // Pricing (future use)
+    isFree: boolean('is_free').notNull().default(true),
+    price: integer('price').default(0), // In cents
+
+    // Metrics
+    installCount: integer('install_count').notNull().default(0),
+    viewCount: integer('view_count').notNull().default(0),
+    averageRating: integer('average_rating').default(0), // 0-500 (stored as x100)
+    reviewCount: integer('review_count').notNull().default(0),
+
+    // Version info
+    version: text('version').notNull().default('1.0.0'),
+    changelog: text('changelog'),
+
+    // Requirements
+    requiredIntegrations: text('required_integrations').array().default([]),
+    minPlanTier: subscriptionTierEnum('min_plan_tier').default('free'),
+
+    // Featured/promoted
+    isFeatured: boolean('is_featured').notNull().default(false),
+    featuredOrder: integer('featured_order'),
+
+    // Timestamps
+    publishedAt: timestamp('published_at'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    typeIdx: index('marketplace_listing_type_idx').on(table.type),
+    categoryIdx: index('marketplace_listing_category_idx').on(table.category),
+    statusIdx: index('marketplace_listing_status_idx').on(table.status),
+    publisherIdx: index('marketplace_listing_publisher_idx').on(table.publishedBy),
+    featuredIdx: index('marketplace_listing_featured_idx').on(table.isFeatured, table.featuredOrder),
+    installCountIdx: index('marketplace_listing_install_count_idx').on(table.installCount),
+    ratingIdx: index('marketplace_listing_rating_idx').on(table.averageRating),
+  }),
+);
+
+export const marketplaceReviews = pgTable(
+  'marketplace_reviews',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Listing reference
+    listingId: uuid('listing_id')
+      .notNull()
+      .references(() => marketplaceListings.id, { onDelete: 'cascade' }),
+
+    // Reviewer info
+    reviewerId: uuid('reviewer_id')
+      .notNull()
+      .references(() => users.id),
+    reviewerWorkspaceId: uuid('reviewer_workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Review content
+    rating: integer('rating').notNull(), // 1-5
+    title: text('title'),
+    content: text('content'),
+
+    // Helpful votes
+    helpfulCount: integer('helpful_count').notNull().default(0),
+
+    // Moderation
+    isVerifiedInstall: boolean('is_verified_install').notNull().default(false),
+    isHidden: boolean('is_hidden').notNull().default(false),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    listingIdx: index('marketplace_review_listing_idx').on(table.listingId),
+    reviewerIdx: index('marketplace_review_reviewer_idx').on(table.reviewerId),
+    ratingIdx: index('marketplace_review_rating_idx').on(table.rating),
+    // One review per user per listing
+    uniqueReview: uniqueIndex('marketplace_review_unique_idx').on(table.listingId, table.reviewerId),
+  }),
+);
+
+export const marketplaceInstalls = pgTable(
+  'marketplace_installs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Listing reference
+    listingId: uuid('listing_id')
+      .notNull()
+      .references(() => marketplaceListings.id, { onDelete: 'cascade' }),
+
+    // Installer info
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    installedBy: uuid('installed_by')
+      .notNull()
+      .references(() => users.id),
+
+    // Created resource reference
+    createdAgentId: uuid('created_agent_id').references(() => agents.id, { onDelete: 'set null' }),
+    createdWorkflowId: uuid('created_workflow_id').references(() => agentWorkflows.id, { onDelete: 'set null' }),
+
+    // Install version
+    installedVersion: text('installed_version').notNull(),
+
+    // Status
+    isActive: boolean('is_active').notNull().default(true),
+    uninstalledAt: timestamp('uninstalled_at'),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    listingIdx: index('marketplace_install_listing_idx').on(table.listingId),
+    workspaceIdx: index('marketplace_install_workspace_idx').on(table.workspaceId),
+    // One active install per listing per workspace
+    uniqueInstall: uniqueIndex('marketplace_install_unique_idx').on(table.listingId, table.workspaceId),
+  }),
+);
+
+// ============================================================================
+// FINANCE - Legal Entities (Multi-Entity Support)
+// ============================================================================
+
+export const legalEntities = pgTable(
+  'legal_entities',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Basic info
+    name: text('name').notNull(),
+    legalName: text('legal_name'),
+    taxId: text('tax_id'), // EIN, VAT, etc.
+    registrationNumber: text('registration_number'),
+
+    // Type
+    entityType: text('entity_type').notNull().default('subsidiary'), // 'parent', 'subsidiary', 'branch', 'division'
+    parentEntityId: uuid('parent_entity_id'),
+
+    // Location
+    country: text('country').notNull().default('US'),
+    currency: text('currency').notNull().default('USD'),
+    timezone: text('timezone').notNull().default('America/New_York'),
+
+    // Address
+    address: jsonb('address')
+      .$type<{
+        street1?: string;
+        street2?: string;
+        city?: string;
+        state?: string;
+        postalCode?: string;
+        country?: string;
+      }>()
+      .default({}),
+
+    // Contact
+    email: text('email'),
+    phone: text('phone'),
+
+    // Financial settings
+    fiscalYearStart: integer('fiscal_year_start').notNull().default(1), // Month 1-12
+    defaultPaymentTerms: integer('default_payment_terms').default(30), // Days
+
+    // Banking
+    bankAccounts: jsonb('bank_accounts')
+      .$type<Array<{
+        name: string;
+        bankName: string;
+        accountNumber?: string; // Masked
+        routingNumber?: string; // Masked
+        currency: string;
+        isPrimary: boolean;
+      }>>()
+      .default([]),
+
+    // Status
+    isActive: boolean('is_active').notNull().default(true),
+    isDefault: boolean('is_default').notNull().default(false),
+
+    // Branding
+    logo: text('logo'),
+    color: text('color'),
+
+    // Metadata
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('legal_entity_tenant_idx').on(table.workspaceId),
+    parentIdx: index('legal_entity_parent_idx').on(table.parentEntityId),
+    activeIdx: index('legal_entity_active_idx').on(table.isActive),
+    defaultIdx: index('legal_entity_default_idx').on(table.workspaceId, table.isDefault),
+  }),
+);
+
+// ============================================================================
+// KNOWLEDGE - Learning Paths
+// ============================================================================
+
+export const learningPaths = pgTable(
+  'learning_paths',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // For whom
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Path info
+    title: text('title').notNull(),
+    description: text('description'),
+    goal: text('goal'), // User's learning goal
+
+    // Role context
+    role: text('role'), // User's role for personalization
+    skillLevel: text('skill_level').default('beginner'), // 'beginner', 'intermediate', 'advanced'
+
+    // Path structure
+    steps: jsonb('steps')
+      .$type<Array<{
+        id: string;
+        title: string;
+        description: string;
+        type: 'document' | 'video' | 'quiz' | 'task' | 'external';
+        resourceId?: string; // Knowledge item ID
+        externalUrl?: string;
+        estimatedMinutes: number;
+        isRequired: boolean;
+        order: number;
+      }>>()
+      .notNull()
+      .default([]),
+
+    // Progress
+    completedSteps: text('completed_steps').array().default([]),
+    currentStepId: text('current_step_id'),
+    progressPercent: integer('progress_percent').notNull().default(0),
+
+    // AI generated
+    isAiGenerated: boolean('is_ai_generated').notNull().default(false),
+    aiContext: jsonb('ai_context').$type<Record<string, unknown>>().default({}),
+
+    // Status
+    status: text('status').notNull().default('active'), // 'active', 'completed', 'paused', 'archived'
+    startedAt: timestamp('started_at'),
+    completedAt: timestamp('completed_at'),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('learning_path_tenant_idx').on(table.workspaceId),
+    userIdx: index('learning_path_user_idx').on(table.userId),
+    statusIdx: index('learning_path_status_idx').on(table.status),
+  }),
+);
+
+// ============================================================================
+// MARKETPLACE RELATIONS
+// ============================================================================
+
+export const marketplaceListingsRelations = relations(marketplaceListings, ({ one, many }) => ({
+  publisher: one(users, {
+    fields: [marketplaceListings.publishedBy],
+    references: [users.id],
+  }),
+  publisherWorkspace: one(workspaces, {
+    fields: [marketplaceListings.publisherWorkspaceId],
+    references: [workspaces.id],
+  }),
+  sourceAgent: one(agents, {
+    fields: [marketplaceListings.sourceAgentId],
+    references: [agents.id],
+  }),
+  sourceWorkflow: one(agentWorkflows, {
+    fields: [marketplaceListings.sourceWorkflowId],
+    references: [agentWorkflows.id],
+  }),
+  reviews: many(marketplaceReviews),
+  installs: many(marketplaceInstalls),
+}));
+
+export const marketplaceReviewsRelations = relations(marketplaceReviews, ({ one }) => ({
+  listing: one(marketplaceListings, {
+    fields: [marketplaceReviews.listingId],
+    references: [marketplaceListings.id],
+  }),
+  reviewer: one(users, {
+    fields: [marketplaceReviews.reviewerId],
+    references: [users.id],
+  }),
+  reviewerWorkspace: one(workspaces, {
+    fields: [marketplaceReviews.reviewerWorkspaceId],
+    references: [workspaces.id],
+  }),
+}));
+
+export const marketplaceInstallsRelations = relations(marketplaceInstalls, ({ one }) => ({
+  listing: one(marketplaceListings, {
+    fields: [marketplaceInstalls.listingId],
+    references: [marketplaceListings.id],
+  }),
+  workspace: one(workspaces, {
+    fields: [marketplaceInstalls.workspaceId],
+    references: [workspaces.id],
+  }),
+  installer: one(users, {
+    fields: [marketplaceInstalls.installedBy],
+    references: [users.id],
+  }),
+  createdAgent: one(agents, {
+    fields: [marketplaceInstalls.createdAgentId],
+    references: [agents.id],
+  }),
+  createdWorkflow: one(agentWorkflows, {
+    fields: [marketplaceInstalls.createdWorkflowId],
+    references: [agentWorkflows.id],
+  }),
+}));
+
+export const legalEntitiesRelations = relations(legalEntities, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [legalEntities.workspaceId],
+    references: [workspaces.id],
+  }),
+  parentEntity: one(legalEntities, {
+    fields: [legalEntities.parentEntityId],
+    references: [legalEntities.id],
+  }),
+}));
+
+export const learningPathsRelations = relations(learningPaths, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [learningPaths.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [learningPaths.userId],
+    references: [users.id],
+  }),
+}));
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -7648,5 +8063,25 @@ export type NewPipelineStage = typeof pipelineStages.$inferInsert;
 export type CustomFieldType = (typeof customFieldTypeEnum.enumValues)[number];
 export type CustomFieldEntityType = (typeof customFieldEntityTypeEnum.enumValues)[number];
 
+// Marketplace Types
+export type MarketplaceListing = typeof marketplaceListings.$inferSelect;
+export type NewMarketplaceListing = typeof marketplaceListings.$inferInsert;
+
+export type MarketplaceReview = typeof marketplaceReviews.$inferSelect;
+export type NewMarketplaceReview = typeof marketplaceReviews.$inferInsert;
+
+export type MarketplaceInstall = typeof marketplaceInstalls.$inferSelect;
+export type NewMarketplaceInstall = typeof marketplaceInstalls.$inferInsert;
+
+export type MarketplaceListingStatus = (typeof marketplaceListingStatusEnum.enumValues)[number];
+export type MarketplaceListingType = (typeof marketplaceListingTypeEnum.enumValues)[number];
+
+// Legal Entity Types
+export type LegalEntity = typeof legalEntities.$inferSelect;
+export type NewLegalEntity = typeof legalEntities.$inferInsert;
+
+// Learning Path Types
+export type LearningPath = typeof learningPaths.$inferSelect;
+export type NewLearningPath = typeof learningPaths.$inferInsert;
 
 
