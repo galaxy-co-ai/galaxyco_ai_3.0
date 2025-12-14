@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 import { Button } from "../ui/button";
-import { Rocket, LogIn, Menu, X } from "lucide-react";
+import { LogIn, Menu, X } from "lucide-react";
 
 interface SmartNavigationProps {
   onEnterApp?: () => void;
@@ -51,14 +52,23 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <motion.div 
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-3 cursor-pointer group"
               whileHover={{ scale: 1.02 }}
               onClick={() => window.location.href = "/"}
             >
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/25">
-                <Rocket className="h-4 w-4 text-white" />
+              {/* Rocket Logo - Show on larger screens */}
+              <div className="hidden sm:block relative">
+                <Image
+                  src="/assets/brand/logos/1ae0cec6-7678-42b8-9154-7af87df89f46.png"
+                  alt="GalaxyCo"
+                  width={140}
+                  height={56}
+                  className="h-8 w-auto group-hover:scale-105 transition-transform duration-300"
+                  priority
+                />
               </div>
-              <span className="text-lg">GalaxyCo.ai</span>
+              {/* Mobile - Just text */}
+              <span className="text-lg font-semibold sm:hidden">GalaxyCo.ai</span>
             </motion.div>
 
             {/* Desktop Navigation */}
@@ -76,7 +86,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
               {onEnterApp && (
                 <Button
                   onClick={onEnterApp}
-                  className="rounded-full shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+                  className="rounded-full shadow-lg bg-electric-cyan text-void-black hover:bg-electric-cyan/90 transition-all duration-300"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Enter App
@@ -128,7 +138,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
                 onEnterApp();
                 setMobileMenuOpen(false);
               }}
-              className="w-full rounded-full shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              className="w-full rounded-full shadow-lg bg-electric-cyan text-void-black hover:bg-electric-cyan/90"
             >
               <LogIn className="h-4 w-4 mr-2" />
               Enter App
