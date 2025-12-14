@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-14 (510e4da)  
+**Updated Through:** 2025-12-14 (9810169)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-14 9810169 feat(brand): add new rocket logo to About page with animation
 - 2025-12-14 510e4da feat(ux): single-column features layout + production-ready documentation page
 - 2025-12-14 f508f74 fix(roadmap): update Q1 2026 items - remove mobile app, move Zapier to Q2
 - 2025-12-14 59b51e9 feat(marketing): launch beta marketing updates with roadmap and feature transparency
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-13 23a4066 feat(realtime): complete Sprint 5 - WebSocket/Pusher integration
 - 2025-12-13 de68e1b feat(knowledge): complete Sprint 8 - RAG Q&A, versioning, permissions, graph
 - 2025-12-13 503b9c4 feat(agents): add Sprint 9 Agent Polish components
-- 2025-12-13 3f418a1 feat(crm): add Sprint 7 Advanced CRM UI components
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
