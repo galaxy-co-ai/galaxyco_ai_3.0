@@ -53,21 +53,21 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <motion.div 
-              className="flex items-center gap-3 cursor-pointer group"
+              className="flex items-center gap-2 cursor-pointer group h-10"
               whileHover={{ scale: 1.02 }}
               onClick={() => window.location.href = "/"}
             >
-              {/* Rocket Logo - Show on larger screens */}
-              <div className="hidden sm:block relative">
-                <BrandLogo
-                  size="nav"
-                  tone="onLight"
-                  className="group-hover:scale-105 transition-transform duration-300"
-                  priority
-                />
-              </div>
-              {/* Mobile - Just text */}
-              <span className="text-lg font-semibold sm:hidden">GalaxyCo.ai</span>
+              {/* Icon + Text combo for header */}
+              <BrandLogo
+                variant="icon"
+                size="icon"
+                tone="onLight"
+                className="h-8 w-8 flex-shrink-0"
+                priority
+              />
+              <span className="text-lg font-bold tracking-wide text-foreground hidden sm:inline">GALAXY</span>
+              {/* Mobile - smaller text */}
+              <span className="text-base font-bold tracking-wide text-foreground sm:hidden">GALAXY</span>
             </motion.div>
 
             {/* Desktop Navigation */}

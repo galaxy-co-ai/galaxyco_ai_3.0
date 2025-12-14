@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 type BrandLogoVariant = "wordmark" | "wordmarkGlow" | "icon";
 type BrandLogoTone = "onLight" | "onDark";
 
-type BrandLogoSize = "nav" | "footer" | "hero" | "icon";
+type BrandLogoSize = "header" | "nav" | "footer" | "hero" | "icon";
 
 const logoSources: Record<BrandLogoVariant, Record<BrandLogoTone, string>> = {
   wordmark: {
@@ -26,6 +26,8 @@ const logoSources: Record<BrandLogoVariant, Record<BrandLogoTone, string>> = {
 };
 
 const sizeToPixels: Record<BrandLogoSize, { width: number; height: number; className: string }> = {
+  // Header size: strictly constrained for navigation bars (max 40px height)
+  header: { width: 160, height: 40, className: "h-10 max-h-10 w-auto" },
   nav: { width: 140, height: 32, className: "h-7 w-auto" },
   footer: { width: 160, height: 40, className: "h-8 w-auto" },
   hero: { width: 520, height: 180, className: "h-32 w-auto" },
