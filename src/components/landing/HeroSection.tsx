@@ -160,7 +160,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
       {/* Main Content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
         <div className="w-full max-w-7xl mx-auto">
-          {/* Announcement Badge */}
+          {/* Beta Launch Badge */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -168,12 +168,11 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             className="flex justify-center mb-8"
           >
             <Badge 
-              className="px-4 py-2 bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-400/30 text-violet-200 backdrop-blur-sm hover:bg-violet-500/30 transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 border-2 border-violet-400/50 text-white backdrop-blur-md shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all duration-300 text-base font-semibold"
               role="status"
             >
-              <Sparkles className="h-3.5 w-3.5 mr-2 text-violet-300" aria-hidden="true" />
-              <span className="font-medium">Introducing AI Workflow Studio 2.0</span>
-              <ArrowRight className="h-3.5 w-3.5 ml-2 text-violet-300" aria-hidden="true" />
+              <Sparkles className="h-4 w-4 mr-2 text-violet-300 animate-pulse" aria-hidden="true" />
+              <span>Beta Launch — Free Until January 1, 2026</span>
             </Badge>
           </motion.div>
 
@@ -198,11 +197,32 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg sm:text-xl lg:text-2xl text-gray-400 text-center max-w-3xl mx-auto mb-10 leading-relaxed"
+            className="text-lg sm:text-xl lg:text-2xl text-gray-400 text-center max-w-3xl mx-auto mb-8 leading-relaxed"
           >
             Deploy autonomous AI agents that manage your CRM, automate workflows, 
             and deliver insights—freeing you to focus on what matters.
           </motion.p>
+
+          {/* Beta Launch Value Props */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25 }}
+            className="flex flex-wrap justify-center items-center gap-4 mb-10 px-4"
+          >
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-sm text-white/80">All Pro Features Unlocked</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="text-sm text-white/80">Your Data, Forever</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
+              <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+              <span className="text-sm text-white/80">Shape the Roadmap</span>
+            </div>
+          </motion.div>
 
           {/* CTA Buttons */}
           <motion.div
@@ -213,44 +233,20 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
           >
             <button
               onClick={onEnterApp}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white/90 text-gray-900 backdrop-blur-sm shadow-lg shadow-white/20 hover:bg-white hover:shadow-white/30 hover:scale-105 group"
-              aria-label="Get started with GalaxyCo AI for free"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white text-gray-900 shadow-lg shadow-white/30 hover:shadow-white/50 hover:scale-105 group"
+              aria-label="Join GalaxyCo AI Beta for free"
             >
-              Start Free Trial
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+              Join Free Beta
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
             </button>
             <button
-              onClick={() => setShowDemoModal(true)}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white/10 text-white/90 border border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-sm group"
-              aria-label="Watch a demo video of the platform"
+              onClick={() => window.location.href = '/features#roadmap'}
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-sm group"
+              aria-label="View product roadmap"
             >
-              <Play className="h-4 w-4 group-hover:scale-110 transition-transform" aria-hidden="true" />
-              Watch Demo
+              View Roadmap
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
             </button>
-          </motion.div>
-
-          {/* Stats Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-            className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 mb-12"
-            role="list"
-            aria-label="Platform statistics"
-          >
-            {stats.map((stat, i) => (
-              <div 
-                key={i} 
-                className="flex items-center gap-1.5"
-                role="listitem"
-              >
-                <span className="text-sm font-semibold text-white/90">{stat.value}</span>
-                <span className="text-xs text-gray-500">{stat.label}</span>
-                {i < stats.length - 1 && (
-                  <span className="ml-4 text-gray-700 hidden sm:inline">•</span>
-                )}
-              </div>
-            ))}
           </motion.div>
 
           {/* Feature Showcase */}

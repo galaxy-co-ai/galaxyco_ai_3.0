@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ const plans = [
     period: "/mo",
     priceId: STRIPE_PRICE_IDS.starter,
     description: "Perfect for individuals and hobbyists exploring AI.",
+    betaAccess: false,
     features: [
       "1 AI Agent",
       "500 Monthly Tasks",
@@ -52,7 +53,7 @@ const plans = [
       "10,000 Monthly Tasks",
       "Advanced Workflows",
       "Priority Email Support",
-      "30-day Data Retention",
+      "Unlimited Data Retention",
       "5 Team Members",
       "Custom Integrations"
     ],
@@ -60,14 +61,16 @@ const plans = [
       "No SSO / SAML",
       "Shared Compute Resources"
     ],
-    cta: "Start Pro Trial",
-    popular: true
+    cta: "Start Free Beta",
+    popular: true,
+    betaAccess: true
   },
   {
     name: "Enterprise",
     price: "Custom",
     priceId: undefined, // Contact sales
     description: "For large organizations requiring security and control.",
+    betaAccess: false,
     features: [
       "Unlimited Everything",
       "Dedicated Compute",
@@ -181,6 +184,55 @@ function PricingContent() {
           </motion.div>
         </section>
 
+        {/* Beta Launch Banner */}
+        <section className="py-6 px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="max-w-5xl mx-auto"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-blue-500/10 border-2 border-violet-400/30 backdrop-blur-md shadow-xl">
+              {/* Animated background effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 via-transparent to-blue-500/5 animate-pulse" />
+              
+              <div className="relative p-8 md:p-10 text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <Sparkles className="h-6 w-6 text-violet-500 animate-pulse" />
+                  <Badge className="px-4 py-1.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white border-0 text-sm font-semibold">
+                    Beta Launch Special
+                  </Badge>
+                  <Sparkles className="h-6 w-6 text-fuchsia-500 animate-pulse" />
+                </div>
+                
+                <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-fuchsia-600 to-blue-600">
+                  All Pro Features Free Until January 1, 2026
+                </h2>
+                
+                <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                  We're actively building and your feedback shapes our roadmap. Join now, unlock everything, 
+                  and help us create the AI platform you've always wanted.
+                </p>
+                
+                <div className="flex flex-wrap justify-center gap-4 pt-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <span className="text-muted-foreground">Your data is yours, forever</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <span className="text-muted-foreground">No credit card required</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-600" />
+                    <span className="text-muted-foreground">Cancel anytime, keep your data</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
             {plans.map((plan, index) => (
@@ -192,8 +244,16 @@ function PricingContent() {
               >
                 <Card className={`h-full flex flex-col relative ${plan.popular ? 'border-primary shadow-lg shadow-primary/10' : ''}`}>
                   {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex gap-2">
                       <Badge className="bg-primary text-primary-foreground px-4 py-1">Most Popular</Badge>
+                      {plan.betaAccess && (
+                        <Badge className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-1">Free Beta</Badge>
+                      )}
+                    </div>
+                  )}
+                  {!plan.popular && plan.betaAccess && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-4 py-1">Free Beta</Badge>
                     </div>
                   )}
                   <CardHeader>
@@ -201,6 +261,11 @@ function PricingContent() {
                     <div className="mt-4 mb-2">
                       <span className="text-4xl font-bold">{plan.price}</span>
                       {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
+                      {plan.betaAccess && (
+                        <div className="mt-1">
+                          <span className="text-xs text-muted-foreground">Full pricing begins Jan 1, 2026</span>
+                        </div>
+                      )}
                     </div>
                     <CardDescription>{plan.description}</CardDescription>
                   </CardHeader>
@@ -252,9 +317,12 @@ function PricingContent() {
             <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
             <div className="space-y-6 text-left">
                {[
-                 { q: "Can I switch plans later?", a: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately." },
-                 { q: "Is there a free trial for Pro?", a: "Absolutely! We offer a 14-day free trial of our Pro plan so you can experience the full power of GalaxyCo." },
-                 { q: "What happens to my data if I cancel?", a: "We retain your data for 30 days after cancellation, giving you time to export it before it's permanently deleted." }
+                 { q: "What does Beta mean for me?", a: "You get full access to all Pro features completely free until January 1, 2026. We're actively building and your feedback directly shapes our roadmap. Think of it as being a founding member of our community." },
+                 { q: "Will I lose my data when Beta ends?", a: "Never. Your data is yours, forever. Whether you're on a free plan, paid plan, or cancelled account, we never delete your data without explicit permission. Export anytime, keep everything." },
+                 { q: "What features are coming next?", a: "Check out our public roadmap on the Features page. We're building advanced automation workflows, expanded integrations, and enterprise security features. Vote on what you want to see first!" },
+                 { q: "How long is free access available?", a: "All Pro features are free until January 1, 2026. After that, you can choose a plan that fits your needs. Early beta users will receive special pricing and exclusive perks as a thank you." },
+                 { q: "Can I switch plans later?", a: "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate any charges fairly." },
+                 { q: "Do I need a credit card to join?", a: "No credit card required during beta. Just sign up and start building. We'll give you plenty of notice before any billing begins." }
                ].map((faq, i) => (
                  <Card key={i} className="bg-background/50 backdrop-blur-sm">
                    <CardHeader>
