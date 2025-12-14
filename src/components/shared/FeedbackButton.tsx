@@ -45,7 +45,7 @@ function getFeatureArea(pathname: string): string {
   if (pathname.startsWith('/conversations')) return 'Conversations';
   if (pathname.startsWith('/finance')) return 'Finance HQ';
   if (pathname.startsWith('/marketing')) return 'Marketing';
-  if (pathname.startsWith('/launchpad')) return 'Launchpad';
+  if (pathname.startsWith('/blog')) return 'Launchpad';
   if (pathname.startsWith('/settings')) return 'Settings';
   if (pathname.startsWith('/assistant')) return 'Neptune';
   if (pathname.startsWith('/connected-apps')) return 'Connectors';

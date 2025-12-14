@@ -310,7 +310,7 @@ async function searchHandler(request: NextRequest) {
         type: 'blog' as const,
         title: b.title,
         description: b.excerpt || 'Blog post',
-        url: `/launchpad/${b.slug}`,
+        url: `/blog/${b.slug}`,
         icon: 'newspaper',
         metadata: { slug: b.slug },
       }));

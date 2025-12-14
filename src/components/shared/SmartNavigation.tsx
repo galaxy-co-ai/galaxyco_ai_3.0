@@ -20,6 +20,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
   const navLinks = [
     { label: "Features", href: "/features" },
     { label: "Pricing", href: "/pricing" },
+    { label: "Blog", href: "/blog" },
     { label: "Docs", href: "/docs" }
   ];
 

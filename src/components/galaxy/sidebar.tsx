@@ -59,7 +59,7 @@ const orchestrationSubitems = [
 
 // Secondary navigation items (Settings, Connectors, Mission Control moved to avatar dropdown)
 const secondaryNavItems = [
-  { icon: Rocket, label: "Launchpad", href: "/launchpad", id: "launchpad" },
+  { icon: Rocket, label: "Launchpad", href: "/blog", id: "launchpad" },
   { icon: Sparkles, label: "Neptune", href: "/assistant", id: "assistant" },
 ];
 

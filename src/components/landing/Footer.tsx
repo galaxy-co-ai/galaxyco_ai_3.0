@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import Image from "next/image";
 import { 
-  Rocket, 
   Twitter, 
   Linkedin, 
   Mail,
@@ -44,12 +44,12 @@ export function Footer() {
       { label: "Features", href: "/features" },
       { label: "Pricing", href: "/pricing" },
       { label: "Integrations", href: "/connected-apps" },
-      { label: "Changelog", href: "/launchpad" },
-      { label: "Roadmap", href: "/launchpad" }
+      { label: "Changelog", href: "/blog" },
+      { label: "Roadmap", href: "/features#roadmap" }
     ],
     company: [
       { label: "About", href: "/about" },
-      { label: "Blog", href: "/launchpad" },
+      { label: "Blog", href: "/blog" },
       { label: "Careers", href: "/contact" },
       { label: "Press Kit", href: "/contact" },
       { label: "Contact", href: "/contact" }
@@ -57,9 +57,9 @@ export function Footer() {
     resources: [
       { label: "Documentation", href: "/docs" },
       { label: "API Reference", href: "/docs" },
-      { label: "Guides", href: "/launchpad" },
+      { label: "Guides", href: "/blog" },
       { label: "Support", href: "/contact" },
-      { label: "Community", href: "/launchpad" }
+      { label: "Community", href: "/blog" }
     ],
     legal: [
       { label: "Privacy Policy", href: "/privacy" },
@@ -82,7 +82,7 @@ export function Footer() {
       {showBackToTop && (
         <motion.button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-40 h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-[0_10px_40px_rgba(59,130,246,0.4)] hover:shadow-[0_10px_50px_rgba(59,130,246,0.6)] transition-all duration-300 flex items-center justify-center group"
+          className="fixed bottom-8 right-8 z-40 h-12 w-12 rounded-full bg-electric-cyan text-void-black shadow-[0_10px_40px_rgba(0,212,232,0.4)] hover:shadow-[0_10px_50px_rgba(0,212,232,0.6)] transition-all duration-300 flex items-center justify-center group"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0 }}
@@ -104,11 +104,14 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/25">
-                <Rocket className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl">GalaxyCo.ai</span>
+            <div className="flex items-center mb-4">
+              <Image
+                src="/assets/brand/logos/1ae0cec6-7678-42b8-9154-7af87df89f46.png"
+                alt="GalaxyCo"
+                width={140}
+                height={56}
+                className="h-8 w-auto"
+              />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-xs">
               AI-native workspace platform that integrates intelligent agents and automated workflows 
@@ -131,7 +134,7 @@ export function Footer() {
                   size="sm"
                   onClick={handleSubscribe}
                   disabled={isSubscribed}
-                  className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 h-10 flex-shrink-0"
+                  className="rounded-full bg-electric-cyan text-void-black hover:bg-electric-cyan/90 px-4 h-10 flex-shrink-0"
                 >
                   {isSubscribed ? (
                     "Subscribed!"

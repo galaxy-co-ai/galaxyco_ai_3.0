@@ -565,7 +565,7 @@ export function PrePublishChecklist({
 
   // Launchpad preview URL
   const launchpadPreviewUrl = article.slug 
-    ? `/launchpad/blog/${article.slug}?preview=true`
+    ? `/blog/blog/${article.slug}?preview=true`
     : null;
 
   return (
@@ -809,7 +809,7 @@ export function PrePublishChecklist({
                           {article.metaTitle || article.title || 'Page Title'}
                         </p>
                         <p className="text-xs text-green-700">
-                          galaxyco.ai/launchpad/blog/{article.slug || 'page-url'}
+                          galaxyco.ai/blog/blog/{article.slug || 'page-url'}
                         </p>
                         <p className="text-sm text-gray-600 line-clamp-2">
                           {article.metaDescription || article.excerpt || 'Meta description will appear here...'}
