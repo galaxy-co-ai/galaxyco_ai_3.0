@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-14 (59b51e9)  
+**Updated Through:** 2025-12-14 (f508f74)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-14 f508f74 fix(roadmap): update Q1 2026 items - remove mobile app, move Zapier to Q2
 - 2025-12-14 59b51e9 feat(marketing): launch beta marketing updates with roadmap and feature transparency
 - 2025-12-13 cc22523 chore: remove todo-hq feature (completed, being replaced by new admin subdomain)
 - 2025-12-13 a3b371f fix: reduce ESLint warnings from 1144 to 578 (49% reduction)
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-13 503b9c4 feat(agents): add Sprint 9 Agent Polish components
 - 2025-12-13 3f418a1 feat(crm): add Sprint 7 Advanced CRM UI components
 - 2025-12-13 e667733 fix(calendar): handle nullable createdBy in events API
-- 2025-12-13 32fc168 feat(crm): add Sprint 7 Advanced CRM backend
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
