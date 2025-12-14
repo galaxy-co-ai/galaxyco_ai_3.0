@@ -90,10 +90,10 @@ const roadmapItems = [
   {
     quarter: "Q1 2026",
     items: [
-      { name: "Advanced Workflow Triggers", description: "Webhook, schedule, and event-based automation triggers" },
+      { name: "Advanced Workflow Triggers", description: "Schedule, event-based, and conditional automation triggers" },
       { name: "Team Collaboration", description: "Shared workspaces, permissions, and role-based access" },
-      { name: "Mobile App (iOS/Android)", description: "Native mobile apps for on-the-go access" },
-      { name: "Zapier Integration", description: "Connect with 5,000+ apps via Zapier" }
+      { name: "Email Integration Suite", description: "Deep Gmail/Outlook integration with smart filtering and auto-responses" },
+      { name: "Enhanced CRM Features", description: "Deal forecasting, pipeline analytics, and custom fields" }
     ]
   },
   {
@@ -101,8 +101,8 @@ const roadmapItems = [
     items: [
       { name: "Custom AI Agents", description: "Build and train your own specialized AI agents" },
       { name: "API & Webhooks", description: "Full REST API and webhook support for developers" },
-      { name: "Advanced Analytics", description: "Deep insights into workflows, agents, and business metrics" },
-      { name: "White-label Options", description: "Custom branding for agency and enterprise clients" }
+      { name: "Zapier Integration", description: "Connect with 5,000+ apps via Zapier" },
+      { name: "Advanced Analytics Dashboard", description: "Deep insights into workflows, agents, and business metrics" }
     ]
   },
   {
