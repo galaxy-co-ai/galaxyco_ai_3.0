@@ -180,7 +180,7 @@ export default function FeaturesPage() {
 
               {/* Current Features Tab */}
               <TabsContent value="current" className="space-y-8">
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="max-w-4xl mx-auto space-y-6">
                   {currentFeatures.map((feature, index) => {
                     const Icon = feature.icon;
                     const statusConfig = {
