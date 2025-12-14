@@ -233,7 +233,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
           >
             <button
               onClick={onEnterApp}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white text-gray-900 shadow-lg shadow-white/30 hover:shadow-white/50 hover:scale-105 group"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-electric-cyan focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-electric-cyan text-void-black shadow-lg shadow-electric-cyan/30 hover:shadow-electric-cyan/50 hover:scale-105 group"
               aria-label="Join GalaxyCo AI Beta for free"
             >
               Join Free Beta

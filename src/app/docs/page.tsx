@@ -309,8 +309,8 @@ export default function DocsPage() {
 
   const statusConfig = {
     stable: { bg: "bg-green-500/10", text: "text-green-700", label: "Stable" },
-    beta: { bg: "bg-blue-500/10", text: "text-blue-700", label: "Beta" },
-    new: { bg: "bg-purple-500/10", text: "text-purple-700", label: "New" }
+    beta: { bg: "bg-electric-cyan/10", text: "text-electric-cyan", label: "Beta" },
+    new: { bg: "bg-creamsicle/10", text: "text-creamsicle", label: "New" }
   };
 
   return (
@@ -448,7 +448,7 @@ export default function DocsPage() {
                       </p>
                     </div>
                     <div className="pt-4">
-                      <Button size="lg" onClick={handleEnterApp} className="gap-2">
+                      <Button size="lg" onClick={handleEnterApp} className="gap-2 bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
                         Start Building <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>

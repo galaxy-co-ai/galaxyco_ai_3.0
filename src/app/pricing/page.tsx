@@ -291,7 +291,7 @@ function PricingContent() {
                   </CardContent>
                   <CardFooter>
                     <Button 
-                      className="w-full" 
+                      className={`w-full ${plan.popular ? 'bg-electric-cyan text-void-black hover:bg-electric-cyan/90' : ''}` }
                       variant={plan.popular ? "default" : "outline"}
                       onClick={() => handleSubscribe(plan.name, plan.priceId)}
                       disabled={loadingPlan !== null}

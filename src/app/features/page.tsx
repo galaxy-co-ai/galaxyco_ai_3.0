@@ -185,8 +185,8 @@ export default function FeaturesPage() {
                     const Icon = feature.icon;
                     const statusConfig = {
                       live: { bg: "bg-green-500/10", text: "text-green-700", label: "Live" },
-                      beta: { bg: "bg-blue-500/10", text: "text-blue-700", label: "Beta" },
-                      "coming-soon": { bg: "bg-gray-400/10", text: "text-gray-600", label: "Coming Soon" }
+                      beta: { bg: "bg-electric-cyan/10", text: "text-electric-cyan", label: "Beta" },
+                      "coming-soon": { bg: "bg-creamsicle/10", text: "text-creamsicle", label: "Coming Soon" }
                     }[feature.status];
 
                     return (

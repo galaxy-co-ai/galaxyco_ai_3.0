@@ -47,7 +47,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0 shadow-lg">
+              <Badge className="mb-4 px-4 py-2 bg-electric-cyan text-void-black border-0 shadow-lg hover:bg-electric-cyan/90 transition-colors">
                 <Sparkles className="h-3.5 w-3.5 mr-2" />
                 Platform Features
               </Badge>
@@ -113,8 +113,8 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
             >
               <div className="max-w-3xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-1 w-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
-                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                  <div className="h-1 w-12 bg-electric-cyan rounded-full" />
+                  <Badge variant="outline" className="bg-electric-cyan/10 text-electric-cyan border-electric-cyan/30">
                     Workflow Builder
                   </Badge>
                 </div>
@@ -123,17 +123,17 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                   Build complex automation workflows with our intuitive drag-and-drop interface. Connect your tools, define logic, and watch AI agents execute your processes flawlessly.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-0">
+                  <Badge variant="secondary" className="bg-electric-cyan/10 text-electric-cyan border-0">
                     <Sparkles className="h-3 w-3 mr-1" />
                     Drag & Drop
                   </Badge>
-                  <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-0">No Code</Badge>
-                  <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-0">Visual Builder</Badge>
+                  <Badge variant="secondary" className="bg-electric-cyan/10 text-electric-cyan border-0">No Code</Badge>
+                  <Badge variant="secondary" className="bg-electric-cyan/10 text-electric-cyan border-0">Visual Builder</Badge>
                 </div>
               </div>
               
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
+                <div className="absolute -inset-1 bg-electric-cyan/20 rounded-2xl blur-xl group-hover:opacity-30 transition-opacity" />
                 <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
                   <Image
                     src="/screenshots/creator-demo.png"

@@ -158,8 +158,8 @@ export default function AboutPage() {
               transition={{ duration: 0.6 }}
               className="space-y-6"
             >
-              <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                <Rocket className="h-6 w-6 text-purple-500" />
+              <div className="h-12 w-12 rounded-xl bg-electric-cyan/10 flex items-center justify-center">
+                <Rocket className="h-6 w-6 text-electric-cyan" />
               </div>
               <h2 className="text-3xl font-bold">What We&apos;ve Built</h2>
               <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
@@ -231,7 +231,7 @@ export default function AboutPage() {
               Join thousands of teams already saving 10+ hours every week with GalaxyCo.ai
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={handleEnterApp} className="gap-2">
+              <Button size="lg" onClick={handleEnterApp} className="gap-2 bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
                 Get Started Free <ArrowRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" onClick={() => router.push("/contact")}>
