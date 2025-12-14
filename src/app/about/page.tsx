@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Rocket, Target, Heart, Zap, Users, Globe, ArrowRight } from "lucide-react";
 
@@ -62,8 +63,33 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto space-y-6"
+            className="max-w-4xl mx-auto space-y-8"
           >
+            {/* New Logo */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 100 }}
+              className="flex justify-center mb-6"
+            >
+              <div className="relative group">
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-2xl blur-2xl group-hover:blur-3xl transition-all duration-500" />
+                
+                {/* Logo */}
+                <div className="relative">
+                  <Image
+                    src="/assets/brand/logos/810729f1-240f-4d5a-9435-04d6c9cc2da8.png"
+                    alt="GalaxyCo Logo"
+                    width={400}
+                    height={200}
+                    className="h-32 w-auto mx-auto group-hover:scale-105 transition-transform duration-300"
+                    priority
+                  />
+                </div>
+              </div>
+            </motion.div>
+
             <Badge className="px-4 py-2 bg-primary/10 text-primary border-primary/20 backdrop-blur-sm">
               About Us
             </Badge>
