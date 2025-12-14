@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Lightbulb, Clock, Share2, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { Lightbulb, Clock, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -45,8 +45,11 @@ export function BestPracticesTemplate({
 }: BestPracticesTemplateProps) {
   const difficultyConfig = {
     Beginner: { color: "bg-green-500/10 text-green-700", icon: Info },
-    Intermediate: { color: "bg-electric-cyan/10 text-electric-cyan", icon: Lightbulb },
-    Advanced: { color: "bg-creamsicle/10 text-creamsicle", icon: AlertTriangle }
+    Intermediate: {
+      color: "bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border",
+      icon: Lightbulb,
+    },
+    Advanced: { color: "bg-warm-soft text-warm-ink border-warm-border", icon: AlertTriangle },
   };
 
   const config = difficultyConfig[difficulty];
@@ -55,7 +58,7 @@ export function BestPracticesTemplate({
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-electric-cyan/5 to-transparent py-16 px-6">
+      <div className="bg-gradient-to-b from-accent-cyan/5 to-transparent py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -64,7 +67,7 @@ export function BestPracticesTemplate({
             className="space-y-6"
           >
             <div className="flex items-center gap-2">
-              <Badge className="bg-electric-cyan/10 text-electric-cyan border-electric-cyan/30">
+              <Badge className="bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border">
                 {category}
               </Badge>
               <Badge className={config.color}>
@@ -118,16 +121,16 @@ export function BestPracticesTemplate({
 
         {/* TL;DR Section */}
         {tldr && tldr.length > 0 && (
-          <Card className="mb-8 bg-gradient-to-br from-electric-cyan/5 to-transparent border-electric-cyan/20">
+          <Card className="mb-8 bg-gradient-to-br from-accent-cyan-soft to-transparent border-accent-cyan-border">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Lightbulb className="h-5 w-5 text-electric-cyan" />
+                <Lightbulb className="h-5 w-5 text-accent-cyan-ink" />
                 <h3 className="font-semibold">TL;DR — Key Takeaways</h3>
               </div>
               <ul className="space-y-2">
                 {tldr.map((point, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-electric-cyan shrink-0 mt-1" />
+                    <CheckCircle2 className="h-4 w-4 text-accent-cyan-ink shrink-0 mt-1" />
                     <span className="text-sm">{point}</span>
                   </li>
                 ))}
@@ -144,12 +147,12 @@ export function BestPracticesTemplate({
         <Separator className="my-12" />
 
         {/* Bottom CTA */}
-        <Card className="bg-gradient-to-br from-electric-cyan/10 to-transparent border-electric-cyan/30">
+        <Card className="bg-gradient-to-br from-accent-cyan-soft to-transparent border-accent-cyan-border">
           <CardContent className="p-8 text-center space-y-4">
-            <Lightbulb className="h-12 w-12 mx-auto text-electric-cyan" />
+            <Lightbulb className="h-12 w-12 mx-auto text-accent-cyan-ink" />
             <h3 className="text-2xl font-bold">Ready to Apply These Practices?</h3>
             <p className="text-muted-foreground">Put these tips into action with GalaxyCo.ai.</p>
-            <Button size="lg" className="bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
+            <Button size="lg" variant="cta">
               Try in Your Dashboard
             </Button>
           </CardContent>
@@ -165,8 +168,8 @@ export function BestPracticesTemplate({
                 {relatedPractices.map((practice) => (
                   <Card key={practice.slug} className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardContent className="p-4 flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-electric-cyan/10 flex items-center justify-center shrink-0">
-                        <Lightbulb className="h-5 w-5 text-electric-cyan" />
+                      <div className="h-10 w-10 rounded-lg bg-accent-cyan-soft flex items-center justify-center shrink-0">
+                        <Lightbulb className="h-5 w-5 text-accent-cyan-ink" />
                       </div>
                       <h3 className="font-semibold line-clamp-2">{practice.title}</h3>
                     </CardContent>

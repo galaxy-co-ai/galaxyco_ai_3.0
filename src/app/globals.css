@@ -1,54 +1,76 @@
 @import "tailwindcss";
 
 :root {
+  /* Brand Anchors */
+  --brand-void-black: #0D0D12;
+  --brand-deep-space: #19122F;
+  --brand-ice-white: #F5F5F7;
+  --brand-electric-cyan: #00D4E8;
+  --brand-creamsicle: #FF9966;
+
   /* Base Colors */
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  
+  --background: var(--brand-ice-white);
+  --foreground: var(--brand-void-black);
+
   /* Card Colors */
   --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  
+  --card-foreground: var(--foreground);
+
   /* Popover Colors */
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  
-  /* Primary Colors - Electric Cyan */
-  --primary: #00D4E8;
-  --primary-foreground: #0D0D12;
-  
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+
+  /* Primary Colors - Deep Space (trustworthy, professional) */
+  --primary: var(--brand-deep-space);
+  --primary-foreground: var(--brand-ice-white);
+
+  /* Accent - Electric Cyan (use for strokes + highlights; avoid large fills) */
+  --accent-cyan: var(--brand-electric-cyan);
+
+  /* Accent tones (theme-aware) */
+  --accent-cyan-ink: color-mix(in oklab, var(--brand-electric-cyan) 40%, var(--brand-deep-space));
+  --accent-cyan-soft: color-mix(in oklab, var(--brand-electric-cyan) 12%, #ffffff);
+  --accent-cyan-border: color-mix(in oklab, var(--brand-electric-cyan) 28%, var(--border));
+  --accent-cyan-glow: color-mix(in oklab, var(--brand-electric-cyan) 55%, #ffffff);
+
+  /* Warm accent tones */
+  --warm: var(--brand-creamsicle);
+  --warm-ink: color-mix(in oklab, var(--brand-creamsicle) 42%, var(--brand-void-black));
+  --warm-soft: color-mix(in oklab, var(--brand-creamsicle) 12%, #ffffff);
+  --warm-border: color-mix(in oklab, var(--brand-creamsicle) 28%, var(--border));
+
   /* Secondary Colors */
   --secondary: oklch(0.95 0.0058 264.53);
   --secondary-foreground: #1c1c1e;
-  
+
   /* Muted Colors */
   --muted: #ececf0;
   --muted-foreground: #717182;
-  
+
   /* Accent Colors */
   --accent: #e9ebef;
   --accent-foreground: #1c1c1e;
-  
+
   /* Destructive Colors */
   --destructive: #FF3B30;
   --destructive-foreground: #ffffff;
-  
+
   /* Border & Input */
   --border: rgba(0, 0, 0, 0.1);
   --input: transparent;
-  --input-background: #f3f3f5;
+  --input-background: #ffffff;
   --switch-background: #cbced4;
-  
-  /* Ring/Focus - Electric Cyan */
-  --ring: #00D4E8;
-  
+
+  /* Ring/Focus - cyan-based (used with alpha via Tailwind ring utilities) */
+  --ring: var(--accent-cyan);
+
   /* Typography */
   --font-size: 16px;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   /* Border Radius - Increased for softer look */
   --radius: 0.875rem;
   --radius-sm: 0.5rem;
@@ -56,35 +78,35 @@
   --radius-lg: 1rem;
   --radius-xl: 1.25rem;
   --radius-2xl: 1.5rem;
-  
+
   /* Sidebar Colors */
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #007AFF;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: #007AFF;
-  
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: color-mix(in oklab, var(--brand-ice-white) 80%, #ffffff);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: var(--accent-cyan);
+
   /* Chart Colors */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  
+
   /* Status Colors */
   --status-success: #34C759;
   --status-warning: #FF9500;
   --status-error: #FF3B30;
-  --status-info: #007AFF;
-  
+  --status-info: var(--accent-cyan-ink);
+
   /* Lead Status Colors - Soft Pastel */
   --lead-hot: #FCA5A5;
   --lead-warm: #FCD34D;
   --lead-cold: #93C5FD;
-  
+
   /* Soft Color Palette */
   --soft-purple: #C4B5FD;
   --soft-indigo: #A5B4FC;
@@ -92,12 +114,12 @@
   --soft-green: #A7F3D0;
   --soft-amber: #FDE68A;
   --soft-red: #FCA5A5;
-  
+
   /* Soft Shadows */
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-soft-hover: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-soft-lg: 0 8px 24px rgba(0, 0, 0, 0.06);
-  
+
   /* Campaign Status Colors */
   --campaign-active: #34C759;
   --campaign-draft: #8E8E93;
@@ -105,38 +127,57 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --background: var(--brand-void-black);
+  --foreground: var(--brand-ice-white);
+
+  --card: color-mix(in oklab, var(--brand-void-black) 70%, var(--brand-deep-space));
+  --card-foreground: var(--brand-ice-white);
+
+  --popover: var(--card);
+  --popover-foreground: var(--brand-ice-white);
+
+  --primary: var(--brand-deep-space);
+  --primary-foreground: var(--brand-ice-white);
+
+  --secondary: color-mix(in oklab, var(--brand-deep-space) 28%, var(--brand-void-black));
+  --secondary-foreground: var(--brand-ice-white);
+
+  --muted: rgba(245, 245, 247, 0.08);
+  --muted-foreground: rgba(245, 245, 247, 0.68);
+
+  --accent: rgba(245, 245, 247, 0.08);
+  --accent-foreground: var(--brand-ice-white);
+
+  --destructive: #FF3B30;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(245, 245, 247, 0.12);
+  --input: transparent;
+  --input-background: rgba(13, 13, 18, 0.6);
+  --switch-background: rgba(245, 245, 247, 0.18);
+
+  --ring: var(--accent-cyan);
+
+  /* Accent tones (dark) */
+  --accent-cyan-ink: color-mix(in oklab, var(--brand-electric-cyan) 85%, #ffffff);
+  --accent-cyan-soft: color-mix(in oklab, var(--brand-electric-cyan) 16%, var(--brand-deep-space));
+  --accent-cyan-border: color-mix(in oklab, var(--brand-electric-cyan) 32%, var(--border));
+  --accent-cyan-glow: color-mix(in oklab, var(--brand-electric-cyan) 75%, #ffffff);
+
+  --warm-ink: color-mix(in oklab, var(--brand-creamsicle) 70%, #ffffff);
+  --warm-soft: color-mix(in oklab, var(--brand-creamsicle) 16%, var(--brand-deep-space));
+  --warm-border: color-mix(in oklab, var(--brand-creamsicle) 32%, var(--border));
+
+  --sidebar: rgba(25, 18, 47, 0.72);
+  --sidebar-foreground: var(--brand-ice-white);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: rgba(245, 245, 247, 0.06);
+  --sidebar-accent-foreground: var(--brand-ice-white);
+  --sidebar-border: rgba(245, 245, 247, 0.12);
+  --sidebar-ring: var(--accent-cyan);
+
+  --status-info: var(--accent-cyan);
 }
 
 @theme inline {
@@ -148,6 +189,14 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-cyan-ink: var(--accent-cyan-ink);
+  --color-accent-cyan-soft: var(--accent-cyan-soft);
+  --color-accent-cyan-border: var(--accent-cyan-border);
+  --color-warm: var(--warm);
+  --color-warm-ink: var(--warm-ink);
+  --color-warm-soft: var(--warm-soft);
+  --color-warm-border: var(--warm-border);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -186,7 +235,7 @@
   --color-campaign-paused: var(--campaign-paused);
   
   /* Typography */
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
   
   /* Border Radius */
@@ -203,7 +252,8 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+    font-family: var(--font-inter), var(--font-geist-sans), system-ui, -apple-system,
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -217,6 +267,17 @@
 
 /* Typography Scale - Enhanced for Better Readability */
 @layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-space-grotesk), var(--font-inter), var(--font-geist-sans),
+      system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+  }
+
   h1 {
     @apply text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight;
   }

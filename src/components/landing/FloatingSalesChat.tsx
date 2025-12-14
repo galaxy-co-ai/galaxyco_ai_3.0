@@ -31,13 +31,13 @@ const getInitialMessages = (): Message[] => [
   {
     id: "1",
     role: "assistant",
-    content: "Hey there! 👋 I'm Galaxy, your AI guide to GalaxyCo.ai. I know everything about our platform — from Neptune AI (our intelligent assistant that actually takes action) to our CRM, Marketing tools, and Workflow Studio. Ask me anything!",
+    content: "Hey there! I'm Galaxy, your AI guide to GalaxyCo.ai. I can help with everything from Neptune AI (our assistant that takes action) to CRM, Marketing, and Workflow Studio. Ask me anything!",
     timestamp: new Date(),
     suggestions: [
       "What is Neptune AI?",
       "Show me pricing",
       "What makes you different?",
-      "Start free trial"
+      "Join free beta"
     ],
   },
 ];
@@ -147,13 +147,13 @@ export function FloatingSalesChat() {
               {/* Pulse ring animation */}
               {!hasInteracted && (
                 <>
-                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 animate-ping opacity-30" />
-                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 animate-pulse opacity-20" />
+                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-accent-cyan to-warm animate-ping opacity-30" />
+                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-accent-cyan to-warm animate-pulse opacity-20" />
                 </>
               )}
               
               {/* Main button */}
-              <div className="relative h-14 w-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30 flex items-center justify-center transition-transform group-hover:scale-110">
+              <div className="relative h-14 w-14 rounded-full bg-gradient-to-br from-primary to-void-black border border-accent-cyan/30 shadow-[0_18px_50px_rgba(0,0,0,0.35)] flex items-center justify-center transition-transform group-hover:scale-110">
                 <MessageCircle className="h-6 w-6 text-white" />
               </div>
 
@@ -163,9 +163,9 @@ export function FloatingSalesChat() {
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 1 }}
-                  className="absolute -left-28 top-1/2 -translate-y-1/2 bg-white rounded-full px-3 py-1.5 shadow-lg border border-gray-100 whitespace-nowrap"
+                  className="absolute -left-28 top-1/2 -translate-y-1/2 bg-card rounded-full px-3 py-1.5 shadow-lg border border-border whitespace-nowrap"
                 >
-                  <span className="text-sm font-medium text-gray-700">Chat with us!</span>
+                  <span className="text-sm font-medium text-foreground/80">Chat with us!</span>
                 </motion.div>
               )}
             </button>
@@ -181,10 +181,10 @@ export function FloatingSalesChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 z-50 w-[380px] h-[560px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[380px] h-[560px] bg-background rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 px-5 py-4 flex items-center justify-between flex-shrink-0">
+            <div className="bg-gradient-to-r from-primary to-void-black px-5 py-4 flex items-center justify-between flex-shrink-0 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -220,7 +220,7 @@ export function FloatingSalesChat() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/50 to-white">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-muted/30 to-background">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -228,7 +228,7 @@ export function FloatingSalesChat() {
                 >
                   {message.role === "assistant" && (
                     <Avatar className="h-8 w-8 shrink-0 shadow-sm">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-void-black text-white">
                         <Sparkles className="h-4 w-4" />
                       </AvatarFallback>
                     </Avatar>
@@ -237,8 +237,8 @@ export function FloatingSalesChat() {
                     <div
                       className={`rounded-2xl px-4 py-2.5 max-w-[85%] ${
                         message.role === "user"
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white ml-auto rounded-br-md"
-                          : "bg-white text-gray-900 rounded-bl-md shadow-sm border border-gray-100"
+                          ? "bg-primary text-primary-foreground ml-auto rounded-br-md border border-accent-cyan/20"
+                          : "bg-card text-foreground rounded-bl-md shadow-sm border border-border"
                       }`}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
@@ -251,7 +251,7 @@ export function FloatingSalesChat() {
                           <button
                             key={idx}
                             onClick={() => handleSuggestionClick(suggestion)}
-                            className="text-xs px-3 py-1.5 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all shadow-sm"
+                            className="text-xs px-3 py-1.5 rounded-full bg-background border border-border text-foreground/80 hover:bg-accent-cyan-soft hover:border-accent-cyan-border hover:text-accent-cyan-ink transition-all shadow-sm"
                           >
                             {suggestion}
                           </button>
@@ -259,7 +259,7 @@ export function FloatingSalesChat() {
                       </div>
                     )}
 
-                    <span className="text-[10px] text-gray-400 mt-1 block">
+                    <span className="text-[10px] text-muted-foreground/70 mt-1 block">
                       {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
@@ -277,26 +277,26 @@ export function FloatingSalesChat() {
               {isLoading && (
                 <div className="flex gap-2.5">
                   <Avatar className="h-8 w-8 shrink-0 shadow-sm">
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-void-black text-white">
                       <Sparkles className="h-4 w-4" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className="rounded-2xl rounded-bl-md px-4 py-3 bg-white shadow-sm border border-gray-100">
+                  <div className="rounded-2xl rounded-bl-md px-4 py-3 bg-card shadow-sm border border-border">
                     <div className="flex gap-1.5">
                       <motion.div
                         animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                         transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                        className="h-2 w-2 bg-blue-400 rounded-full"
+                        className="h-2 w-2 bg-accent-cyan/80 rounded-full"
                       />
                       <motion.div
                         animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                         transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
-                        className="h-2 w-2 bg-purple-400 rounded-full"
+                        className="h-2 w-2 bg-warm/80 rounded-full"
                       />
                       <motion.div
                         animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
                         transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
-                        className="h-2 w-2 bg-blue-400 rounded-full"
+                        className="h-2 w-2 bg-accent-cyan/80 rounded-full"
                       />
                     </div>
                   </div>
@@ -307,11 +307,11 @@ export function FloatingSalesChat() {
 
             {/* Quick Features Banner - shown only on initial state */}
             {messages.length === 1 && !isLoading && (
-              <div className="px-4 pb-2 border-t border-gray-100 bg-gray-50/50">
-                <div className="flex items-center justify-between py-2 text-[10px] text-gray-500">
+              <div className="px-4 pb-2 border-t border-border bg-muted/30">
+                <div className="flex items-center justify-between py-2 text-[10px] text-muted-foreground">
                   <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-yellow-500" /> Instant answers</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3 text-blue-500" /> 24/7 available</span>
+                    <span className="flex items-center gap-1"><Zap className="h-3 w-3 text-warm" /> Instant answers</span>
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3 text-accent-cyan" /> 24/7 available</span>
                     <span className="flex items-center gap-1"><Shield className="h-3 w-3 text-green-500" /> Secure</span>
                   </div>
                 </div>
@@ -319,7 +319,7 @@ export function FloatingSalesChat() {
             )}
 
             {/* Input */}
-            <div className="px-4 py-3 border-t border-gray-100 bg-white flex items-center gap-2 flex-shrink-0">
+            <div className="px-4 py-3 border-t border-border bg-background flex items-center gap-2 flex-shrink-0">
               <Input
                 placeholder="Ask anything about GalaxyCo.ai..."
                 value={input}
@@ -330,15 +330,16 @@ export function FloatingSalesChat() {
                     handleSend();
                   }
                 }}
-                className="flex-1 rounded-full border-gray-200 focus-visible:ring-blue-500"
+                className="flex-1 rounded-full border-border focus-visible:ring-accent-cyan"
                 disabled={isLoading}
                 aria-label="Type your message"
               />
               <Button
                 size="icon"
+                variant="cta"
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-full shadow-md"
+                className="rounded-full"
                 aria-label="Send message"
               >
                 {isLoading ? (
@@ -350,13 +351,13 @@ export function FloatingSalesChat() {
             </div>
 
             {/* Footer */}
-            <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-[10px] text-gray-400">Powered by GalaxyCo AI</span>
+            <div className="px-4 py-2 bg-muted/30 border-t border-border flex items-center justify-between">
+              <span className="text-[10px] text-muted-foreground">Powered by GalaxyCo AI</span>
               <Link
                 href="/sign-up"
-                className="text-[10px] text-blue-600 hover:text-blue-700 font-medium flex items-center gap-0.5"
+                className="text-[10px] text-accent-cyan-ink hover:text-accent-cyan font-medium flex items-center gap-0.5"
               >
-                Start free trial <ArrowRight className="h-3 w-3" />
+                Join free beta <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           </motion.div>

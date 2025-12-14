@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import Image from "next/image";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { 
   Twitter, 
   Linkedin, 
@@ -82,7 +82,7 @@ export function Footer() {
       {showBackToTop && (
         <motion.button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-40 h-12 w-12 rounded-full bg-electric-cyan text-void-black shadow-[0_10px_40px_rgba(0,212,232,0.4)] hover:shadow-[0_10px_50px_rgba(0,212,232,0.6)] transition-all duration-300 flex items-center justify-center group"
+          className="fixed bottom-8 right-8 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground border border-accent-cyan/25 shadow-soft-lg hover:border-accent-cyan/40 transition-all duration-300 flex items-center justify-center group"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0 }}
@@ -105,13 +105,7 @@ export function Footer() {
             transition={{ duration: 0.5 }}
           >
             <div className="flex items-center mb-4">
-              <Image
-                src="/assets/brand/logos/1ae0cec6-7678-42b8-9154-7af87df89f46.png"
-                alt="GalaxyCo"
-                width={140}
-                height={56}
-                className="h-8 w-auto"
-              />
+              <BrandLogo size="footer" tone="onLight" />
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-xs">
               AI-native workspace platform that integrates intelligent agents and automated workflows 
@@ -132,9 +126,10 @@ export function Footer() {
                 />
                 <Button
                   size="sm"
+                  variant="cta"
                   onClick={handleSubscribe}
                   disabled={isSubscribed}
-                  className="rounded-full bg-electric-cyan text-void-black hover:bg-electric-cyan/90 px-4 h-10 flex-shrink-0"
+                  className="rounded-full px-4 h-10 flex-shrink-0"
                 >
                   {isSubscribed ? (
                     "Subscribed!"
@@ -285,7 +280,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="h-9 w-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 hover:from-blue-600 hover:to-purple-600 flex items-center justify-center transition-all duration-300 group"
+                  className="h-9 w-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 hover:from-primary hover:to-accent-cyan flex items-center justify-center transition-all duration-300 group"
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   whileTap={{ scale: 0.95 }}
                 >

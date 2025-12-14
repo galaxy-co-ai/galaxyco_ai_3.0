@@ -66,9 +66,9 @@ const CTAStarField = () => {
 
 export function FooterCTA({ onEnterApp }: FooterCTAProps) {
   const benefits = [
-    { icon: CheckCircle2, text: "14-day free trial" },
+    { icon: CheckCircle2, text: "Free until Jan 1, 2026" },
     { icon: CheckCircle2, text: "No credit card required" },
-    { icon: CheckCircle2, text: "Setup in 5 minutes" }
+    { icon: CheckCircle2, text: "Setup in 5 minutes" },
   ];
 
   return (
@@ -80,7 +80,7 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Card className="relative p-8 lg:p-12 border-0 shadow-[0_30px_90px_rgba(0,0,0,0.2)] bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 text-white overflow-hidden">
+          <Card className="relative p-8 lg:p-12 border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.2)] bg-gradient-to-br from-void-black via-primary to-void-black text-white overflow-hidden">
             {/* Animated Background */}
             <CTAStarField />
             
@@ -136,7 +136,7 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
                   >
                     <Sparkles className="h-3.5 w-3.5 mr-2" />
                   </motion.div>
-                  <span className="text-sm">Limited Time: 1,000+ Teams Already Onboard</span>
+                  <span className="text-sm">Beta Launch — Free Until Jan 1, 2026</span>
                 </Badge>
               </motion.div>
 
@@ -153,7 +153,7 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
 
               {/* Description */}
               <motion.p
-                className="text-base lg:text-lg text-center mb-8 text-blue-100 max-w-2xl mx-auto leading-relaxed"
+                className="text-base lg:text-lg text-center mb-8 text-white/80 max-w-2xl mx-auto leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -173,10 +173,10 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
               >
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto rounded-full bg-white text-blue-600 hover:bg-blue-50 shadow-[0_20px_50px_rgba(255,255,255,0.3)] hover:shadow-[0_20px_70px_rgba(255,255,255,0.4)] transition-all duration-300 px-8 py-6 group"
+                  className="w-full sm:w-auto rounded-full bg-white text-primary hover:bg-white/90 shadow-[0_20px_50px_rgba(255,255,255,0.3)] hover:shadow-[0_20px_70px_rgba(255,255,255,0.4)] transition-all duration-300 px-8 py-6 group"
                   onClick={onEnterApp}
                 >
-                  Start Free Trial
+                  Join Free Beta
                   <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <Button 
@@ -224,14 +224,14 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
                     {[
-                      "from-blue-400 to-blue-500",
-                      "from-purple-400 to-purple-500",
-                      "from-pink-400 to-pink-500",
-                      "from-orange-400 to-orange-500"
+                      "from-accent-cyan to-primary",
+                      "from-warm to-primary",
+                      "from-accent-cyan to-warm",
+                      "from-primary to-accent-cyan",
                     ].map((gradient, i) => (
                       <div 
                         key={i} 
-                        className={`h-8 w-8 rounded-full bg-gradient-to-br ${gradient} border-2 border-blue-600 flex items-center justify-center`}
+                        className={`h-8 w-8 rounded-full bg-gradient-to-br ${gradient} border-2 border-white/20 flex items-center justify-center`}
                       >
                         <Users className="h-4 w-4 text-white" />
                       </div>
@@ -243,7 +243,7 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
                 <div className="flex items-center gap-2">
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-300 text-yellow-300" />
+                      <Star key={i} className="h-4 w-4 fill-warm text-warm" />
                     ))}
                   </div>
                   <span className="text-xs lg:text-sm text-white/80">4.9/5 rating</span>

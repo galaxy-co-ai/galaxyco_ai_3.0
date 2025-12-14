@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -30,36 +31,36 @@ const features = [
     icon: Bot,
     label: "AI Agents",
     description: "24/7 autonomous task execution",
-    gradient: "from-violet-500 to-purple-600",
-    bgGlow: "bg-violet-500/20",
+    gradient: "from-accent-cyan to-primary",
+    bgGlow: "bg-accent-cyan/10",
   },
   {
     icon: Workflow,
     label: "Workflow Studio",
     description: "Visual drag-and-drop builder",
-    gradient: "from-blue-500 to-cyan-500",
-    bgGlow: "bg-blue-500/20",
+    gradient: "from-accent-cyan to-warm",
+    bgGlow: "bg-accent-cyan/10",
   },
   {
     icon: Users,
     label: "Smart CRM",
     description: "AI-powered insights & scoring",
-    gradient: "from-pink-500 to-rose-500",
-    bgGlow: "bg-pink-500/20",
+    gradient: "from-warm to-primary",
+    bgGlow: "bg-warm/10",
   },
   {
     icon: BarChart3,
     label: "Marketing Hub",
     description: "Campaign analytics & ROI",
-    gradient: "from-orange-500 to-amber-500",
-    bgGlow: "bg-orange-500/20",
+    gradient: "from-warm to-accent-cyan",
+    bgGlow: "bg-warm/10",
   },
   {
     icon: FileSearch,
     label: "Knowledge Base",
     description: "AI-powered document search",
-    gradient: "from-emerald-500 to-teal-500",
-    bgGlow: "bg-emerald-500/20",
+    gradient: "from-accent-cyan to-primary",
+    bgGlow: "bg-accent-cyan/10",
   },
 ];
 
@@ -109,11 +110,14 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
       aria-label="Hero section introducing GalaxyCo AI platform"
     >
       {/* Background with animated gradient */}
-      <div className="absolute inset-0 bg-[#0a0a1a]">
+      <div className="absolute inset-0 bg-void-black">
         {/* Gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-600/30 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: "1s" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/20 rounded-full blur-[150px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-deep-space/60 rounded-full blur-[120px] animate-pulse" />
+        <div
+          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-accent-cyan/10 rounded-full blur-[100px] animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-creamsicle/5 rounded-full blur-[150px]" />
         
         {/* Grid pattern overlay */}
         <div 
@@ -126,7 +130,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
         />
         
         {/* Radial fade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a1a]/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-void-black/80" />
       </div>
 
       {/* Animated Background Particles */}
@@ -167,11 +171,11 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             transition={{ duration: 0.5 }}
             className="flex justify-center mb-8"
           >
-            <Badge 
-              className="px-5 py-2.5 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 border-2 border-violet-400/50 text-white backdrop-blur-md shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 transition-all duration-300 text-base font-semibold"
+              <Badge
+              className="px-5 py-2.5 bg-primary/30 border border-accent-cyan/30 text-white backdrop-blur-md shadow-soft-lg hover:border-accent-cyan/45 transition-all duration-300 text-base font-semibold"
               role="status"
             >
-              <Sparkles className="h-4 w-4 mr-2 text-violet-300 animate-pulse" aria-hidden="true" />
+              <Sparkles className="h-4 w-4 mr-2 text-accent-cyan animate-pulse" aria-hidden="true" />
               <span>Beta Launch — Free Until January 1, 2026</span>
             </Badge>
           </motion.div>
@@ -186,7 +190,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight">
               AI that works
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-cyan to-warm">
                 while you sleep
               </span>
             </h1>
@@ -215,11 +219,11 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
               <span className="text-sm text-white/80">All Pro Features Unlocked</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-accent-cyan animate-pulse" />
               <span className="text-sm text-white/80">Your Data, Forever</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-warm animate-pulse" />
               <span className="text-sm text-white/80">Shape the Roadmap</span>
             </div>
           </motion.div>
@@ -231,17 +235,18 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-3 justify-center mb-12 lg:mb-16"
           >
-            <button
+            <Button
               onClick={onEnterApp}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-electric-cyan focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-electric-cyan text-void-black shadow-lg shadow-electric-cyan/30 hover:shadow-electric-cyan/50 hover:scale-105 group"
+              variant="cta"
+              className="h-12 rounded-xl px-6 text-base font-semibold group focus-visible:ring-offset-void-black"
               aria-label="Join GalaxyCo AI Beta for free"
             >
               Join Free Beta
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-            </button>
+            </Button>
             <button
               onClick={() => window.location.href = '/features#roadmap'}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a] bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-sm group"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-void-black bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-sm group"
               aria-label="View product roadmap"
             >
               View Roadmap
@@ -281,7 +286,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
                       aria-controls={`feature-panel-${index}`}
                       className={`
                         flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium
-                        transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a]
+                        transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-void-black
                         ${isActive 
                           ? `bg-gradient-to-r ${feature.gradient} text-white shadow-lg` 
                           : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10"
@@ -390,7 +395,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
                     aria-current={index === currentFeature ? "true" : undefined}
                     className={`
                       h-1.5 rounded-full transition-all duration-500
-                      focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-[#0a0a1a]
+                      focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-void-black
                       ${index === currentFeature 
                         ? `w-12 bg-gradient-to-r ${feature.gradient}` 
                         : "w-6 bg-white/20 hover:bg-white/40"
@@ -405,40 +410,41 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
       </div>
 
       {/* Bottom fade for smooth transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
 
       {/* Demo Video Modal */}
       <Dialog open={showDemoModal} onOpenChange={setShowDemoModal}>
-        <DialogContent className="sm:max-w-3xl bg-slate-900 border-slate-700 text-white">
+        <DialogContent className="sm:max-w-3xl bg-void-black/90 border border-white/10 text-white backdrop-blur-xl shadow-soft-lg">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-              <Play className="h-5 w-5 text-violet-400" />
+              <Play className="h-5 w-5 text-accent-cyan" />
               Platform Demo
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-white/70">
               See how GalaxyCo.ai can transform your business operations
             </DialogDescription>
           </DialogHeader>
-          <div className="relative aspect-video bg-slate-800 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="relative aspect-video bg-white/5 border border-white/10 rounded-lg overflow-hidden flex items-center justify-center">
             {/* Placeholder for demo video - replace with actual video embed */}
             <div className="text-center p-8">
-              <div className="w-20 h-20 rounded-full bg-violet-500/20 flex items-center justify-center mx-auto mb-4">
-                <Play className="h-10 w-10 text-violet-400" />
+              <div className="w-20 h-20 rounded-full bg-accent-cyan/15 border border-accent-cyan/20 flex items-center justify-center mx-auto mb-4">
+                <Play className="h-10 w-10 text-accent-cyan" />
               </div>
               <h3 className="text-lg font-medium text-white mb-2">Demo Video Coming Soon</h3>
-              <p className="text-slate-400 text-sm max-w-md">
-                We&apos;re putting the finishing touches on our demo video. 
-                In the meantime, click &quot;Start Free Trial&quot; to explore the platform yourself!
+              <p className="text-white/70 text-sm max-w-md">
+                We&apos;re putting the finishing touches on our demo video.
+                In the meantime, click &quot;Try It Now&quot; to explore the platform yourself!
               </p>
-              <button
+              <Button
                 onClick={() => {
                   setShowDemoModal(false);
                   onEnterApp();
                 }}
-                className="mt-6 px-6 py-2.5 bg-violet-600 hover:bg-violet-500 text-white font-medium rounded-lg transition-colors"
+                variant="cta"
+                className="mt-6"
               >
                 Try It Now
-              </button>
+              </Button>
             </div>
           </div>
         </DialogContent>

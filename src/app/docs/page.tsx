@@ -7,7 +7,7 @@ import { Footer } from "@/components/landing/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -309,8 +309,8 @@ export default function DocsPage() {
 
   const statusConfig = {
     stable: { bg: "bg-green-500/10", text: "text-green-700", label: "Stable" },
-    beta: { bg: "bg-electric-cyan/10", text: "text-electric-cyan", label: "Beta" },
-    new: { bg: "bg-creamsicle/10", text: "text-creamsicle", label: "New" }
+    beta: { bg: "bg-accent-cyan-soft", text: "text-accent-cyan-ink", label: "Beta" },
+    new: { bg: "bg-warm-soft", text: "text-warm-ink", label: "New" },
   };
 
   return (
@@ -448,7 +448,7 @@ export default function DocsPage() {
                       </p>
                     </div>
                     <div className="pt-4">
-                      <Button size="lg" onClick={handleEnterApp} className="gap-2 bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
+                      <Button size="lg" variant="cta" onClick={handleEnterApp} className="gap-2">
                         Start Building <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
@@ -464,3 +464,4 @@ export default function DocsPage() {
     </div>
   );
 }
+

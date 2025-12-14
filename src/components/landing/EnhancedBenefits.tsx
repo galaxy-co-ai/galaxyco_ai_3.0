@@ -11,9 +11,9 @@ const benefits = [
     description: "Automate repetitive tasks and focus on what matters",
     metric: "10+",
     metricLabel: "Hours Saved",
-    gradient: "from-blue-500 to-cyan-500",
+    gradient: "from-accent-cyan to-primary",
     proof: "Average across 1,000+ teams",
-    link: "#time-savings"
+    link: "#time-savings",
   },
   {
     number: "02",
@@ -22,9 +22,9 @@ const benefits = [
     description: "AI-powered insights reduce human error by 85%",
     metric: "85%",
     metricLabel: "Error Reduction",
-    gradient: "from-purple-500 to-pink-500",
+    gradient: "from-accent-cyan to-warm",
     proof: "Validated by third-party audit",
-    link: "#accuracy"
+    link: "#accuracy",
   },
   {
     number: "03",
@@ -33,9 +33,9 @@ const benefits = [
     description: "Teams report 3x faster task completion",
     metric: "3x",
     metricLabel: "Faster Tasks",
-    gradient: "from-orange-500 to-red-500",
+    gradient: "from-warm to-primary",
     proof: "Based on user surveys",
-    link: "#productivity"
+    link: "#productivity",
   },
   {
     number: "04",
@@ -44,10 +44,10 @@ const benefits = [
     description: "Bank-level encryption and compliance",
     metric: "100%",
     metricLabel: "SOC 2 Compliant",
-    gradient: "from-green-500 to-emerald-500",
+    gradient: "from-primary to-accent-cyan",
     proof: "Audited annually",
-    link: "#security"
-  }
+    link: "#security",
+  },
 ];
 
 interface BenefitCardProps {
@@ -134,7 +134,7 @@ function BenefitCard({ benefit, index }: BenefitCardProps) {
           <motion.div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
             style={{
-              background: `radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.05), transparent 70%)`,
+              background: `radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.06), transparent 70%)`,
             }}
           />
         </Card>
@@ -147,15 +147,15 @@ export function EnhancedBenefits() {
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-accent-cyan-soft/20 to-warm-soft/20" />
       
       {/* Decorative Grid Pattern */}
       <div 
         className="absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage: `
-            linear-gradient(to right, #6366f1 1px, transparent 1px),
-            linear-gradient(to bottom, #6366f1 1px, transparent 1px)
+            linear-gradient(to right, rgba(0,229,255,0.55) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0,229,255,0.55) 1px, transparent 1px)
           `,
           backgroundSize: '40px 40px',
         }}
@@ -165,7 +165,7 @@ export function EnhancedBenefits() {
       <motion.div
         className="absolute top-20 right-10 w-96 h-96 rounded-full opacity-20 blur-3xl"
         style={{
-          background: "radial-gradient(circle, rgba(59,130,246,0.4) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(0,229,255,0.35) 0%, transparent 70%)",
         }}
         animate={{
           scale: [1, 1.2, 1],
@@ -181,7 +181,7 @@ export function EnhancedBenefits() {
       <motion.div
         className="absolute bottom-20 left-10 w-96 h-96 rounded-full opacity-20 blur-3xl"
         style={{
-          background: "radial-gradient(circle, rgba(168,85,247,0.4) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(255,179,117,0.35) 0%, transparent 70%)",
         }}
         animate={{
           scale: [1.2, 1, 1.2],

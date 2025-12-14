@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import Image from "next/image";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "../ui/button";
 import { LogIn, Menu, X } from "lucide-react";
 
@@ -59,12 +59,10 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
             >
               {/* Rocket Logo - Show on larger screens */}
               <div className="hidden sm:block relative">
-                <Image
-                  src="/assets/brand/logos/1ae0cec6-7678-42b8-9154-7af87df89f46.png"
-                  alt="GalaxyCo"
-                  width={140}
-                  height={56}
-                  className="h-8 w-auto group-hover:scale-105 transition-transform duration-300"
+                <BrandLogo
+                  size="nav"
+                  tone="onLight"
+                  className="group-hover:scale-105 transition-transform duration-300"
                   priority
                 />
               </div>
@@ -87,7 +85,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
               {onEnterApp && (
                 <Button
                   onClick={onEnterApp}
-                  className="rounded-full shadow-lg bg-electric-cyan text-void-black hover:bg-electric-cyan/90 transition-all duration-300"
+                  className="rounded-full shadow-lg bg-deep-space text-ice-white hover:bg-deep-space/90 transition-all duration-300"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Enter App
@@ -139,7 +137,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
                 onEnterApp();
                 setMobileMenuOpen(false);
               }}
-              className="w-full rounded-full shadow-lg bg-electric-cyan text-void-black hover:bg-electric-cyan/90"
+              className="w-full rounded-full shadow-lg bg-deep-space text-ice-white hover:bg-deep-space/90"
             >
               <LogIn className="h-4 w-4 mr-2" />
               Enter App

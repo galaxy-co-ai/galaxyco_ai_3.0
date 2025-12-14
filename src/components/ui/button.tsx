@@ -12,15 +12,22 @@ import { cn } from "@/lib/utils";
  */
 const buttonVariants = cva(
   // Base styles shared by all variants
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 active:scale-[0.98] hover:-translate-y-px",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-150 disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] hover:-translate-y-px",
   {
     variants: {
       variant: {
         /**
          * Primary action (brand)
+         *
+         * Decision: Deep Space filled with restrained Electric Cyan accents (Apple-like).
          */
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-soft hover:shadow-soft-hover border border-primary/80",
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-soft hover:shadow-soft-hover border border-accent-cyan/20 hover:border-accent-cyan/30",
+        /**
+         * Marketing CTA (extra emphasis)
+         */
+        cta:
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-soft hover:shadow-soft-hover border border-accent-cyan/35 hover:border-accent-cyan/45",
         /**
          * Surface button (Neptune-style): subtle border + soft elevation
          */

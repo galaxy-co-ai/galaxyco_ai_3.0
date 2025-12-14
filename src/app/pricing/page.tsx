@@ -198,14 +198,14 @@ function PricingContent() {
               
               <div className="relative p-8 md:p-10 text-center space-y-4">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Sparkles className="h-6 w-6 text-violet-500 animate-pulse" />
-                  <Badge className="px-4 py-1.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white border-0 text-sm font-semibold">
+                  <Sparkles className="h-6 w-6 text-accent-cyan animate-pulse" />
+                  <Badge className="px-4 py-1.5 bg-primary/10 text-primary border border-accent-cyan/25 text-sm font-semibold">
                     Beta Launch Special
                   </Badge>
-                  <Sparkles className="h-6 w-6 text-fuchsia-500 animate-pulse" />
+                  <Sparkles className="h-6 w-6 text-warm animate-pulse" />
                 </div>
                 
-                <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-violet-600 via-fuchsia-600 to-blue-600">
+                <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent-cyan to-warm">
                   All Pro Features Free Until January 1, 2026
                 </h2>
                 
@@ -290,9 +290,9 @@ function PricingContent() {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button 
-                      className={`w-full ${plan.popular ? 'bg-electric-cyan text-void-black hover:bg-electric-cyan/90' : ''}` }
-                      variant={plan.popular ? "default" : "outline"}
+                    <Button
+                      className="w-full"
+                      variant={plan.popular ? "cta" : "outline"}
                       onClick={() => handleSubscribe(plan.name, plan.priceId)}
                       disabled={loadingPlan !== null}
                     >

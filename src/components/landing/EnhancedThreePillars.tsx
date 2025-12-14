@@ -11,34 +11,34 @@ const pillars = [
     icon: BookOpen,
     title: "Knowledge Base",
     description: "Centralized company documentation that's always up-to-date",
-    gradient: "from-blue-500 to-cyan-500",
-    bgGradient: "from-blue-50 to-cyan-50",
-    glowColor: "rgba(59, 130, 246, 0.3)",
+    gradient: "from-accent-cyan to-primary",
+    bgGradient: "from-accent-cyan-soft to-card",
+    glowColor: "rgba(0, 229, 255, 0.22)",
     stats: ["Smart Search", "AI Organization", "Version Control"],
-    link: "#knowledge"
+    link: "#knowledge",
   },
   {
     id: "02",
     icon: Users,
     title: "AI-Native CRM",
     description: "Auto-transcribe calls, meetings, and emails into actionable data",
-    gradient: "from-purple-500 to-pink-500",
-    bgGradient: "from-purple-50 to-pink-50",
-    glowColor: "rgba(168, 85, 247, 0.3)",
+    gradient: "from-warm to-primary",
+    bgGradient: "from-warm-soft to-card",
+    glowColor: "rgba(255, 179, 117, 0.22)",
     stats: ["Auto Transcription", "Smart Insights", "Pipeline Tracking"],
-    link: "#crm"
+    link: "#crm",
   },
   {
     id: "03",
     icon: Brain,
     title: "AI Assistant Hub",
     description: "Orchestrate specialized agents for every workflow",
-    gradient: "from-orange-500 to-red-500",
-    bgGradient: "from-orange-50 to-red-50",
-    glowColor: "rgba(249, 115, 22, 0.3)",
+    gradient: "from-accent-cyan to-warm",
+    bgGradient: "from-accent-cyan-soft via-card to-warm-soft",
+    glowColor: "rgba(0, 229, 255, 0.18)",
     stats: ["24/7 Automation", "Multi-Agent", "Custom Workflows"],
-    link: "#assistant"
-  }
+    link: "#assistant",
+  },
 ];
 
 interface PillarCardProps {
@@ -79,7 +79,7 @@ function PillarCard({ pillar, index }: PillarCardProps) {
         whileHover={{ y: -8, scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       >
-        <Card className={`relative p-8 border border-white/60 shadow-[0_20px_70px_rgba(0,0,0,0.1)] hover:shadow-[0_30px_90px_rgba(0,0,0,0.15)] transition-shadow duration-500 cursor-pointer group h-full overflow-hidden bg-gradient-to-br ${pillar.bgGradient}`}>
+        <Card className={`relative p-8 border border-border shadow-[0_20px_70px_rgba(0,0,0,0.1)] hover:shadow-[0_30px_90px_rgba(0,0,0,0.15)] transition-shadow duration-500 cursor-pointer group h-full overflow-hidden bg-gradient-to-br ${pillar.bgGradient}`}>
           {/* Numbered Badge */}
           <div className="absolute top-6 right-6">
             <Badge 
@@ -115,7 +115,7 @@ function PillarCard({ pillar, index }: PillarCardProps) {
           </motion.div>
 
           {/* Title */}
-          <h3 className="mb-3 text-2xl group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+          <h3 className="mb-3 text-2xl group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-accent-cyan group-hover:to-warm transition-all duration-300">
             {pillar.title}
           </h3>
 
@@ -125,7 +125,7 @@ function PillarCard({ pillar, index }: PillarCardProps) {
           </p>
 
           {/* Stats with Animated Checkmarks */}
-          <div className="space-y-3 mb-6 p-4 rounded-xl bg-white/40 backdrop-blur-sm border border-white/60">
+          <div className="space-y-3 mb-6 p-4 rounded-xl bg-background/60 backdrop-blur-sm border border-border/60">
             {pillar.stats.map((stat, statIdx) => (
               <motion.div
                 key={statIdx}
@@ -151,7 +151,7 @@ function PillarCard({ pillar, index }: PillarCardProps) {
           {/* Learn More CTA */}
           <Button
             variant="ghost"
-            className="w-full justify-between group/btn hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300"
+            className="w-full justify-between group/btn hover:bg-gradient-to-r hover:from-accent-cyan-soft hover:to-warm-soft transition-all duration-300"
             asChild
           >
             <a href={pillar.link}>
@@ -169,7 +169,7 @@ export function EnhancedThreePillars() {
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/30 to-white" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-accent-cyan-soft/20 to-background" />
       
       {/* Decorative Grid Pattern */}
       <div 
@@ -186,11 +186,11 @@ export function EnhancedThreePillars() {
       {/* Subtle Floating Orbs - Reduced */}
       <div
         className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(59,130,246,0.5) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(0,229,255,0.45) 0%, transparent 70%)" }}
       />
       <div
         className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(168,85,247,0.5) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, rgba(255,179,117,0.45) 0%, transparent 70%)" }}
       />
 
       <div className="relative max-w-7xl mx-auto px-4 lg:px-6">
@@ -202,7 +202,7 @@ export function EnhancedThreePillars() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 shadow-lg">
+          <Badge className="mb-4 px-4 py-2 bg-primary text-primary-foreground border border-accent-cyan/25 shadow-soft">
             Three Pillars of AI-Native Productivity
           </Badge>
           <h2 className="mb-4 text-3xl lg:text-4xl">

@@ -34,6 +34,8 @@ const badgeVariants = cva(
         info: "",
         warning: "",
         danger: "",
+        brand: "",
+        warm: "",
         violet: "",
         indigo: "",
         pink: "",
@@ -85,6 +87,20 @@ const badgeVariants = cva(
         tone: "danger",
         className:
           "bg-red-50 text-red-700 border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 dark:hover:bg-red-900/30",
+      },
+      // Brand (Electric Cyan)
+      {
+        variant: "soft",
+        tone: "brand",
+        className:
+          "bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border hover:bg-accent-cyan-soft",
+      },
+      // Warm (Creamsicle)
+      {
+        variant: "soft",
+        tone: "warm",
+        className:
+          "bg-warm-soft text-warm-ink border-warm-border hover:bg-warm-soft",
       },
       // Violet (brand accent)
       {

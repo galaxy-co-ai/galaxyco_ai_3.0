@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import Image from "next/image";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useRouter } from "next/navigation";
 import { Rocket, Target, Heart, Zap, Users, Globe, ArrowRight } from "lucide-react";
 
@@ -78,12 +78,10 @@ export default function AboutPage() {
                 
                 {/* Logo */}
                 <div className="relative">
-                  <Image
-                    src="/assets/brand/logos/810729f1-240f-4d5a-9435-04d6c9cc2da8.png"
-                    alt="GalaxyCo Logo"
-                    width={400}
-                    height={200}
-                    className="h-32 w-auto mx-auto group-hover:scale-105 transition-transform duration-300"
+                  <BrandLogo
+                    size="hero"
+                    tone="onLight"
+                    className="mx-auto group-hover:scale-105 transition-transform duration-300"
                     priority
                   />
                 </div>
@@ -158,8 +156,8 @@ export default function AboutPage() {
               transition={{ duration: 0.6 }}
               className="space-y-6"
             >
-              <div className="h-12 w-12 rounded-xl bg-electric-cyan/10 flex items-center justify-center">
-                <Rocket className="h-6 w-6 text-electric-cyan" />
+              <div className="h-12 w-12 rounded-xl bg-accent-cyan-soft flex items-center justify-center">
+                <Rocket className="h-6 w-6 text-accent-cyan-ink" />
               </div>
               <h2 className="text-3xl font-bold">What We&apos;ve Built</h2>
               <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
@@ -231,7 +229,7 @@ export default function AboutPage() {
               Join thousands of teams already saving 10+ hours every week with GalaxyCo.ai
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={handleEnterApp} className="gap-2 bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
+              <Button size="lg" variant="cta" onClick={handleEnterApp} className="gap-2">
                 Get Started Free <ArrowRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" onClick={() => router.push("/contact")}>

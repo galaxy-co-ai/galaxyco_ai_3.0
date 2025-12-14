@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { TrendingUp, Users, Clock, Share2, Building2 } from "lucide-react";
+import { TrendingUp, Clock, Building2 } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
@@ -61,7 +61,7 @@ export function CaseStudyTemplate({
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-electric-cyan/5 to-transparent py-16 px-6">
+      <div className="bg-gradient-to-b from-accent-cyan/5 to-transparent py-16 px-6">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -69,7 +69,7 @@ export function CaseStudyTemplate({
             transition={{ duration: 0.6 }}
             className="space-y-6"
           >
-            <Badge className="bg-electric-cyan/10 text-electric-cyan border-electric-cyan/30">
+            <Badge className="bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border">
               Case Study
             </Badge>
             
@@ -114,9 +114,9 @@ export function CaseStudyTemplate({
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card className="bg-gradient-to-br from-electric-cyan/5 to-transparent border-electric-cyan/20">
+              <Card className="bg-gradient-to-br from-accent-cyan-soft to-transparent border-accent-cyan-border">
                 <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-electric-cyan mb-1">{metric.value}</div>
+                  <div className="text-3xl font-bold text-accent-cyan-ink mb-1">{metric.value}</div>
                   {metric.change && (
                     <div className="text-sm text-green-600 flex items-center justify-center gap-1 mb-2">
                       <TrendingUp className="h-3 w-3" />
@@ -160,7 +160,7 @@ export function CaseStudyTemplate({
         {quote && (
           <>
             <Separator />
-            <Card className="bg-gradient-to-br from-electric-cyan/5 to-transparent border-electric-cyan/20">
+            <Card className="bg-gradient-to-br from-accent-cyan-soft to-transparent border-accent-cyan-border">
               <CardContent className="p-8">
                 <blockquote className="text-xl italic mb-4">&ldquo;{quote.text}&rdquo;</blockquote>
                 <div className="flex items-center gap-3">
@@ -183,11 +183,11 @@ export function CaseStudyTemplate({
         </section>
 
         {/* CTA */}
-        <Card className="bg-gradient-to-br from-electric-cyan/10 to-transparent border-electric-cyan/30">
+        <Card className="bg-gradient-to-br from-accent-cyan-soft to-transparent border-accent-cyan-border">
           <CardContent className="p-8 text-center space-y-4">
             <h3 className="text-2xl font-bold">Ready for Similar Results?</h3>
             <p className="text-muted-foreground">See how GalaxyCo.ai can transform your business operations.</p>
-            <Button size="lg" className="bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
+            <Button size="lg" variant="cta">
               Get Started Free
             </Button>
           </CardContent>
@@ -203,7 +203,7 @@ export function CaseStudyTemplate({
                 {relatedCaseStudies.map((study) => (
                   <Card key={study.slug} className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardContent className="p-4">
-                      <div className="text-sm text-electric-cyan mb-2">{study.customer}</div>
+                      <div className="text-sm text-accent-cyan-ink mb-2">{study.customer}</div>
                       <h3 className="font-semibold line-clamp-2">{study.title}</h3>
                     </CardContent>
                   </Card>

@@ -62,7 +62,7 @@ export function TutorialTemplate({
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-electric-cyan/5 to-transparent py-16 px-6">
+      <div className="bg-gradient-to-b from-accent-cyan/5 to-transparent py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -70,7 +70,7 @@ export function TutorialTemplate({
             transition={{ duration: 0.6 }}
             className="space-y-6"
           >
-            <Badge className="bg-electric-cyan/10 text-electric-cyan border-electric-cyan/30">
+            <Badge className="bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border">
               {category}
             </Badge>
             <h1 className="text-4xl md:text-5xl font-bold leading-tight">{title}</h1>
@@ -173,7 +173,11 @@ export function TutorialTemplate({
                             </div>
                           )}
                           <h3 className="font-semibold line-clamp-2">{post.title}</h3>
-                          <Button variant="ghost" size="sm" className="p-0 h-auto font-normal text-electric-cyan hover:text-electric-cyan/80">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-0 h-auto font-normal text-accent-cyan-ink hover:underline underline-offset-4"
+                          >
                             Read more <ChevronRight className="h-4 w-4 ml-1" />
                           </Button>
                         </CardContent>
@@ -190,7 +194,7 @@ export function TutorialTemplate({
             <Card className="bg-card/50 backdrop-blur-sm">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <BookOpen className="h-5 w-5 text-electric-cyan" />
+                  <BookOpen className="h-5 w-5 text-accent-cyan-ink" />
                   <h3 className="font-semibold">Table of Contents</h3>
                 </div>
                 <nav className="space-y-2">
@@ -198,7 +202,7 @@ export function TutorialTemplate({
                     <a
                       key={section.id}
                       href={`#${section.id}`}
-                      className={`block text-sm hover:text-electric-cyan transition-colors ${
+                      className={`block text-sm hover:text-accent-cyan transition-colors ${
                         section.level === 2 ? "pl-0" : "pl-4"
                       }`}
                     >

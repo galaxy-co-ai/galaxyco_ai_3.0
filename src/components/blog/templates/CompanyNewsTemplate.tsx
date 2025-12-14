@@ -41,10 +41,13 @@ export function CompanyNewsTemplate({
   children
 }: CompanyNewsTemplateProps) {
   const categoryConfig = {
-    "Company Update": { color: "bg-electric-cyan/10 text-electric-cyan border-electric-cyan/30", icon: Building2 },
-    "Team News": { color: "bg-creamsicle/10 text-creamsicle border-creamsicle/30", icon: Users },
+    "Company Update": {
+      color: "bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border",
+      icon: Building2,
+    },
+    "Team News": { color: "bg-warm-soft text-warm-ink border-warm-border", icon: Users },
     "Milestone": { color: "bg-green-500/10 text-green-700", icon: TrendingUp },
-    "Behind the Scenes": { color: "bg-purple-500/10 text-purple-700", icon: Users }
+    "Behind the Scenes": { color: "bg-purple-500/10 text-purple-700", icon: Users },
   };
 
   const config = categoryConfig[category];
@@ -64,7 +67,7 @@ export function CompanyNewsTemplate({
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-electric-cyan/5 to-transparent py-16 px-6">
+      <div className="bg-gradient-to-b from-accent-cyan/5 to-transparent py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -147,14 +150,14 @@ export function CompanyNewsTemplate({
         </div>
 
         {/* CTA Section */}
-        <Card className="bg-gradient-to-br from-electric-cyan/10 to-transparent border-electric-cyan/30">
+        <Card className="bg-gradient-to-br from-accent-cyan-soft to-transparent border-accent-cyan-border">
           <CardContent className="p-8 text-center space-y-4">
             <h3 className="text-2xl font-bold">Be Part of Our Journey</h3>
             <p className="text-muted-foreground">
               Join us as we build the future of AI-powered work
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button size="lg" className="bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
+              <Button size="lg" variant="cta">
                 Join Beta
               </Button>
               <Button size="lg" variant="outline">
@@ -179,11 +182,11 @@ export function CompanyNewsTemplate({
                     <Card key={news.slug} className="hover:shadow-lg transition-shadow cursor-pointer">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-electric-cyan/10 flex items-center justify-center shrink-0">
-                            <NewsIcon className="h-5 w-5 text-electric-cyan" />
+                          <div className="h-10 w-10 rounded-lg bg-accent-cyan-soft flex items-center justify-center shrink-0">
+                            <NewsIcon className="h-5 w-5 text-accent-cyan-ink" />
                           </div>
                           <div className="flex-1">
-                            <div className="text-xs text-electric-cyan mb-1">{news.category}</div>
+                            <div className="text-xs text-accent-cyan-ink mb-1">{news.category}</div>
                             <h3 className="font-semibold line-clamp-2">{news.title}</h3>
                           </div>
                         </div>

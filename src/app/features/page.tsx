@@ -144,7 +144,7 @@ export default function FeaturesPage() {
             <Badge className="px-4 py-2 bg-primary/10 text-primary border-primary/20 backdrop-blur-sm">
               Platform Overview
             </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-purple-500 to-blue-600 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent-cyan to-warm leading-tight">
               A Complete AI Operating System for Your Business
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -185,8 +185,8 @@ export default function FeaturesPage() {
                     const Icon = feature.icon;
                     const statusConfig = {
                       live: { bg: "bg-green-500/10", text: "text-green-700", label: "Live" },
-                      beta: { bg: "bg-electric-cyan/10", text: "text-electric-cyan", label: "Beta" },
-                      "coming-soon": { bg: "bg-creamsicle/10", text: "text-creamsicle", label: "Coming Soon" }
+                      beta: { bg: "bg-accent-cyan-soft", text: "text-accent-cyan-ink", label: "Beta" },
+                      "coming-soon": { bg: "bg-warm-soft", text: "text-warm-ink", label: "Coming Soon" },
                     }[feature.status];
 
                     return (

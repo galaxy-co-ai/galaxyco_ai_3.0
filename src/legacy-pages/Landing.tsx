@@ -24,7 +24,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Smart Navigation */}
       <SmartNavigation onEnterApp={onEnterApp} />
 
@@ -38,7 +38,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
       <SectionDivider variant="dots" />
 
       {/* Platform Showcase Section */}
-      <section id="features" className="py-20 bg-gradient-to-b from-white to-gray-50">
+      <section id="features" className="py-20 bg-gradient-to-b from-background to-muted/30">
         <div className="max-w-7xl mx-auto px-4 lg:px-6">
           <div className="text-center mb-16">
             <motion.div
@@ -47,7 +47,7 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Badge className="mb-4 px-4 py-2 bg-electric-cyan text-void-black border-0 shadow-lg hover:bg-electric-cyan/90 transition-colors">
+              <Badge variant="soft" tone="brand" size="pill" className="mb-4 shadow-soft">
                 <Sparkles className="h-3.5 w-3.5 mr-2" />
                 Platform Features
               </Badge>
@@ -69,8 +69,11 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
             >
               <div className="max-w-3xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-1 w-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" />
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                  <div className="h-1 w-12 bg-gradient-to-r from-accent-cyan to-primary rounded-full" />
+                  <Badge
+                    variant="outline"
+                    className="bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border"
+                  >
                     AI Assistant
                   </Badge>
                 </div>
@@ -79,18 +82,18 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                   Monitor all AI agent activity with live updates, quick actions, and instant insights into your automation workflows. Your command center for productivity.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">
+                  <Badge variant="secondary" className="bg-accent-cyan-soft text-accent-cyan-ink border-0">
                     <Sparkles className="h-3 w-3 mr-1" />
                     Live Updates
                   </Badge>
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">24/7 Monitoring</Badge>
-                  <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-0">AI-Powered</Badge>
+                  <Badge variant="secondary" className="bg-accent-cyan-soft text-accent-cyan-ink border-0">24/7 Monitoring</Badge>
+                  <Badge variant="secondary" className="bg-accent-cyan-soft text-accent-cyan-ink border-0">AI-Powered</Badge>
                 </div>
               </div>
               
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
-                <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <div className="absolute -inset-1 bg-gradient-to-r from-accent-cyan to-primary rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
+                <div className="relative bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
                   <Image
                     src="/screenshots/dashboard-demo.png"
                     alt="GalaxyCo AI Dashboard - Real-time agent monitoring and task automation"
@@ -113,8 +116,8 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
             >
               <div className="max-w-3xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-1 w-12 bg-electric-cyan rounded-full" />
-                  <Badge variant="outline" className="bg-electric-cyan/10 text-electric-cyan border-electric-cyan/30">
+                  <div className="h-1 w-12 bg-gradient-to-r from-accent-cyan to-primary rounded-full" />
+                  <Badge variant="outline" className="bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border">
                     Workflow Builder
                   </Badge>
                 </div>
@@ -123,18 +126,18 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                   Build complex automation workflows with our intuitive drag-and-drop interface. Connect your tools, define logic, and watch AI agents execute your processes flawlessly.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <Badge variant="secondary" className="bg-electric-cyan/10 text-electric-cyan border-0">
+                  <Badge variant="secondary" className="bg-accent-cyan-soft text-accent-cyan-ink border-0">
                     <Sparkles className="h-3 w-3 mr-1" />
                     Drag & Drop
                   </Badge>
-                  <Badge variant="secondary" className="bg-electric-cyan/10 text-electric-cyan border-0">No Code</Badge>
-                  <Badge variant="secondary" className="bg-electric-cyan/10 text-electric-cyan border-0">Visual Builder</Badge>
+                  <Badge variant="secondary" className="bg-accent-cyan-soft text-accent-cyan-ink border-0">No Code</Badge>
+                  <Badge variant="secondary" className="bg-accent-cyan-soft text-accent-cyan-ink border-0">Visual Builder</Badge>
                 </div>
               </div>
               
               <div className="relative group">
-                <div className="absolute -inset-1 bg-electric-cyan/20 rounded-2xl blur-xl group-hover:opacity-30 transition-opacity" />
-                <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <div className="absolute -inset-1 bg-gradient-to-r from-accent-cyan to-primary rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
+                <div className="relative bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
                   <Image
                     src="/screenshots/creator-demo.png"
                     alt="GalaxyCo AI Creator Studio - Visual workflow builder for content creation"
@@ -156,8 +159,8 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
             >
               <div className="max-w-3xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-1 w-12 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full" />
-                  <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">
+                  <div className="h-1 w-12 bg-gradient-to-r from-warm to-primary rounded-full" />
+                  <Badge variant="outline" className="bg-warm-soft text-warm-ink border-warm-border">
                     CRM
                   </Badge>
                 </div>
@@ -166,18 +169,18 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                   Auto-transcribe calls and meetings, track deals with AI-powered insights, and manage your entire sales pipeline. Every conversation becomes actionable data.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <Badge variant="secondary" className="bg-pink-50 text-pink-700 border-0">
+                  <Badge variant="secondary" className="bg-warm-soft text-warm-ink border-0">
                     <Sparkles className="h-3 w-3 mr-1" />
                     Auto-Transcribe
                   </Badge>
-                  <Badge variant="secondary" className="bg-pink-50 text-pink-700 border-0">Smart Insights</Badge>
-                  <Badge variant="secondary" className="bg-pink-50 text-pink-700 border-0">Deal Tracking</Badge>
+                  <Badge variant="secondary" className="bg-warm-soft text-warm-ink border-0">Smart Insights</Badge>
+                  <Badge variant="secondary" className="bg-warm-soft text-warm-ink border-0">Deal Tracking</Badge>
                 </div>
               </div>
               
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-orange-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
-                <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <div className="absolute -inset-1 bg-gradient-to-r from-warm to-primary rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
+                <div className="relative bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
                   <Image
                     src="/screenshots/crm-demo.png"
                     alt="GalaxyCo AI CRM - AI-native customer relationship management with Neptune assistant"
@@ -199,8 +202,8 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
             >
               <div className="max-w-3xl">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="h-1 w-12 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full" />
-                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                  <div className="h-1 w-12 bg-gradient-to-r from-warm to-accent-cyan rounded-full" />
+                  <Badge variant="outline" className="bg-warm-soft text-warm-ink border-warm-border">
                     Marketing
                   </Badge>
                 </div>
@@ -209,18 +212,18 @@ export function Landing({ onEnterApp }: LandingProps = {}) {
                   Launch campaigns, track performance across all channels, and optimize with AI-driven recommendations. Real-time analytics and conversion tracking at your fingertips.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-0">
+                  <Badge variant="secondary" className="bg-warm-soft text-warm-ink border-0">
                     <Sparkles className="h-3 w-3 mr-1" />
                     Campaign Management
                   </Badge>
-                  <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-0">Analytics</Badge>
-                  <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-0">AI Optimization</Badge>
+                  <Badge variant="secondary" className="bg-warm-soft text-warm-ink border-0">Analytics</Badge>
+                  <Badge variant="secondary" className="bg-warm-soft text-warm-ink border-0">AI Optimization</Badge>
                 </div>
               </div>
               
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
-                <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <div className="absolute -inset-1 bg-gradient-to-r from-warm to-accent-cyan rounded-2xl opacity-20 blur-xl group-hover:opacity-30 transition-opacity" />
+                <div className="relative bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
                   <Image
                     src="/screenshots/marketing-demo.png"
                     alt="GalaxyCo AI Marketing Hub - Campaign management and AI-driven analytics"

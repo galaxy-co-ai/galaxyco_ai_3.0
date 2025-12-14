@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Rocket, Clock, Share2, Sparkles, CheckCircle2 } from "lucide-react";
+import { Rocket, Clock, Sparkles, CheckCircle2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -51,10 +51,16 @@ export function ProductUpdateTemplate({
   children
 }: ProductUpdateTemplateProps) {
   const categoryConfig = {
-    "Major Update": { color: "bg-electric-cyan text-void-black", icon: Rocket },
-    "Minor Update": { color: "bg-electric-cyan/10 text-electric-cyan border-electric-cyan/30", icon: Sparkles },
+    "Major Update": {
+      color: "bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border",
+      icon: Rocket,
+    },
+    "Minor Update": {
+      color: "bg-accent-cyan-soft text-accent-cyan-ink border-accent-cyan-border",
+      icon: Sparkles,
+    },
     "Bug Fix": { color: "bg-green-500/10 text-green-700", icon: CheckCircle2 },
-    "New Feature": { color: "bg-creamsicle/10 text-creamsicle border-creamsicle/30", icon: Sparkles }
+    "New Feature": { color: "bg-warm-soft text-warm-ink border-warm-border", icon: Sparkles },
   };
 
   const config = categoryConfig[category];
@@ -63,7 +69,7 @@ export function ProductUpdateTemplate({
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-electric-cyan/5 to-transparent py-16 px-6">
+      <div className="bg-gradient-to-b from-accent-cyan/5 to-transparent py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -143,8 +149,8 @@ export function ProductUpdateTemplate({
                   <Card className="bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
                     <CardContent className="p-6">
                       <div className="flex gap-4">
-                        <div className="h-10 w-10 rounded-lg bg-electric-cyan/10 flex items-center justify-center shrink-0">
-                          <FeatureIcon className="h-5 w-5 text-electric-cyan" />
+                        <div className="h-10 w-10 rounded-lg bg-accent-cyan-soft flex items-center justify-center shrink-0">
+                          <FeatureIcon className="h-5 w-5 text-accent-cyan-ink" />
                         </div>
                         <div>
                           <h3 className="font-semibold mb-2">{feature.title}</h3>
@@ -208,12 +214,12 @@ export function ProductUpdateTemplate({
         )}
 
         {/* CTA */}
-        <Card className="mt-12 bg-gradient-to-br from-electric-cyan/10 to-transparent border-electric-cyan/30">
+        <Card className="mt-12 bg-gradient-to-br from-accent-cyan-soft to-transparent border-accent-cyan-border">
           <CardContent className="p-8 text-center space-y-4">
-            <Rocket className="h-12 w-12 mx-auto text-electric-cyan" />
+            <Rocket className="h-12 w-12 mx-auto text-accent-cyan-ink" />
             <h3 className="text-2xl font-bold">Try It Now</h3>
             <p className="text-muted-foreground">Experience these new features in your dashboard.</p>
-            <Button size="lg" className="bg-electric-cyan text-void-black hover:bg-electric-cyan/90">
+            <Button size="lg" variant="cta">
               Go to Dashboard
             </Button>
           </CardContent>
