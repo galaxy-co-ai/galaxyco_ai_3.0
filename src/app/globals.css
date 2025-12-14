@@ -13,9 +13,9 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   
-  /* Primary Colors - Soft Purple/Indigo */
-  --primary: #6366F1;
-  --primary-foreground: #ffffff;
+  /* Primary Colors - Electric Cyan */
+  --primary: #00D4E8;
+  --primary-foreground: #0D0D12;
   
   /* Secondary Colors */
   --secondary: oklch(0.95 0.0058 264.53);
@@ -39,8 +39,8 @@
   --input-background: #f3f3f5;
   --switch-background: #cbced4;
   
-  /* Ring/Focus - Softer purple */
-  --ring: #818CF8;
+  /* Ring/Focus - Electric Cyan */
+  --ring: #00D4E8;
   
   /* Typography */
   --font-size: 16px;

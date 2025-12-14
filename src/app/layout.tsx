@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk, Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,7 +18,13 @@ const geistMono = Geist_Mono({
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["700"],
+  weight: ["400", "600", "700"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -39,7 +45,7 @@ export default function RootLayout({
     >
       <html lang="en" suppressHydrationWarning>
         <body
-          className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${inter.variable} antialiased`}
         >
           <ThemeProvider>
             {children}

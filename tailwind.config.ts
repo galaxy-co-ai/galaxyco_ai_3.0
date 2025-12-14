@@ -11,17 +11,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Soft status colors
+        // GalaxyCo Brand Colors
+        'void-black': '#0D0D12',
+        'deep-space': '#19122F',
+        'ice-white': '#F5F5F7',
+        'electric-cyan': '#00D4E8',
+        'creamsicle': '#FF9966',
+        // Legacy soft colors (keeping for gradual migration)
         'soft-hot': '#FCA5A5',
         'soft-warm': '#FCD34D',
         'soft-cold': '#93C5FD',
-        // Soft palette
-        'soft-purple': '#C4B5FD',
-        'soft-indigo': '#A5B4FC',
-        'soft-blue': '#BFDBFE',
-        'soft-green': '#A7F3D0',
-        'soft-amber': '#FDE68A',
-        'soft-red': '#FCA5A5',
       },
       borderRadius: {
         '2xl': '1.5rem',
