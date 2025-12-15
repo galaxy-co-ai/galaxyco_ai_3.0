@@ -827,28 +827,16 @@ export default function DocsPage() {
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-1">Full Documentation Coming Soon</h3>
                     <p className="text-nebula-frost/70 text-sm">
-                      We're actively writing comprehensive guides. During beta, join our office hours for personalized onboarding.
+                      We're actively writing comprehensive guides. Get started with the platform while we expand our docs.
                     </p>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <Button
-                      variant="outline"
-                      className="border-nebula-frost/20 text-nebula-frost hover:bg-nebula-frost/10 hover:border-nebula-frost/30"
-                      asChild
-                    >
-                      <a href="/contact" className="gap-2">
-                        Office Hours
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    </Button>
-                    <Button
-                      onClick={handleEnterApp}
-                      className="bg-nebula-frost text-nebula-void hover:bg-nebula-frost/90"
-                    >
-                      Start Building
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={handleEnterApp}
+                    className="bg-nebula-frost text-nebula-void hover:bg-nebula-frost/90"
+                  >
+                    Start Building
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </motion.div>
