@@ -11,9 +11,9 @@ const pillars = [
     icon: BookOpen,
     title: "Knowledge Base",
     description: "Centralized company documentation that's always up-to-date",
-    gradient: "from-accent-cyan to-primary",
-    bgGradient: "from-accent-cyan-soft to-card",
-    glowColor: "rgba(0, 229, 255, 0.22)",
+    gradient: "from-nebula-teal to-nebula-blue",
+    bgGradient: "from-nebula-teal/5 to-card",
+    glowColor: "rgba(91, 138, 138, 0.18)",
     stats: ["Smart Search", "AI Organization", "Version Control"],
     link: "#knowledge",
   },
@@ -22,9 +22,9 @@ const pillars = [
     icon: Users,
     title: "AI-Native CRM",
     description: "Auto-transcribe calls, meetings, and emails into actionable data",
-    gradient: "from-warm to-primary",
-    bgGradient: "from-warm-soft to-card",
-    glowColor: "rgba(255, 179, 117, 0.22)",
+    gradient: "from-nebula-violet to-nebula-rose",
+    bgGradient: "from-nebula-violet/5 to-card",
+    glowColor: "rgba(124, 107, 158, 0.18)",
     stats: ["Auto Transcription", "Smart Insights", "Pipeline Tracking"],
     link: "#crm",
   },
@@ -33,9 +33,9 @@ const pillars = [
     icon: Brain,
     title: "AI Assistant Hub",
     description: "Orchestrate specialized agents for every workflow",
-    gradient: "from-accent-cyan to-warm",
-    bgGradient: "from-accent-cyan-soft via-card to-warm-soft",
-    glowColor: "rgba(0, 229, 255, 0.18)",
+    gradient: "from-nebula-rose to-nebula-teal",
+    bgGradient: "from-nebula-rose/5 via-card to-nebula-teal/5",
+    glowColor: "rgba(158, 123, 138, 0.15)",
     stats: ["24/7 Automation", "Multi-Agent", "Custom Workflows"],
     link: "#assistant",
   },
@@ -115,7 +115,7 @@ function PillarCard({ pillar, index }: PillarCardProps) {
           </motion.div>
 
           {/* Title */}
-          <h3 className="mb-3 text-2xl group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-accent-cyan group-hover:to-warm transition-all duration-300">
+          <h3 className="mb-3 text-2xl group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-nebula-teal group-hover:to-nebula-violet transition-all duration-300">
             {pillar.title}
           </h3>
 
@@ -151,7 +151,7 @@ function PillarCard({ pillar, index }: PillarCardProps) {
           {/* Learn More CTA */}
           <Button
             variant="ghost"
-            className="w-full justify-between group/btn hover:bg-gradient-to-r hover:from-accent-cyan-soft hover:to-warm-soft transition-all duration-300"
+            className="w-full justify-between group/btn hover:bg-gradient-to-r hover:from-nebula-teal/10 hover:to-nebula-violet/10 transition-all duration-300"
             asChild
           >
             <a href={pillar.link}>
@@ -169,28 +169,28 @@ export function EnhancedThreePillars() {
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-accent-cyan-soft/20 to-background" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-nebula-teal/5 to-background" />
       
       {/* Decorative Grid Pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `
-            linear-gradient(to right, #000 1px, transparent 1px),
-            linear-gradient(to bottom, #000 1px, transparent 1px)
+            linear-gradient(to right, currentColor 1px, transparent 1px),
+            linear-gradient(to bottom, currentColor 1px, transparent 1px)
           `,
-          backgroundSize: '60px 60px',
+          backgroundSize: '80px 80px',
         }}
       />
 
-      {/* Subtle Floating Orbs - Reduced */}
+      {/* Subtle Floating Orbs - Nebula colors */}
       <div
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(0,229,255,0.45) 0%, transparent 70%)" }}
+        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-8 blur-3xl pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(91,138,138,0.25) 0%, transparent 70%)" }}
       />
       <div
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(255,179,117,0.45) 0%, transparent 70%)" }}
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-8 blur-3xl pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(124,107,158,0.25) 0%, transparent 70%)" }}
       />
 
       <div className="relative max-w-7xl mx-auto px-4 lg:px-6">
@@ -202,7 +202,7 @@ export function EnhancedThreePillars() {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Badge className="mb-4 px-4 py-2 bg-primary text-primary-foreground border border-accent-cyan/25 shadow-soft">
+          <Badge className="mb-4 px-4 py-2 bg-primary text-primary-foreground border border-nebula-violet/25 shadow-soft">
             Three Pillars of AI-Native Productivity
           </Badge>
           <h2 className="mb-4 text-3xl lg:text-4xl">

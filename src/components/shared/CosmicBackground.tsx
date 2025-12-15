@@ -81,11 +81,11 @@ export function CosmicBackground() {
         />
       ))}
 
-      {/* Gradient Orbs - Using brand colors */}
+      {/* Gradient Orbs - Nebula colors */}
       <motion.div
         className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(0,212,232,0.15) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(91,138,138,0.12) 0%, transparent 70%)",
         }}
         animate={{
           scale: [1, 1.2, 1],
@@ -101,7 +101,7 @@ export function CosmicBackground() {
       <motion.div
         className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full"
         style={{
-          background: "radial-gradient(circle, rgba(255,153,102,0.15) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(124,107,158,0.12) 0%, transparent 70%)",
         }}
         animate={{
           scale: [1.2, 1, 1.2],

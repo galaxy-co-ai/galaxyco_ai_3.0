@@ -80,9 +80,9 @@ export function Footer() {
     <footer className="relative bg-gradient-to-b from-white via-gray-50 to-gray-100 border-t border-border/50">
       {/* Back to Top Button - only shows after scrolling */}
       {showBackToTop && (
-        <motion.button
+          <motion.button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground border border-accent-cyan/25 shadow-soft-lg hover:border-accent-cyan/40 transition-all duration-300 flex items-center justify-center group"
+          className="fixed bottom-8 right-8 z-40 h-12 w-12 rounded-full bg-primary text-primary-foreground border border-nebula-teal/25 shadow-soft-lg hover:border-nebula-teal/40 transition-all duration-300 flex items-center justify-center group"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0 }}
@@ -280,7 +280,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="h-9 w-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 hover:from-primary hover:to-accent-cyan flex items-center justify-center transition-all duration-300 group"
+                  className="h-9 w-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 hover:from-nebula-deep hover:to-nebula-teal flex items-center justify-center transition-all duration-300 group"
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   whileTap={{ scale: 0.95 }}
                 >

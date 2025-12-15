@@ -31,36 +31,36 @@ const features = [
     icon: Bot,
     label: "AI Agents",
     description: "24/7 autonomous task execution",
-    gradient: "from-accent-cyan to-primary",
-    bgGlow: "bg-accent-cyan/10",
+    gradient: "from-nebula-teal to-nebula-violet",
+    bgGlow: "bg-nebula-teal/10",
   },
   {
     icon: Workflow,
     label: "Workflow Studio",
     description: "Visual drag-and-drop builder",
-    gradient: "from-accent-cyan to-warm",
-    bgGlow: "bg-accent-cyan/10",
+    gradient: "from-nebula-violet to-nebula-rose",
+    bgGlow: "bg-nebula-violet/10",
   },
   {
     icon: Users,
     label: "Smart CRM",
     description: "AI-powered insights & scoring",
-    gradient: "from-warm to-primary",
-    bgGlow: "bg-warm/10",
+    gradient: "from-nebula-rose to-nebula-blue",
+    bgGlow: "bg-nebula-rose/10",
   },
   {
     icon: BarChart3,
     label: "Marketing Hub",
     description: "Campaign analytics & ROI",
-    gradient: "from-warm to-accent-cyan",
-    bgGlow: "bg-warm/10",
+    gradient: "from-nebula-blue to-nebula-teal",
+    bgGlow: "bg-nebula-blue/10",
   },
   {
     icon: FileSearch,
     label: "Knowledge Base",
     description: "AI-powered document search",
-    gradient: "from-accent-cyan to-primary",
-    bgGlow: "bg-accent-cyan/10",
+    gradient: "from-nebula-teal to-nebula-blue",
+    bgGlow: "bg-nebula-teal/10",
   },
 ];
 
@@ -109,28 +109,32 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
       className="relative min-h-screen flex flex-col overflow-hidden"
       aria-label="Hero section introducing GalaxyCo AI platform"
     >
-      {/* Background with animated gradient */}
-      <div className="absolute inset-0 bg-void-black">
-        {/* Gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-deep-space/60 rounded-full blur-[120px] animate-pulse" />
+      {/* Background with nebula gradient layers */}
+      <div className="absolute inset-0 bg-nebula-void">
+        {/* Deep nebula gradient base */}
+        <div className="absolute inset-0 bg-gradient-to-br from-nebula-dark via-nebula-deep to-nebula-void" />
+        
+        {/* Nebula color clouds - muted and sophisticated */}
+        <div className="absolute top-0 left-1/4 w-[800px] h-[600px] bg-nebula-violet/8 rounded-full blur-[150px]" />
         <div
-          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-accent-cyan/10 rounded-full blur-[100px] animate-pulse"
+          className="absolute bottom-1/4 right-1/3 w-[600px] h-[500px] bg-nebula-teal/6 rounded-full blur-[120px]"
           style={{ animationDelay: "1s" }}
         />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-creamsicle/5 rounded-full blur-[150px]" />
+        <div className="absolute top-1/3 right-1/4 w-[500px] h-[400px] bg-nebula-rose/5 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-1/3 w-[700px] h-[500px] bg-nebula-blue/6 rounded-full blur-[130px]" />
         
-        {/* Grid pattern overlay */}
+        {/* Subtle grid pattern overlay */}
         <div 
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.02]"
           style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: "60px 60px",
+            backgroundImage: `linear-gradient(rgba(240,240,245,0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(240,240,245,0.1) 1px, transparent 1px)`,
+            backgroundSize: "80px 80px",
           }}
         />
         
-        {/* Radial fade */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-void-black/80" />
+        {/* Radial fade to background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-nebula-void/90" />
       </div>
 
       {/* Animated Background Particles */}
@@ -172,10 +176,10 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             className="flex justify-center mb-8"
           >
               <Badge
-              className="px-5 py-2.5 bg-primary/30 border border-accent-cyan/30 text-white backdrop-blur-md shadow-soft-lg hover:border-accent-cyan/45 transition-all duration-300 text-base font-semibold"
+              className="px-5 py-2.5 bg-nebula-dark/60 border border-nebula-violet/30 text-nebula-frost backdrop-blur-md shadow-soft-lg hover:border-nebula-violet/50 transition-all duration-300 text-base font-semibold"
               role="status"
             >
-              <Sparkles className="h-4 w-4 mr-2 text-accent-cyan animate-pulse" aria-hidden="true" />
+              <Sparkles className="h-4 w-4 mr-2 text-nebula-teal animate-pulse" aria-hidden="true" />
               <span>Beta Launch — Free Until January 1, 2026</span>
             </Badge>
           </motion.div>
@@ -187,10 +191,10 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             transition={{ duration: 0.7, delay: 0.1 }}
             className="text-center mb-6 lg:mb-8"
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-[1.1] tracking-tight">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-nebula-frost leading-[1.1] tracking-tight">
               AI that works
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-cyan to-warm">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-nebula-teal via-nebula-violet to-nebula-rose">
                 while you sleep
               </span>
             </h1>
@@ -214,17 +218,17 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             transition={{ duration: 0.7, delay: 0.25 }}
             className="flex flex-wrap justify-center items-center gap-4 mb-10 px-4"
           >
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm text-white/80">All Pro Features Unlocked</span>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-nebula-frost/5 backdrop-blur-sm border border-nebula-frost/10">
+              <div className="h-2 w-2 rounded-full bg-emerald-400/80 animate-pulse" />
+              <span className="text-sm text-nebula-frost/80">All Pro Features Unlocked</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="h-2 w-2 rounded-full bg-accent-cyan animate-pulse" />
-              <span className="text-sm text-white/80">Your Data, Forever</span>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-nebula-frost/5 backdrop-blur-sm border border-nebula-frost/10">
+              <div className="h-2 w-2 rounded-full bg-nebula-teal animate-pulse" />
+              <span className="text-sm text-nebula-frost/80">Your Data, Forever</span>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10">
-              <div className="h-2 w-2 rounded-full bg-warm animate-pulse" />
-              <span className="text-sm text-white/80">Shape the Roadmap</span>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-nebula-frost/5 backdrop-blur-sm border border-nebula-frost/10">
+              <div className="h-2 w-2 rounded-full bg-nebula-violet animate-pulse" />
+              <span className="text-sm text-nebula-frost/80">Shape the Roadmap</span>
             </div>
           </motion.div>
 
@@ -238,7 +242,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             <Button
               onClick={onEnterApp}
               variant="cta"
-              className="h-12 rounded-xl px-6 text-base font-semibold group focus-visible:ring-offset-void-black"
+              className="h-12 rounded-xl px-6 text-base font-semibold group focus-visible:ring-offset-nebula-void"
               aria-label="Join GalaxyCo AI Beta for free"
             >
               Join Free Beta
@@ -246,7 +250,7 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
             </Button>
             <button
               onClick={() => window.location.href = '/features#roadmap'}
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-void-black bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:border-white/30 backdrop-blur-sm group"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-nebula-teal focus:ring-offset-2 focus:ring-offset-nebula-void bg-nebula-frost/10 text-nebula-frost border border-nebula-frost/20 hover:bg-nebula-frost/15 hover:border-nebula-frost/30 backdrop-blur-sm group"
               aria-label="View product roadmap"
             >
               View Roadmap
@@ -286,10 +290,10 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
                       aria-controls={`feature-panel-${index}`}
                       className={`
                         flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium
-                        transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-void-black
+                        transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-nebula-teal focus:ring-offset-2 focus:ring-offset-nebula-void
                         ${isActive 
-                          ? `bg-gradient-to-r ${feature.gradient} text-white shadow-lg` 
-                          : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10"
+                          ? `bg-gradient-to-r ${feature.gradient} text-nebula-frost shadow-lg` 
+                          : "bg-nebula-frost/5 text-nebula-frost/60 hover:text-nebula-frost hover:bg-nebula-frost/10 border border-nebula-frost/10"
                         }
                       `}
                     >
@@ -395,10 +399,10 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
                     aria-current={index === currentFeature ? "true" : undefined}
                     className={`
                       h-1.5 rounded-full transition-all duration-500
-                      focus:outline-none focus:ring-2 focus:ring-accent-cyan focus:ring-offset-2 focus:ring-offset-void-black
+                      focus:outline-none focus:ring-2 focus:ring-nebula-teal focus:ring-offset-2 focus:ring-offset-nebula-void
                       ${index === currentFeature 
                         ? `w-12 bg-gradient-to-r ${feature.gradient}` 
-                        : "w-6 bg-white/20 hover:bg-white/40"
+                        : "w-6 bg-nebula-frost/20 hover:bg-nebula-frost/40"
                       }
                     `}
                   />
@@ -414,24 +418,24 @@ export function HeroSection({ onEnterApp }: HeroSectionProps) {
 
       {/* Demo Video Modal */}
       <Dialog open={showDemoModal} onOpenChange={setShowDemoModal}>
-        <DialogContent className="sm:max-w-3xl bg-void-black/90 border border-white/10 text-white backdrop-blur-xl shadow-soft-lg">
+        <DialogContent className="sm:max-w-3xl bg-nebula-void/95 border border-nebula-frost/10 text-nebula-frost backdrop-blur-xl shadow-soft-lg">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-              <Play className="h-5 w-5 text-accent-cyan" />
+              <Play className="h-5 w-5 text-nebula-teal" />
               Platform Demo
             </DialogTitle>
-            <DialogDescription className="text-white/70">
+            <DialogDescription className="text-nebula-frost/70">
               See how GalaxyCo.ai can transform your business operations
             </DialogDescription>
           </DialogHeader>
-          <div className="relative aspect-video bg-white/5 border border-white/10 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="relative aspect-video bg-nebula-frost/5 border border-nebula-frost/10 rounded-lg overflow-hidden flex items-center justify-center">
             {/* Placeholder for demo video - replace with actual video embed */}
             <div className="text-center p-8">
-              <div className="w-20 h-20 rounded-full bg-accent-cyan/15 border border-accent-cyan/20 flex items-center justify-center mx-auto mb-4">
-                <Play className="h-10 w-10 text-accent-cyan" />
+              <div className="w-20 h-20 rounded-full bg-nebula-teal/15 border border-nebula-teal/20 flex items-center justify-center mx-auto mb-4">
+                <Play className="h-10 w-10 text-nebula-teal" />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">Demo Video Coming Soon</h3>
-              <p className="text-white/70 text-sm max-w-md">
+              <h3 className="text-lg font-medium text-nebula-frost mb-2">Demo Video Coming Soon</h3>
+              <p className="text-nebula-frost/70 text-sm max-w-md">
                 We&apos;re putting the finishing touches on our demo video.
                 In the meantime, click &quot;Try It Now&quot; to explore the platform yourself!
               </p>

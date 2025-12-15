@@ -1,16 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand Anchors */
-  --brand-void-black: #0D0D12;
-  --brand-deep-space: #19122F;
-  --brand-ice-white: #F5F5F7;
-  --brand-electric-cyan: #00D4E8;
-  --brand-creamsicle: #FF9966;
+  /* ═══════════════════════════════════════════════════════════════════════════
+     NEBULA BRAND PALETTE - Premium, Muted, Sophisticated
+     Inspired by deep space nebulae with desaturated, rich tones
+     ═══════════════════════════════════════════════════════════════════════════ */
+  
+  /* Foundation Colors */
+  --brand-void: #0A0A0F;
+  --brand-deep-space: #13111C;
+  --brand-nebula-dark: #1A1625;
+  --brand-frost: #F0F0F5;
+  
+  /* Nebula Accent Palette - Muted & Sophisticated */
+  --brand-nebula-teal: #5B8A8A;
+  --brand-nebula-violet: #7C6B9E;
+  --brand-nebula-rose: #9E7B8A;
+  --brand-nebula-blue: #5A6B8A;
+  
+  /* Legacy aliases for backwards compatibility */
+  --brand-void-black: var(--brand-void);
+  --brand-ice-white: var(--brand-frost);
 
   /* Base Colors */
-  --background: var(--brand-ice-white);
-  --foreground: var(--brand-void-black);
+  --background: var(--brand-frost);
+  --foreground: var(--brand-void);
 
   /* Card Colors */
   --card: #ffffff;
@@ -22,22 +36,28 @@
 
   /* Primary Colors - Deep Space (trustworthy, professional) */
   --primary: var(--brand-deep-space);
-  --primary-foreground: var(--brand-ice-white);
+  --primary-foreground: var(--brand-frost);
 
-  /* Accent - Electric Cyan (use for strokes + highlights; avoid large fills) */
-  --accent-cyan: var(--brand-electric-cyan);
+  /* Nebula Teal Accent (primary accent - use for highlights) */
+  --accent-cyan: var(--brand-nebula-teal);
 
-  /* Accent tones (theme-aware) */
-  --accent-cyan-ink: color-mix(in oklab, var(--brand-electric-cyan) 40%, var(--brand-deep-space));
-  --accent-cyan-soft: color-mix(in oklab, var(--brand-electric-cyan) 12%, #ffffff);
-  --accent-cyan-border: color-mix(in oklab, var(--brand-electric-cyan) 28%, var(--border));
-  --accent-cyan-glow: color-mix(in oklab, var(--brand-electric-cyan) 55%, #ffffff);
+  /* Nebula Teal tones (theme-aware) */
+  --accent-cyan-ink: color-mix(in oklab, var(--brand-nebula-teal) 55%, var(--brand-deep-space));
+  --accent-cyan-soft: color-mix(in oklab, var(--brand-nebula-teal) 10%, #ffffff);
+  --accent-cyan-border: color-mix(in oklab, var(--brand-nebula-teal) 25%, var(--border));
+  --accent-cyan-glow: color-mix(in oklab, var(--brand-nebula-teal) 40%, #ffffff);
 
-  /* Warm accent tones */
-  --warm: var(--brand-creamsicle);
-  --warm-ink: color-mix(in oklab, var(--brand-creamsicle) 42%, var(--brand-void-black));
-  --warm-soft: color-mix(in oklab, var(--brand-creamsicle) 12%, #ffffff);
-  --warm-border: color-mix(in oklab, var(--brand-creamsicle) 28%, var(--border));
+  /* Nebula Violet accent tones */
+  --violet: var(--brand-nebula-violet);
+  --violet-ink: color-mix(in oklab, var(--brand-nebula-violet) 55%, var(--brand-deep-space));
+  --violet-soft: color-mix(in oklab, var(--brand-nebula-violet) 10%, #ffffff);
+  --violet-border: color-mix(in oklab, var(--brand-nebula-violet) 25%, var(--border));
+
+  /* Nebula Rose accent tones (replaces warm/creamsicle) */
+  --warm: var(--brand-nebula-rose);
+  --warm-ink: color-mix(in oklab, var(--brand-nebula-rose) 55%, var(--brand-void));
+  --warm-soft: color-mix(in oklab, var(--brand-nebula-rose) 10%, #ffffff);
+  --warm-border: color-mix(in oklab, var(--brand-nebula-rose) 25%, var(--border));
 
   /* Secondary Colors */
   --secondary: oklch(0.95 0.0058 264.53);
@@ -127,60 +147,65 @@
 }
 
 .dark {
-  --background: var(--brand-void-black);
-  --foreground: var(--brand-ice-white);
+  --background: var(--brand-void);
+  --foreground: var(--brand-frost);
 
-  --card: color-mix(in oklab, var(--brand-void-black) 70%, var(--brand-deep-space));
-  --card-foreground: var(--brand-ice-white);
+  --card: color-mix(in oklab, var(--brand-void) 70%, var(--brand-nebula-dark));
+  --card-foreground: var(--brand-frost);
 
   --popover: var(--card);
-  --popover-foreground: var(--brand-ice-white);
+  --popover-foreground: var(--brand-frost);
 
-  --primary: var(--brand-deep-space);
-  --primary-foreground: var(--brand-ice-white);
+  --primary: var(--brand-nebula-dark);
+  --primary-foreground: var(--brand-frost);
 
-  --secondary: color-mix(in oklab, var(--brand-deep-space) 28%, var(--brand-void-black));
-  --secondary-foreground: var(--brand-ice-white);
+  --secondary: color-mix(in oklab, var(--brand-deep-space) 40%, var(--brand-void));
+  --secondary-foreground: var(--brand-frost);
 
-  --muted: rgba(245, 245, 247, 0.08);
-  --muted-foreground: rgba(245, 245, 247, 0.68);
+  --muted: rgba(240, 240, 245, 0.08);
+  --muted-foreground: rgba(240, 240, 245, 0.65);
 
-  --accent: rgba(245, 245, 247, 0.08);
-  --accent-foreground: var(--brand-ice-white);
+  --accent: rgba(240, 240, 245, 0.08);
+  --accent-foreground: var(--brand-frost);
 
-  --destructive: #FF3B30;
+  --destructive: #E05545;
   --destructive-foreground: #ffffff;
 
-  --border: rgba(245, 245, 247, 0.12);
+  --border: rgba(240, 240, 245, 0.10);
   --input: transparent;
-  --input-background: rgba(13, 13, 18, 0.6);
-  --switch-background: rgba(245, 245, 247, 0.18);
+  --input-background: rgba(10, 10, 15, 0.6);
+  --switch-background: rgba(240, 240, 245, 0.15);
 
-  --ring: var(--accent-cyan);
+  --ring: var(--brand-nebula-teal);
 
-  /* Accent tones (dark) */
-  --accent-cyan-ink: color-mix(in oklab, var(--brand-electric-cyan) 85%, #ffffff);
-  --accent-cyan-soft: color-mix(in oklab, var(--brand-electric-cyan) 16%, var(--brand-deep-space));
-  --accent-cyan-border: color-mix(in oklab, var(--brand-electric-cyan) 32%, var(--border));
-  --accent-cyan-glow: color-mix(in oklab, var(--brand-electric-cyan) 75%, #ffffff);
+  /* Nebula accent tones (dark mode - slightly brighter) */
+  --accent-cyan-ink: color-mix(in oklab, var(--brand-nebula-teal) 80%, #ffffff);
+  --accent-cyan-soft: color-mix(in oklab, var(--brand-nebula-teal) 18%, var(--brand-nebula-dark));
+  --accent-cyan-border: color-mix(in oklab, var(--brand-nebula-teal) 30%, var(--border));
+  --accent-cyan-glow: color-mix(in oklab, var(--brand-nebula-teal) 60%, #ffffff);
 
-  --warm-ink: color-mix(in oklab, var(--brand-creamsicle) 70%, #ffffff);
-  --warm-soft: color-mix(in oklab, var(--brand-creamsicle) 16%, var(--brand-deep-space));
-  --warm-border: color-mix(in oklab, var(--brand-creamsicle) 32%, var(--border));
+  --violet-ink: color-mix(in oklab, var(--brand-nebula-violet) 80%, #ffffff);
+  --violet-soft: color-mix(in oklab, var(--brand-nebula-violet) 18%, var(--brand-nebula-dark));
+  --violet-border: color-mix(in oklab, var(--brand-nebula-violet) 30%, var(--border));
 
-  --sidebar: rgba(25, 18, 47, 0.72);
-  --sidebar-foreground: var(--brand-ice-white);
+  --warm-ink: color-mix(in oklab, var(--brand-nebula-rose) 75%, #ffffff);
+  --warm-soft: color-mix(in oklab, var(--brand-nebula-rose) 18%, var(--brand-nebula-dark));
+  --warm-border: color-mix(in oklab, var(--brand-nebula-rose) 30%, var(--border));
+
+  --sidebar: rgba(19, 17, 28, 0.85);
+  --sidebar-foreground: var(--brand-frost);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: rgba(245, 245, 247, 0.06);
-  --sidebar-accent-foreground: var(--brand-ice-white);
-  --sidebar-border: rgba(245, 245, 247, 0.12);
-  --sidebar-ring: var(--accent-cyan);
+  --sidebar-accent: rgba(240, 240, 245, 0.06);
+  --sidebar-accent-foreground: var(--brand-frost);
+  --sidebar-border: rgba(240, 240, 245, 0.10);
+  --sidebar-ring: var(--brand-nebula-teal);
 
-  --status-info: var(--accent-cyan);
+  --status-info: var(--brand-nebula-teal);
 }
 
 @theme inline {
+  /* Core Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -189,14 +214,36 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  
+  /* Nebula Brand Colors */
+  --color-nebula-void: var(--brand-void);
+  --color-nebula-deep-space: var(--brand-deep-space);
+  --color-nebula-dark: var(--brand-nebula-dark);
+  --color-nebula-frost: var(--brand-frost);
+  --color-nebula-teal: var(--brand-nebula-teal);
+  --color-nebula-violet: var(--brand-nebula-violet);
+  --color-nebula-rose: var(--brand-nebula-rose);
+  --color-nebula-blue: var(--brand-nebula-blue);
+  
+  /* Accent Teal (primary accent) */
   --color-accent-cyan: var(--accent-cyan);
   --color-accent-cyan-ink: var(--accent-cyan-ink);
   --color-accent-cyan-soft: var(--accent-cyan-soft);
   --color-accent-cyan-border: var(--accent-cyan-border);
+  
+  /* Violet Accent */
+  --color-violet: var(--violet);
+  --color-violet-ink: var(--violet-ink);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-border: var(--violet-border);
+  
+  /* Rose/Warm Accent */
   --color-warm: var(--warm);
   --color-warm-ink: var(--warm-ink);
   --color-warm-soft: var(--warm-soft);
   --color-warm-border: var(--warm-border);
+  
+  /* Secondary & Muted */
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -205,16 +252,22 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  
+  /* UI Elements */
   --color-border: var(--border);
   --color-input: var(--input);
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
+  
+  /* Charts */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  
+  /* Sidebar */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -223,6 +276,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Status */
   --color-status-success: var(--status-success);
   --color-status-warning: var(--status-warning);
   --color-status-error: var(--status-error);

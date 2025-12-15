@@ -14,7 +14,7 @@ export function SectionDivider({ variant = "dots" }: SectionDividerProps) {
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
-              className="h-2 w-2 rounded-full bg-gradient-to-r from-electric-cyan to-creamsicle"
+              className="h-2 w-2 rounded-full bg-gradient-to-r from-nebula-teal to-nebula-violet"
               initial={{ scale: 0, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: true }}
@@ -30,7 +30,7 @@ export function SectionDivider({ variant = "dots" }: SectionDividerProps) {
     return (
       <div className="py-12">
         <motion.div
-          className="h-px w-full bg-gradient-to-r from-transparent via-electric-cyan/50 to-transparent"
+          className="h-px w-full bg-gradient-to-r from-transparent via-nebula-teal/40 to-transparent"
           initial={{ scaleX: 0, opacity: 0 }}
           whileInView={{ scaleX: 1, opacity: 1 }}
           viewport={{ once: true }}
@@ -50,7 +50,7 @@ export function SectionDivider({ variant = "dots" }: SectionDividerProps) {
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <div className="h-px w-16 bg-gradient-to-r from-transparent to-electric-cyan/50" />
+        <div className="h-px w-16 bg-gradient-to-r from-transparent to-nebula-teal/40" />
         <motion.div
           animate={{
             rotate: [0, 360],
@@ -62,9 +62,9 @@ export function SectionDivider({ variant = "dots" }: SectionDividerProps) {
             ease: "linear",
           }}
         >
-          <Sparkles className="h-4 w-4 text-electric-cyan" />
+          <Sparkles className="h-4 w-4 text-nebula-teal" />
         </motion.div>
-        <div className="h-px w-16 bg-gradient-to-l from-transparent to-creamsicle/50" />
+        <div className="h-px w-16 bg-gradient-to-l from-transparent to-nebula-violet/40" />
       </motion.div>
     </div>
   );

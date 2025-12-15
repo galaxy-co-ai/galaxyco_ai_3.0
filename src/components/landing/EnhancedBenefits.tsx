@@ -11,7 +11,7 @@ const benefits = [
     description: "Automate repetitive tasks and focus on what matters",
     metric: "10+",
     metricLabel: "Hours Saved",
-    gradient: "from-accent-cyan to-primary",
+    gradient: "from-nebula-teal to-nebula-blue",
     proof: "Average across 1,000+ teams",
     link: "#time-savings",
   },
@@ -22,7 +22,7 @@ const benefits = [
     description: "AI-powered insights reduce human error by 85%",
     metric: "85%",
     metricLabel: "Error Reduction",
-    gradient: "from-accent-cyan to-warm",
+    gradient: "from-nebula-violet to-nebula-teal",
     proof: "Validated by third-party audit",
     link: "#accuracy",
   },
@@ -33,7 +33,7 @@ const benefits = [
     description: "Teams report 3x faster task completion",
     metric: "3x",
     metricLabel: "Faster Tasks",
-    gradient: "from-warm to-primary",
+    gradient: "from-nebula-rose to-nebula-violet",
     proof: "Based on user surveys",
     link: "#productivity",
   },
@@ -44,7 +44,7 @@ const benefits = [
     description: "Bank-level encryption and compliance",
     metric: "100%",
     metricLabel: "SOC 2 Compliant",
-    gradient: "from-primary to-accent-cyan",
+    gradient: "from-nebula-blue to-nebula-teal",
     proof: "Audited annually",
     link: "#security",
   },
@@ -134,7 +134,7 @@ function BenefitCard({ benefit, index }: BenefitCardProps) {
           <motion.div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
             style={{
-              background: `radial-gradient(circle at 50% 0%, rgba(0, 229, 255, 0.06), transparent 70%)`,
+              background: `radial-gradient(circle at 50% 0%, rgba(91, 138, 138, 0.08), transparent 70%)`,
             }}
           />
         </Card>
@@ -147,25 +147,25 @@ export function EnhancedBenefits() {
   return (
     <section className="relative py-24 overflow-hidden">
       {/* Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-accent-cyan-soft/20 to-warm-soft/20" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-nebula-teal/5 to-nebula-violet/5" />
       
       {/* Decorative Grid Pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(0,229,255,0.55) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(0,229,255,0.55) 1px, transparent 1px)
+            linear-gradient(to right, rgba(91,138,138,0.4) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(91,138,138,0.4) 1px, transparent 1px)
           `,
-          backgroundSize: '40px 40px',
+          backgroundSize: '60px 60px',
         }}
       />
 
-      {/* Decorative Gradient Orbs */}
+      {/* Decorative Gradient Orbs - Nebula colors */}
       <motion.div
-        className="absolute top-20 right-10 w-96 h-96 rounded-full opacity-20 blur-3xl"
+        className="absolute top-20 right-10 w-96 h-96 rounded-full opacity-15 blur-3xl"
         style={{
-          background: "radial-gradient(circle, rgba(0,229,255,0.35) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(91,138,138,0.3) 0%, transparent 70%)",
         }}
         animate={{
           scale: [1, 1.2, 1],
@@ -179,9 +179,9 @@ export function EnhancedBenefits() {
         }}
       />
       <motion.div
-        className="absolute bottom-20 left-10 w-96 h-96 rounded-full opacity-20 blur-3xl"
+        className="absolute bottom-20 left-10 w-96 h-96 rounded-full opacity-15 blur-3xl"
         style={{
-          background: "radial-gradient(circle, rgba(255,179,117,0.35) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(124,107,158,0.3) 0%, transparent 70%)",
         }}
         animate={{
           scale: [1.2, 1, 1.2],

@@ -80,7 +80,7 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <Card className="relative p-8 lg:p-12 border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.2)] bg-gradient-to-br from-void-black via-primary to-void-black text-white overflow-hidden">
+          <Card className="relative p-8 lg:p-12 border border-nebula-frost/10 shadow-[0_30px_90px_rgba(0,0,0,0.2)] bg-gradient-to-br from-nebula-void via-nebula-dark to-nebula-void text-nebula-frost overflow-hidden">
             {/* Animated Background */}
             <CTAStarField />
             
@@ -224,29 +224,29 @@ export function FooterCTA({ onEnterApp }: FooterCTAProps) {
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
                     {[
-                      "from-accent-cyan to-primary",
-                      "from-warm to-primary",
-                      "from-accent-cyan to-warm",
-                      "from-primary to-accent-cyan",
+                      "from-nebula-teal to-nebula-blue",
+                      "from-nebula-violet to-nebula-rose",
+                      "from-nebula-rose to-nebula-teal",
+                      "from-nebula-blue to-nebula-violet",
                     ].map((gradient, i) => (
                       <div 
                         key={i} 
-                        className={`h-8 w-8 rounded-full bg-gradient-to-br ${gradient} border-2 border-white/20 flex items-center justify-center`}
+                        className={`h-8 w-8 rounded-full bg-gradient-to-br ${gradient} border-2 border-nebula-frost/20 flex items-center justify-center`}
                       >
-                        <Users className="h-4 w-4 text-white" />
+                        <Users className="h-4 w-4 text-nebula-frost" />
                       </div>
                     ))}
                   </div>
-                  <span className="text-xs lg:text-sm text-white/80">1,000+ teams</span>
+                  <span className="text-xs lg:text-sm text-nebula-frost/80">1,000+ teams</span>
                 </div>
-                <div className="h-4 w-px bg-white/20" />
+                <div className="h-4 w-px bg-nebula-frost/20" />
                 <div className="flex items-center gap-2">
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="h-4 w-4 fill-warm text-warm" />
+                      <Star key={i} className="h-4 w-4 fill-nebula-rose text-nebula-rose" />
                     ))}
                   </div>
-                  <span className="text-xs lg:text-sm text-white/80">4.9/5 rating</span>
+                  <span className="text-xs lg:text-sm text-nebula-frost/80">4.9/5 rating</span>
                 </div>
               </motion.div>
             </div>
