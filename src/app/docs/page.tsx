@@ -552,8 +552,14 @@ export default function DocsPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 lg:pl-0">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <main className="relative flex-1 min-w-0 lg:pl-0">
+          {/* Subtle nebula background for content area */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-20 right-1/4 w-[600px] h-[400px] bg-nebula-violet/[0.03] rounded-full blur-[120px]" />
+            <div className="absolute bottom-1/3 left-1/4 w-[500px] h-[350px] bg-nebula-teal/[0.02] rounded-full blur-[100px]" />
+          </div>
+          
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
             {/* Search Bar */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
