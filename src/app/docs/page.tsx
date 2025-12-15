@@ -43,6 +43,8 @@ interface DocSection {
   description: string;
   lastUpdated: string;
   status?: "stable" | "beta" | "new";
+  topics?: string[];
+  details?: string;
 }
 
 const userTypeConfig: Record<UserType, { label: string; icon: React.ElementType; description: string }> = {
