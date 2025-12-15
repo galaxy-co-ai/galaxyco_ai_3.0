@@ -361,13 +361,43 @@ export default function DocsPage() {
     <div className="min-h-screen bg-background">
       <SmartNavigation onEnterApp={handleEnterApp} />
       
-      {/* Subtle nebula background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-[800px] h-[600px] bg-nebula-violet/[0.03] rounded-full blur-[150px]" />
-        <div className="absolute bottom-1/4 left-1/4 w-[600px] h-[500px] bg-nebula-teal/[0.03] rounded-full blur-[120px]" />
+      {/* Minimal Hero Section */}
+      <section className="relative pt-[73px] overflow-hidden">
+        {/* Dark nebula background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-nebula-void via-nebula-deep to-nebula-dark" />
+        
+        {/* Subtle nebula accents */}
+        <div className="absolute top-1/2 left-1/4 w-[500px] h-[300px] bg-nebula-violet/10 rounded-full blur-[100px]" />
+        <div className="absolute top-1/3 right-1/4 w-[400px] h-[250px] bg-nebula-teal/8 rounded-full blur-[80px]" />
+        
+        {/* Hero content */}
+        <div className="relative z-10 px-6 py-16 lg:py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-4xl mx-auto text-center"
+          >
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-nebula-frost tracking-tight mb-4">
+              Documentation
+            </h1>
+            <p className="text-lg sm:text-xl text-nebula-frost/60 max-w-2xl mx-auto">
+              Everything you need to build, integrate, and scale with GalaxyCo.ai
+            </p>
+          </motion.div>
+        </div>
+        
+        {/* Bottom fade to content */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
+      </section>
+
+      {/* Subtle nebula background for content area */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ top: "300px" }}>
+        <div className="absolute top-0 right-1/4 w-[800px] h-[600px] bg-nebula-violet/[0.02] rounded-full blur-[150px]" />
+        <div className="absolute bottom-1/4 left-1/4 w-[600px] h-[500px] bg-nebula-teal/[0.02] rounded-full blur-[120px]" />
       </div>
 
-      <div className="flex min-h-screen pt-[73px]">
+      <div className="flex min-h-[calc(100vh-300px)]">
         {/* Mobile sidebar toggle */}
         <button
           onClick={() => setSidebarOpen(true)}
@@ -398,7 +428,7 @@ export default function DocsPage() {
             border-r border-border/50 lg:border-0
             transform transition-transform duration-300 ease-out
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-            lg:pt-[73px] pt-0
+            pt-0
           `}
         >
           <div className="h-full overflow-y-auto py-6 px-4 lg:px-6">
