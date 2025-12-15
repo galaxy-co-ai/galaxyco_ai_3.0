@@ -78,7 +78,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Rocket,
       description: "5-minute quickstart guide to using GalaxyCo.ai",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Get up and running with GalaxyCo.ai in minutes. Learn how to set up your workspace, invite team members, and configure your first AI agent.",
+      topics: ["Account Setup", "Workspace Configuration", "First Agent", "Team Invitations", "Quick Tour"]
     },
     {
       id: "core-concepts",
@@ -86,7 +88,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: BookOpen,
       description: "Understanding workflows, agents, and automation",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Master the fundamental concepts that power GalaxyCo.ai. Understand how AI agents, workflows, and automations work together.",
+      topics: ["AI Agents", "Workflows", "Triggers & Actions", "Data Models", "Integrations"]
     },
     {
       id: "neptune-ai",
@@ -94,7 +98,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Bot,
       description: "How to interact with and train your AI assistant",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Neptune is your AI-powered assistant that learns from your business context. Train it with your knowledge base for personalized responses.",
+      topics: ["Chat Interface", "Training Neptune", "Custom Instructions", "Knowledge Sources", "Response Tuning"]
     },
     {
       id: "workflows",
@@ -102,7 +108,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Zap,
       description: "Create and manage automated workflows",
       lastUpdated: "2025-12-10",
-      status: "beta"
+      status: "beta",
+      details: "Design powerful automations with our visual workflow builder. Connect triggers, actions, and conditions without writing code.",
+      topics: ["Visual Builder", "Triggers", "Actions", "Conditions", "Templates", "Testing"]
     },
     {
       id: "crm-basics",
@@ -110,7 +118,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Users,
       description: "Managing contacts, deals, and pipelines",
       lastUpdated: "2025-12-12",
-      status: "stable"
+      status: "stable",
+      details: "Organize your customer relationships with our AI-native CRM. Track deals, manage pipelines, and get AI-powered insights.",
+      topics: ["Contacts", "Deals & Pipelines", "Activities", "AI Scoring", "Reporting"]
     },
     {
       id: "best-practices",
@@ -118,7 +128,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: CheckCircle2,
       description: "Tips and patterns for power users",
       lastUpdated: "2025-12-08",
-      status: "stable"
+      status: "stable",
+      details: "Learn from successful teams using GalaxyCo.ai. Discover patterns, tips, and strategies to maximize your productivity.",
+      topics: ["Workflow Patterns", "Agent Training", "Team Collaboration", "Data Hygiene", "Performance Tips"]
     },
     {
       id: "troubleshooting",
@@ -126,7 +138,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: HelpCircle,
       description: "Common issues and solutions",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Find solutions to common issues and learn how to debug problems. Our FAQ covers the most frequent questions.",
+      topics: ["Common Errors", "Connection Issues", "Sync Problems", "Performance", "FAQ"]
     }
   ],
   "developers": [
@@ -136,7 +150,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Code2,
       description: "REST API architecture and capabilities",
       lastUpdated: "2025-12-14",
-      status: "new"
+      status: "new",
+      details: "Our RESTful API provides programmatic access to all GalaxyCo.ai features. Build custom integrations and extend the platform.",
+      topics: ["REST Architecture", "Base URLs", "Versioning", "Response Formats", "Pagination"]
     },
     {
       id: "authentication",
@@ -144,7 +160,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Key,
       description: "API keys, OAuth, and security",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Secure your API requests with API keys or OAuth 2.0. Learn about scopes, token refresh, and security best practices.",
+      topics: ["API Keys", "OAuth 2.0", "Scopes", "Token Management", "Security"]
     },
     {
       id: "api-reference",
@@ -152,7 +170,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Database,
       description: "Complete endpoint documentation",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Complete reference for all API endpoints with request/response examples, parameters, and error codes.",
+      topics: ["Contacts API", "Workflows API", "Agents API", "Knowledge API", "Webhooks API"]
     },
     {
       id: "webhooks",
@@ -160,7 +180,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Webhook,
       description: "Real-time event notifications",
       lastUpdated: "2025-12-10",
-      status: "beta"
+      status: "beta",
+      details: "Receive real-time notifications when events occur in GalaxyCo.ai. Configure endpoints, verify signatures, and handle retries.",
+      topics: ["Event Types", "Webhook Setup", "Signature Verification", "Retry Logic", "Debugging"]
     },
     {
       id: "rate-limits",
@@ -168,7 +190,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: BarChart3,
       description: "API quotas and best practices",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Understand rate limits for different API endpoints. Learn strategies for efficient API usage and handling rate limit errors.",
+      topics: ["Limits by Endpoint", "Headers", "Retry Strategies", "Bulk Operations", "Optimization"]
     },
     {
       id: "sdks",
@@ -176,7 +200,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Code2,
       description: "Official client libraries",
       lastUpdated: "2025-12-05",
-      status: "beta"
+      status: "beta",
+      details: "Use our official SDKs for faster development. Available for JavaScript/TypeScript, Python, and more.",
+      topics: ["JavaScript SDK", "Python SDK", "Installation", "Quick Start", "Examples"]
     },
     {
       id: "errors",
@@ -184,7 +210,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: AlertCircle,
       description: "Error codes and debugging",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Reference for all API error codes with troubleshooting steps. Learn how to handle errors gracefully in your integration.",
+      topics: ["Error Codes", "HTTP Status", "Error Objects", "Debugging Tips", "Common Errors"]
     },
     {
       id: "changelog",
@@ -192,7 +220,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Clock,
       description: "API version history",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Track all API changes, new features, deprecations, and breaking changes. Subscribe to updates for your integrations.",
+      topics: ["Latest Changes", "Breaking Changes", "Deprecations", "Migration Guides", "Roadmap"]
     }
   ],
   "admins": [
@@ -202,7 +232,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Users,
       description: "Add, remove, and manage team members",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Manage your team members, invite new users, and control access across your organization.",
+      topics: ["Invite Users", "Remove Members", "Teams & Groups", "User Profiles", "Bulk Actions"]
     },
     {
       id: "permissions",
@@ -210,7 +242,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Shield,
       description: "Role-based access control",
       lastUpdated: "2025-12-12",
-      status: "stable"
+      status: "stable",
+      details: "Define custom roles and permissions to control what team members can access and modify.",
+      topics: ["Built-in Roles", "Custom Roles", "Permission Matrix", "Resource Access", "Inheritance"]
     },
     {
       id: "security",
@@ -218,7 +252,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Key,
       description: "SSO, 2FA, and security policies",
       lastUpdated: "2025-12-10",
-      status: "beta"
+      status: "beta",
+      details: "Configure enterprise security features including SSO, two-factor authentication, and session policies.",
+      topics: ["SSO Setup", "2FA Enforcement", "Session Management", "IP Allowlists", "Password Policies"]
     },
     {
       id: "billing",
@@ -226,7 +262,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: BarChart3,
       description: "Monitor usage and manage subscriptions",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Track your usage, manage subscriptions, and access invoices. Understand your billing cycle and costs.",
+      topics: ["Usage Dashboard", "Subscription Plans", "Invoices", "Payment Methods", "Cost Optimization"]
     },
     {
       id: "audit-logs",
@@ -234,7 +272,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: FileText,
       description: "Track all system activities",
       lastUpdated: "2025-12-08",
-      status: "beta"
+      status: "beta",
+      details: "View detailed logs of all actions taken in your workspace for security and compliance auditing.",
+      topics: ["Activity Logs", "User Actions", "Export Logs", "Retention", "Search & Filter"]
     },
     {
       id: "advanced-settings",
@@ -242,7 +282,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Settings,
       description: "System configuration and customization",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Fine-tune your workspace with advanced configuration options for power users and enterprise needs.",
+      topics: ["Workspace Settings", "Defaults", "Integrations", "Data Retention", "Feature Flags"]
     },
     {
       id: "compliance",
@@ -250,7 +292,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Shield,
       description: "GDPR, SOC 2, and data protection",
       lastUpdated: "2025-12-01",
-      status: "stable"
+      status: "stable",
+      details: "Learn about our compliance certifications and how to configure your workspace for regulatory requirements.",
+      topics: ["GDPR", "SOC 2", "Data Residency", "Data Export", "DPA"]
     }
   ],
   "ai-agents": [
@@ -260,7 +304,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Database,
       description: "Complete capabilities and constraints",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Comprehensive overview of GalaxyCo.ai platform capabilities, architecture, and operational boundaries for AI integration.",
+      topics: ["Capabilities", "Architecture", "Rate Limits", "Data Access", "Constraints"]
     },
     {
       id: "data-models",
@@ -268,7 +314,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Database,
       description: "Entity schemas and relationships",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Detailed entity schemas, relationships, and data structures used throughout the platform.",
+      topics: ["Contacts Schema", "Workflows Schema", "Agents Schema", "Relationships", "Custom Fields"]
     },
     {
       id: "use-case-taxonomy",
@@ -276,7 +324,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: BookOpen,
       description: "Categorized use cases and patterns",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Structured taxonomy of supported use cases with recommended patterns and implementation approaches.",
+      topics: ["CRM Use Cases", "Automation Patterns", "Integration Scenarios", "Best Practices", "Anti-Patterns"]
     },
     {
       id: "api-specs",
@@ -284,7 +334,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Code2,
       description: "OpenAPI/Swagger documentation",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Machine-readable API specifications in OpenAPI format for automated integration and code generation.",
+      topics: ["OpenAPI Spec", "Swagger UI", "Code Generation", "Postman Collection", "SDKs"]
     },
     {
       id: "integration-patterns",
@@ -292,7 +344,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Webhook,
       description: "Common integration architectures",
       lastUpdated: "2025-12-12",
-      status: "stable"
+      status: "stable",
+      details: "Reference architectures and patterns for integrating AI agents with GalaxyCo.ai platform.",
+      topics: ["Event-Driven", "Request-Response", "Batch Processing", "Real-Time Sync", "Hybrid"]
     },
     {
       id: "performance",
@@ -300,7 +354,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: Zap,
       description: "Response times and throughput",
       lastUpdated: "2025-12-10",
-      status: "stable"
+      status: "stable",
+      details: "Performance metrics, benchmarks, and optimization guidelines for AI agent integrations.",
+      topics: ["Latency", "Throughput", "Concurrency", "Optimization", "Monitoring"]
     },
     {
       id: "limitations",
@@ -308,7 +364,9 @@ const docSections: Record<UserType, DocSection[]> = {
       icon: AlertCircle,
       description: "Known constraints and boundaries",
       lastUpdated: "2025-12-14",
-      status: "stable"
+      status: "stable",
+      details: "Documented limitations, constraints, and boundaries that AI agents should be aware of.",
+      topics: ["API Limits", "Data Constraints", "Feature Gaps", "Known Issues", "Workarounds"]
     }
   ]
 };
@@ -380,7 +438,7 @@ export default function DocsPage() {
             transition={{ duration: 0.5 }}
             className="max-w-4xl mx-auto text-center"
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-nebula-frost tracking-tight mb-4">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-nebula-frost tracking-widest mb-4 uppercase">
               Documentation
             </h1>
             <p className="text-lg sm:text-xl text-nebula-frost/60 max-w-2xl mx-auto">
@@ -603,11 +661,12 @@ export default function DocsPage() {
               </div>
             </motion.div>
 
-            {/* Doc Cards */}
+            {/* Doc Cards - Expandable */}
             <div className="space-y-3">
               {filteredSections.map((section, index) => {
                 const Icon = section.icon;
                 const status = section.status ? statusConfig[section.status] : null;
+                const isExpanded = activeSection === section.id;
 
                 return (
                   <motion.div
@@ -616,40 +675,117 @@ export default function DocsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: 0.05 * index }}
                   >
-                    <button
-                      onClick={() => setActiveSection(section.id)}
-                      className="w-full group"
-                    >
-                      <div className="relative flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50 hover:border-nebula-teal/30 hover:bg-card/80 transition-all duration-200 shadow-soft hover:shadow-soft-hover text-left">
-                        {/* Nebula glow on hover */}
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-nebula-teal/5 to-nebula-violet/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        
-                        {/* Icon */}
-                        <div className="relative h-12 w-12 rounded-xl bg-muted/50 group-hover:bg-gradient-to-br group-hover:from-nebula-teal/20 group-hover:to-nebula-violet/20 flex items-center justify-center flex-shrink-0 transition-all duration-200">
-                          <Icon className="h-6 w-6 text-muted-foreground group-hover:text-nebula-teal transition-colors" />
-                        </div>
-
-                        {/* Content */}
-                        <div className="relative flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-foreground group-hover:text-nebula-teal transition-colors">
-                              {section.title}
-                            </h3>
-                            {status && (
-                              <Badge className={`${status.bg} ${status.text} ${status.border} border text-[10px] px-1.5 py-0`}>
-                                {section.status === "stable" ? "Stable" : section.status === "beta" ? "Beta" : "New"}
-                              </Badge>
-                            )}
+                    <div className={`
+                      relative rounded-2xl bg-card/60 backdrop-blur-sm border transition-all duration-300 shadow-soft
+                      ${isExpanded 
+                        ? "border-nebula-teal/40 bg-card/80 shadow-soft-hover" 
+                        : "border-border/50 hover:border-nebula-teal/30 hover:bg-card/80 hover:shadow-soft-hover"
+                      }
+                    `}>
+                      {/* Nebula glow */}
+                      <div className={`
+                        absolute inset-0 rounded-2xl bg-gradient-to-r from-nebula-teal/5 to-nebula-violet/5 transition-opacity duration-300
+                        ${isExpanded ? "opacity-100" : "opacity-0"}
+                      `} />
+                      
+                      {/* Header - Clickable */}
+                      <button
+                        onClick={() => setActiveSection(isExpanded ? null : section.id)}
+                        className="w-full group"
+                        aria-expanded={isExpanded}
+                        aria-controls={`doc-content-${section.id}`}
+                      >
+                        <div className="relative flex items-center gap-4 p-4 sm:p-5 text-left">
+                          {/* Icon */}
+                          <div className={`
+                            relative h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200
+                            ${isExpanded 
+                              ? "bg-gradient-to-br from-nebula-teal/20 to-nebula-violet/20" 
+                              : "bg-muted/50 group-hover:bg-gradient-to-br group-hover:from-nebula-teal/20 group-hover:to-nebula-violet/20"
+                            }
+                          `}>
+                            <Icon className={`h-6 w-6 transition-colors ${isExpanded ? "text-nebula-teal" : "text-muted-foreground group-hover:text-nebula-teal"}`} />
                           </div>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {section.description}
-                          </p>
-                        </div>
 
-                        {/* Arrow */}
-                        <ChevronRight className="relative h-5 w-5 text-muted-foreground/50 group-hover:text-nebula-teal group-hover:translate-x-1 transition-all flex-shrink-0" />
-                      </div>
-                    </button>
+                          {/* Content */}
+                          <div className="relative flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className={`font-semibold transition-colors ${isExpanded ? "text-nebula-teal" : "text-foreground group-hover:text-nebula-teal"}`}>
+                                {section.title}
+                              </h3>
+                              {status && (
+                                <Badge className={`${status.bg} ${status.text} ${status.border} border text-[10px] px-1.5 py-0`}>
+                                  {section.status === "stable" ? "Stable" : section.status === "beta" ? "Beta" : "New"}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {section.description}
+                            </p>
+                          </div>
+
+                          {/* Arrow - rotates when expanded */}
+                          <ChevronRight className={`
+                            relative h-5 w-5 transition-all flex-shrink-0
+                            ${isExpanded 
+                              ? "text-nebula-teal rotate-90" 
+                              : "text-muted-foreground/50 group-hover:text-nebula-teal group-hover:translate-x-1"
+                            }
+                          `} />
+                        </div>
+                      </button>
+
+                      {/* Expandable Content */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            id={`doc-content-${section.id}`}
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
+                            <div className="relative px-4 sm:px-5 pb-5 pt-0">
+                              {/* Divider */}
+                              <div className="h-px bg-border/50 mb-4" />
+                              
+                              {/* Details */}
+                              {section.details && (
+                                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                                  {section.details}
+                                </p>
+                              )}
+                              
+                              {/* Topics */}
+                              {section.topics && section.topics.length > 0 && (
+                                <div className="space-y-3">
+                                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Topics Covered
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
+                                    {section.topics.map((topic: string, i: number) => (
+                                      <span
+                                        key={i}
+                                        className="px-3 py-1.5 rounded-lg bg-nebula-teal/10 text-nebula-teal text-xs font-medium border border-nebula-teal/20"
+                                      >
+                                        {topic}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Coming Soon Note */}
+                              <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                                <Clock className="h-3 w-3" />
+                                <span>Full content coming soon • Updated {new Date(section.lastUpdated).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </motion.div>
                 );
               })}
