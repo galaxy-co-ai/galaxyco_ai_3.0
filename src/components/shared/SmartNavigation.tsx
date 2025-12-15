@@ -85,7 +85,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
               {onEnterApp && (
                 <Button
                   onClick={onEnterApp}
-                  className="rounded-full shadow-lg bg-deep-space text-ice-white hover:bg-deep-space/90 transition-all duration-300"
+                  className="rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300"
                 >
                   <LogIn className="h-4 w-4 mr-2" />
                   Enter App
@@ -137,7 +137,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
                 onEnterApp();
                 setMobileMenuOpen(false);
               }}
-              className="w-full rounded-full shadow-lg bg-deep-space text-ice-white hover:bg-deep-space/90"
+              className="w-full rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90"
             >
               <LogIn className="h-4 w-4 mr-2" />
               Enter App
