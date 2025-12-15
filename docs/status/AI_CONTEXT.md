@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-14 (2b68142)  
+**Updated Through:** 2025-12-14 (c8675d7)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-14 c8675d7 feat(docs): add expandable doc cards with detailed content
 - 2025-12-14 2b68142 fix(docs): remove hardcoded 300px offset for responsive hero layout
 - 2025-12-14 bcbe289 feat(docs): add minimal dark nebula hero section with large white text
 - 2025-12-14 76afbbc feat(docs): redesign docs page with premium Apple-inspired layout
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-14 59b51e9 feat(marketing): launch beta marketing updates with roadmap and feature transparency
 - 2025-12-13 cc22523 chore: remove todo-hq feature (completed, being replaced by new admin subdomain)
 - 2025-12-13 a3b371f fix: reduce ESLint warnings from 1144 to 578 (49% reduction)
-- 2025-12-13 9b2ab27 docs: mark all loose ends complete - 100% project completion
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
