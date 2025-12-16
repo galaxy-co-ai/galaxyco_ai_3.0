@@ -3,13 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Command, Rocket, Settings, Plug, Gauge, LogOut } from "lucide-react";
+import { Search, Command, Settings, Plug, Gauge, LogOut } from "lucide-react";
 import { OrganizationSwitcher, useUser, useClerk } from "@clerk/nextjs";
 import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -215,10 +216,15 @@ export function Header({
           className="flex items-center gap-2 rounded-lg transition-colors hover:opacity-80 flex-shrink-0"
           aria-label="Go to landing page"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shadow-indigo-500/25">
-            <Rocket className="h-4.5 w-4.5 text-white" />
-          </div>
-          <h2 className="text-sm font-bold tracking-[0.25em] text-foreground uppercase">Galaxy</h2>
+          <BrandLogo
+            variant="icon"
+            size="icon"
+            tone="onLight"
+            className="h-8 w-8 flex-shrink-0"
+            priority
+          />
+          <span className="text-lg font-bold tracking-wide text-foreground hidden sm:inline">GALAXY</span>
+          <span className="text-base font-bold tracking-wide text-foreground sm:hidden">GALAXY</span>
         </Link>
 
         {/* Title Section (if provided) */}
