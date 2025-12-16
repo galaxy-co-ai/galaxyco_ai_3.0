@@ -69,9 +69,9 @@ export default function RoadmapCard({
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden">
+    <Card className="h-full flex flex-col overflow-hidden bg-white/80 backdrop-blur-sm border-white/50 shadow-soft">
       {/* Branded Header */}
-      <div className="border-b bg-background px-6 py-4 shrink-0">
+      <div className="border-b bg-gradient-to-r from-nebula-frost/50 via-white to-nebula-frost/30 px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <PageTitle
             title="Roadmap"

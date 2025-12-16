@@ -665,7 +665,7 @@ export default function NeptuneAssistPanel({
                 <div
                   className={`max-w-[85%] rounded-lg p-3 ${
                     msg.role === "user"
-                      ? "bg-primary text-white"
+                      ? "bg-nebula-violet text-white"
                       : "bg-muted"
                   }`}
                 >
@@ -1128,7 +1128,7 @@ export default function NeptuneAssistPanel({
                 (!input.trim() && pendingAttachments.length === 0) || isLoading || isRecording
               }
               size="icon"
-              className="h-9 w-9 shrink-0"
+              className="h-9 w-9 shrink-0 bg-nebula-violet hover:bg-nebula-violet/90 text-white"
               aria-label="Send message"
             >
               <Send className="h-4 w-4" />

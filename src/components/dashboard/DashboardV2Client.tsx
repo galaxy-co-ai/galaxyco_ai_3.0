@@ -170,14 +170,14 @@ export default function DashboardV2Client({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      {/* Header */}
-      <div className="border-b bg-background px-6 py-4">
+      {/* Header - Branded gradient */}
+      <div className="border-b bg-gradient-to-r from-nebula-frost via-white to-nebula-frost/80 px-6 py-4">
         <div className="flex items-center justify-between pt-4">
           <PageTitle title="Dashboard" icon={Globe} />
 
           {/* Stats Bar with Trends */}
           <div className="hidden lg:flex flex-wrap items-center gap-3">
-            <Badge variant="soft" tone="violet" size="pill">
+            <Badge variant="soft" className="bg-nebula-violet/10 text-nebula-violet border-nebula-violet/20" size="pill">
               <Bot aria-hidden="true" />
               <span className="font-semibold">{stats.activeAgents}</span>
               <span className="opacity-70 font-normal">Agents</span>
@@ -194,7 +194,7 @@ export default function DashboardV2Client({
                 </span>
               )}
             </Badge>
-            <Badge variant="soft" tone="info" size="pill">
+            <Badge variant="soft" className="bg-nebula-teal/10 text-nebula-teal border-nebula-teal/20" size="pill">
               <Users aria-hidden="true" />
               <span className="font-semibold">{stats.crmContacts}</span>
               <span className="opacity-70 font-normal">Contacts</span>
@@ -211,7 +211,7 @@ export default function DashboardV2Client({
                 </span>
               )}
             </Badge>
-            <Badge variant="soft" tone="success" size="pill">
+            <Badge variant="soft" className="bg-nebula-blue/10 text-nebula-blue border-nebula-blue/20" size="pill">
               <Plug aria-hidden="true" />
               <span className="font-semibold">{stats.financeConnections}</span>
               <span className="opacity-70 font-normal">Connected</span>
@@ -235,8 +235,8 @@ export default function DashboardV2Client({
 
         {/* Content Grid: Neptune (main), Roadmap (right), Activity (right bottom) */}
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 px-6 pt-4 pb-6">
-          {/* Neptune Chat Interface - Main column */}
-          <div className="min-w-0 min-h-0 flex flex-col">
+          {/* Neptune Chat Interface - Main column with branded border */}
+          <div className="min-w-0 min-h-0 flex flex-col rounded-lg border-2 border-nebula-violet/20 bg-white/50 backdrop-blur-sm shadow-soft overflow-hidden">
             <NeptuneAssistPanel
               conversationId={null}
               conversation={null}

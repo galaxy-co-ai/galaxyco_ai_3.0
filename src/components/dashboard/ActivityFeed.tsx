@@ -284,9 +284,9 @@ export default function ActivityFeed({ workspaceId, userId, className }: Activit
   const unreadCount = filteredActivities.filter(a => !readItems.has(a.id)).length;
 
   return (
-    <div className={`flex flex-col h-full bg-background border rounded-lg ${className || ''}`}>
+    <div className={`flex flex-col h-full bg-white/80 backdrop-blur-sm border border-white/50 rounded-lg shadow-soft ${className || ''}`}>
       {/* Header */}
-      <div className="p-4 border-b border-border shrink-0">
+      <div className="p-4 border-b border-border/50 bg-gradient-to-r from-nebula-frost/30 via-white to-nebula-frost/20 shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" />
