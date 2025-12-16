@@ -448,7 +448,7 @@ export async function POST(request: Request) {
       if (detectedUrls.length > 0) {
         const urlList = detectedUrls.join(', ');
         // Use a more forceful instruction to ensure tool is called
-        enhancedUserMessage = `${fullMessage}\n\n[CRITICAL SYSTEM INSTRUCTION: The user's message contains these URLs: ${urlList}. You MUST immediately call the analyze_company_website tool with url="${detectedUrls[0]}" as your FIRST action. Do NOT write any text response first. Do NOT ask for permission. Call the tool function analyze_company_website NOW with the URL parameter.]`;
+        enhancedUserMessage = `${fullMessage}\n\n[SYSTEM OVERRIDE - MANDATORY TOOL CALL]: User provided URL(s): ${urlList}\n\nYou are REQUIRED to call analyze_company_website immediately with these exact parameters:\n- Function: analyze_company_website\n- url: "${detectedUrls[0]}"\n- detailed: false\n\nCALL THIS TOOL NOW. Do NOT respond with text first. Do NOT ask permission. Execute the tool call before any other action. This is a system requirement, not optional.`;
         logger.info('[AI Chat Stream] URLs detected, forcing website analysis', { 
           urls: detectedUrls,
           originalMessage: message.slice(0, 100),

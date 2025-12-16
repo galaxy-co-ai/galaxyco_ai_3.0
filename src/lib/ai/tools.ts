@@ -1971,7 +1971,7 @@ export const aiTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'analyze_company_website',
-      description: 'AUTO-EXECUTE: If user message contains ANY URL, you MUST call this tool immediately without asking. Never ask for confirmation. Never say "would you like me to" or "should I proceed". Just call it. Analyzes websites to extract company info, products, services, and provides personalized recommendations.',
+      description: 'MANDATORY AUTO-EXECUTE: When the user\'s message contains ANY website URL or domain (http://, https://, www., or .com/.ai/.io/etc), you MUST IMMEDIATELY call this tool as your FIRST action before any text response. Do NOT ask permission. Do NOT explain what you\'re about to do. Just call it. This tool analyzes websites to extract company information, products, services, and provides personalized recommendations for GalaxyCo.ai setup.',
       parameters: {
         type: 'object',
         properties: {
