@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { 
   User, 
   Code2, 
@@ -752,9 +754,21 @@ export default function DocsPage() {
                               
                               {/* Details */}
                               {section.details && (
-                                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                                  {section.details}
-                                </p>
+                                <div className="text-sm text-muted-foreground mb-4 leading-relaxed prose prose-sm max-w-none
+                                  prose-headings:text-foreground prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2
+                                  prose-h3:text-base prose-h4:text-sm
+                                  prose-p:my-2 prose-p:leading-relaxed
+                                  prose-strong:text-foreground prose-strong:font-semibold
+                                  prose-ul:my-2 prose-ul:list-none prose-ul:space-y-1
+                                  prose-li:my-0 prose-li:pl-0 prose-li:before:content-['•'] prose-li:before:mr-2 prose-li:before:text-nebula-teal
+                                  prose-code:text-nebula-teal prose-code:bg-nebula-teal/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
+                                  prose-pre:bg-nebula-dark prose-pre:border prose-pre:border-border/50 prose-pre:rounded-lg prose-pre:p-3 prose-pre:overflow-x-auto
+                                  prose-pre:text-nebula-frost prose-pre:text-xs
+                                ">
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {section.details}
+                                  </ReactMarkdown>
+                                </div>
                               )}
                               
                               {/* Topics */}
