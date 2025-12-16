@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-15 (bacbf7e)  
+**Updated Through:** 2025-12-15 (10c6057)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-15 10c6057 chore: merge remote changes
+- 2025-12-15 f87aeee feat(web): update dashboard header to use brand logo and add Product Hunt screenshots
 - 2025-12-15 bacbf7e fix(docs): update API reference link text to show absolute path
 - 2025-12-15 e14f249 feat(api): add OpenAPI 3.1 interactive documentation system
 - 2025-12-15 76ec97a Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-14 1da2e76 feat(brand): install new favicons and fix brand color consistency
 - 2025-12-14 832a8d7 fix(ui): constrain header logo to prevent nav expansion
 - 2025-12-14 bc94076 feat(ui): branding consistency update across site
-- 2025-12-14 c0b9225 docs: add brand system completion summary
-- 2025-12-14 3c9d4bf feat(blog): Rename Launchpad to Blog + Complete brand system
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
