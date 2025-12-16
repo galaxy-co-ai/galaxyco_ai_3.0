@@ -323,26 +323,93 @@ export default function AssistantPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to send message');
+        throw new Error('Failed to send message');
       }
 
-      const data = await response.json();
+      // Handle SSE streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (!reader) {
+        throw new Error('No response body');
+      }
 
-      const assistantMessage: Message = {
-        id: data.message.id,
+      let assistantContent = '';
+      let messageId = '';
+      let convId = currentConversationId;
+      let metadata: Message['metadata'];
+
+      // Create optimistic assistant message
+      const tempAssistantMessage: Message = {
+        id: 'temp-' + Date.now(),
         role: "assistant",
-        content: data.message.content,
-        timestamp: new Date(data.message.createdAt),
+        content: '',
+        timestamp: new Date(),
       };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      // Update conversation ID if this was a new conversation
-      if (!currentConversationId && data.conversationId) {
-        setCurrentConversationId(data.conversationId);
-        setSelectedConversation(data.conversationId);
+      setMessages(prev => [...prev, tempAssistantMessage]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            
+            if (data === '[DONE]') {
+              break;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              
+              // Update conversation ID
+              if (parsed.conversationId && !convId) {
+                convId = parsed.conversationId;
+                setCurrentConversationId(parsed.conversationId);
+                setSelectedConversation(parsed.conversationId);
+              }
+
+              // Accumulate content
+              if (parsed.content) {
+                assistantContent += parsed.content;
+                // Update message in real-time
+                setMessages(prev => prev.map(m => 
+                  m.id === tempAssistantMessage.id 
+                    ? { ...m, content: assistantContent }
+                    : m
+                ));
+              }
+
+              // Store final data
+              if (parsed.messageId) {
+                messageId = parsed.messageId;
+              }
+              if (parsed.metadata) {
+                metadata = parsed.metadata;
+              }
+            } catch (e) {
+              // Ignore parse errors for SSE data
+              logger.debug('SSE parse error (non-critical)', e);
+            }
+          }
+        }
       }
+
+      // Update with final message
+      setMessages(prev => prev.map(m => 
+        m.id === tempAssistantMessage.id 
+          ? { 
+              ...m, 
+              id: messageId || m.id,
+              content: assistantContent || 'No response generated',
+              metadata 
+            }
+          : m
+      ));
       
       // Refresh conversation history
       mutateConversations();
