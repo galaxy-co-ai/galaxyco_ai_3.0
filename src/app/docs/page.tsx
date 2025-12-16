@@ -33,10 +33,3115 @@ import {
   Clock,
   Menu,
   X,
-  Sparkles
+  Sparkles,
+  UserPlus,
+  Building2,
+  LayoutDashboard,
+  MessageSquare,
+  UserCircle,
+  MousePointer,
+  Lightbulb,
+  ChevronDown,
+  Command,
+  Keyboard,
+  // Additional icons for enhanced content
+  Workflow,
+  Brain,
+  Target,
+  ArrowRight,
+  Play,
+  Pause,
+  RefreshCw,
+  Mail,
+  Calendar,
+  TrendingUp,
+  PieChart,
+  Filter,
+  Tag,
+  Star,
+  Trash2,
+  Edit,
+  Eye,
+  Download,
+  Upload,
+  Link,
+  Globe,
+  Lock,
+  Unlock,
+  ShieldCheck,
+  UserCog,
+  CreditCard,
+  Receipt,
+  Activity,
+  Terminal,
+  GitBranch,
+  Package,
+  Server,
+  Cpu,
+  Layers,
+  Grid3X3,
+  ListChecks,
+  ClipboardList,
+  FileCode,
+  AlertTriangle,
+  Info,
+  CircleCheck,
+  CircleX,
+  Timer,
+  Gauge,
+  Network,
+  Share2,
+  Copy,
+  Repeat,
+  Shuffle,
+  Plus,
+  Minus,
+  RotateCcw,
+  type LucideIcon
 } from "lucide-react";
 
 type UserType = "end-users" | "developers" | "admins" | "ai-agents";
+
+// Enhanced Getting Started Content Component
+function GettingStartedContent() {
+  const [proTipsOpen, setProTipsOpen] = useState(true);
+  
+  const steps = [
+    { 
+      number: 1, 
+      title: "Create Your Account", 
+      icon: UserPlus,
+      content: "Sign up with email or use Google/Microsoft OAuth. You'll be prompted to create your first workspace."
+    },
+    { 
+      number: 2, 
+      title: "Set Up Your Workspace", 
+      icon: Building2,
+      content: "Give your workspace a name (you can change this later). This is where all your agents, contacts, and workflows will live."
+    },
+    { 
+      number: 3, 
+      title: "Explore the Dashboard", 
+      icon: LayoutDashboard,
+      content: "After signup, you'll land on your dashboard where Neptune AI greets you. The sidebar on the left gives you access to all major features: CRM, Library, Marketing, and more."
+    },
+    { 
+      number: 4, 
+      title: "Chat with Neptune", 
+      icon: MessageSquare,
+      content: "Click on Neptune AI in the sidebar and ask it anything. Try: 'Show me what I can do' or 'Help me create my first contact.' Neptune understands natural language and can guide you through the platform."
+    },
+    { 
+      number: 5, 
+      title: "Add Your First Contact", 
+      icon: UserCircle,
+      content: "Go to CRM → Leads and click 'Add Lead'. Fill in the basic info. Watch as Neptune automatically suggests next actions and scores the lead."
+    },
+    { 
+      number: 6, 
+      title: "Try Quick Actions", 
+      icon: MousePointer,
+      content: "On the dashboard, you'll see quick action buttons like 'Help me create my first agent' and 'Upload a document'. These are shortcuts to common tasks."
+    }
+  ];
+  
+  const proTips = [
+    { 
+      icon: Command, 
+      content: <>Use <kbd className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-nebula-dark/80 text-nebula-frost text-xs font-mono border border-border/40">⌘K</kbd> (Mac) or <kbd className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-nebula-dark/80 text-nebula-frost text-xs font-mono border border-border/40">Ctrl+K</kbd> (Windows) to open the command palette from anywhere</>
+    },
+    { 
+      icon: Sparkles, 
+      content: "Neptune learns from your usage - the more you interact, the smarter it gets" 
+    },
+    { 
+      icon: BookOpen, 
+      content: "Check the 'Launchpad' section for guided tutorials" 
+    },
+    { 
+      icon: Users, 
+      content: "Invite team members from Settings → Team Management" 
+    }
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Welcome message */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Welcome to GalaxyCo! Here's how to get started in under 5 minutes:
+        </p>
+      </div>
+      
+      {/* Steps */}
+      <div className="relative space-y-4">
+        {/* Connecting line */}
+        <div className="absolute left-[22px] top-10 bottom-10 w-[2px] bg-gradient-to-b from-nebula-teal/40 via-nebula-violet/30 to-nebula-teal/10 hidden sm:block" />
+        
+        {steps.map((step, index) => {
+          const StepIcon = step.icon;
+          return (
+            <motion.div
+              key={step.number}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="relative flex gap-4 group"
+            >
+              {/* Step Number */}
+              <div className="relative z-10 flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-nebula-teal to-nebula-violet flex items-center justify-center text-nebula-frost font-bold shadow-lg shadow-nebula-teal/20 group-hover:shadow-xl group-hover:shadow-nebula-teal/30 transition-shadow">
+                {step.number}
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 pb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <StepIcon className="h-4 w-4 text-nebula-teal" />
+                  <h4 className="font-semibold text-foreground text-base">{step.title}</h4>
+                </div>
+                <p className="text-muted-foreground/90 text-base leading-relaxed pl-6">
+                  {step.content}
+                </p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+      
+      {/* Pro Tips Collapsible */}
+      <div className="border border-nebula-teal/20 rounded-xl overflow-hidden bg-nebula-teal/5">
+        <button
+          onClick={() => setProTipsOpen(!proTipsOpen)}
+          className="w-full flex items-center justify-between p-4 hover:bg-nebula-teal/10 transition-colors"
+          aria-expanded={proTipsOpen}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-nebula-teal/20 flex items-center justify-center">
+              <Lightbulb className="h-4 w-4 text-nebula-teal" />
+            </div>
+            <span className="font-semibold text-foreground">Pro Tips</span>
+          </div>
+          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${proTipsOpen ? 'rotate-180' : ''}`} />
+        </button>
+        
+        <AnimatePresence>
+          {proTipsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="px-4 pb-4 space-y-3">
+                {proTips.map((tip, index) => {
+                  const TipIcon = tip.icon;
+                  return (
+                    <div key={index} className="flex items-start gap-3 text-base text-muted-foreground/90">
+                      <TipIcon className="h-5 w-5 text-nebula-teal flex-shrink-0 mt-0.5" />
+                      <span>{tip.content}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      
+      {/* Closing message */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          You're now ready to start using GalaxyCo! Explore the other documentation sections to dive deeper into specific features.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Core Concepts Content Component
+function CoreConceptsContent() {
+  const [activeSection, setActiveSection] = useState<string | null>("agents");
+  
+  const concepts = [
+    {
+      id: "agents",
+      title: "AI Agents",
+      icon: Bot,
+      color: "nebula-teal",
+      description: "Think of agents as specialized AI workers. Each agent has a specific job: scoring leads, drafting content, scheduling follow-ups, etc.",
+      details: "Unlike chatbots that just answer questions, our agents take action on your behalf. When a new lead comes in, an agent can automatically research them, score their fit, and draft a personalized follow-up—all without you lifting a finger."
+    },
+    {
+      id: "workflows",
+      title: "Workflows",
+      icon: Workflow,
+      color: "nebula-violet",
+      description: "Workflows connect triggers, conditions, and actions into automated processes.",
+      details: "For example: 'When a new contact is added (trigger) AND they're from Enterprise segment (condition), THEN assign to senior sales rep AND send welcome sequence (actions).' You can build workflows visually without code using our Creator studio."
+    },
+    {
+      id: "neptune",
+      title: "Neptune AI Orchestrator",
+      icon: Brain,
+      color: "nebula-teal",
+      description: "Neptune is the brain that coordinates everything. It sits above all your agents and workflows.",
+      details: "When you ask Neptune 'What should I work on today?', it analyzes your CRM, active workflows, and pending tasks to give you prioritized recommendations. Neptune can also execute workflows, create new agents, and explain what's happening."
+    }
+  ];
+
+  const howItWorks = [
+    { step: 1, text: "You add a new lead to your CRM", icon: UserPlus },
+    { step: 2, text: "An AI agent automatically enriches and scores them", icon: Bot },
+    { step: 3, text: "A workflow triggers based on the score", icon: Zap },
+    { step: 4, text: "Actions execute: sending email, creating tasks, updating pipeline", icon: Play },
+    { step: 5, text: "Neptune surfaces next steps to you", icon: Target }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          GalaxyCo is built around three core concepts that work together seamlessly:
+        </p>
+      </div>
+
+      {/* Interactive Concept Cards */}
+      <div className="grid gap-4">
+        {concepts.map((concept) => {
+          const ConceptIcon = concept.icon;
+          const isActive = activeSection === concept.id;
+          return (
+            <motion.div
+              key={concept.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`border rounded-xl overflow-hidden transition-all cursor-pointer ${
+                isActive ? `border-${concept.color}/40 bg-${concept.color}/5` : 'border-border/40 hover:border-border/60'
+              }`}
+              onClick={() => setActiveSection(isActive ? null : concept.id)}
+            >
+              <div className="p-4 flex items-start gap-4">
+                <div className={`h-12 w-12 rounded-xl bg-gradient-to-br from-${concept.color}/20 to-${concept.color}/10 flex items-center justify-center flex-shrink-0`}>
+                  <ConceptIcon className={`h-6 w-6 text-${concept.color}`} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold text-foreground text-lg">{concept.title}</h4>
+                    <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isActive ? 'rotate-180' : ''}`} />
+                  </div>
+                  <p className="text-muted-foreground/90 text-base mt-1">{concept.description}</p>
+                </div>
+              </div>
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="px-4 pb-4 pt-0 ml-16">
+                      <p className="text-muted-foreground/80 text-base leading-relaxed border-l-2 border-nebula-teal/30 pl-4">
+                        {concept.details}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* How They Work Together */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <RefreshCw className="h-5 w-5 text-nebula-teal" />
+          How They Work Together
+        </h4>
+        <div className="relative space-y-3">
+          <div className="absolute left-[18px] top-8 bottom-4 w-[2px] bg-gradient-to-b from-nebula-teal/40 to-nebula-violet/20 hidden sm:block" />
+          {howItWorks.map((item, index) => {
+            const ItemIcon = item.icon;
+            return (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center gap-4"
+              >
+                <div className="relative z-10 w-9 h-9 rounded-lg bg-nebula-teal/20 flex items-center justify-center text-nebula-teal font-bold text-sm flex-shrink-0">
+                  {item.step}
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground/90">
+                  <ItemIcon className="h-4 w-4 text-nebula-teal/70" />
+                  <span>{item.text}</span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Additional Concepts */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="border border-border/40 rounded-xl p-4 bg-card/30">
+          <div className="flex items-center gap-3 mb-3">
+            <Database className="h-5 w-5 text-nebula-violet" />
+            <h5 className="font-semibold text-foreground">Data Models</h5>
+          </div>
+          <p className="text-sm text-muted-foreground/80 leading-relaxed">
+            Everything in GalaxyCo has a consistent structure. Contacts, Deals, Documents, and Agents all have properties, relationships, and histories.
+          </p>
+        </div>
+        <div className="border border-border/40 rounded-xl p-4 bg-card/30">
+          <div className="flex items-center gap-3 mb-3">
+            <Link className="h-5 w-5 text-nebula-violet" />
+            <h5 className="font-semibold text-foreground">Integrations</h5>
+          </div>
+          <p className="text-sm text-muted-foreground/80 leading-relaxed">
+            Connect external tools (Google Calendar, QuickBooks, Shopify) to extend what agents can do as part of workflows.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Neptune AI Content Component
+function NeptuneAIContent() {
+  const [tipsOpen, setTipsOpen] = useState(true);
+
+  const capabilities = [
+    { icon: Search, text: "Answer questions about your data", example: "'How many hot leads do I have?'" },
+    { icon: Plus, text: "Execute tasks", example: "'Create a contact for John Smith at Acme Corp'" },
+    { icon: TrendingUp, text: "Surface insights", example: "'Show me deals that haven't been touched in 7 days'" },
+    { icon: Edit, text: "Draft content", example: "'Write a follow-up email for this lead'" },
+    { icon: HelpCircle, text: "Explain decisions", example: "'Why did you score this lead as Hot?'" },
+    { icon: Target, text: "Suggest next actions", example: "'What should I prioritize today?'" }
+  ];
+
+  const usageTips = [
+    { title: "Natural Language", icon: MessageSquare, content: "Just type or speak naturally. Neptune understands context. Instead of clicking through menus, ask: 'Add a follow-up task for next Tuesday' or 'Show me my pipeline.'" },
+    { title: "Tool Execution", icon: Zap, content: "Neptune has access to tools across your workspace. When you ask it to create a contact or schedule a workflow, it actually executes those actions. You'll see confirmations of what it did." },
+    { title: "Context Awareness", icon: Brain, content: "Neptune remembers your conversation history and understands your workspace data. If you say 'Send them a follow-up,' it knows who 'them' refers to based on your conversation." }
+  ];
+
+  const trainingSteps = [
+    { icon: Upload, title: "Upload Documents", content: "In Library → Knowledge Base, upload your company docs, playbooks, or FAQs. Neptune will learn from these." },
+    { icon: Star, title: "Provide Feedback", content: "Use the thumbs up/down on Neptune's responses. This teaches it what good answers look like." },
+    { icon: Settings, title: "Set Context", content: "Tell Neptune about your business: 'We're a B2B SaaS company selling to mid-market HR teams.'" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Neptune is your AI business assistant that understands your workspace and takes action on your behalf.
+        </p>
+      </div>
+
+      {/* Capabilities Grid */}
+      <div>
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-nebula-teal" />
+          What Neptune Can Do
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {capabilities.map((cap, index) => {
+            const CapIcon = cap.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                className="border border-border/40 rounded-lg p-3 hover:border-nebula-teal/30 transition-colors"
+              >
+                <div className="flex items-start gap-3">
+                  <CapIcon className="h-5 w-5 text-nebula-teal flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-foreground/90 text-sm font-medium">{cap.text}</p>
+                    <p className="text-muted-foreground/70 text-xs mt-1 italic">{cap.example}</p>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* How to Use Neptune */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4">How to Use Neptune</h4>
+        <div className="space-y-4">
+          {usageTips.map((tip, index) => {
+            const TipIcon = tip.icon;
+            return (
+              <div key={index} className="flex gap-4">
+                <div className="h-10 w-10 rounded-lg bg-nebula-violet/20 flex items-center justify-center flex-shrink-0">
+                  <TipIcon className="h-5 w-5 text-nebula-violet" />
+                </div>
+                <div>
+                  <h5 className="font-medium text-foreground">{tip.title}</h5>
+                  <p className="text-muted-foreground/80 text-sm mt-1 leading-relaxed">{tip.content}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Training Neptune */}
+      <div className="border border-nebula-teal/20 rounded-xl overflow-hidden bg-nebula-teal/5">
+        <button
+          onClick={() => setTipsOpen(!tipsOpen)}
+          className="w-full flex items-center justify-between p-4 hover:bg-nebula-teal/10 transition-colors"
+          aria-expanded={tipsOpen}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-nebula-teal/20 flex items-center justify-center">
+              <Brain className="h-4 w-4 text-nebula-teal" />
+            </div>
+            <span className="font-semibold text-foreground">Training Neptune</span>
+          </div>
+          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${tipsOpen ? 'rotate-180' : ''}`} />
+        </button>
+        <AnimatePresence>
+          {tipsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+            >
+              <div className="px-4 pb-4 space-y-3">
+                {trainingSteps.map((step, index) => {
+                  const StepIcon = step.icon;
+                  return (
+                    <div key={index} className="flex gap-3">
+                      <StepIcon className="h-5 w-5 text-nebula-teal flex-shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-foreground">{step.title}:</span>
+                        <span className="text-muted-foreground/80 ml-1">{step.content}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Pro Tips */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-start gap-3">
+          <Lightbulb className="h-5 w-5 text-nebula-teal flex-shrink-0 mt-0.5" />
+          <div className="space-y-2 text-sm text-muted-foreground/90">
+            <p>• Neptune works best with specific questions</p>
+            <p>• You can always undo or modify what Neptune does</p>
+            <p>• Use the 'Explain' button to understand Neptune's reasoning</p>
+            <p>• Access Neptune from anywhere with <kbd className="px-1.5 py-0.5 rounded bg-nebula-dark/60 text-nebula-frost text-xs font-mono">⌘K</kbd></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Building Workflows Content Component
+function BuildingWorkflowsContent() {
+  const [examplesOpen, setExamplesOpen] = useState(true);
+
+  const anatomy = [
+    { title: "Trigger", icon: Zap, color: "nebula-teal", description: "What starts the workflow. Examples: new contact added, deal stage changed, time-based (every Monday at 9am), webhook received." },
+    { title: "Conditions", icon: Filter, color: "nebula-violet", description: "Rules that determine if the workflow continues. Example: 'IF lead score > 80 AND industry = SaaS'" },
+    { title: "Actions", icon: Play, color: "nebula-teal", description: "What happens when conditions are met. Examples: send email, create task, update CRM field, call external API, run AI agent." }
+  ];
+
+  const buildSteps = [
+    "Go to Orchestration → Workflows → New Workflow",
+    "Choose a trigger (start simple with 'New Contact Created')",
+    "Add a condition (optional but recommended)",
+    "Add actions - drag and drop from the right panel",
+    "Configure each action's settings",
+    "Test with sample data",
+    "Activate when ready"
+  ];
+
+  const examples = [
+    { name: "Lead Routing", trigger: "When new lead created", conditions: "IF score > 70", actions: "Assign to senior rep, ELSE assign to junior rep → Send Slack notification" },
+    { name: "Follow-Up Automation", trigger: "When deal sits in stage for 7 days", conditions: null, actions: "Create follow-up task → Send reminder email → Alert manager" },
+    { name: "Content Approval", trigger: "When document uploaded", conditions: null, actions: "Request approval from manager → IF approved → Publish to knowledge base" }
+  ];
+
+  const bestPractices = [
+    { icon: CircleCheck, text: "Start with one workflow at a time" },
+    { icon: CircleCheck, text: "Test thoroughly before activating" },
+    { icon: CircleCheck, text: "Use clear naming conventions" },
+    { icon: CircleCheck, text: "Add error handling (what if API call fails?)" },
+    { icon: CircleCheck, text: "Monitor workflow execution logs" },
+    { icon: CircleCheck, text: "Don't over-automate - keep human oversight where needed" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Workflows automate repetitive tasks so you can focus on high-value work.
+        </p>
+      </div>
+
+      {/* Anatomy of a Workflow */}
+      <div>
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Layers className="h-5 w-5 text-nebula-teal" />
+          Anatomy of a Workflow
+        </h4>
+        <div className="space-y-3">
+          {anatomy.map((item, index) => {
+            const ItemIcon = item.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex gap-4 p-4 border border-border/40 rounded-xl hover:border-nebula-teal/30 transition-colors"
+              >
+                <div className={`h-12 w-12 rounded-xl bg-${item.color}/20 flex items-center justify-center flex-shrink-0`}>
+                  <ItemIcon className={`h-6 w-6 text-${item.color}`} />
+                </div>
+                <div>
+                  <h5 className="font-semibold text-foreground">{item.title}</h5>
+                  <p className="text-muted-foreground/80 text-sm mt-1 leading-relaxed">{item.description}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Building Your First Workflow */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Rocket className="h-5 w-5 text-nebula-violet" />
+          Building Your First Workflow
+        </h4>
+        <div className="relative space-y-3">
+          <div className="absolute left-[18px] top-6 bottom-4 w-[2px] bg-gradient-to-b from-nebula-violet/40 to-nebula-teal/20 hidden sm:block" />
+          {buildSteps.map((step, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.03 }}
+              className="flex items-center gap-4"
+            >
+              <div className="relative z-10 w-9 h-9 rounded-lg bg-nebula-violet/20 flex items-center justify-center text-nebula-violet font-bold text-sm flex-shrink-0">
+                {index + 1}
+              </div>
+              <span className="text-muted-foreground/90">{step}</span>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Examples */}
+      <div className="border border-nebula-teal/20 rounded-xl overflow-hidden bg-nebula-teal/5">
+        <button
+          onClick={() => setExamplesOpen(!examplesOpen)}
+          className="w-full flex items-center justify-between p-4 hover:bg-nebula-teal/10 transition-colors"
+          aria-expanded={examplesOpen}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-nebula-teal/20 flex items-center justify-center">
+              <ListChecks className="h-4 w-4 text-nebula-teal" />
+            </div>
+            <span className="font-semibold text-foreground">Common Workflow Examples</span>
+          </div>
+          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${examplesOpen ? 'rotate-180' : ''}`} />
+        </button>
+        <AnimatePresence>
+          {examplesOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+            >
+              <div className="px-4 pb-4 space-y-4">
+                {examples.map((example, index) => (
+                  <div key={index} className="bg-card/50 rounded-lg p-3 border border-border/30">
+                    <h5 className="font-medium text-foreground mb-2">{example.name}</h5>
+                    <div className="text-sm text-muted-foreground/80 space-y-1">
+                      <p><span className="text-nebula-teal font-medium">Trigger:</span> {example.trigger}</p>
+                      {example.conditions && <p><span className="text-nebula-violet font-medium">Condition:</span> {example.conditions}</p>}
+                      <p><span className="text-nebula-teal font-medium">Actions:</span> {example.actions}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Best Practices */}
+      <div className="grid sm:grid-cols-2 gap-2">
+        {bestPractices.map((practice, index) => (
+          <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground/90">
+            <CircleCheck className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+            <span>{practice.text}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Enhanced CRM Essentials Content Component
+function CRMEssentialsContent() {
+  const [scoringOpen, setScoringOpen] = useState(true);
+
+  const contactFeatures = [
+    { icon: UserPlus, title: "Adding Contacts", content: "Click 'Add Lead' and fill in basic info (name, email, company). Neptune AI automatically enriches the contact with additional data." },
+    { icon: Upload, title: "Import", content: "Bulk import from CSV or integrate with your existing tools. Go to CRM → Import to upload a file." },
+    { icon: Tag, title: "Organization", content: "Contacts can be tagged, segmented, and organized into lists. Use filters to create views like 'Enterprise Leads'." }
+  ];
+
+  const pipelineStages = ["New", "Qualified", "Demo", "Proposal", "Negotiation", "Closed Won/Lost"];
+
+  const scoringFactors = [
+    { icon: Building2, text: "Company fit (size, industry, location)" },
+    { icon: Mail, text: "Engagement signals (email opens, site visits, responses)" },
+    { icon: TrendingUp, text: "Historical patterns (similar deals that closed)" },
+    { icon: Calendar, text: "Timing indicators (budget cycle, hiring activity)" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Our CRM is built to work with AI, not against it. Here's what you need to know:
+        </p>
+      </div>
+
+      {/* Contacts & Leads */}
+      <div>
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Users className="h-5 w-5 text-nebula-teal" />
+          Contacts & Leads
+        </h4>
+        <div className="space-y-3">
+          {contactFeatures.map((feature, index) => {
+            const FeatureIcon = feature.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex gap-4 p-4 border border-border/40 rounded-xl"
+              >
+                <div className="h-10 w-10 rounded-lg bg-nebula-teal/20 flex items-center justify-center flex-shrink-0">
+                  <FeatureIcon className="h-5 w-5 text-nebula-teal" />
+                </div>
+                <div>
+                  <h5 className="font-medium text-foreground">{feature.title}</h5>
+                  <p className="text-muted-foreground/80 text-sm mt-1">{feature.content}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Deals & Pipeline */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Target className="h-5 w-5 text-nebula-violet" />
+          Deals & Pipeline
+        </h4>
+        <p className="text-muted-foreground/80 text-sm mb-4">Default pipeline stages (customizable in CRM Settings):</p>
+        <div className="flex flex-wrap gap-2">
+          {pipelineStages.map((stage, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <span className="px-3 py-1.5 rounded-lg bg-nebula-violet/10 text-nebula-violet text-sm font-medium border border-nebula-violet/20">
+                {stage}
+              </span>
+              {index < pipelineStages.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground/50" />}
+            </div>
+          ))}
+        </div>
+        <p className="text-muted-foreground/70 text-sm mt-4 italic">
+          💡 Drag and drop deals between stages in the Kanban view. AI tracks how long deals sit in each stage.
+        </p>
+      </div>
+
+      {/* AI Scoring */}
+      <div className="border border-nebula-teal/20 rounded-xl overflow-hidden bg-nebula-teal/5">
+        <button
+          onClick={() => setScoringOpen(!scoringOpen)}
+          className="w-full flex items-center justify-between p-4 hover:bg-nebula-teal/10 transition-colors"
+          aria-expanded={scoringOpen}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-nebula-teal/20 flex items-center justify-center">
+              <Gauge className="h-4 w-4 text-nebula-teal" />
+            </div>
+            <span className="font-semibold text-foreground">AI Lead Scoring</span>
+          </div>
+          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${scoringOpen ? 'rotate-180' : ''}`} />
+        </button>
+        <AnimatePresence>
+          {scoringOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+            >
+              <div className="px-4 pb-4">
+                <p className="text-muted-foreground/80 text-sm mb-3">
+                  Every lead gets an AI-generated score (Cold, Warm, Hot) based on:
+                </p>
+                <div className="space-y-2">
+                  {scoringFactors.map((factor, index) => {
+                    const FactorIcon = factor.icon;
+                    return (
+                      <div key={index} className="flex items-center gap-3 text-sm text-muted-foreground/90">
+                        <FactorIcon className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+                        <span>{factor.text}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Activities & Reporting */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="border border-border/40 rounded-xl p-4 bg-card/30">
+          <div className="flex items-center gap-3 mb-3">
+            <Activity className="h-5 w-5 text-nebula-teal" />
+            <h5 className="font-semibold text-foreground">Activities & Notes</h5>
+          </div>
+          <p className="text-sm text-muted-foreground/80 leading-relaxed">
+            Track all interactions: calls, emails, meetings, notes. AI can auto-transcribe calls and extract action items.
+          </p>
+        </div>
+        <div className="border border-border/40 rounded-xl p-4 bg-card/30">
+          <div className="flex items-center gap-3 mb-3">
+            <PieChart className="h-5 w-5 text-nebula-violet" />
+            <h5 className="font-semibold text-foreground">Reporting</h5>
+          </div>
+          <p className="text-sm text-muted-foreground/80 leading-relaxed">
+            Built-in reports: pipeline health, conversion rates, average deal size, sales velocity, lead source performance.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Best Practices Content Component
+function BestPracticesContent() {
+  const categories = [
+    {
+      title: "Data Hygiene",
+      icon: Database,
+      color: "nebula-teal",
+      tips: [
+        "Keep contact data clean - merge duplicates weekly",
+        "Use consistent naming conventions for deals and companies",
+        "Archive old data rather than deleting (you might need it later)",
+        "Tag contacts liberally - tags make segmentation easier",
+        "Set up data validation rules to prevent junk data"
+      ]
+    },
+    {
+      title: "Workflow Design",
+      icon: Workflow,
+      color: "nebula-violet",
+      tips: [
+        "Start simple - one trigger, one action",
+        "Add complexity gradually as you learn what works",
+        "Always include error handling",
+        "Use clear, descriptive names for workflows",
+        "Review and prune unused workflows quarterly"
+      ]
+    },
+    {
+      title: "Agent Training",
+      icon: Bot,
+      color: "nebula-teal",
+      tips: [
+        "Upload your best docs to the knowledge base first",
+        "Provide feedback on agent actions (thumbs up/down)",
+        "Be specific when correcting agents",
+        "Give agents time to learn - they get better with usage",
+        "Set clear boundaries (what agents CAN'T do)"
+      ]
+    },
+    {
+      title: "Team Collaboration",
+      icon: Users,
+      color: "nebula-violet",
+      tips: [
+        "Define roles clearly - who owns what",
+        "Use @ mentions in notes to notify team members",
+        "Set up team views in CRM for transparency",
+        "Have a single source of truth for important data",
+        "Regular team syncs on what's working/not working"
+      ]
+    }
+  ];
+
+  const performanceTips = [
+    { icon: Command, text: "Use keyboard shortcuts (⌘K opens command palette)" },
+    { icon: Eye, text: "Set up saved views for frequent filters" },
+    { icon: ListChecks, text: "Batch similar tasks (all follow-ups at once)" },
+    { icon: Bot, text: "Let AI handle repetitive work, you focus on decisions" },
+    { icon: Target, text: "Review your daily priorities from Neptune every morning" }
+  ];
+
+  const securityTips = [
+    { icon: Key, text: "Never share API keys publicly" },
+    { icon: Shield, text: "Use role-based permissions for team members" },
+    { icon: Lock, text: "Enable 2FA for all users" },
+    { icon: FileText, text: "Review audit logs monthly" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Category Cards */}
+      <div className="grid gap-4">
+        {categories.map((category, index) => {
+          const CategoryIcon = category.icon;
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="border border-border/40 rounded-xl p-5"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`h-10 w-10 rounded-lg bg-${category.color}/20 flex items-center justify-center`}>
+                  <CategoryIcon className={`h-5 w-5 text-${category.color}`} />
+                </div>
+                <h4 className="font-semibold text-foreground text-lg">{category.title}</h4>
+              </div>
+              <div className="space-y-2 ml-1">
+                {category.tips.map((tip, tipIndex) => (
+                  <div key={tipIndex} className="flex items-start gap-3 text-sm text-muted-foreground/90">
+                    <CircleCheck className="h-4 w-4 text-nebula-teal flex-shrink-0 mt-0.5" />
+                    <span>{tip}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Performance Tips */}
+      <div className="border border-nebula-teal/20 rounded-xl p-5 bg-nebula-teal/5">
+        <div className="flex items-center gap-3 mb-4">
+          <Zap className="h-5 w-5 text-nebula-teal" />
+          <h4 className="font-semibold text-foreground">Performance Tips</h4>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {performanceTips.map((tip, index) => {
+            const TipIcon = tip.icon;
+            return (
+              <div key={index} className="flex items-center gap-3 text-sm text-muted-foreground/90">
+                <TipIcon className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+                <span>{tip.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Security */}
+      <div className="border border-nebula-violet/20 rounded-xl p-5 bg-nebula-violet/5">
+        <div className="flex items-center gap-3 mb-4">
+          <ShieldCheck className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Security</h4>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {securityTips.map((tip, index) => {
+            const TipIcon = tip.icon;
+            return (
+              <div key={index} className="flex items-center gap-3 text-sm text-muted-foreground/90">
+                <TipIcon className="h-4 w-4 text-nebula-violet flex-shrink-0" />
+                <span>{tip.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Getting Unstuck */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <HelpCircle className="h-5 w-5 text-nebula-teal" />
+          <h4 className="font-semibold text-foreground">Getting Unstuck</h4>
+        </div>
+        <div className="space-y-2 text-sm text-muted-foreground/90">
+          <p>• Ask Neptune for help first</p>
+          <p>• Check the Troubleshooting docs</p>
+          <p>• Use the feedback widget to report issues</p>
+          <p>• Email support@galaxyco.ai - we respond within 24 hours</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Troubleshooting Content Component
+function TroubleshootingContent() {
+  const [openQuestion, setOpenQuestion] = useState<number | null>(0);
+
+  const faqs = [
+    {
+      question: "Neptune isn't responding to my questions",
+      answer: "Check your internet connection. Refresh the page. If it persists, try: Settings → Clear Cache. Neptune requires an active connection to our AI service.",
+      icon: MessageSquare
+    },
+    {
+      question: "I can't see contacts I just imported",
+      answer: "Imports process in background. Check CRM → Import History for status. Large imports (500+ contacts) can take 2-3 minutes. Refresh the page after the import completes.",
+      icon: Upload
+    },
+    {
+      question: "Workflows aren't triggering",
+      answer: "Check three things: 1) Is the workflow active? (green toggle), 2) Do the trigger conditions match? (test with sample data), 3) Check workflow logs for errors (Orchestration → Logs).",
+      icon: Workflow
+    },
+    {
+      question: "Lead scores seem wrong",
+      answer: "Scoring improves as Neptune learns your patterns. Provide feedback on scores (thumbs up/down). Adjust scoring criteria in CRM Settings → Lead Scoring. New workspaces need ~50 contacts before scores stabilize.",
+      icon: Gauge
+    },
+    {
+      question: "Can't upload documents to knowledge base",
+      answer: "Supported formats: PDF, DOC, DOCX, TXT, MD. Max file size: 25MB. Check that file isn't password-protected. Clear browser cache if upload hangs.",
+      icon: FileText
+    },
+    {
+      question: "Integration isn't syncing",
+      answer: "Go to Settings → Integrations → [Your Integration] → Test Connection. If it fails, you may need to re-authorize. Some integrations have rate limits - check status.",
+      icon: Link
+    },
+    {
+      question: "Slow performance",
+      answer: "Clear browser cache. Try a different browser (Chrome recommended). Check your internet speed. If workspace is >10,000 contacts, performance may vary - contact support.",
+      icon: Timer
+    },
+    {
+      question: "Lost data or made a mistake",
+      answer: "Most actions can be undone immediately. For data recovery, contact support@galaxyco.ai with details. We keep backups for 30 days.",
+      icon: RotateCcw
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Common issues and how to solve them. Click any question to see the answer.
+        </p>
+      </div>
+
+      {/* FAQ Accordion */}
+      <div className="space-y-2">
+        {faqs.map((faq, index) => {
+          const FaqIcon = faq.icon;
+          const isOpen = openQuestion === index;
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03 }}
+              className={`border rounded-xl overflow-hidden transition-all ${
+                isOpen ? 'border-nebula-teal/40 bg-nebula-teal/5' : 'border-border/40 hover:border-border/60'
+              }`}
+            >
+              <button
+                onClick={() => setOpenQuestion(isOpen ? null : index)}
+                className="w-full flex items-center gap-4 p-4 text-left"
+                aria-expanded={isOpen}
+              >
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                  isOpen ? 'bg-nebula-teal/20' : 'bg-muted/50'
+                }`}>
+                  <FaqIcon className={`h-5 w-5 ${isOpen ? 'text-nebula-teal' : 'text-muted-foreground'}`} />
+                </div>
+                <span className={`flex-1 font-medium ${isOpen ? 'text-nebula-teal' : 'text-foreground'}`}>
+                  {faq.question}
+                </span>
+                <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="px-4 pb-4 ml-14">
+                      <p className="text-muted-foreground/90 text-sm leading-relaxed">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Still Stuck */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <Mail className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Still Stuck?</h4>
+        </div>
+        <p className="text-sm text-muted-foreground/90 mb-3">
+          Email <span className="text-nebula-teal font-medium">support@galaxyco.ai</span> with:
+        </p>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground/80">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-nebula-violet/20 flex items-center justify-center text-xs text-nebula-violet font-bold">1</span>
+            <span>What you were trying to do</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-nebula-violet/20 flex items-center justify-center text-xs text-nebula-violet font-bold">2</span>
+            <span>What happened instead</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-nebula-violet/20 flex items-center justify-center text-xs text-nebula-violet font-bold">3</span>
+            <span>Screenshots if possible</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-nebula-violet/20 flex items-center justify-center text-xs text-nebula-violet font-bold">4</span>
+            <span>Your browser/OS</span>
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground/70 mt-3 italic">We respond within 24 hours.</p>
+      </div>
+    </div>
+  );
+}
+
+// ==================== DEVELOPERS SECTION COMPONENTS ====================
+
+// Enhanced API Overview Content Component
+function APIOverviewContent() {
+  const [copied, setCopied] = useState(false);
+  const baseUrl = "/api";
+  
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(baseUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = baseUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const principles = [
+    { title: "RESTful Design", icon: Globe, description: "Standard HTTP methods (GET, POST, PUT, PATCH, DELETE). Predictable resource URLs." },
+    { title: "JSON Everywhere", icon: FileCode, description: "All requests accept JSON payloads. All responses return JSON. Content-Type: application/json required." },
+    { title: "Idempotency", icon: Repeat, description: "PUT and DELETE are idempotent. POST operations return idempotency keys to prevent duplicate actions." }
+  ];
+
+  const capabilities = [
+    "Full CRUD on Contacts, Deals, Workflows, Documents",
+    "Execute workflows programmatically",
+    "Query Neptune AI assistant",
+    "Subscribe to webhooks for real-time events",
+    "Upload/download files",
+    "Manage team members and permissions"
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          GalaxyCo.ai provides a comprehensive REST API for building integrations, automating workflows, and extending platform capabilities.
+        </p>
+      </div>
+
+      {/* Base URL with Copy Button */}
+      <div className="border border-nebula-teal/30 rounded-xl p-4 bg-nebula-dark/80">
+        <div className="flex items-center gap-3 mb-3">
+          <Server className="h-5 w-5 text-nebula-teal" />
+          <span className="font-semibold text-nebula-frost">Base URL</span>
+        </div>
+        <div className="relative">
+          <code className="text-nebula-teal bg-nebula-dark px-4 py-3 pr-12 rounded-lg block font-mono text-sm border border-border/40">
+            {baseUrl}
+          </code>
+          <button
+            onClick={copyToClipboard}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-md hover:bg-white/10 transition-colors"
+            aria-label="Copy base URL to clipboard"
+          >
+            {copied ? (
+              <CircleCheck className="h-4 w-4 text-nebula-teal" />
+            ) : (
+              <Copy className="h-4 w-4 text-white/70 hover:text-white" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Architecture Principles - Unified styling */}
+      <div>
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Layers className="h-5 w-5 text-nebula-violet" />
+          Architecture Principles
+        </h4>
+        <div className="space-y-3">
+          {principles.map((principle, index) => {
+            const PrincipleIcon = principle.icon;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex gap-4 p-4 border border-border/40 rounded-xl hover:border-nebula-violet/30 transition-colors"
+              >
+                <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-nebula-violet/25 to-nebula-violet/10 flex items-center justify-center flex-shrink-0 border border-nebula-violet/20">
+                  <PrincipleIcon className="h-5 w-5 text-nebula-violet" />
+                </div>
+                <div>
+                  <h5 className="font-medium text-foreground">{principle.title}</h5>
+                  <p className="text-muted-foreground/80 text-sm mt-1">{principle.description}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Response Format */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="border border-nebula-teal/20 rounded-xl p-4 bg-nebula-teal/5">
+          <div className="flex items-center gap-2 mb-3">
+            <CircleCheck className="h-5 w-5 text-nebula-teal" />
+            <span className="font-medium text-foreground">Success Response</span>
+          </div>
+          <code className="text-xs text-nebula-frost/80 bg-nebula-dark/60 p-3 rounded-lg block font-mono whitespace-pre">
+{`{"data": {...}, "meta": {...}}`}
+          </code>
+        </div>
+        <div className="border border-red-500/20 rounded-xl p-4 bg-red-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <CircleX className="h-5 w-5 text-red-400" />
+            <span className="font-medium text-foreground">Error Response</span>
+          </div>
+          <code className="text-xs text-nebula-frost/80 bg-nebula-dark/60 p-3 rounded-lg block font-mono whitespace-pre">
+{`{"error": {"code": "...", "message": "..."}}`}
+          </code>
+        </div>
+      </div>
+
+      {/* Common Capabilities */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-nebula-teal" />
+          Common Capabilities
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {capabilities.map((cap, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground/90">
+              <CircleCheck className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+              <span>{cap}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Getting Started - More visual weight */}
+      <div className="bg-gradient-to-r from-nebula-violet/15 to-nebula-teal/15 border border-nebula-violet/30 rounded-xl p-6 mt-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-lg bg-nebula-violet/20 flex items-center justify-center">
+            <Key className="h-5 w-5 text-nebula-violet" />
+          </div>
+          <h4 className="font-semibold text-foreground text-lg">Getting Started</h4>
+        </div>
+        <p className="text-sm text-muted-foreground/90 leading-relaxed">
+          Generate an API key in <span className="text-nebula-teal font-semibold">Settings → Developers → API Keys</span>. Include it in all requests via the <code className="px-2 py-1 rounded-md bg-nebula-dark/70 text-nebula-frost text-xs font-mono border border-border/40">Authorization: Bearer YOUR_KEY</code> header.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Authentication Content Component
+function AuthenticationContent() {
+  const [oauthOpen, setOauthOpen] = useState(false);
+
+  const scopes = [
+    { scope: "contacts:read", description: "Read contacts/deals" },
+    { scope: "contacts:write", description: "Create/update contacts" },
+    { scope: "workflows:read", description: "View workflows" },
+    { scope: "workflows:execute", description: "Run workflows" },
+    { scope: "knowledge:read", description: "Access knowledge base" },
+    { scope: "admin:all", description: "Full admin access" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          GalaxyCo.ai supports two authentication methods: API Keys for server-to-server integrations and OAuth 2.0 for user-authorized applications.
+        </p>
+      </div>
+
+      {/* API Keys */}
+      <div className="border border-nebula-teal/20 rounded-xl p-5 bg-nebula-teal/5">
+        <div className="flex items-center gap-3 mb-4">
+          <Key className="h-6 w-6 text-nebula-teal" />
+          <div>
+            <h4 className="font-semibold text-foreground text-lg">API Keys</h4>
+            <p className="text-sm text-muted-foreground/70">Recommended for Server-to-Server</p>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="bg-nebula-dark/40 rounded-lg p-4">
+            <p className="text-sm text-muted-foreground/80 mb-2">Include in Authorization header:</p>
+            <code className="text-nebula-frost text-sm font-mono">Authorization: Bearer gco_live_abc123xyz789</code>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="px-2 py-1 rounded bg-nebula-teal/20 text-nebula-teal font-mono text-xs">gco_live_</span>
+              <span className="text-muted-foreground/80">Production keys</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="px-2 py-1 rounded bg-nebula-violet/20 text-nebula-violet font-mono text-xs">gco_test_</span>
+              <span className="text-muted-foreground/80">Test/sandbox keys</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* OAuth 2.0 */}
+      <div className="border border-nebula-violet/20 rounded-xl overflow-hidden">
+        <button
+          onClick={() => setOauthOpen(!oauthOpen)}
+          className="w-full flex items-center justify-between p-4 hover:bg-nebula-violet/5 transition-colors"
+          aria-expanded={oauthOpen}
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-nebula-violet/20 flex items-center justify-center">
+              <Lock className="h-5 w-5 text-nebula-violet" />
+            </div>
+            <div className="text-left">
+              <span className="font-semibold text-foreground block">OAuth 2.0</span>
+              <span className="text-sm text-muted-foreground/70">For User-Authorized Apps</span>
+            </div>
+          </div>
+          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${oauthOpen ? 'rotate-180' : ''}`} />
+        </button>
+        <AnimatePresence>
+          {oauthOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+            >
+              <div className="px-4 pb-4 space-y-4">
+                <div className="bg-nebula-dark/30 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground/80 mb-2">Authorization URL:</p>
+                  <code className="text-nebula-frost text-xs font-mono break-all">
+                    https://app.galaxyco.ai/oauth/authorize?client_id=...&redirect_uri=...&response_type=code&scope=contacts:read
+                  </code>
+                </div>
+                <p className="text-sm text-muted-foreground/80">
+                  Standard Authorization Code flow with PKCE for security. Access tokens valid for 1 hour. Use refresh tokens for long-lived access.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Scopes */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Shield className="h-5 w-5 text-nebula-teal" />
+          Available Scopes
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {scopes.map((s, index) => (
+            <div key={index} className="flex items-center gap-3 text-sm">
+              <code className="px-2 py-1 rounded bg-nebula-dark/40 text-nebula-teal font-mono text-xs">{s.scope}</code>
+              <span className="text-muted-foreground/80">{s.description}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Best Practices */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <ShieldCheck className="h-5 w-5 text-nebula-teal" />
+          <h4 className="font-semibold text-foreground">Security Best Practices</h4>
+        </div>
+        <div className="space-y-2 text-sm text-muted-foreground/90">
+          <p>• Never commit keys to version control</p>
+          <p>• Rotate keys every 90 days</p>
+          <p>• Request minimum scopes needed</p>
+          <p>• Store tokens encrypted</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced API Reference Content Component  
+function APIReferenceContent() {
+  const [activeEndpoint, setActiveEndpoint] = useState("contacts");
+
+  const endpoints = [
+    {
+      id: "contacts",
+      name: "Contacts API",
+      icon: Users,
+      routes: [
+        { method: "GET", path: "/v1/contacts", description: "List contacts" },
+        { method: "POST", path: "/v1/contacts", description: "Create contact" },
+        { method: "GET", path: "/v1/contacts/{id}", description: "Get contact" },
+        { method: "PATCH", path: "/v1/contacts/{id}", description: "Update contact" },
+        { method: "DELETE", path: "/v1/contacts/{id}", description: "Delete contact" }
+      ]
+    },
+    {
+      id: "workflows",
+      name: "Workflows API",
+      icon: Workflow,
+      routes: [
+        { method: "GET", path: "/v1/workflows", description: "List workflows" },
+        { method: "POST", path: "/v1/workflows", description: "Create workflow" },
+        { method: "POST", path: "/v1/workflows/{id}/execute", description: "Trigger workflow" },
+        { method: "GET", path: "/v1/workflows/{id}/runs", description: "Get execution history" }
+      ]
+    },
+    {
+      id: "neptune",
+      name: "Neptune AI API",
+      icon: Bot,
+      routes: [
+        { method: "POST", path: "/v1/neptune/chat", description: "Send message to Neptune" },
+        { method: "GET", path: "/v1/neptune/context", description: "Get workspace context" },
+        { method: "POST", path: "/v1/neptune/execute", description: "Execute Neptune command" }
+      ]
+    },
+    {
+      id: "knowledge",
+      name: "Knowledge Base API",
+      icon: BookOpen,
+      routes: [
+        { method: "GET", path: "/v1/knowledge/documents", description: "List documents" },
+        { method: "POST", path: "/v1/knowledge/documents", description: "Upload document" },
+        { method: "POST", path: "/v1/knowledge/search", description: "Search knowledge base" }
+      ]
+    }
+  ];
+
+  const methodColors: Record<string, string> = {
+    GET: "bg-emerald-500/20 text-emerald-400",
+    POST: "bg-blue-500/20 text-blue-400",
+    PATCH: "bg-amber-500/20 text-amber-400",
+    DELETE: "bg-red-500/20 text-red-400"
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Comprehensive API endpoint documentation organized by resource type.
+        </p>
+      </div>
+
+      {/* Endpoint Tabs */}
+      <div className="flex flex-wrap gap-2">
+        {endpoints.map((endpoint) => {
+          const EndpointIcon = endpoint.icon;
+          return (
+            <button
+              key={endpoint.id}
+              onClick={() => setActiveEndpoint(endpoint.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeEndpoint === endpoint.id
+                  ? 'bg-nebula-teal/20 text-nebula-teal border border-nebula-teal/30'
+                  : 'bg-card/50 text-muted-foreground hover:text-foreground border border-border/40'
+              }`}
+            >
+              <EndpointIcon className="h-4 w-4" />
+              {endpoint.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active Endpoint Routes */}
+      {endpoints.map((endpoint) => (
+        activeEndpoint === endpoint.id && (
+          <motion.div
+            key={endpoint.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="border border-border/40 rounded-xl overflow-hidden"
+          >
+            {endpoint.routes.map((route, index) => (
+              <div
+                key={index}
+                className={`flex items-center gap-4 p-4 ${index !== endpoint.routes.length - 1 ? 'border-b border-border/30' : ''}`}
+              >
+                <span className={`px-2 py-1 rounded text-xs font-bold font-mono ${methodColors[route.method]}`}>
+                  {route.method}
+                </span>
+                <code className="text-nebula-frost/80 text-sm font-mono flex-1">{route.path}</code>
+                <span className="text-sm text-muted-foreground/70 hidden sm:block">{route.description}</span>
+              </div>
+            ))}
+          </motion.div>
+        )
+      ))}
+
+      {/* Query Parameters */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground mb-4">Query Parameters</h4>
+        <div className="space-y-2 text-sm">
+          <div className="flex gap-4">
+            <code className="text-nebula-teal font-mono">?filter[status]=active</code>
+            <span className="text-muted-foreground/80">Filter by field</span>
+          </div>
+          <div className="flex gap-4">
+            <code className="text-nebula-teal font-mono">?sort=-created_at</code>
+            <span className="text-muted-foreground/80">Sort (prefix - for descending)</span>
+          </div>
+          <div className="flex gap-4">
+            <code className="text-nebula-teal font-mono">?fields=id,name,email</code>
+            <span className="text-muted-foreground/80">Return only specific fields</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Docs Link */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3">
+          <ExternalLink className="h-5 w-5 text-nebula-violet" />
+          <span className="text-foreground">
+            Full interactive API reference with live examples: <a href="/docs/api" className="text-nebula-teal font-medium hover:underline">docs/api</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Webhooks Content Component
+function WebhooksContent() {
+  const [eventsOpen, setEventsOpen] = useState(true);
+
+  const eventTypes = [
+    { category: "CRM Events", events: ["contact.created", "contact.updated", "deal.stage_changed", "deal.closed_won"] },
+    { category: "Workflow Events", events: ["workflow.started", "workflow.completed", "workflow.failed"] },
+    { category: "System Events", events: ["user.invited", "integration.connected"] }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Webhooks deliver real-time event notifications to your server when things happen in GalaxyCo.ai.
+        </p>
+      </div>
+
+      {/* Setup Steps */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Settings className="h-5 w-5 text-nebula-teal" />
+          Setting Up Webhooks
+        </h4>
+        <div className="space-y-3">
+          {[
+            "Go to Settings → Developers → Webhooks",
+            "Click Create Webhook",
+            "Enter your endpoint URL (must be HTTPS)",
+            "Select events to subscribe to",
+            "Save and note the signing secret"
+          ].map((step, index) => (
+            <div key={index} className="flex items-center gap-3">
+              <span className="w-7 h-7 rounded-lg bg-nebula-teal/20 flex items-center justify-center text-nebula-teal font-bold text-sm flex-shrink-0">
+                {index + 1}
+              </span>
+              <span className="text-muted-foreground/90 text-sm">{step}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Event Types */}
+      <div className="border border-nebula-teal/20 rounded-xl overflow-hidden bg-nebula-teal/5">
+        <button
+          onClick={() => setEventsOpen(!eventsOpen)}
+          className="w-full flex items-center justify-between p-4 hover:bg-nebula-teal/10 transition-colors"
+          aria-expanded={eventsOpen}
+        >
+          <div className="flex items-center gap-3">
+            <Webhook className="h-5 w-5 text-nebula-teal" />
+            <span className="font-semibold text-foreground">Event Types</span>
+          </div>
+          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${eventsOpen ? 'rotate-180' : ''}`} />
+        </button>
+        <AnimatePresence>
+          {eventsOpen && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+              <div className="px-4 pb-4 space-y-4">
+                {eventTypes.map((category, index) => (
+                  <div key={index}>
+                    <h5 className="font-medium text-foreground text-sm mb-2">{category.category}</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {category.events.map((event, i) => (
+                        <code key={i} className="px-2 py-1 rounded bg-nebula-dark/40 text-nebula-teal text-xs font-mono">
+                          {event}
+                        </code>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Signature Verification */}
+      <div className="border border-nebula-violet/20 rounded-xl p-5 bg-nebula-violet/5">
+        <div className="flex items-center gap-3 mb-3">
+          <ShieldCheck className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Signature Verification</h4>
+        </div>
+        <p className="text-sm text-muted-foreground/80 mb-3">
+          Every webhook includes <code className="text-nebula-teal text-xs">X-GalaxyCo-Signature</code> header. Verify it to ensure the request came from us.
+        </p>
+      </div>
+
+      {/* Retry Logic */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <RefreshCw className="h-5 w-5 text-nebula-teal" />
+          <h4 className="font-semibold text-foreground">Retry Logic</h4>
+        </div>
+        <p className="text-sm text-muted-foreground/90">
+          If your endpoint returns non-2xx status or times out ({">"}10s), we retry with exponential backoff: 1min, 5min, 30min, 2hr, 12hr. After 5 failures, webhook is disabled.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Rate Limits Content Component
+function RateLimitsContent() {
+  const planLimits = [
+    { plan: "Starter", limit: "1,000 requests/hour", color: "nebula-teal" },
+    { plan: "Professional", limit: "5,000 requests/hour", color: "nebula-violet" },
+    { plan: "Enterprise", limit: "20,000 requests/hour", color: "nebula-teal" }
+  ];
+
+  const strategies = [
+    { icon: Layers, title: "Use Bulk Endpoints", description: "Instead of creating 100 contacts individually, use bulk create endpoint" },
+    { icon: Database, title: "Cache Responses", description: "Cache data that doesn't change frequently (team members, workflow definitions)" },
+    { icon: Webhook, title: "Use Webhooks", description: "Instead of polling for changes, subscribe to webhooks for real-time updates" },
+    { icon: Timer, title: "Exponential Backoff", description: "When rate limited, wait progressively longer between retries: 1s, 2s, 4s, 8s..." }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          API rate limits prevent abuse and ensure reliable service for all users.
+        </p>
+      </div>
+
+      {/* Limits by Plan */}
+      <div>
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-nebula-teal" />
+          Limits by Plan
+        </h4>
+        <div className="grid sm:grid-cols-3 gap-4">
+          {planLimits.map((plan, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className={`border border-${plan.color}/30 rounded-xl p-4 bg-${plan.color}/5 text-center`}
+            >
+              <h5 className="font-semibold text-foreground">{plan.plan}</h5>
+              <p className={`text-${plan.color} font-mono text-lg mt-2`}>{plan.limit}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Rate Limit Headers */}
+      <div className="border border-border/40 rounded-xl p-5 bg-nebula-dark/30">
+        <h4 className="font-semibold text-foreground mb-4">Rate Limit Headers</h4>
+        <div className="space-y-2 font-mono text-sm">
+          <div className="flex gap-2">
+            <span className="text-nebula-teal">X-RateLimit-Limit:</span>
+            <span className="text-nebula-frost/70">5000</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-nebula-teal">X-RateLimit-Remaining:</span>
+            <span className="text-nebula-frost/70">4850</span>
+          </div>
+          <div className="flex gap-2">
+            <span className="text-nebula-teal">X-RateLimit-Reset:</span>
+            <span className="text-nebula-frost/70">1702558800</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Optimization Strategies */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-nebula-violet" />
+          Optimization Strategies
+        </h4>
+        <div className="space-y-4">
+          {strategies.map((strategy, index) => {
+            const StrategyIcon = strategy.icon;
+            return (
+              <div key={index} className="flex gap-4">
+                <div className="h-10 w-10 rounded-lg bg-nebula-violet/20 flex items-center justify-center flex-shrink-0">
+                  <StrategyIcon className="h-5 w-5 text-nebula-violet" />
+                </div>
+                <div>
+                  <h5 className="font-medium text-foreground">{strategy.title}</h5>
+                  <p className="text-muted-foreground/80 text-sm">{strategy.description}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced SDKs Content Component
+function SDKsContent() {
+  const [activeSDK, setActiveSDK] = useState("javascript");
+
+  const sdks = [
+    { id: "javascript", name: "JavaScript/TypeScript", install: "npm install @galaxyco/sdk", icon: Code2 },
+    { id: "python", name: "Python", install: "pip install galaxyco", icon: Terminal }
+  ];
+
+  const features = [
+    "Automatic retry with exponential backoff",
+    "Built-in rate limit handling",
+    "Type-safe (TypeScript) / Type-hinted (Python)",
+    "Async/await support",
+    "Pagination helpers",
+    "Webhook signature verification"
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Official SDKs make integrating with GalaxyCo.ai faster and easier. We handle authentication, retries, and error handling.
+        </p>
+      </div>
+
+      {/* SDK Tabs */}
+      <div className="flex gap-2">
+        {sdks.map((sdk) => {
+          const SDKIcon = sdk.icon;
+          return (
+            <button
+              key={sdk.id}
+              onClick={() => setActiveSDK(sdk.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeSDK === sdk.id
+                  ? 'bg-nebula-teal/20 text-nebula-teal border border-nebula-teal/30'
+                  : 'bg-card/50 text-muted-foreground hover:text-foreground border border-border/40'
+              }`}
+            >
+              <SDKIcon className="h-4 w-4" />
+              {sdk.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Installation */}
+      {sdks.map((sdk) => (
+        activeSDK === sdk.id && (
+          <motion.div key={sdk.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="border border-nebula-dark/60 rounded-xl bg-nebula-dark/40 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Package className="h-4 w-4 text-nebula-teal" />
+                <span className="text-sm text-muted-foreground">Installation</span>
+              </div>
+              <code className="text-nebula-frost font-mono text-sm">{sdk.install}</code>
+            </div>
+          </motion.div>
+        )
+      ))}
+
+      {/* Features */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-nebula-violet" />
+          Features
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {features.map((feature, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground/90">
+              <CircleCheck className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+              <span>{feature}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Other Languages */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <h4 className="font-semibold text-foreground mb-3">Other Languages</h4>
+        <div className="space-y-2 text-sm text-muted-foreground/90">
+          <p><span className="text-nebula-teal font-medium">Ruby:</span> gem install galaxyco (community-maintained)</p>
+          <p><span className="text-nebula-teal font-medium">Go:</span> go get github.com/galaxyco/go-sdk (coming soon)</p>
+          <p><span className="text-nebula-teal font-medium">.NET:</span> NuGet package in development</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Error Handling Content Component
+function ErrorHandlingContent() {
+  const [openCode, setOpenCode] = useState<number | null>(0);
+
+  const statusCodes = [
+    { code: "400", name: "Bad Request", description: "Invalid request parameters. Check the error message for details.", color: "amber" },
+    { code: "401", name: "Unauthorized", description: "Invalid or missing API key. Verify your Authorization header.", color: "red" },
+    { code: "403", name: "Forbidden", description: "Valid credentials but insufficient permissions. Check your API key scopes.", color: "red" },
+    { code: "404", name: "Not Found", description: "Resource doesn't exist. Verify the ID is correct.", color: "amber" },
+    { code: "429", name: "Too Many Requests", description: "Rate limit exceeded. Check Retry-After header.", color: "violet" },
+    { code: "500", name: "Internal Server Error", description: "Something went wrong on our end. Include request_id when contacting support.", color: "red" }
+  ];
+
+  const errorCodes = [
+    { code: "invalid_request", description: "Malformed request. Fix the syntax." },
+    { code: "missing_field", description: "Required field not provided." },
+    { code: "duplicate", description: "Resource already exists (e.g., contact with same email)." },
+    { code: "rate_limit_exceeded", description: "Too many requests." },
+    { code: "invalid_credentials", description: "API key is invalid or expired." }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Understand API errors and implement robust error handling.
+        </p>
+      </div>
+
+      {/* HTTP Status Codes */}
+      <div>
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-nebula-teal" />
+          HTTP Status Codes
+        </h4>
+        <div className="space-y-2">
+          {statusCodes.map((status, index) => {
+            const isOpen = openCode === index;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                className={`border rounded-xl overflow-hidden transition-all ${
+                  isOpen ? 'border-nebula-teal/40' : 'border-border/40'
+                }`}
+              >
+                <button
+                  onClick={() => setOpenCode(isOpen ? null : index)}
+                  className="w-full flex items-center gap-4 p-3 text-left"
+                >
+                  <span className={`px-2 py-1 rounded font-mono text-sm font-bold bg-${status.color}-500/20 text-${status.color}-400`}>
+                    {status.code}
+                  </span>
+                  <span className="font-medium text-foreground">{status.name}</span>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}>
+                      <div className="px-4 pb-3 ml-16">
+                        <p className="text-sm text-muted-foreground/80">{status.description}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Common Error Codes */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground mb-4">Common Error Codes</h4>
+        <div className="space-y-2">
+          {errorCodes.map((error, index) => (
+            <div key={index} className="flex gap-4 text-sm">
+              <code className="text-nebula-teal font-mono whitespace-nowrap">{error.code}</code>
+              <span className="text-muted-foreground/80">{error.description}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Debugging Tip */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-2">
+          <Info className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Debugging</h4>
+        </div>
+        <p className="text-sm text-muted-foreground/90">
+          Every response includes <code className="text-nebula-teal text-xs">X-Request-ID</code> header. Include this when contacting support for faster resolution.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Changelog Content Component
+function ChangelogContent() {
+  const versions = [
+    {
+      version: "v1.3.0",
+      date: "2025-12-14",
+      label: "Latest",
+      changes: [
+        "Added Neptune AI chat endpoint (POST /v1/neptune/chat)",
+        "New bulk contact update endpoint",
+        "Improved rate limit headers with reset timestamp",
+        "Fixed: Workflow execution webhook payload format"
+      ]
+    },
+    {
+      version: "v1.2.0",
+      date: "2025-12-01",
+      changes: [
+        "Added knowledge base API endpoints",
+        "New webhook events for deal stage changes",
+        "OAuth 2.0 with PKCE support",
+        "Enhanced error responses with field-level details"
+      ]
+    },
+    {
+      version: "v1.1.0",
+      date: "2025-11-15",
+      changes: [
+        "Webhook signature verification",
+        "Pagination cursor improvements",
+        "Added fields query parameter",
+        "Beta: Bulk operations API"
+      ]
+    }
+  ];
+
+  const roadmap = [
+    "GraphQL API (Q1 2026)",
+    "Advanced filtering & search",
+    "Real-time subscriptions via WebSockets",
+    "Expanded bulk operations"
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Stay informed about API changes and plan your integration updates. Current Version: <span className="text-nebula-teal font-semibold">v1</span>
+        </p>
+      </div>
+
+      {/* Version History */}
+      <div className="relative space-y-4">
+        <div className="absolute left-[18px] top-10 bottom-10 w-[2px] bg-gradient-to-b from-nebula-teal/40 to-nebula-violet/20 hidden sm:block" />
+        {versions.map((version, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className="relative flex gap-4"
+          >
+            <div className="relative z-10 w-9 h-9 rounded-lg bg-gradient-to-br from-nebula-teal to-nebula-violet flex items-center justify-center flex-shrink-0">
+              <GitBranch className="h-4 w-4 text-nebula-frost" />
+            </div>
+            <div className="flex-1 border border-border/40 rounded-xl p-4 bg-card/50">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="font-semibold text-foreground">{version.version}</span>
+                <span className="text-sm text-muted-foreground/70">{version.date}</span>
+                {version.label && (
+                  <span className="px-2 py-0.5 rounded bg-nebula-teal/20 text-nebula-teal text-xs font-medium">
+                    {version.label}
+                  </span>
+                )}
+              </div>
+              <ul className="space-y-1">
+                {version.changes.map((change, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground/80">
+                    <span className="text-nebula-teal mt-1">•</span>
+                    <span>{change}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Roadmap */}
+      <div className="border border-nebula-violet/20 rounded-xl p-5 bg-nebula-violet/5">
+        <div className="flex items-center gap-3 mb-4">
+          <Rocket className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Roadmap (Next 6 Months)</h4>
+        </div>
+        <div className="space-y-2">
+          {roadmap.map((item, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground/90">
+              <ChevronRight className="h-4 w-4 text-nebula-violet" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Subscribe */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <div className="flex items-center gap-3">
+          <Mail className="h-5 w-5 text-nebula-teal" />
+          <span className="text-foreground">
+            Subscribe to updates: <span className="text-nebula-teal font-medium">developers@galaxyco.ai</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== ADMINS SECTION COMPONENTS ====================
+
+// Enhanced Team Management Content Component
+function TeamManagementContent() {
+  const roles = [
+    { name: "Admin", description: "Full access including billing, team management, and workspace settings.", icon: Shield, color: "nebula-teal" },
+    { name: "Member", description: "Can create/edit contacts, workflows, and documents. Cannot manage billing or invite users.", icon: Users, color: "nebula-violet" },
+    { name: "Read-Only", description: "View-only access to all data. Cannot make changes.", icon: Eye, color: "muted-foreground" }
+  ];
+
+  const actions = [
+    { icon: UserPlus, title: "Invite Members", description: "Enter email addresses, select role, they receive a signup link valid for 7 days." },
+    { icon: Edit, title: "Edit Roles", description: "Click on any team member → Change Role. Takes effect immediately." },
+    { icon: Pause, title: "Deactivate Users", description: "Preserve data and activity history. Reactivate anytime." },
+    { icon: Trash2, title: "Remove Users", description: "Permanently remove from workspace. Their data is reassigned to owner." }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Manage your team effectively with comprehensive controls for adding, organizing, and managing members.
+        </p>
+      </div>
+
+      {/* User Roles */}
+      <div>
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Shield className="h-5 w-5 text-nebula-teal" />
+          User Roles
+        </h4>
+        <div className="space-y-3">
+          {roles.map((role, index) => {
+            const RoleIcon = role.icon;
+            return (
+              <motion.div key={index} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}
+                className="flex gap-4 p-4 border border-border/40 rounded-xl">
+                <div className={`h-10 w-10 rounded-lg bg-${role.color}/20 flex items-center justify-center flex-shrink-0`}>
+                  <RoleIcon className={`h-5 w-5 text-${role.color}`} />
+                </div>
+                <div>
+                  <h5 className="font-medium text-foreground">{role.name}</h5>
+                  <p className="text-muted-foreground/80 text-sm mt-1">{role.description}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Managing Members */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <UserCog className="h-5 w-5 text-nebula-violet" />
+          Managing Members
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {actions.map((action, index) => {
+            const ActionIcon = action.icon;
+            return (
+              <div key={index} className="flex gap-3">
+                <ActionIcon className="h-5 w-5 text-nebula-teal flex-shrink-0 mt-0.5" />
+                <div>
+                  <h5 className="font-medium text-foreground text-sm">{action.title}</h5>
+                  <p className="text-muted-foreground/70 text-xs mt-0.5">{action.description}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Best Practices */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <Lightbulb className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Best Practices</h4>
+        </div>
+        <div className="space-y-2 text-sm text-muted-foreground/90">
+          <p>• Use read-only access for contractors or external stakeholders</p>
+          <p>• Create teams that mirror your org structure</p>
+          <p>• Regular audit of active users (quarterly)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Permissions Content Component
+function PermissionsContent() {
+  const permissionMatrix = [
+    { resource: "Contacts & Deals", permissions: ["View", "Create", "Edit", "Delete", "Export"] },
+    { resource: "Workflows & Agents", permissions: ["View", "Execute", "Edit", "Create", "Delete"] },
+    { resource: "Knowledge Base", permissions: ["Read", "Upload", "Edit", "Delete"] },
+    { resource: "Settings", permissions: ["View", "Edit", "Billing", "Team", "Integrations"] }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Control exactly what team members can do with granular role-based permissions.
+        </p>
+      </div>
+
+      {/* Built-in Roles */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {[
+          { role: "Workspace Admin", desc: "Full control over everything including billing", icon: Shield, color: "nebula-teal" },
+          { role: "Team Admin", desc: "Manage team members and their permissions", icon: Users, color: "nebula-violet" },
+          { role: "Member", desc: "Standard access - create/edit contacts, deals, workflows", icon: User, color: "nebula-teal" },
+          { role: "Read-Only", desc: "View all data but cannot make changes", icon: Eye, color: "muted-foreground" }
+        ].map((item, index) => {
+          const ItemIcon = item.icon;
+          return (
+            <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+              className="border border-border/40 rounded-xl p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <ItemIcon className={`h-5 w-5 text-${item.color}`} />
+                <h5 className="font-medium text-foreground">{item.role}</h5>
+              </div>
+              <p className="text-muted-foreground/70 text-sm">{item.desc}</p>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Permission Matrix */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Grid3X3 className="h-5 w-5 text-nebula-teal" />
+          Permission Matrix
+        </h4>
+        <div className="space-y-4">
+          {permissionMatrix.map((item, index) => (
+            <div key={index}>
+              <h5 className="font-medium text-foreground text-sm mb-2">{item.resource}</h5>
+              <div className="flex flex-wrap gap-2">
+                {item.permissions.map((perm, i) => (
+                  <span key={i} className="px-2 py-1 rounded bg-nebula-teal/10 text-nebula-teal text-xs font-medium">
+                    {perm}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Custom Roles */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <Settings className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Custom Roles (Professional & Enterprise)</h4>
+        </div>
+        <p className="text-sm text-muted-foreground/90">
+          Create custom roles tailored to your needs. Go to Settings → Roles → Create Custom Role. Examples: 'Sales Rep', 'Marketing Manager', 'Support Agent'.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Security Content Component
+function SecurityContent() {
+  const features = [
+    { icon: Lock, title: "Single Sign-On (SSO)", description: "Supports SAML 2.0 and OAuth 2.0 providers: Okta, Azure AD, Google Workspace" },
+    { icon: Key, title: "Two-Factor Authentication", description: "Authenticator apps, SMS codes, or hardware keys (YubiKey)" },
+    { icon: Timer, title: "Session Management", description: "Configure timeout (1 hour to 30 days) and concurrent session limits" },
+    { icon: Globe, title: "IP Allowlisting", description: "Restrict access to specific IP addresses or ranges" },
+    { icon: Shield, title: "Password Policies", description: "Enforce minimum length, complexity, expiration, and reuse prevention" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Secure your workspace with enterprise-grade security controls.
+        </p>
+      </div>
+
+      {/* Security Features */}
+      <div className="space-y-3">
+        {features.map((feature, index) => {
+          const FeatureIcon = feature.icon;
+          return (
+            <motion.div key={index} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}
+              className="flex gap-4 p-4 border border-border/40 rounded-xl hover:border-nebula-teal/30 transition-colors">
+              <div className="h-10 w-10 rounded-lg bg-nebula-teal/20 flex items-center justify-center flex-shrink-0">
+                <FeatureIcon className="h-5 w-5 text-nebula-teal" />
+              </div>
+              <div>
+                <h5 className="font-medium text-foreground">{feature.title}</h5>
+                <p className="text-muted-foreground/80 text-sm mt-1">{feature.description}</p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Additional Security */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <ShieldCheck className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Additional Security</h4>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground/90">
+          <p>• Audit logs track all security events</p>
+          <p>• Failed login alerts</p>
+          <p>• API key rotation reminders</p>
+          <p>• Encryption at rest and in transit (AES-256)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Billing Content Component
+function BillingContent() {
+  const plans = [
+    { name: "Starter", price: "$49/mo", features: "5 seats, 10K contacts, 1K workflow runs/mo" },
+    { name: "Professional", price: "$149/mo", features: "15 seats, 50K contacts, 10K workflow runs/mo" },
+    { name: "Enterprise", price: "Custom", features: "Unlimited seats, contacts, and runs" }
+  ];
+
+  const metrics = [
+    { icon: Users, label: "Active users / seat limit" },
+    { icon: Zap, label: "API requests (current month)" },
+    { icon: Database, label: "Storage used / limit" },
+    { icon: Workflow, label: "Workflow executions" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Manage your subscription, track usage, and control costs.
+        </p>
+      </div>
+
+      {/* Plans */}
+      <div className="grid sm:grid-cols-3 gap-4">
+        {plans.map((plan, index) => (
+          <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+            className="border border-border/40 rounded-xl p-4 text-center bg-card/50">
+            <h5 className="font-semibold text-foreground">{plan.name}</h5>
+            <p className="text-nebula-teal text-xl font-bold mt-2">{plan.price}</p>
+            <p className="text-muted-foreground/70 text-xs mt-2">{plan.features}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Usage Metrics */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-nebula-violet" />
+          Usage Dashboard
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {metrics.map((metric, index) => {
+            const MetricIcon = metric.icon;
+            return (
+              <div key={index} className="flex items-center gap-3 text-sm text-muted-foreground/90">
+                <MetricIcon className="h-4 w-4 text-nebula-teal" />
+                <span>{metric.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Cost Optimization */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <TrendingUp className="h-5 w-5 text-nebula-teal" />
+          <h4 className="font-semibold text-foreground">Cost Optimization Tips</h4>
+        </div>
+        <div className="space-y-2 text-sm text-muted-foreground/90">
+          <p>• Deactivate unused users to free up seats</p>
+          <p>• Archive old workflows to reduce executions</p>
+          <p>• Use bulk API operations to reduce request count</p>
+          <p>• Review usage monthly and adjust plan accordingly</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Audit Logs Content Component
+function AuditLogsContent() {
+  const logTypes = [
+    { category: "User Actions", items: ["Login/logout events", "Failed login attempts", "Password changes", "2FA enable/disable"] },
+    { category: "Data Changes", items: ["Contact/deal created, updated, deleted", "Workflow modified or executed", "Document uploaded or removed"] },
+    { category: "API Activity", items: ["API key created or revoked", "API requests (with endpoints and status)", "Webhook deliveries"] }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Comprehensive activity tracking for security, compliance, and debugging.
+        </p>
+      </div>
+
+      {/* What Gets Logged */}
+      <div className="space-y-4">
+        {logTypes.map((type, index) => (
+          <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+            className="border border-border/40 rounded-xl p-4">
+            <h5 className="font-medium text-foreground mb-3 flex items-center gap-2">
+              <Activity className="h-4 w-4 text-nebula-teal" />
+              {type.category}
+            </h5>
+            <div className="grid sm:grid-cols-2 gap-2">
+              {type.items.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground/80">
+                  <span className="text-nebula-teal">•</span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Retention */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="border border-nebula-teal/20 rounded-xl p-4 bg-nebula-teal/5">
+          <h5 className="font-medium text-foreground mb-2">Professional</h5>
+          <p className="text-nebula-teal text-lg font-bold">90-day retention</p>
+        </div>
+        <div className="border border-nebula-violet/20 rounded-xl p-4 bg-nebula-violet/5">
+          <h5 className="font-medium text-foreground mb-2">Enterprise</h5>
+          <p className="text-nebula-violet text-lg font-bold">1-year retention</p>
+          <p className="text-muted-foreground/70 text-xs">(customizable up to 7 years)</p>
+        </div>
+      </div>
+
+      {/* Use Cases */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <ListChecks className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Common Use Cases</h4>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground/90">
+          <p>• Compliance audits (SOC 2, GDPR, HIPAA)</p>
+          <p>• Security investigations</p>
+          <p>• Debugging workflow issues</p>
+          <p>• User activity monitoring</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Advanced Settings Content Component
+function AdvancedSettingsContent() {
+  const settings = [
+    { icon: Settings, title: "General", items: ["Workspace name and icon", "Default timezone", "Date/time format", "Language", "Currency for deals"] },
+    { icon: Mail, title: "Notifications", items: ["Email digest frequency", "Slack integration for alerts", "In-app notification preferences", "Mobile push notifications"] },
+    { icon: Database, title: "Data Retention", items: ["Deleted items: 30 days in trash", "Completed workflows: 90 days of logs", "Archived contacts: Never deleted"] }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Advanced configuration options for customizing your workspace.
+        </p>
+      </div>
+
+      {/* Settings Categories */}
+      <div className="space-y-4">
+        {settings.map((category, index) => {
+          const CategoryIcon = category.icon;
+          return (
+            <motion.div key={index} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}
+              className="border border-border/40 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-nebula-teal/20 flex items-center justify-center">
+                  <CategoryIcon className="h-5 w-5 text-nebula-teal" />
+                </div>
+                <h5 className="font-semibold text-foreground">{category.title}</h5>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-2 ml-1">
+                {category.items.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground/80">
+                    <CircleCheck className="h-3 w-3 text-nebula-teal flex-shrink-0" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Integrations */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <Link className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Available Integrations</h4>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {["Salesforce", "HubSpot", "Google Calendar", "Outlook", "Slack", "Teams", "QuickBooks", "Xero", "Shopify", "Stripe"].map((int, i) => (
+            <span key={i} className="px-3 py-1 rounded-lg bg-card/50 text-muted-foreground/80 text-sm border border-border/40">
+              {int}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Compliance Content Component
+function ComplianceContent() {
+  const certifications = [
+    { name: "SOC 2 Type II", status: "Certified", description: "Annual audit of security, availability, and confidentiality controls", icon: ShieldCheck },
+    { name: "GDPR", status: "Compliant", description: "Full compliance with EU General Data Protection Regulation", icon: Shield },
+    { name: "CCPA", status: "Compliant", description: "California Consumer Privacy Act requirements met", icon: Shield },
+    { name: "ISO 27001", status: "In Progress", description: "Expected Q2 2026", icon: Clock }
+  ];
+
+  const gdprRights = ["Right to access: Export user data", "Right to erasure: Permanently delete user data", "Right to rectification: Update incorrect data", "Right to data portability: Download data in JSON format"];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          GalaxyCo.ai meets stringent compliance standards to protect your data.
+        </p>
+      </div>
+
+      {/* Certifications */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {certifications.map((cert, index) => {
+          const CertIcon = cert.icon;
+          return (
+            <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+              className="border border-border/40 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <CertIcon className="h-5 w-5 text-nebula-teal" />
+                  <h5 className="font-semibold text-foreground">{cert.name}</h5>
+                </div>
+                <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                  cert.status === "Certified" || cert.status === "Compliant" 
+                    ? "bg-emerald-500/20 text-emerald-400" 
+                    : "bg-amber-500/20 text-amber-400"
+                }`}>
+                  {cert.status}
+                </span>
+              </div>
+              <p className="text-muted-foreground/70 text-sm">{cert.description}</p>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* GDPR Features */}
+      <div className="border border-nebula-teal/20 rounded-xl p-5 bg-nebula-teal/5">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Shield className="h-5 w-5 text-nebula-teal" />
+          GDPR Data Subject Rights
+        </h4>
+        <div className="space-y-2">
+          {gdprRights.map((right, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground/90">
+              <CircleCheck className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+              <span>{right}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Data Residency */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <div className="flex items-center gap-3 mb-3">
+          <Globe className="h-5 w-5 text-nebula-violet" />
+          <h4 className="font-semibold text-foreground">Data Residency (Enterprise)</h4>
+        </div>
+        <p className="text-sm text-muted-foreground/90 mb-3">Choose where your data is stored:</p>
+        <div className="flex flex-wrap gap-2">
+          {["US (Virginia)", "EU (Frankfurt)", "UK (London)", "Canada (Montreal)", "Australia (Sydney)"].map((region, i) => (
+            <span key={i} className="px-3 py-1 rounded-lg bg-nebula-violet/10 text-nebula-violet text-sm border border-nebula-violet/20">
+              {region}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== AI AGENTS SECTION COMPONENTS ====================
+
+// Enhanced Platform Overview Content Component
+function PlatformOverviewContent() {
+  const capabilities = [
+    { icon: Users, text: "CRM operations (contacts, deals, activities)" },
+    { icon: Workflow, text: "Workflow creation and execution" },
+    { icon: BookOpen, text: "Knowledge base management" },
+    { icon: Bot, text: "Neptune AI orchestration" },
+    { icon: Webhook, text: "Real-time webhook events" },
+    { icon: Shield, text: "Team and permission management" }
+  ];
+
+  const operations = [
+    "CRUD on all resources",
+    "Complex queries with filtering, sorting, pagination",
+    "Bulk operations (max 100 items)",
+    "File uploads (max 25MB)",
+    "Transactional workflows",
+    "Async job processing"
+  ];
+
+  const limits = [
+    { plan: "Starter", limit: "1K req/hr" },
+    { plan: "Professional", limit: "5K req/hr" },
+    { plan: "Enterprise", limit: "20K req/hr" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Machine-readable specifications for AI agents integrating with GalaxyCo.ai.
+        </p>
+      </div>
+
+      {/* Core Functions */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Cpu className="h-5 w-5 text-nebula-teal" />
+          Core Functions
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {capabilities.map((cap, index) => {
+            const CapIcon = cap.icon;
+            return (
+              <div key={index} className="flex items-center gap-3 text-sm text-muted-foreground/90">
+                <CapIcon className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+                <span>{cap.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Supported Operations */}
+      <div className="border border-border/40 rounded-xl p-5">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-nebula-violet" />
+          Supported Operations
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {operations.map((op, index) => (
+            <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground/90">
+              <CircleCheck className="h-4 w-4 text-nebula-teal flex-shrink-0" />
+              <span>{op}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Architecture */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: "API Style", value: "RESTful + JSON" },
+          { label: "Base URL", value: "/api" },
+          { label: "Auth", value: "Bearer token" },
+          { label: "Pagination", value: "Cursor-based" }
+        ].map((item, index) => (
+          <div key={index} className="border border-border/40 rounded-lg p-3 text-center bg-card/30">
+            <p className="text-muted-foreground/70 text-xs uppercase tracking-wider">{item.label}</p>
+            <p className="text-foreground font-medium mt-1">{item.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Rate Limits */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <h4 className="font-semibold text-foreground mb-4">Rate Limits by Plan</h4>
+        <div className="flex gap-4 justify-center">
+          {limits.map((item, index) => (
+            <div key={index} className="text-center">
+              <p className="text-muted-foreground/70 text-sm">{item.plan}</p>
+              <p className="text-nebula-teal font-mono font-bold">{item.limit}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Data Models Content Component
+function DataModelsContent() {
+  const schemas = [
+    { name: "Contact", fields: ["id", "email (required)", "first_name", "last_name", "company", "score", "tags[]", "custom_fields{}"] },
+    { name: "Deal", fields: ["id", "name (required)", "contact_id", "value", "currency", "stage", "probability", "status"] },
+    { name: "Workflow", fields: ["id", "name (required)", "trigger{}", "conditions[]", "actions[]", "active", "created_at"] },
+    { name: "Agent", fields: ["id", "name", "type", "ai_provider", "model", "instructions", "inputs[]", "outputs[]"] }
+  ];
+
+  const relationships = [
+    { from: "Contact", to: "Deals", type: "one-to-many" },
+    { from: "Contact", to: "Activities", type: "one-to-many" },
+    { from: "Deal", to: "Contact", type: "many-to-one" },
+    { from: "Workflow", to: "Actions", type: "one-to-many" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Comprehensive data schemas for all platform entities.
+        </p>
+      </div>
+
+      {/* Schemas */}
+      <div className="space-y-4">
+        {schemas.map((schema, index) => (
+          <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+            className="border border-border/40 rounded-xl p-4 bg-nebula-dark/20">
+            <h5 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Database className="h-4 w-4 text-nebula-teal" />
+              {schema.name}
+            </h5>
+            <div className="flex flex-wrap gap-2">
+              {schema.fields.map((field, i) => (
+                <code key={i} className="px-2 py-1 rounded bg-nebula-dark/40 text-nebula-frost/80 text-xs font-mono">
+                  {field}
+                </code>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Relationships */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Network className="h-5 w-5 text-nebula-violet" />
+          Relationships
+        </h4>
+        <div className="space-y-2">
+          {relationships.map((rel, index) => (
+            <div key={index} className="flex items-center gap-3 text-sm">
+              <span className="text-nebula-teal font-medium">{rel.from}</span>
+              <ArrowRight className="h-4 w-4 text-muted-foreground/50" />
+              <span className="text-nebula-violet font-medium">{rel.to}</span>
+              <span className="text-muted-foreground/60 text-xs">({rel.type})</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Data Types */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <h4 className="font-semibold text-foreground mb-3">Data Types</h4>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm">
+          <p><span className="text-nebula-teal">Timestamps:</span> ISO 8601 UTC</p>
+          <p><span className="text-nebula-teal">IDs:</span> Prefixed strings (cnt_, wf_, doc_)</p>
+          <p><span className="text-nebula-teal">Currency:</span> ISO 4217 codes</p>
+          <p><span className="text-nebula-teal">Enums:</span> Predefined string values</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Use Case Taxonomy Content Component
+function UseCaseTaxonomyContent() {
+  const useCases = [
+    { category: "Lead Management", icon: Users, items: ["Auto-enrich contacts from email/company domain", "Score leads based on fit criteria", "Route leads to appropriate sales rep", "De-duplicate and merge contacts"] },
+    { category: "Deal Management", icon: Target, items: ["Track deal progression through pipeline", "Predict deal close probability", "Alert on stalled deals", "Generate deal summaries"] },
+    { category: "Activity Tracking", icon: Activity, items: ["Log emails, calls, meetings", "Extract action items from transcripts", "Suggest next best actions", "Generate activity summaries"] }
+  ];
+
+  const patterns = [
+    { name: "Event-Driven", trigger: "Webhook or platform event", useCase: "Real-time response required" },
+    { name: "Scheduled", trigger: "Time-based (cron)", useCase: "Batch processing acceptable" },
+    { name: "Request-Response", trigger: "Explicit API call", useCase: "On-demand execution needed" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Categorized use cases with recommended implementation patterns for AI agents.
+        </p>
+      </div>
+
+      {/* Use Cases */}
+      <div className="space-y-4">
+        {useCases.map((useCase, index) => {
+          const UseCaseIcon = useCase.icon;
+          return (
+            <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+              className="border border-border/40 rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-lg bg-nebula-teal/20 flex items-center justify-center">
+                  <UseCaseIcon className="h-5 w-5 text-nebula-teal" />
+                </div>
+                <h5 className="font-semibold text-foreground">{useCase.category}</h5>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-2">
+                {useCase.items.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground/90">
+                    <CircleCheck className="h-3 w-3 text-nebula-teal flex-shrink-0" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Automation Patterns */}
+      <div className="border border-nebula-violet/20 rounded-xl p-5 bg-nebula-violet/5">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Workflow className="h-5 w-5 text-nebula-violet" />
+          Automation Patterns
+        </h4>
+        <div className="space-y-3">
+          {patterns.map((pattern, index) => (
+            <div key={index} className="flex gap-4 items-center">
+              <span className="text-nebula-violet font-medium w-32">{pattern.name}</span>
+              <span className="text-muted-foreground/70 text-sm flex-1">{pattern.trigger}</span>
+              <span className="text-muted-foreground/90 text-sm">{pattern.useCase}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Best Practices & Anti-Patterns */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="border border-nebula-teal/20 rounded-xl p-4 bg-nebula-teal/5">
+          <h5 className="font-medium text-foreground mb-3 flex items-center gap-2">
+            <CircleCheck className="h-4 w-4 text-nebula-teal" />
+            Best Practices
+          </h5>
+          <div className="space-y-1 text-sm text-muted-foreground/80">
+            <p>• Use idempotency keys for writes</p>
+            <p>• Implement exponential backoff</p>
+            <p>• Cache frequently accessed data</p>
+            <p>• Batch operations when possible</p>
+          </div>
+        </div>
+        <div className="border border-red-500/20 rounded-xl p-4 bg-red-500/5">
+          <h5 className="font-medium text-foreground mb-3 flex items-center gap-2">
+            <CircleX className="h-4 w-4 text-red-400" />
+            Anti-Patterns
+          </h5>
+          <div className="space-y-1 text-sm text-muted-foreground/80">
+            <p>• Polling instead of webhooks</p>
+            <p>• Individual API calls instead of bulk</p>
+            <p>• Ignoring error codes</p>
+            <p>• Hard-coding IDs or assumptions</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced API Specifications Content Component
+function APISpecificationsContent() {
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Machine-readable specifications for automated tooling and code generation.
+        </p>
+      </div>
+
+      {/* OpenAPI */}
+      <div className="border border-nebula-teal/20 rounded-xl p-5 bg-nebula-teal/5">
+        <div className="flex items-center gap-3 mb-4">
+          <FileCode className="h-6 w-6 text-nebula-teal" />
+          <div>
+            <h4 className="font-semibold text-foreground">OpenAPI 3.1 Specification</h4>
+            <p className="text-muted-foreground/70 text-sm">Full API spec with schemas and examples</p>
+          </div>
+        </div>
+        <code className="text-nebula-frost text-sm font-mono bg-nebula-dark/40 p-3 rounded-lg block">
+          /api/openapi
+        </code>
+      </div>
+
+      {/* Resources */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="border border-border/40 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <ExternalLink className="h-4 w-4 text-nebula-violet" />
+            <h5 className="font-medium text-foreground">Interactive Docs</h5>
+          </div>
+          <a href="/docs/api" className="text-nebula-teal text-sm hover:underline">/docs/api</a>
+          <p className="text-muted-foreground/70 text-xs mt-2">Swagger UI with live testing</p>
+        </div>
+        <div className="border border-border/40 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Download className="h-4 w-4 text-nebula-violet" />
+            <h5 className="font-medium text-foreground">Postman Collection</h5>
+          </div>
+          <code className="text-nebula-teal text-sm">/api/openapi</code>
+          <p className="text-muted-foreground/70 text-xs mt-2">Pre-configured collection</p>
+        </div>
+      </div>
+
+      {/* Code Generation */}
+      <div className="border border-border/40 rounded-xl p-5 bg-card/50">
+        <h4 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Terminal className="h-5 w-5 text-nebula-teal" />
+          Code Generation
+        </h4>
+        <div className="space-y-3">
+          <div className="bg-nebula-dark/40 rounded-lg p-3">
+            <p className="text-muted-foreground/70 text-xs mb-1">JavaScript/TypeScript</p>
+            <code className="text-nebula-frost text-xs font-mono">npx openapi-generator-cli generate -i .../openapi.json -g typescript-fetch -o ./client</code>
+          </div>
+          <div className="bg-nebula-dark/40 rounded-lg p-3">
+            <p className="text-muted-foreground/70 text-xs mb-1">Python</p>
+            <code className="text-nebula-frost text-xs font-mono">openapi-generator generate -i .../openapi.json -g python -o ./client</code>
+          </div>
+        </div>
+      </div>
+
+      {/* Supported Generators */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <h4 className="font-semibold text-foreground mb-3">Supported Generators</h4>
+        <div className="flex flex-wrap gap-2">
+          {["JavaScript", "TypeScript", "Python", "Go", "Ruby", "Java", "C#", "PHP"].map((lang, i) => (
+            <span key={i} className="px-3 py-1 rounded-lg bg-nebula-violet/10 text-nebula-violet text-sm border border-nebula-violet/20">
+              {lang}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Integration Patterns Content Component
+function IntegrationPatternsContent() {
+  const patterns = [
+    { name: "Event-Driven", icon: Zap, flow: "GalaxyCo → Webhook → Your Service → Process → API Call Back", best: "Real-time reactions", latency: "<1s" },
+    { name: "Request-Response", icon: ArrowRight, flow: "Your Service → API Call → GalaxyCo → Response → Process", best: "On-demand queries", latency: "<500ms" },
+    { name: "Batch Processing", icon: Layers, flow: "Schedule → Fetch Data → Process Bulk → Bulk Update", best: "Periodic updates", latency: "Minutes" },
+    { name: "Real-Time Sync", icon: RefreshCw, flow: "System A ↔ Webhooks + API ↔ System B", best: "Bidirectional sync", latency: "<5s" }
+  ];
+
+  const reliabilityPatterns = [
+    { icon: Timer, text: "Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s" },
+    { icon: Pause, text: "Circuit breaker: Stop after N failures" },
+    { icon: Key, text: "Idempotency: Use Idempotency-Key header" },
+    { icon: Database, text: "Dead letter queue: Store failed events" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Reference architectures for common integration patterns.
+        </p>
+      </div>
+
+      {/* Patterns */}
+      <div className="space-y-4">
+        {patterns.map((pattern, index) => {
+          const PatternIcon = pattern.icon;
+          return (
+            <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+              className="border border-border/40 rounded-xl p-5">
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-nebula-teal/20 to-nebula-violet/20 flex items-center justify-center flex-shrink-0">
+                  <PatternIcon className="h-6 w-6 text-nebula-teal" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h5 className="font-semibold text-foreground">{pattern.name}</h5>
+                    <span className="px-2 py-0.5 rounded bg-nebula-teal/10 text-nebula-teal text-xs">{pattern.latency}</span>
+                  </div>
+                  <p className="text-muted-foreground/70 text-sm mb-2">Best for: {pattern.best}</p>
+                  <code className="text-nebula-frost/60 text-xs font-mono">{pattern.flow}</code>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Reliability Patterns */}
+      <div className="border border-nebula-violet/20 rounded-xl p-5 bg-nebula-violet/5">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <ShieldCheck className="h-5 w-5 text-nebula-violet" />
+          Reliability Patterns
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {reliabilityPatterns.map((pattern, index) => {
+            const PatternIcon = pattern.icon;
+            return (
+              <div key={index} className="flex items-center gap-3 text-sm text-muted-foreground/90">
+                <PatternIcon className="h-4 w-4 text-nebula-violet flex-shrink-0" />
+                <span>{pattern.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Performance Benchmarks Content Component
+function PerformanceBenchmarksContent() {
+  const responseTimes = [
+    { operation: "GET /contacts/{id}", time: "50ms", type: "Read" },
+    { operation: "GET /contacts (list)", time: "150ms", type: "Read" },
+    { operation: "POST /contacts", time: "120ms", type: "Write" },
+    { operation: "Search queries", time: "200ms", type: "Read" },
+    { operation: "Simple workflow", time: "300ms", type: "Execute" },
+    { operation: "Complex workflow", time: "2s", type: "Execute" }
+  ];
+
+  const optimizations = [
+    { title: "Reduce Latency", items: ["Use field selection (?fields=id,name,email)", "Enable HTTP/2 for connection reuse", "Cache frequently accessed data"] },
+    { title: "Increase Throughput", items: ["Use bulk endpoints instead of loops", "Parallelize independent requests", "Use webhooks instead of polling"] }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Performance characteristics and optimization guidelines.
+        </p>
+      </div>
+
+      {/* Response Times */}
+      <div className="border border-border/40 rounded-xl overflow-hidden">
+        <div className="bg-nebula-dark/20 px-4 py-3 border-b border-border/30">
+          <h4 className="font-semibold text-foreground flex items-center gap-2">
+            <Gauge className="h-5 w-5 text-nebula-teal" />
+            API Response Times (P95)
+          </h4>
+        </div>
+        <div className="divide-y divide-border/30">
+          {responseTimes.map((item, index) => (
+            <div key={index} className="flex items-center gap-4 px-4 py-3">
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                item.type === "Read" ? "bg-emerald-500/20 text-emerald-400" :
+                item.type === "Write" ? "bg-blue-500/20 text-blue-400" :
+                "bg-amber-500/20 text-amber-400"
+              }`}>{item.type}</span>
+              <code className="text-muted-foreground/80 text-sm font-mono flex-1">{item.operation}</code>
+              <span className="text-nebula-teal font-medium">{item.time}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Optimizations */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {optimizations.map((opt, index) => (
+          <div key={index} className="border border-border/40 rounded-xl p-4">
+            <h5 className="font-medium text-foreground mb-3 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-nebula-violet" />
+              {opt.title}
+            </h5>
+            <div className="space-y-2">
+              {opt.items.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground/80">
+                  <CircleCheck className="h-3 w-3 text-nebula-teal flex-shrink-0" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Monitoring */}
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+          <Activity className="h-5 w-5 text-nebula-teal" />
+          Key Metrics to Track
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground/90">
+          <p>• API response time (P50, P95, P99)</p>
+          <p>• Error rate by endpoint</p>
+          <p>• Rate limit utilization</p>
+          <p>• Workflow execution time</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Enhanced Limitations Content Component
+function LimitationsContent() {
+  const limits = [
+    { category: "API Limits", items: ["Rate limits enforced per plan (1K-20K req/hr)", "Max payload size: 10MB", "Bulk operations: max 100 items", "API timeout: 30 seconds"] },
+    { category: "Data Constraints", items: ["String fields: max 10,000 characters", "Arrays: max 1,000 items per field", "Custom fields: max 50 per entity type", "Tags: max 100 per contact/deal"] },
+    { category: "Search Limitations", items: ["Full-text search limited to 100K documents", "Search results max 1,000 items", "No fuzzy matching (exact or prefix only)", "Indexes updated every 5 minutes"] },
+    { category: "Workflow Limitations", items: ["Max 50 actions per workflow", "No loops or recursion", "Execution timeout: 5 minutes", "Cannot call external webhooks directly"] }
+  ];
+
+  const workarounds = [
+    { issue: "Large Payloads", solution: "Split into multiple requests or use file upload" },
+    { issue: "Complex Workflows", solution: "Chain multiple workflows via webhooks" },
+    { issue: "Rate Limits", solution: "Implement queuing system in your application" },
+    { issue: "Timeouts", solution: "Use async pattern: POST to create job, GET to poll status" }
+  ];
+
+  return (
+    <div className="space-y-8">
+      <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
+        <p className="text-base text-foreground/90 leading-relaxed">
+          Known limitations and constraints to design around.
+        </p>
+      </div>
+
+      {/* Limits by Category */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {limits.map((limit, index) => (
+          <motion.div key={index} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+            className="border border-border/40 rounded-xl p-4">
+            <h5 className="font-medium text-foreground mb-3 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-400" />
+              {limit.category}
+            </h5>
+            <div className="space-y-1">
+              {limit.items.map((item, i) => (
+                <p key={i} className="text-sm text-muted-foreground/80 flex items-start gap-2">
+                  <span className="text-amber-400 mt-1">•</span>
+                  {item}
+                </p>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Workarounds */}
+      <div className="border border-nebula-teal/20 rounded-xl p-5 bg-nebula-teal/5">
+        <h4 className="font-semibold text-foreground text-lg mb-4 flex items-center gap-2">
+          <Lightbulb className="h-5 w-5 text-nebula-teal" />
+          Workarounds
+        </h4>
+        <div className="space-y-3">
+          {workarounds.map((item, index) => (
+            <div key={index} className="flex gap-4 items-start">
+              <span className="text-amber-400 font-medium text-sm w-28 flex-shrink-0">{item.issue}</span>
+              <span className="text-muted-foreground/80 text-sm">{item.solution}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Upcoming Improvements */}
+      <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
+        <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+          <Rocket className="h-5 w-5 text-nebula-violet" />
+          Upcoming Improvements
+        </h4>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm text-muted-foreground/90">
+          <p>• GraphQL API (Q1 2026)</p>
+          <p>• Increased rate limits for all plans (Q2 2026)</p>
+          <p>• Workflow debugging tools (Q2 2026)</p>
+          <p>• Real-time search (Q3 2026)</p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface DocSection {
   id: string;
@@ -153,7 +3258,7 @@ const docSections: Record<UserType, DocSection[]> = {
       description: "REST API architecture and capabilities",
       lastUpdated: "2025-12-14",
       status: "new",
-      details: "GalaxyCo.ai provides a comprehensive REST API for building integrations, automating workflows, and extending platform capabilities.\n\n**Base URL:**\n```\nhttps://api.galaxyco.ai/v1\n```\n\n**Architecture Principles:**\n\n**RESTful Design:** Standard HTTP methods (GET, POST, PUT, PATCH, DELETE). Predictable resource URLs like `/contacts/{id}` or `/workflows/{id}/execute`.\n\n**JSON Everywhere:** All requests accept JSON payloads. All responses return JSON. Content-Type: application/json is required.\n\n**Idempotency:** PUT and DELETE operations are idempotent. POST operations return idempotency keys to prevent duplicate actions.\n\n**Versioning:**\n\nAPI version is specified in the URL path (`/v1/`, `/v2/`, etc.). Current version: v1. We maintain backward compatibility for at least 12 months after a new version is released.\n\n**Response Format:**\n\nSuccess responses (200-299) return the requested resource or confirmation:\n```json\n{\"data\": {...}, \"meta\": {\"timestamp\": \"2025-12-14T10:00:00Z\"}}\n```\n\nError responses (400-599) include error details:\n```json\n{\"error\": {\"code\": \"invalid_request\", \"message\": \"Missing required field: email\"}}\n```\n\n**Pagination:**\n\nList endpoints support cursor-based pagination:\n- `?limit=50` - Number of results (max 100, default 25)\n- `?cursor=abc123` - Pagination cursor from previous response\n\nResponses include pagination metadata with `next_cursor`.\n\n**Common Capabilities:**\n\n- Full CRUD on Contacts, Deals, Workflows, Documents\n- Execute workflows programmatically\n- Query Neptune AI assistant\n- Subscribe to webhooks for real-time events\n- Upload/download files\n- Manage team members and permissions\n\n**Getting Started:** Generate an API key in Settings → Developers → API Keys. Include it in all requests via `Authorization: Bearer YOUR_KEY` header.",
+      details: "GalaxyCo.ai provides a comprehensive REST API for building integrations, automating workflows, and extending platform capabilities.\n\n**Base URL:**\n```\n/api\n```\n\n**Architecture Principles:**\n\n**RESTful Design:** Standard HTTP methods (GET, POST, PUT, PATCH, DELETE). Predictable resource URLs like `/contacts/{id}` or `/workflows/{id}/execute`.\n\n**JSON Everywhere:** All requests accept JSON payloads. All responses return JSON. Content-Type: application/json is required.\n\n**Idempotency:** PUT and DELETE operations are idempotent. POST operations return idempotency keys to prevent duplicate actions.\n\n**Versioning:**\n\nAPI version is specified in the URL path (`/v1/`, `/v2/`, etc.). Current version: v1. We maintain backward compatibility for at least 12 months after a new version is released.\n\n**Response Format:**\n\nSuccess responses (200-299) return the requested resource or confirmation:\n```json\n{\"data\": {...}, \"meta\": {\"timestamp\": \"2025-12-14T10:00:00Z\"}}\n```\n\nError responses (400-599) include error details:\n```json\n{\"error\": {\"code\": \"invalid_request\", \"message\": \"Missing required field: email\"}}\n```\n\n**Pagination:**\n\nList endpoints support cursor-based pagination:\n- `?limit=50` - Number of results (max 100, default 25)\n- `?cursor=abc123` - Pagination cursor from previous response\n\nResponses include pagination metadata with `next_cursor`.\n\n**Common Capabilities:**\n\n- Full CRUD on Contacts, Deals, Workflows, Documents\n- Execute workflows programmatically\n- Query Neptune AI assistant\n- Subscribe to webhooks for real-time events\n- Upload/download files\n- Manage team members and permissions\n\n**Getting Started:** Generate an API key in Settings → Developers → API Keys. Include it in all requests via `Authorization: Bearer YOUR_KEY` header.",
       topics: ["REST Architecture", "Base URLs", "Versioning", "Response Formats", "Pagination"]
     },
     {
@@ -307,7 +3412,7 @@ const docSections: Record<UserType, DocSection[]> = {
       description: "Complete capabilities and constraints",
       lastUpdated: "2025-12-14",
       status: "stable",
-      details: "Machine-readable specifications for AI agents integrating with GalaxyCo.ai.\n\n**Platform Capabilities:**\n\n**Core Functions:**\n• CRM operations (contacts, deals, activities)\n• Workflow creation and execution\n• Knowledge base management\n• Neptune AI orchestration\n• Real-time webhook events\n• Team and permission management\n\n**Supported Operations:**\n• CRUD on all resources\n• Complex queries with filtering, sorting, pagination\n• Bulk operations (max 100 items)\n• File uploads (max 25MB)\n• Transactional workflows\n• Async job processing\n\n**Architecture:**\n\n**API Style:** RESTful with JSON payloads\n**Base URL:** https://api.galaxyco.ai/v1\n**Authentication:** Bearer token (API keys or OAuth 2.0)\n**Rate Limiting:** Token bucket algorithm, per-endpoint limits\n**Pagination:** Cursor-based, max 100 items per page\n**Webhooks:** Event-driven with signature verification\n**Idempotency:** Supported via Idempotency-Key header\n\n**Rate Limits:**\n\n**By Plan:**\n• Starter: 1K req/hr\n• Professional: 5K req/hr\n• Enterprise: 20K req/hr (customizable)\n\n**By Operation Type:**\n• GET: Full rate limit\n• POST/PUT/PATCH: 50% of rate limit\n• DELETE: 25% of rate limit\n• Bulk: 10% of rate limit\n\n**Data Access:**\n\n**Read Access:** All resources accessible via API with proper scopes\n**Write Access:** All mutations supported with validation\n**Search:** Full-text search on contacts, deals, documents\n**Filtering:** Support for complex boolean queries\n**Relationships:** Nested resource loading available\n\n**Operational Constraints:**\n\n**Hard Limits:**\n• Max payload size: 10MB\n• Max bulk operations: 100 items\n• Max webhook payload: 1MB\n• Workflow timeout: 5 minutes\n• API response timeout: 30 seconds\n\n**Soft Limits:**\n• Contacts per workspace: 1M (Enterprise)\n• Workflows per workspace: 1000\n• Concurrent workflow executions: 100\n\n**Data Types:**\n• Timestamps: ISO 8601 UTC\n• IDs: Prefixed strings (cnt_, wf_, doc_)\n• Currency: ISO 4217 codes\n• Enums: Predefined string values\n\n**Error Handling:**\n• Standard HTTP status codes\n• Structured error objects with codes\n• Request IDs for debugging",
+      details: "Machine-readable specifications for AI agents integrating with GalaxyCo.ai.\n\n**Platform Capabilities:**\n\n**Core Functions:**\n• CRM operations (contacts, deals, activities)\n• Workflow creation and execution\n• Knowledge base management\n• Neptune AI orchestration\n• Real-time webhook events\n• Team and permission management\n\n**Supported Operations:**\n• CRUD on all resources\n• Complex queries with filtering, sorting, pagination\n• Bulk operations (max 100 items)\n• File uploads (max 25MB)\n• Transactional workflows\n• Async job processing\n\n**Architecture:**\n\n**API Style:** RESTful with JSON payloads\n**Base URL:** /api\n**Authentication:** Bearer token (API keys or OAuth 2.0)\n**Rate Limiting:** Token bucket algorithm, per-endpoint limits\n**Pagination:** Cursor-based, max 100 items per page\n**Webhooks:** Event-driven with signature verification\n**Idempotency:** Supported via Idempotency-Key header\n\n**Rate Limits:**\n\n**By Plan:**\n• Starter: 1K req/hr\n• Professional: 5K req/hr\n• Enterprise: 20K req/hr (customizable)\n\n**By Operation Type:**\n• GET: Full rate limit\n• POST/PUT/PATCH: 50% of rate limit\n• DELETE: 25% of rate limit\n• Bulk: 10% of rate limit\n\n**Data Access:**\n\n**Read Access:** All resources accessible via API with proper scopes\n**Write Access:** All mutations supported with validation\n**Search:** Full-text search on contacts, deals, documents\n**Filtering:** Support for complex boolean queries\n**Relationships:** Nested resource loading available\n\n**Operational Constraints:**\n\n**Hard Limits:**\n• Max payload size: 10MB\n• Max bulk operations: 100 items\n• Max webhook payload: 1MB\n• Workflow timeout: 5 minutes\n• API response timeout: 30 seconds\n\n**Soft Limits:**\n• Contacts per workspace: 1M (Enterprise)\n• Workflows per workspace: 1000\n• Concurrent workflow executions: 100\n\n**Data Types:**\n• Timestamps: ISO 8601 UTC\n• IDs: Prefixed strings (cnt_, wf_, doc_)\n• Currency: ISO 4217 codes\n• Enums: Predefined string values\n\n**Error Handling:**\n• Standard HTTP status codes\n• Structured error objects with codes\n• Request IDs for debugging",
       topics: ["Capabilities", "Architecture", "Rate Limits", "Data Access", "Constraints"]
     },
     {
@@ -337,7 +3442,7 @@ const docSections: Record<UserType, DocSection[]> = {
       description: "OpenAPI/Swagger documentation",
       lastUpdated: "2025-12-14",
       status: "stable",
-      details: "Machine-readable specifications for automated tooling and code generation.\n\n**OpenAPI 3.1 Specification:**\n\nFull API spec available at: https://api.galaxyco.ai/openapi.json\n\nIncludes:\n• All endpoints with parameters\n• Request/response schemas\n• Authentication requirements\n• Error responses\n• Examples for all operations\n\n**Interactive Documentation:**\n\nExplore API interactively: https://api.galaxyco.ai/docs\n\nSwagger UI features:\n• Try API calls directly from browser\n• See real request/response examples\n• Authentication playground\n• Response schema viewer\n\n**Code Generation:**\n\nGenerate client code from OpenAPI spec:\n\n```bash\n# JavaScript/TypeScript\nnpx openapi-generator-cli generate \\\n  -i https://api.galaxyco.ai/openapi.json \\\n  -g typescript-fetch \\\n  -o ./generated-client\n\n# Python\nopenapi-generator generate \\\n  -i https://api.galaxyco.ai/openapi.json \\\n  -g python \\\n  -o ./generated-client\n```\n\nSupported generators: JavaScript, TypeScript, Python, Go, Ruby, Java, C#, PHP, and more.\n\n**Postman Collection:**\n\nImport into Postman: https://api.galaxyco.ai/postman.json\n\nIncludes:\n• Pre-configured authentication\n• Environment variables\n• Sample requests for all endpoints\n• Test scripts\n\n**Official SDKs:**\n\nWe provide and maintain official SDKs:\n\n**JavaScript/TypeScript:**\n```bash\nnpm install @galaxyco/sdk\n```\n\n**Python:**\n```bash\npip install galaxyco\n```\n\nSDKs include:\n• Type-safe interfaces\n• Auto-retry logic\n• Rate limit handling\n• Comprehensive error types\n• Pagination helpers\n• Webhook verification\n\n**Schema Validation:**\n\nAll requests validated against JSON Schema. Validation errors return 400 with detailed field-level errors.\n\n**Versioning:**\n\nAPI version in URL (/v1/). Spec includes version info. We maintain backward compatibility for 12 months.",
+      details: "Machine-readable specifications for automated tooling and code generation.\n\n**OpenAPI 3.1 Specification:**\n\nFull API spec available at: /api/openapi\n\nIncludes:\n• All endpoints with parameters\n• Request/response schemas\n• Authentication requirements\n• Error responses\n• Examples for all operations\n\n**Interactive Documentation:**\n\nExplore API interactively: /docs/api\n\nSwagger UI features:\n• Try API calls directly from browser\n• See real request/response examples\n• Authentication playground\n• Response schema viewer\n\n**Code Generation:**\n\nGenerate client code from OpenAPI spec:\n\n```bash\n# JavaScript/TypeScript\nnpx openapi-generator-cli generate \\\n  -i /api/openapi \\\n  -g typescript-fetch \\\n  -o ./generated-client\n\n# Python\nopenapi-generator generate \\\n  -i /api/openapi \\\n  -g python \\\n  -o ./generated-client\n```\n\nSupported generators: JavaScript, TypeScript, Python, Go, Ruby, Java, C#, PHP, and more.\n\n**Postman Collection:**\n\nImport into Postman: https://api.galaxyco.ai/postman.json\n\nIncludes:\n• Pre-configured authentication\n• Environment variables\n• Sample requests for all endpoints\n• Test scripts\n\n**Official SDKs:**\n\nWe provide and maintain official SDKs:\n\n**JavaScript/TypeScript:**\n```bash\nnpm install @galaxyco/sdk\n```\n\n**Python:**\n```bash\npip install galaxyco\n```\n\nSDKs include:\n• Type-safe interfaces\n• Auto-retry logic\n• Rate limit handling\n• Comprehensive error types\n• Pagination helpers\n• Webhook verification\n\n**Schema Validation:**\n\nAll requests validated against JSON Schema. Validation errors return 400 with detailed field-level errors.\n\n**Versioning:**\n\nAPI version in URL (/v1/). Spec includes version info. We maintain backward compatibility for 12 months.",
       topics: ["OpenAPI Spec", "Swagger UI", "Code Generation", "Postman Collection", "SDKs"]
     },
     {
@@ -752,18 +3857,81 @@ export default function DocsPage() {
                               {/* Divider */}
                               <div className="h-px bg-border/50 mb-4" />
                               
-                              {/* Details */}
-                              {section.details && (
-                                <div className="text-sm text-muted-foreground mb-4 leading-relaxed prose prose-sm max-w-none
-                                  prose-headings:text-foreground prose-headings:font-semibold prose-headings:mt-4 prose-headings:mb-2
-                                  prose-h3:text-base prose-h4:text-sm
-                                  prose-p:my-2 prose-p:leading-relaxed
-                                  prose-strong:text-foreground prose-strong:font-semibold
-                                  prose-ul:my-2 prose-ul:list-none prose-ul:space-y-1
-                                  prose-li:my-0 prose-li:pl-0 prose-li:before:content-['•'] prose-li:before:mr-2 prose-li:before:text-nebula-teal
-                                  prose-code:text-nebula-teal prose-code:bg-nebula-teal/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:content-none prose-code:after:content-none
-                                  prose-pre:bg-nebula-dark prose-pre:border prose-pre:border-border/50 prose-pre:rounded-lg prose-pre:p-3 prose-pre:overflow-x-auto
-                                  prose-pre:text-nebula-frost prose-pre:text-xs
+                              {/* Details - Enhanced Components or Standard Markdown */}
+                              {section.id === "getting-started" ? (
+                                <GettingStartedContent />
+                              ) : section.id === "core-concepts" ? (
+                                <CoreConceptsContent />
+                              ) : section.id === "neptune-ai" ? (
+                                <NeptuneAIContent />
+                              ) : section.id === "workflows" ? (
+                                <BuildingWorkflowsContent />
+                              ) : section.id === "crm-basics" ? (
+                                <CRMEssentialsContent />
+                              ) : section.id === "best-practices" ? (
+                                <BestPracticesContent />
+                              ) : section.id === "troubleshooting" ? (
+                                <TroubleshootingContent />
+                              ) : section.id === "api-overview" ? (
+                                <APIOverviewContent />
+                              ) : section.id === "authentication" ? (
+                                <AuthenticationContent />
+                              ) : section.id === "api-reference" ? (
+                                <APIReferenceContent />
+                              ) : section.id === "webhooks" ? (
+                                <WebhooksContent />
+                              ) : section.id === "rate-limits" ? (
+                                <RateLimitsContent />
+                              ) : section.id === "sdks" ? (
+                                <SDKsContent />
+                              ) : section.id === "errors" ? (
+                                <ErrorHandlingContent />
+                              ) : section.id === "changelog" ? (
+                                <ChangelogContent />
+                              ) : section.id === "team-management" ? (
+                                <TeamManagementContent />
+                              ) : section.id === "permissions" ? (
+                                <PermissionsContent />
+                              ) : section.id === "security" ? (
+                                <SecurityContent />
+                              ) : section.id === "billing" ? (
+                                <BillingContent />
+                              ) : section.id === "audit-logs" ? (
+                                <AuditLogsContent />
+                              ) : section.id === "advanced-settings" ? (
+                                <AdvancedSettingsContent />
+                              ) : section.id === "compliance" ? (
+                                <ComplianceContent />
+                              ) : section.id === "platform-overview" ? (
+                                <PlatformOverviewContent />
+                              ) : section.id === "data-models" ? (
+                                <DataModelsContent />
+                              ) : section.id === "use-cases" ? (
+                                <UseCaseTaxonomyContent />
+                              ) : section.id === "api-specs" ? (
+                                <APISpecificationsContent />
+                              ) : section.id === "integration-patterns" ? (
+                                <IntegrationPatternsContent />
+                              ) : section.id === "performance" ? (
+                                <PerformanceBenchmarksContent />
+                              ) : section.id === "limitations" ? (
+                                <LimitationsContent />
+                              ) : section.details && (
+                                <div className="text-base text-muted-foreground/90 mb-6 leading-[1.7] prose prose-base max-w-none
+                                  prose-headings:text-foreground prose-headings:font-semibold prose-headings:leading-tight
+                                  prose-headings:mt-8 prose-headings:mb-4 first:prose-headings:mt-0
+                                  prose-h3:text-lg prose-h3:tracking-tight
+                                  prose-h4:text-base prose-h4:font-medium
+                                  prose-p:my-4 prose-p:leading-[1.7]
+                                  prose-strong:text-foreground prose-strong:font-medium
+                                  prose-ul:my-5 prose-ul:list-none prose-ul:space-y-2.5 prose-ul:pl-0
+                                  prose-ol:my-5 prose-ol:space-y-2.5 prose-ol:pl-5
+                                  prose-li:my-0 prose-li:pl-0 prose-li:leading-[1.6]
+                                  prose-li:before:content-['•'] prose-li:before:mr-3 prose-li:before:text-nebula-teal prose-li:before:font-bold
+                                  prose-code:text-nebula-teal prose-code:bg-nebula-teal/15 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:text-sm prose-code:font-mono prose-code:font-medium prose-code:before:content-none prose-code:after:content-none
+                                  prose-pre:bg-nebula-dark/80 prose-pre:border prose-pre:border-border/60 prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto prose-pre:shadow-sm prose-pre:my-5
+                                  prose-pre:text-nebula-frost/90 prose-pre:text-sm prose-pre:leading-relaxed
+                                  prose-a:text-nebula-teal prose-a:no-underline hover:prose-a:underline
                                 ">
                                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                     {section.details}
@@ -773,15 +3941,15 @@ export default function DocsPage() {
                               
                               {/* Topics */}
                               {section.topics && section.topics.length > 0 && (
-                                <div className="space-y-3">
-                                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <div className="mt-8 pt-6 border-t border-border/40">
+                                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
                                     Topics Covered
                                   </h4>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="flex flex-wrap gap-2.5">
                                     {section.topics.map((topic: string, i: number) => (
                                       <span
                                         key={i}
-                                        className="px-3 py-1.5 rounded-lg bg-nebula-teal/10 text-nebula-teal text-xs font-medium border border-nebula-teal/20"
+                                        className="px-3.5 py-2 rounded-lg bg-nebula-teal/10 text-nebula-teal text-sm font-medium border border-nebula-teal/20 transition-colors hover:bg-nebula-teal/15"
                                       >
                                         {topic}
                                       </span>
@@ -791,8 +3959,8 @@ export default function DocsPage() {
                               )}
                               
                               {/* Coming Soon Note */}
-                              <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-                                <Clock className="h-3 w-3" />
+                              <div className="mt-6 pt-4 border-t border-border/30 flex items-center gap-2.5 text-sm text-muted-foreground/70">
+                                <Clock className="h-4 w-4" />
                                 <span>Full content coming soon • Updated {new Date(section.lastUpdated).toLocaleDateString()}</span>
                               </div>
                             </div>
