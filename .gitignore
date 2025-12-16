@@ -59,3 +59,4 @@ test-monitor.js
 ROLLBACK_IF_NEEDED.sh
 README_OLD.md
 _to-delete/
+build-output.txt
