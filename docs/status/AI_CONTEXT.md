@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-15 (10c6057)  
+**Updated Through:** 2025-12-15 (3a45554)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-15 3a45554 chore: ignore build-output.txt
 - 2025-12-15 10c6057 chore: merge remote changes
 - 2025-12-15 f87aeee feat(web): update dashboard header to use brand logo and add Product Hunt screenshots
 - 2025-12-15 bacbf7e fix(docs): update API reference link text to show absolute path
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-14 ff889f6 feat(brand): transform to premium nebula color palette
 - 2025-12-14 1da2e76 feat(brand): install new favicons and fix brand color consistency
 - 2025-12-14 832a8d7 fix(ui): constrain header logo to prevent nav expansion
-- 2025-12-14 bc94076 feat(ui): branding consistency update across site
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
