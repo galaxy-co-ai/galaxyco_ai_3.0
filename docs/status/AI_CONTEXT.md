@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-16 (1492e1a)  
+**Updated Through:** 2025-12-16 (a91bd3d)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-16 a91bd3d feat(neptune): improve website analysis tool reliability and error messaging
 - 2025-12-16 1492e1a feat(ui): add branded styling to dashboard and Neptune panel
 - 2025-12-16 f9e7013 fix: resolve TypeScript error in assistant page and add QuickBooks payment scope
 - 2025-12-15 9a0f5c7 feat(oauth): add QuickBooks and Shopify OAuth support
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-14 eecf13a feat(docs): add expandable doc cards with details and topics
 - 2025-12-14 c8675d7 feat(docs): add expandable doc cards with detailed content
 - 2025-12-14 2b68142 fix(docs): remove hardcoded 300px offset for responsive hero layout
-- 2025-12-14 bcbe289 feat(docs): add minimal dark nebula hero section with large white text
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
