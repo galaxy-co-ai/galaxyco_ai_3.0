@@ -1555,7 +1555,7 @@ function APIReferenceContent() {
         <div className="flex items-center gap-3">
           <ExternalLink className="h-5 w-5 text-nebula-violet" />
           <span className="text-foreground">
-            Full interactive API reference with live examples: <a href="/docs/api" className="text-nebula-teal font-medium hover:underline">docs/api</a>
+            Full interactive API reference with live examples: <a href="/docs/api" className="text-nebula-teal font-medium hover:underline">/docs/api</a>
           </span>
         </div>
       </div>
