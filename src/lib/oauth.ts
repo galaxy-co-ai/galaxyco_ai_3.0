@@ -54,6 +54,7 @@ export const oauthProviders: Record<OAuthProvider, OAuthConfig> = {
     tokenUrl: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
     scopes: [
       'com.intuit.quickbooks.accounting',
+      'com.intuit.quickbooks.payment',
       'openid',
       'profile',
       'email',

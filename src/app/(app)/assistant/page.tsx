@@ -391,9 +391,8 @@ export default function AssistantPage() {
               if (parsed.metadata) {
                 metadata = parsed.metadata;
               }
-            } catch (e) {
-              // Ignore parse errors for SSE data
-              logger.debug('SSE parse error (non-critical)', e);
+            } catch {
+              // Ignore parse errors for SSE data - expected for incomplete chunks
             }
           }
         }
