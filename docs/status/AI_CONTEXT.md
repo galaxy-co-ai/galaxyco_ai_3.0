@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-15 (e14f249)  
+**Updated Through:** 2025-12-15 (bacbf7e)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-15 bacbf7e fix(docs): update API reference link text to show absolute path
 - 2025-12-15 e14f249 feat(api): add OpenAPI 3.1 interactive documentation system
 - 2025-12-15 76ec97a Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-15 aa2fcb0 feat(docs): add polished markdown rendering with react-markdown
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-14 bc94076 feat(ui): branding consistency update across site
 - 2025-12-14 c0b9225 docs: add brand system completion summary
 - 2025-12-14 3c9d4bf feat(blog): Rename Launchpad to Blog + Complete brand system
-- 2025-12-14 ae1a99d feat(brand): Phase 4-5 - Marketing pages with Electric Cyan + Blog templates
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
