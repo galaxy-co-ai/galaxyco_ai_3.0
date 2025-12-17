@@ -185,6 +185,14 @@ export const prospectStageEnum = pgEnum('prospect_stage', [
   'lost',
 ]);
 
+export const leadStatusEnum = pgEnum('lead_status', [
+  'cold',
+  'warm',
+  'hot',
+  'closed_won',
+  'closed_lost',
+]);
+
 // Communication enums
 export const inboxChannelEnum = pgEnum('inbox_channel', [
   'email',
@@ -2842,6 +2850,9 @@ export const contacts = pgTable(
     phone: text('phone'),
     title: text('title'),
     company: text('company'),
+
+    // Lead tracking
+    leadStatus: leadStatusEnum('lead_status'),
 
     // Social
     linkedinUrl: text('linkedin_url'),

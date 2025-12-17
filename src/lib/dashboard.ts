@@ -183,6 +183,22 @@ export async function getDashboardData(workspaceId: string, userName: string = '
     const currentTasks = tasksData.length;
     const currentContacts = crmData[0]?.total ?? 0;
 
+    // Count hot leads
+    const [hotLeadsData] = await safeQuery(
+      db
+        .select({ count: count() })
+        .from(contacts)
+        .where(
+          and(
+            eq(contacts.workspaceId, workspaceId),
+            eq(contacts.leadStatus, 'hot')
+          )
+        ),
+      [{ count: 0 }],
+      'hot-leads'
+    );
+    const hotLeadsCount = hotLeadsData?.count ?? 0;
+
     // Calculate previous stats (for 7-14 days ago)
     const previousAgents = agentsDataPrevious.filter(a => {
       const createdAt = new Date(a.createdAt);
@@ -201,7 +217,7 @@ export async function getDashboardData(workspaceId: string, userName: string = '
       completedTasks: currentTasks,
       hoursSaved: currentTasks * 2, // Estimate: 2 hours per task
       crmContacts: currentContacts,
-      hotLeads: 0, // TODO: Implement hot leads tracking when leadStatus field is added
+      hotLeads: hotLeadsCount,
       financeConnections: financeIntegrations.length,
       trends: {
         agents: calculateTrend(currentAgents, previousAgents),
