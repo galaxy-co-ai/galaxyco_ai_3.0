@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useUser, OrganizationProfile } from "@clerk/nextjs";
+import { useUser, OrganizationProfile, useSessionList } from "@clerk/nextjs";
 import useSWR from "swr";
 import { 
   User, 
@@ -81,15 +81,43 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
   { id: "api", name: "API Keys", icon: Key, description: "Developer access" },
 ];
 
-// Mock sessions data for security section (TODO: Replace with real API data)
-const mockSessions = [
-  { id: "1", device: "MacBook Pro - Chrome", location: "San Francisco, CA", lastActive: "Now", current: true },
-  { id: "2", device: "iPhone 15 Pro - Safari", location: "San Francisco, CA", lastActive: "2 hours ago", current: false },
-  { id: "3", device: "Windows PC - Firefox", location: "New York, NY", lastActive: "Yesterday", current: false },
-];
+// Helpers for security sessions (formatting only)
+function getDeviceInfo(userAgent?: string): string {
+  if (!userAgent) return 'Unknown Device';
+  let browser = 'Browser';
+  if (userAgent.includes('Chrome')) browser = 'Chrome';
+  else if (userAgent.includes('Safari')) browser = 'Safari';
+  else if (userAgent.includes('Firefox')) browser = 'Firefox';
+  else if (userAgent.includes('Edge')) browser = 'Edge';
+
+  let device = 'Computer';
+  if (userAgent.includes('iPhone')) device = 'iPhone';
+  else if (userAgent.includes('iPad')) device = 'iPad';
+  else if (userAgent.includes('Android')) device = 'Android';
+  else if (userAgent.includes('Mac')) device = 'Mac';
+  else if (userAgent.includes('Windows')) device = 'Windows PC';
+  else if (userAgent.includes('Linux')) device = 'Linux';
+
+  return `${device} - ${browser}`;
+}
+
+function formatLastActive(ts?: Date | number): string {
+  if (!ts) return 'Unknown';
+  const t = typeof ts === 'number' ? ts : ts.getTime();
+  const diff = Date.now() - t;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (minutes < 1) return 'Now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return 'Yesterday';
+  return `${days}d ago`;
+}
 
 export default function SettingsPage() {
-  const { user, isLoaded } = useUser();
+const { user, isLoaded } = useUser();
+  const { sessions, isLoaded: sessionsLoaded } = useSessionList();
   const [activeSection, setActiveSection] = React.useState<SettingsSection>("profile");
   const [showApiKey, setShowApiKey] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -698,12 +726,44 @@ export default function SettingsPage() {
 
       case "security":
         const twoFactorEnabled = user?.twoFactorEnabled ?? false;
+
+        // Build active sessions list from Clerk
+        const activeSessions = (sessions || [])
+          .filter((s) => (s as any).status === 'active')
+          .map((s) => {
+            const ua = ((s as any).latestActivity?.userAgent as string) || ((s as any).userAgent as string) || '';
+            const city = (s as any).latestActivity?.city as string | undefined;
+            const country = (s as any).latestActivity?.country as string | undefined;
+            const lastActiveAt = (s as any).lastActiveAt as Date | undefined;
+            return {
+              id: (s as any).id as string,
+              device: getDeviceInfo(ua),
+              location: city && country ? `${city}, ${country}` : 'Unknown Location',
+              lastActive: formatLastActive(lastActiveAt),
+              current: (s as any).id === (user as any)?.lastActiveSessionId,
+            };
+          });
         
         const handleManageSecurity = () => {
-          // Open Clerk's user profile to security settings
           if (user) {
-            // Clerk provides openUserProfile for managing security
             window.location.href = '/user';
+          }
+        };
+
+        const handleRevokeSession = async (sessionId: string) => {
+          try {
+            const res = await fetch('/api/auth/revoke-session', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || 'Failed to revoke session');
+            toast.success('Session revoked');
+            // Refresh to reflect session list changes
+            window.location.reload();
+          } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to revoke session');
           }
         };
         
@@ -757,9 +817,18 @@ export default function SettingsPage() {
 
             {/* Active Sessions */}
             <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-900">Active Sessions</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-900">Active Sessions</h4>
+                <span className="text-xs text-gray-500">{activeSessions.length} active</span>
+              </div>
               <div className="space-y-2">
-                {mockSessions.map((session) => (
+                {activeSessions.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-gray-500">
+                    <Shield className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <p>No active sessions</p>
+                  </div>
+                ) : (
+                  activeSessions.map((session) => (
                   <div
                     key={session.id}
                     className="flex items-center justify-between p-3 rounded-lg border border-gray-100"
@@ -780,13 +849,23 @@ export default function SettingsPage() {
                     {session.current ? (
                       <Badge className="bg-green-100 text-green-700 border-0 text-[10px]">Current</Badge>
                     ) : (
-                      <Button variant="ghost" size="sm" className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          if (confirm('Revoke this session?')) {
+                            handleRevokeSession(session.id);
+                          }
+                        }}
+                      >
                         <LogOut className="h-3 w-3 mr-1" />
                         Revoke
                       </Button>
                     )}
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
