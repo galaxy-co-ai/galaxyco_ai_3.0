@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db';
-import { users, agents, contacts, knowledgeItems, integrations } from '@/db/schema';
+import { users, agents, contacts, knowledgeItems, integrations, agentExecutions, conversationMessages } from '@/db/schema';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
@@ -86,14 +86,34 @@ export async function getRecentActivity(
         )
       );
 
-    // Count agent executions (simplified - using agentExecutions if available)
-    // For now, we'll use a placeholder since we need to check the schema
-    const agentRuns = 0; // TODO: Query agentExecutions table if it exists
+    // Count agent executions
+    const [executionsCount] = await db
+      .select({ count: count() })
+      .from(agentExecutions)
+      .where(
+        and(
+          eq(agentExecutions.workspaceId, workspaceId),
+          gte(agentExecutions.createdAt, cutoffDate)
+        )
+      );
+    const agentRuns = executionsCount?.count || 0;
+
+    // Count new messages
+    const [messagesCount] = await db
+      .select({ count: count() })
+      .from(conversationMessages)
+      .where(
+        and(
+          eq(conversationMessages.workspaceId, workspaceId),
+          gte(conversationMessages.createdAt, cutoffDate)
+        )
+      );
+    const newMessages = messagesCount?.count || 0;
 
     return {
       newLeads: leadsCount?.count || 0,
       agentRuns,
-      newMessages: 0, // TODO: Query team_messages or conversations if needed
+      newMessages,
       recentAgents: recentAgents.map(a => ({
         id: a.id,
         name: a.name,

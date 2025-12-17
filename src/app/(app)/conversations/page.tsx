@@ -83,11 +83,35 @@ export default async function ConversationsPage() {
         .groupBy(conversations.channel),
     ]);
 
+    // Calculate average response time (in minutes)
+    const responseDeltas: number[] = [];
+    for (const conv of conversationsList) {
+      const convMessages = latestMessages
+        .filter(m => m.conversationId === conv.id)
+        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      
+      const inbound = convMessages.filter(m => m.direction === 'inbound');
+      const outbound = convMessages.filter(m => m.direction === 'outbound');
+      
+      // For each inbound message, find the next outbound and calculate delta
+      for (const inMsg of inbound) {
+        const nextOut = outbound.find(o => o.createdAt.getTime() > inMsg.createdAt.getTime());
+        if (nextOut) {
+          const deltaMinutes = (nextOut.createdAt.getTime() - inMsg.createdAt.getTime()) / (1000 * 60);
+          responseDeltas.push(deltaMinutes);
+        }
+      }
+    }
+
+    const avgResponseTime = responseDeltas.length > 0
+      ? Math.round(responseDeltas.reduce((a, b) => a + b, 0) / responseDeltas.length)
+      : 0;
+
     const stats = {
       totalConversations: totalStats[0]?.count || 0,
       unreadMessages: unreadStats[0]?.count || 0,
       activeChannels: activeChannelsStats.length || 0,
-      avgResponseTime: 0, // TODO: Calculate from message timestamps
+      avgResponseTime,
     };
 
     return (

@@ -1,7 +1,19 @@
 # Known Gaps & Incomplete Features
 
-**Last Updated:** 2025-12-17  
-**Auto-generated from:** `grep -r "TODO\|FIXME\|mock" src/`
+**Last Updated:** 2025-12-17 (Verified & Updated)  
+**Accuracy:** 93% (13/14 gaps valid, 1 false positive removed)  
+**Recent Fixes:** avgResponseTime, agentRuns, newMessages (2025-12-17)
+
+---
+
+## ✅ Recently Fixed (2025-12-17)
+
+| File | Issue | Status |
+|------|-------|--------|
+| `conversations/page.tsx` | ✅ avgResponseTime calculation | FIXED |
+| `lib/user-activity.ts` | ✅ agentRuns count query | FIXED |
+| `lib/user-activity.ts` | ✅ newMessages count query | FIXED |
+| `pricing/page.tsx` | ✅ Stripe Price IDs (false positive - already configured) | NOT A GAP |
 
 ---
 
@@ -12,13 +24,10 @@
 
 | File | Issue | Priority |
 |------|-------|----------|
-| `conversations/page.tsx` | avgResponseTime always 0, needs calculation | Medium |
-| `lib/dashboard.ts` | hotLeads tracking not implemented | Medium |
+| `lib/dashboard.ts` | hotLeads tracking not implemented (needs leadStatus field) | Medium |
 | `lib/dashboard.ts` | lastLogin not tracked in database | Low |
-| `lib/user-activity.ts` | agentRuns count missing database query | Low |
-| `lib/user-activity.ts` | newMessages count not implemented | Low |
 
-**Action:** Add database queries for these metrics
+**Action:** Add database schema changes and queries for these metrics
 
 ---
 
@@ -40,10 +49,10 @@
 
 | File | Issue | Priority |
 |------|-------|----------|
-| `settings/page.tsx` | Mock sessions data for security section | Medium |
-| `pricing/page.tsx` | Placeholder Stripe Price IDs | High |
+| `settings/page.tsx` | Mock sessions data for security section | High |
 
-**Action:** Replace mock data with real API calls
+**Action:** Replace mock data with real API calls  
+**Note:** Stripe Price IDs are already configured in .env.local
 
 ---
 
@@ -115,12 +124,31 @@ The following are legitimate uses of "placeholder" or "mock":
 
 ---
 
+## Fix Priority Recommendations
+
+### 🔥 Quick Wins (< 30 min each)
+1. Mock sessions data (settings/page.tsx) - Users see fake security info
+2. New messages count (FIXED ✅)
+3. Agent runs count (FIXED ✅)
+
+### ⚡ Important (30-90 min each)
+4. Hot leads tracking - Requires schema change (add `leadStatus` to contacts)
+5. Finance document saving - Create API endpoint + storage integration
+
+### 📋 Nice to Have (Defer)
+6. Media attachments in SMS/MMS
+7. Last login tracking
+8. AI form auto-fill features
+
+---
+
 ## How to Use This File
 
 1. **Before starting work:** Check if your feature area has known gaps
 2. **When you find a gap:** Add it here with priority level
-3. **When you fix a gap:** Remove it from this file and note in START.md
+3. **When you fix a gap:** Move it to "Recently Fixed" section with date
 4. **Regular cleanup:** Run `grep -r "TODO\|FIXME" src/` monthly to refresh
+5. **Verify accuracy:** Re-verify all gaps every 2-3 months (last verified: 2025-12-17)
 
 ---
 

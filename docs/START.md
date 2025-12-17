@@ -29,50 +29,66 @@ Database:    ✅ Schema current, migrations up to date
 - ⚠️ Component test queries need refinement (72 failures remaining)
 - **Next:** Fix component test selectors, measure coverage
 
-### 2. Mock Data Cleanup
-**Status:** In progress
-- Found 100+ TODO/FIXME markers in codebase
-- Some components still using mock data
-- **Action:** Generate STUBS.md to track incomplete features
+### 2. Feature Gaps & Incomplete Implementations
+**Status:** ✅ Analyzed and prioritized (2025-12-17)
+- ✅ STUBS.md verified (93% accuracy, 1 false positive removed)
+- ✅ **Fixed 3 quick wins:** avgResponseTime, agentRuns, newMessages
+- ✅ Created comprehensive analysis: docs/STUBS_ANALYSIS_2025-12-17.md
+- ⚠️ 10 verified gaps remaining (prioritized by impact)
+- **High Priority Next:** Mock sessions data, hot leads tracking, finance docs
+- **Action:** See STUBS.md for complete priority roadmap
 
 ### 3. Documentation Debt
-**Status:** Being addressed
-- PROJECT_STATUS.md is bloated (2000+ lines)
+**Status:** ✅ Improved (2025-12-17)
+- ✅ STUBS.md updated with verified gaps
+- ✅ Created detailed analysis report
+- PROJECT_STATUS.md is bloated (2000+ lines) - consider archiving
 - FEATURES_MAP.md and MASTER_TASK_LIST.md outdated
 - **Action:** Deprecate old docs, use this START.md as source of truth
 
 ---
 
-## Recent Changes (Last 10 Commits)
+## Recent Changes (Last Session)
 
-```
-59ba484 - chore: redeploy with corrected NEXT_PUBLIC_APP_URL
-5ffeb53 - docs(status): update AI context
-969729e - chore: trigger redeploy after fixing Vercel env vars
-7ffedc7 - docs(status): update AI context
-b64d274 - docs(oauth): add Gmail OAuth quick fix guide
-cc85899 - docs(status): update AI context
-2bc324e - docs(oauth): add Gmail OAuth troubleshooting guide
-6074966 - docs(status): update AI context
-a91bd3d - feat(neptune): improve website analysis tool reliability
-e35d5fc - docs(status): update AI context
-```
+**Session:** STUBS Analysis & Quick Wins (2025-12-17)  
+**Duration:** ~2 hours  
+**Focus:** Verify STUBS.md accuracy, implement high-ROI fixes
 
-**Recent Focus:** OAuth troubleshooting, Vercel deployments, Neptune improvements
+**Accomplishments:**
+- ✅ Verified all 14 gaps in STUBS.md (found 1 false positive)
+- ✅ Fixed avgResponseTime calculation in conversations dashboard
+- ✅ Fixed agentRuns count in user activity tracking
+- ✅ Fixed newMessages count in user activity tracking
+- ✅ Created comprehensive analysis report (docs/STUBS_ANALYSIS_2025-12-17.md)
+- ✅ Updated STUBS.md with corrected priorities
+- ✅ TypeScript: 0 errors (verified)
+
+**Impact:**
+- 3 production metrics now show real data instead of 0
+- Removed 1 false alarm (Stripe IDs already configured)
+- Clear priority roadmap for next 10 gaps
 
 ---
 
 ## Active Work
 
-**Current Sprint:** Documentation system + cleanup
-- ✅ Updated WARP.md with foundation layer
-- ✅ Rewrote AGENTS.md as AI agent playbook
-- ✅ Created START.md, STUBS.md, tests/STATUS.md
-- ✅ Removed 21 dead files from src/ and root (4174 lines deleted)
-- ✅ Build verified (TypeScript 0 errors, production build successful)
-- ✅ Test suite audited (147 pre-existing failures documented)
+**Current Sprint:** Feature gap analysis & cleanup  
+**Status:** ✅ STUBS analysis complete
 
-**Blocked Items:** None currently
+**Completed (2025-12-17):**
+- ✅ Verified all STUBS.md gaps (93% accuracy)
+- ✅ Fixed 3 calculation metrics (avgResponseTime, agentRuns, newMessages)
+- ✅ Created priority roadmap for remaining 10 gaps
+- ✅ Updated documentation (STUBS.md, START.md)
+- ✅ TypeScript: 0 errors, builds clean
+
+**Next Up (Priority Order):**
+1. Mock sessions data (settings security section)
+2. Hot leads tracking (requires schema change)
+3. Finance document persistence
+4. Component test fixes (72 failures)
+
+**Blocked Items:** None
 
 ---
 
@@ -165,10 +181,11 @@ e35d5fc - docs(status): update AI context
 
 ## Notes for Next Session
 
-- **Testing:** Need to audit test suite and document status
-- **Stubs:** Need to generate STUBS.md from TODO/FIXME scan
+- **High Priority:** Fix mock sessions data (settings/page.tsx) - users see fake security info
+- **Medium Priority:** Implement hot leads tracking (requires adding leadStatus to contacts schema)
+- **Testing:** Continue fixing component test queries (72 failures remaining)
 - **Cleanup:** Consider archiving outdated docs (PROJECT_STATUS, FEATURES_MAP, MASTER_TASK_LIST)
-- **Priorities:** Focus on testing infrastructure and documentation accuracy
+- **Reference:** See docs/STUBS_ANALYSIS_2025-12-17.md for complete gap analysis
 
 ---
 
