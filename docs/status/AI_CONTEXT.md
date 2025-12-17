@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-17 (b59421b)  
+**Updated Through:** 2025-12-17 (e121760)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,10 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-17 e121760 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-17 b0a7b9f feat(neptune): complete audit & autonomy enhancements
+- 2025-12-17 158cbe6 docs: add Neptune AI assistant audit handoff document
+- 2025-12-17 c552233 docs: add comprehensive user journey test report (97% pass rate)
 - 2025-12-17 b59421b feat(finance): implement document persistence to content library
 - 2025-12-17 e6621e6 feat(ai): implement create_agent tool for Neptune
 - 2025-12-17 56570af feat(crm): implement hot leads tracking with leadStatus field
@@ -37,10 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-16 59ba484 chore: redeploy with corrected NEXT_PUBLIC_APP_URL environment variable
 - 2025-12-16 969729e chore: trigger redeploy after fixing Vercel environment variables
 - 2025-12-16 b64d274 docs(oauth): add Gmail OAuth quick fix guide
-- 2025-12-16 2bc324e docs(oauth): add Gmail OAuth troubleshooting guide and diagnostic endpoint
-- 2025-12-16 a91bd3d feat(neptune): improve website analysis tool reliability and error messaging
-- 2025-12-16 1492e1a feat(ui): add branded styling to dashboard and Neptune panel
-- 2025-12-16 f9e7013 fix: resolve TypeScript error in assistant page and add QuickBooks payment scope
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
