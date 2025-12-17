@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-16 (969729e)  
+**Updated Through:** 2025-12-16 (59ba484)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-16 59ba484 chore: redeploy with corrected NEXT_PUBLIC_APP_URL environment variable
 - 2025-12-16 969729e chore: trigger redeploy after fixing Vercel environment variables
 - 2025-12-16 b64d274 docs(oauth): add Gmail OAuth quick fix guide
 - 2025-12-16 2bc324e docs(oauth): add Gmail OAuth troubleshooting guide and diagnostic endpoint
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-15 a2e1501 docs(docs): enhance all documentation content with comprehensive details
 - 2025-12-15 7c6e26c docs(launch): add Product Hunt copy, LinkedIn sequence, launch runbook, and support system
 - 2025-12-15 9319355 feat(launch): add 5 vertical landing pages for SaaS, Agencies, Consultants, Professional Services, and Sales
-- 2025-12-14 61e2727 fix(docs): remove Office Hours button from CTA section
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
