@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { FinanceKPIGrid } from "./FinanceKPIGrid";
 import { FinanceModuleGrid } from "./FinanceModuleGrid";
 import { FinanceTimeline } from "./FinanceTimeline";
@@ -538,6 +539,9 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
   // Check for demo mode
   const searchParams = useSearchParams();
   const isDemoMode = searchParams.get("demo") === "true";
+  
+  // Get workspace for saving documents
+  const { workspace } = useWorkspace();
 
   // State
   const [dateRange, setDateRange] = React.useState<DateRange>({
@@ -721,9 +725,49 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
         onOpenChange={setIsDocCreatorOpen}
         documentType={docCreatorType}
         onSave={async (document, asDraft) => {
-          // TODO: Save document to Library and sync with external software
-          // After saving, refresh relevant data
-          toast.success(asDraft ? "Draft saved" : "Document saved");
+          if (!workspace) {
+            toast.error("Workspace not loaded");
+            return;
+          }
+
+          try {
+            const response = await fetch("/api/finance/documents", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                document,
+                asDraft,
+                workspaceId: workspace.id,
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error("Failed to save document");
+            }
+
+            const result = await response.json();
+            
+            toast.success(
+              asDraft 
+                ? "Draft saved to Library" 
+                : "Document saved to Library",
+              {
+                description: result.item?.title,
+                action: {
+                  label: "View",
+                  onClick: () => window.location.href = "/content",
+                },
+              }
+            );
+
+            // Refresh relevant finance data
+            // TODO: Trigger revalidation of finance modules if needed
+          } catch (error) {
+            toast.error("Failed to save document", {
+              description: error instanceof Error ? error.message : "Unknown error",
+            });
+            throw error;
+          }
         }}
       />
     </main>

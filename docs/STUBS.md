@@ -15,6 +15,7 @@
 | `lib/user-activity.ts` | ✅ newMessages count query | FIXED |
 | `settings/page.tsx` | ✅ Mock sessions replaced with Clerk sessions | FIXED |
 | `lib/dashboard.ts` | ✅ Hot leads tracking (added leadStatus to contacts) | FIXED |
+| `FinanceHQDashboard.tsx` | ✅ Finance document persistence to content library | FIXED |
 | `pricing/page.tsx` | ✅ Stripe Price IDs (false positive - already configured) | NOT A GAP |
 
 ---
@@ -68,7 +69,6 @@
 
 | File | Issue | Priority |
 |------|-------|----------|
-| `FinanceHQDashboard.tsx` | Documents not saved to Library or external software | Medium |
 | `team/channels/route.ts` | Real unread counts not calculated | Low |
 
 **Action:** Implement external sync and persistence
@@ -129,7 +129,7 @@ The following are legitimate uses of "placeholder" or "mock":
 
 ### ⚡ Important (30-90 min each)
 4. ~~Hot leads tracking~~ (FIXED ✅ - added `leadStatus` to contacts)
-5. Finance document saving - Create API endpoint + storage integration
+5. ~~Finance document saving~~ (FIXED ✅ - API endpoint + creatorItems storage)
 
 ### 📋 Nice to Have (Defer)
 6. Media attachments in SMS/MMS
