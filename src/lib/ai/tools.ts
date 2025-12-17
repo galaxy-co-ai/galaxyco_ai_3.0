@@ -3387,20 +3387,69 @@ const toolImplementations: Record<string, ToolFunction> = {
 
   // Content: Draft Email
   async draft_email(args, context): Promise<ToolResult> {
-    // This is a content generation tool - the AI will generate the content
-    // We just return the parameters to signal success
-    return {
-      success: true,
-      message: 'Email draft parameters received',
-      data: {
-        purpose: args.purpose,
-        recipientName: args.recipientName,
-        recipientCompany: args.recipientCompany,
-        context: args.context,
-        tone: args.tone || 'professional',
-        senderName: context.userName,
-      },
-    };
+    try {
+      const purpose = args.purpose as string;
+      const recipientName = args.recipientName as string;
+      const recipientCompany = (args.recipientCompany as string) || '';
+      const contextInfo = (args.context as string) || '';
+      const tone = (args.tone as string) || 'professional';
+      const senderName = context.userName;
+
+      // Generate actual email using GPT-4o
+      const { getOpenAI } = await import('@/lib/ai-providers');
+      const openai = getOpenAI();
+      
+      const systemPrompt = `You are a professional email writer. Draft clear, effective emails that achieve their purpose while maintaining the appropriate tone. Focus on clarity, brevity, and actionability.`;
+      const userPrompt = `Draft an email with the following details:
+
+Purpose: ${purpose}
+Recipient: ${recipientName}${recipientCompany ? ` at ${recipientCompany}` : ''}
+Sender: ${senderName}
+Tone: ${tone}${contextInfo ? `\nContext: ${contextInfo}` : ''}
+
+Provide a complete email with:
+- Subject line
+- Professional greeting
+- Clear, concise body
+- Appropriate call-to-action
+- Professional sign-off`;
+
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 800,
+      });
+
+      const draftedEmail = completion.choices[0]?.message?.content || '';
+
+      if (!draftedEmail) {
+        throw new Error('No email generated');
+      }
+
+      return {
+        success: true,
+        message: `Drafted email to ${recipientName}${recipientCompany ? ` at ${recipientCompany}` : ''}`,
+        data: {
+          purpose,
+          recipientName,
+          recipientCompany,
+          tone,
+          senderName,
+          draft: draftedEmail,
+        },
+      };
+    } catch (error) {
+      logger.error('AI draft_email failed', error);
+      return {
+        success: false,
+        message: 'Failed to draft email',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
   },
 
   // ============================================================================
@@ -6043,11 +6092,30 @@ A: [Detailed answer]`,
       const contextInfo = (args.context as string) || '';
       const saveToLibrary = (args.save_to_library as boolean) || false;
 
-      // Generate copy using AI (this would typically call OpenAI with marketing expertise prompt)
-      // For now, return structured response that Neptune can use to generate copy
-      const copyPrompt = `Generate ${copyType} for ${targetAudience} with goal of ${goal} in ${tone} tone. ${contextInfo ? `Context: ${contextInfo}` : ''}`;
+      // Generate actual copy using GPT-4o
+      const { getOpenAI } = await import('@/lib/ai-providers');
+      const openai = getOpenAI();
+      
+      const systemPrompt = `You are an expert marketing copywriter. Generate compelling, persuasive copy that resonates with the target audience and drives action. Write in a ${tone} tone and focus on clarity, emotional appeal, and conversion optimization.`;
+      const userPrompt = `Generate ${copyType} for ${targetAudience} with the goal of ${goal}.${contextInfo ? `\n\nAdditional context: ${contextInfo}` : ''}\n\nProvide only the final copy, ready to use. No meta-commentary or explanations.`;
 
-      // If save_to_library is true, save to knowledgeItems
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.8, // Higher creativity for marketing copy
+        max_tokens: 1000,
+      });
+
+      const generatedCopy = completion.choices[0]?.message?.content || '';
+
+      if (!generatedCopy) {
+        throw new Error('No content generated');
+      }
+
+      // Save to library if requested
       let savedItemId: string | null = null;
       if (saveToLibrary) {
         try {
@@ -6058,7 +6126,7 @@ A: [Detailed answer]`,
               createdBy: context.userId,
               title: `Marketing Copy: ${copyType}`,
               type: 'text',
-              content: copyPrompt, // In production, this would be the generated copy
+              content: generatedCopy,
               status: 'ready',
             })
             .returning();
@@ -6073,7 +6141,7 @@ A: [Detailed answer]`,
         message: `Generated ${copyType} for ${targetAudience}. ${saveToLibrary && savedItemId ? 'Saved to library.' : 'Ready to use.'}`,
         data: {
           type: copyType,
-          copy: copyPrompt, // In production, this would be the actual generated copy
+          copy: generatedCopy,
           targetAudience,
           goal,
           tone,
@@ -6130,12 +6198,39 @@ A: [Detailed answer]`,
       const themes = (args.themes as string) || '';
       const saveToLibrary = (args.save_to_library as boolean) || false;
 
-      // Generate content calendar structure
-      const calendar = {
+      // Generate actual content calendar using GPT-4o
+      const { getOpenAI } = await import('@/lib/ai-providers');
+      const openai = getOpenAI();
+      
+      const systemPrompt = `You are a content strategy expert. Create detailed, actionable content calendars with specific post ideas, timing recommendations, and content themes. Be specific and practical.`;
+      const userPrompt = `Create a ${duration} content calendar for ${channels.join(', ')}.${themes ? `\n\nFocus on these themes: ${themes}` : ''}\n\nFormat as a clear calendar with:
+- Specific post ideas for each day/week
+- Recommended posting times
+- Content types (text, image, video, etc.)
+- Hashtags/keywords
+- Engagement strategies`;
+
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 2000, // Calendars need more tokens
+      });
+
+      const generatedCalendar = completion.choices[0]?.message?.content || '';
+
+      if (!generatedCalendar) {
+        throw new Error('No calendar generated');
+      }
+
+      const calendarData = {
         duration,
         channels,
         themes,
-        posts: `Content calendar for ${duration} across ${channels.join(', ')}${themes ? ` with themes: ${themes}` : ''}`,
+        content: generatedCalendar,
       };
 
       let savedItemId: string | null = null;
@@ -6148,7 +6243,7 @@ A: [Detailed answer]`,
               createdBy: context.userId,
               title: `Content Calendar: ${duration}`,
               type: 'document',
-              content: JSON.stringify(calendar),
+              content: generatedCalendar,
               status: 'ready',
             })
             .returning();
@@ -6162,7 +6257,7 @@ A: [Detailed answer]`,
         success: true,
         message: `Created ${duration} content calendar for ${channels.join(', ')}. ${saveToLibrary && savedItemId ? 'Saved to library.' : ''}`,
         data: {
-          calendar,
+          calendar: calendarData,
           savedToLibrary: !!savedItemId,
           itemId: savedItemId,
         },
@@ -6183,15 +6278,33 @@ A: [Detailed answer]`,
       const targetAudience = args.target_audience as string;
       const brandPersonality = (args.brand_personality as string) || '';
 
-      // Generate brand guidelines
-      const guidelines = {
-        companyDescription,
-        targetAudience,
-        brandPersonality,
-        voice: `Brand voice guidelines for ${companyDescription} targeting ${targetAudience}`,
-        tone: `Tone variations for ${brandPersonality || 'brand personality'}`,
-        messaging: `Core messaging framework for ${targetAudience}`,
-      };
+      // Generate comprehensive brand guidelines using GPT-4o
+      const { getOpenAI } = await import('@/lib/ai-providers');
+      const openai = getOpenAI();
+      
+      const systemPrompt = `You are a brand strategy consultant. Create comprehensive, professional brand guidelines that teams can reference for consistent brand communication. Be specific with examples and actionable guidance.`;
+      const userPrompt = `Create detailed brand guidelines for:\n\nCompany: ${companyDescription}\nTarget Audience: ${targetAudience}${brandPersonality ? `\nBrand Personality: ${brandPersonality}` : ''}\n\nInclude:
+1. Brand Voice & Tone (with do's and don'ts)
+2. Messaging Framework (key messages, value props)
+3. Communication Style Guide
+4. Content Guidelines
+5. Examples of on-brand vs off-brand language`;
+
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.6, // Lower temperature for more consistent guidelines
+        max_tokens: 2500,
+      });
+
+      const generatedGuidelines = completion.choices[0]?.message?.content || '';
+
+      if (!generatedGuidelines) {
+        throw new Error('No guidelines generated');
+      }
 
       // Always save brand guidelines to knowledge base
       const [savedItem] = await db
@@ -6201,7 +6314,7 @@ A: [Detailed answer]`,
           createdBy: context.userId,
           title: 'Brand Guidelines',
           type: 'document',
-          content: JSON.stringify(guidelines),
+          content: generatedGuidelines,
           status: 'ready',
         })
         .returning();
@@ -6210,7 +6323,12 @@ A: [Detailed answer]`,
         success: true,
         message: `Generated brand guidelines for ${companyDescription}. Saved to library.`,
         data: {
-          guidelines,
+          guidelines: {
+            companyDescription,
+            targetAudience,
+            brandPersonality,
+            content: generatedGuidelines,
+          },
           itemId: savedItem.id,
         },
       };
