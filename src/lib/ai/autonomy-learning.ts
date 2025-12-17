@@ -23,38 +23,151 @@ export interface ActionRiskLevel {
 }
 
 // Risk classification for all tools
+// Updated 2025-12-17: Comprehensive classification of all 101 Neptune tools
 export const TOOL_RISK_LEVELS: Record<string, ActionRiskLevel> = {
-  // Low-risk: Auto-execute immediately
-  create_task: { toolName: 'create_task', level: 'low', defaultConfidence: 80 },
+  // ============================================================================
+  // LOW-RISK TOOLS: Auto-execute immediately (read-only, organizational, safe)
+  // ============================================================================
+  
+  // Analytics & Reporting (read-only)
+  get_pipeline_summary: { toolName: 'get_pipeline_summary', level: 'low', defaultConfidence: 90 },
+  get_campaign_stats: { toolName: 'get_campaign_stats', level: 'low', defaultConfidence: 90 },
+  get_hot_leads: { toolName: 'get_hot_leads', level: 'low', defaultConfidence: 90 },
+  get_conversion_metrics: { toolName: 'get_conversion_metrics', level: 'low', defaultConfidence: 90 },
+  get_team_performance: { toolName: 'get_team_performance', level: 'low', defaultConfidence: 85 },
+  get_activity_timeline: { toolName: 'get_activity_timeline', level: 'low', defaultConfidence: 85 },
+  get_deals_closing_soon: { toolName: 'get_deals_closing_soon', level: 'low', defaultConfidence: 90 },
+  get_finance_summary: { toolName: 'get_finance_summary', level: 'low', defaultConfidence: 85 },
+  get_overdue_invoices: { toolName: 'get_overdue_invoices', level: 'low', defaultConfidence: 85 },
+  get_finance_integrations: { toolName: 'get_finance_integrations', level: 'low', defaultConfidence: 90 },
+  compare_financial_periods: { toolName: 'compare_financial_periods', level: 'low', defaultConfidence: 85 },
+  forecast_revenue: { toolName: 'forecast_revenue', level: 'low', defaultConfidence: 80 },
+  generate_cash_flow_forecast: { toolName: 'generate_cash_flow_forecast', level: 'low', defaultConfidence: 80 },
+  project_cash_flow: { toolName: 'project_cash_flow', level: 'low', defaultConfidence: 75 },
+  
+  // Search & Retrieval (read-only)
+  search_leads: { toolName: 'search_leads', level: 'low', defaultConfidence: 90 },
+  search_knowledge: { toolName: 'search_knowledge', level: 'low', defaultConfidence: 90 },
+  search_web: { toolName: 'search_web', level: 'low', defaultConfidence: 85 },
+  list_agents: { toolName: 'list_agents', level: 'low', defaultConfidence: 90 },
+  list_agent_teams: { toolName: 'list_agent_teams', level: 'low', defaultConfidence: 90 },
+  list_collections: { toolName: 'list_collections', level: 'low', defaultConfidence: 90 },
+  list_team_members: { toolName: 'list_team_members', level: 'low', defaultConfidence: 90 },
+  get_agent_status: { toolName: 'get_agent_status', level: 'low', defaultConfidence: 85 },
+  get_team_status: { toolName: 'get_team_status', level: 'low', defaultConfidence: 85 },
+  get_workflow_status: { toolName: 'get_workflow_status', level: 'low', defaultConfidence: 85 },
+  get_upcoming_events: { toolName: 'get_upcoming_events', level: 'low', defaultConfidence: 85 },
+  find_available_times: { toolName: 'find_available_times', level: 'low', defaultConfidence: 80 },
+  check_agent_availability: { toolName: 'check_agent_availability', level: 'low', defaultConfidence: 85 },
+  retrieve_agent_memory: { toolName: 'retrieve_agent_memory', level: 'low', defaultConfidence: 85 },
+  
+  // Analysis & Insights (non-destructive)
+  analyze_company_website: { toolName: 'analyze_company_website', level: 'low', defaultConfidence: 85 },
+  analyze_brand_message: { toolName: 'analyze_brand_message', level: 'low', defaultConfidence: 80 },
+  analyze_competitor: { toolName: 'analyze_competitor', level: 'low', defaultConfidence: 80 },
+  analyze_lead_for_campaign: { toolName: 'analyze_lead_for_campaign', level: 'low', defaultConfidence: 80 },
+  auto_qualify_lead: { toolName: 'auto_qualify_lead', level: 'low', defaultConfidence: 75 },
+  score_campaign_effectiveness: { toolName: 'score_campaign_effectiveness', level: 'low', defaultConfidence: 80 },
+  
+  // Organization & Prioritization (reversible)
   prioritize_tasks: { toolName: 'prioritize_tasks', level: 'low', defaultConfidence: 75 },
   batch_similar_tasks: { toolName: 'batch_similar_tasks', level: 'low', defaultConfidence: 70 },
   organize_documents: { toolName: 'organize_documents', level: 'low', defaultConfidence: 70 },
   auto_categorize_expenses: { toolName: 'auto_categorize_expenses', level: 'low', defaultConfidence: 75 },
   flag_anomalies: { toolName: 'flag_anomalies', level: 'low', defaultConfidence: 70 },
-  project_cash_flow: { toolName: 'project_cash_flow', level: 'low', defaultConfidence: 70 },
-  get_pipeline_summary: { toolName: 'get_pipeline_summary', level: 'low', defaultConfidence: 90 },
-  get_campaign_stats: { toolName: 'get_campaign_stats', level: 'low', defaultConfidence: 90 },
-  search_web: { toolName: 'search_web', level: 'low', defaultConfidence: 85 },
+  reprioritize_hit_list: { toolName: 'reprioritize_hit_list', level: 'low', defaultConfidence: 75 },
   
-  // Medium-risk: Ask first, learn over time
+  // Content Cockpit (read-only insights)
+  get_hit_list_insights: { toolName: 'get_hit_list_insights', level: 'low', defaultConfidence: 85 },
+  get_article_analytics: { toolName: 'get_article_analytics', level: 'low', defaultConfidence: 85 },
+  get_content_insights: { toolName: 'get_content_insights', level: 'low', defaultConfidence: 85 },
+  get_use_case_recommendation: { toolName: 'get_use_case_recommendation', level: 'low', defaultConfidence: 85 },
+  get_source_suggestions: { toolName: 'get_source_suggestions', level: 'low', defaultConfidence: 85 },
+  
+  // Navigation & UI (safe operations)
+  navigate_to_page: { toolName: 'navigate_to_page', level: 'low', defaultConfidence: 90 },
+  
+  // ============================================================================
+  // MEDIUM-RISK TOOLS: Ask first, learn over time (creates/modifies data)
+  // ============================================================================
+  
+  // CRM Operations
   create_lead: { toolName: 'create_lead', level: 'medium', defaultConfidence: 0 },
-  update_lead_stage: { toolName: 'update_lead_stage', level: 'medium', defaultConfidence: 0 },
   create_contact: { toolName: 'create_contact', level: 'medium', defaultConfidence: 0 },
+  update_lead_stage: { toolName: 'update_lead_stage', level: 'medium', defaultConfidence: 0 },
+  add_note: { toolName: 'add_note', level: 'medium', defaultConfidence: 0 },
+  create_deal: { toolName: 'create_deal', level: 'medium', defaultConfidence: 0 },
+  update_deal: { toolName: 'update_deal', level: 'medium', defaultConfidence: 0 },
+  
+  // Task Management
+  create_task: { toolName: 'create_task', level: 'medium', defaultConfidence: 0 },
+  assign_to_team_member: { toolName: 'assign_to_team_member', level: 'medium', defaultConfidence: 0 },
+  
+  // Agent & Orchestration
+  create_agent: { toolName: 'create_agent', level: 'medium', defaultConfidence: 0 },
+  run_agent: { toolName: 'run_agent', level: 'medium', defaultConfidence: 0 },
+  create_agent_team: { toolName: 'create_agent_team', level: 'medium', defaultConfidence: 0 },
+  run_agent_team: { toolName: 'run_agent_team', level: 'medium', defaultConfidence: 0 },
+  delegate_to_agent: { toolName: 'delegate_to_agent', level: 'medium', defaultConfidence: 0 },
+  coordinate_agents: { toolName: 'coordinate_agents', level: 'medium', defaultConfidence: 0 },
+  store_shared_context: { toolName: 'store_shared_context', level: 'medium', defaultConfidence: 0 },
+  
+  // Workflow & Automation
+  create_workflow: { toolName: 'create_workflow', level: 'medium', defaultConfidence: 0 },
+  execute_workflow: { toolName: 'execute_workflow', level: 'medium', defaultConfidence: 0 },
+  create_automation: { toolName: 'create_automation', level: 'medium', defaultConfidence: 0 },
+  
+  // Marketing Operations
   create_campaign: { toolName: 'create_campaign', level: 'medium', defaultConfidence: 0 },
-  schedule_meeting: { toolName: 'schedule_meeting', level: 'medium', defaultConfidence: 0 },
-  draft_proposal: { toolName: 'draft_proposal', level: 'medium', defaultConfidence: 0 },
-  auto_qualify_lead: { toolName: 'auto_qualify_lead', level: 'medium', defaultConfidence: 0 },
-  create_follow_up_sequence: { toolName: 'create_follow_up_sequence', level: 'medium', defaultConfidence: 0 },
+  launch_campaign: { toolName: 'launch_campaign', level: 'medium', defaultConfidence: 0 },
+  update_campaign_roadmap: { toolName: 'update_campaign_roadmap', level: 'medium', defaultConfidence: 0 },
   optimize_campaign: { toolName: 'optimize_campaign', level: 'medium', defaultConfidence: 0 },
   segment_audience: { toolName: 'segment_audience', level: 'medium', defaultConfidence: 0 },
-  schedule_social_posts: { toolName: 'schedule_social_posts', level: 'medium', defaultConfidence: 0 },
+  create_content_calendar: { toolName: 'create_content_calendar', level: 'medium', defaultConfidence: 0 },
+  generate_brand_guidelines: { toolName: 'generate_brand_guidelines', level: 'medium', defaultConfidence: 0 },
+  suggest_next_marketing_action: { toolName: 'suggest_next_marketing_action', level: 'medium', defaultConfidence: 0 },
+  
+  // Content Generation
+  generate_image: { toolName: 'generate_image', level: 'medium', defaultConfidence: 0 },
+  generate_marketing_copy: { toolName: 'generate_marketing_copy', level: 'medium', defaultConfidence: 0 },
+  generate_document: { toolName: 'generate_document', level: 'medium', defaultConfidence: 0 },
+  create_document: { toolName: 'create_document', level: 'medium', defaultConfidence: 0 },
+  create_professional_document: { toolName: 'create_professional_document', level: 'medium', defaultConfidence: 0 },
+  generate_pdf: { toolName: 'generate_pdf', level: 'medium', defaultConfidence: 0 },
+  save_upload_to_library: { toolName: 'save_upload_to_library', level: 'medium', defaultConfidence: 0 },
+  
+  // Knowledge Base
+  create_collection: { toolName: 'create_collection', level: 'medium', defaultConfidence: 0 },
+  add_content_source: { toolName: 'add_content_source', level: 'medium', defaultConfidence: 0 },
+  add_to_hit_list: { toolName: 'add_to_hit_list', level: 'medium', defaultConfidence: 0 },
+  
+  // Calendar & Meetings
+  schedule_meeting: { toolName: 'schedule_meeting', level: 'medium', defaultConfidence: 0 },
   book_meeting_rooms: { toolName: 'book_meeting_rooms', level: 'medium', defaultConfidence: 0 },
   
-  // High-risk: Always confirm
+  // Social Media (drafts/scheduling)
+  schedule_social_posts: { toolName: 'schedule_social_posts', level: 'medium', defaultConfidence: 0 },
+  post_to_social_media: { toolName: 'post_to_social_media', level: 'medium', defaultConfidence: 0 },
+  
+  // Dashboard & Roadmap
+  update_dashboard_roadmap: { toolName: 'update_dashboard_roadmap', level: 'medium', defaultConfidence: 0 },
+  
+  // Drafting (requires review)
+  draft_email: { toolName: 'draft_email', level: 'medium', defaultConfidence: 0 },
+  draft_proposal: { toolName: 'draft_proposal', level: 'medium', defaultConfidence: 0 },
+  create_follow_up_sequence: { toolName: 'create_follow_up_sequence', level: 'medium', defaultConfidence: 0 },
+  
+  // ============================================================================
+  // HIGH-RISK TOOLS: Always confirm (irreversible external actions)
+  // ============================================================================
+  
+  // Email Sending (external communication)
   send_email: { toolName: 'send_email', level: 'high', defaultConfidence: 0 },
-  schedule_demo: { toolName: 'schedule_demo', level: 'high', defaultConfidence: 0 },
-  send_payment_reminders: { toolName: 'send_payment_reminders', level: 'high', defaultConfidence: 0 },
   send_invoice_reminder: { toolName: 'send_invoice_reminder', level: 'high', defaultConfidence: 0 },
+  send_payment_reminders: { toolName: 'send_payment_reminders', level: 'high', defaultConfidence: 0 },
+  
+  // Customer-facing Scheduling
+  schedule_demo: { toolName: 'schedule_demo', level: 'high', defaultConfidence: 0 },
 };
 
 // ============================================================================

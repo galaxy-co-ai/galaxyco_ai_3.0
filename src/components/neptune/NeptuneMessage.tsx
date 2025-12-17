@@ -17,7 +17,11 @@ interface NeptuneMessageProps {
         success?: boolean;
         data?: unknown;
       };
+      autoExecuted?: boolean;
+      confidence?: number;
     }>;
+    autoExecuted?: boolean;
+    confidenceScore?: number;
   };
   className?: string;
 }
@@ -72,8 +76,41 @@ export function NeptuneMessage({
     };
   }, [metadata]);
 
+  // Check for auto-executed tools
+  const autoExecutedTools = React.useMemo(() => {
+    if (!metadata?.functionCalls) return [];
+    return metadata.functionCalls
+      .filter((fc) => fc.autoExecuted === true)
+      .map((fc) => ({
+        name: fc.name,
+        confidence: fc.confidence || 0,
+      }));
+  }, [metadata]);
+
   return (
     <div className={cn("space-y-3", className)}>
+      {/* Autonomy indicators */}
+      {autoExecutedTools.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-2 text-xs">
+          {autoExecutedTools.map((tool, idx) => (
+            <div
+              key={`${tool.name}-${idx}`}
+              className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800"
+            >
+              <span className="font-medium">🤖</span>
+              <span className="font-medium">
+                {tool.name.replace(/_/g, ' ')}
+              </span>
+              {tool.confidence > 0 && (
+                <span className="text-blue-600 dark:text-blue-400">
+                  ({tool.confidence}% confident)
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Main markdown content */}
       <MarkdownContent content={content} />
 
