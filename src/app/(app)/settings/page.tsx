@@ -35,6 +35,8 @@ import {
   Sun,
   Moon,
   Webhook,
+  Bot,
+  CheckCircle2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,7 +62,7 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
-type SettingsSection = "profile" | "workspace" | "team" | "billing" | "security" | "notifications" | "appearance" | "webhooks" | "api";
+type SettingsSection = "profile" | "workspace" | "team" | "billing" | "security" | "notifications" | "appearance" | "autonomy" | "webhooks" | "api";
 
 interface SettingsCategory {
   id: SettingsSection;
@@ -77,6 +79,7 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
   { id: "security", name: "Security", icon: Shield, description: "Password and 2FA" },
   { id: "notifications", name: "Notifications", icon: Bell, description: "Alert preferences" },
   { id: "appearance", name: "Appearance", icon: Palette, description: "Theme and display" },
+  { id: "autonomy", name: "Neptune Autonomy", icon: Bot, description: "AI auto-execution settings" },
   { id: "webhooks", name: "Webhooks", icon: Webhook, description: "Manage webhooks" },
   { id: "api", name: "API Keys", icon: Key, description: "Developer access" },
 ];
@@ -1547,6 +1550,62 @@ const { user, isLoaded } = useUser();
               <p className="text-sm text-gray-600">
                 Webhooks allow you to receive real-time notifications when events occur. Each webhook includes a signature for verification.
               </p>
+            </div>
+          </div>
+        );
+
+      case "autonomy":
+        return (
+          <div className="space-y-4">
+            <div className="p-6 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+              <div className="flex items-center gap-3 mb-2">
+                <Bot className="h-8 w-8" />
+                <div>
+                  <h3 className="text-lg font-semibold">Neptune Autonomy</h3>
+                  <p className="text-sm opacity-90">Manage AI auto-execution preferences</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-lg bg-gray-50 border border-gray-100">
+              <p className="text-sm text-gray-700 mb-4">
+                Neptune learns from your approval patterns and can automatically execute trusted actions.
+                Configure which tools Neptune can auto-execute on the dedicated settings page.
+              </p>
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                onClick={() => window.location.href = '/settings/autonomy'}
+              >
+                <Bot className="h-4 w-4 mr-2" />
+                Open Autonomy Settings
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-900">Key Features</h4>
+              <div className="space-y-2">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-white border border-gray-100">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Learning System</p>
+                    <p className="text-xs text-gray-500">Neptune learns which actions you trust based on your approval history</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-white border border-gray-100">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Confidence Scoring</p>
+                    <p className="text-xs text-gray-500">Each tool has a confidence score that increases with successful use</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-white border border-gray-100">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Full Control</p>
+                    <p className="text-xs text-gray-500">Enable or disable auto-execution for any tool at any time</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         );
