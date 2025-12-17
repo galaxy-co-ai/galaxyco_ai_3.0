@@ -9,13 +9,14 @@
 ## Quick Status
 
 ```bash
-Unit Tests:        ❌ 147 failed (pre-existing issues)
-Integration Tests: ❌ Multiple failures (API, finance, validation)
-E2E Tests:         ❌ Playwright tests have setup issues
+Unit Tests:        ❌ 93 failures across 8 suites
+Integration Tests: ❌ API failures (14 finance, 2 validation, 1 agents)
+E2E Tests:         ❌ 5 Playwright suites misconfigured
+Passing:           ✅ 64 tests (assistant, crm-contacts, workflows, campaigns, utils, rate-limit)
 Coverage:          ⚠️  Not measured yet
 ```
 
-**Status:** Test suite has significant pre-existing failures unrelated to recent changes
+**Status:** Test suite has systematic failures with identifiable patterns (see breakdown below)
 
 ---
 
@@ -39,35 +40,106 @@ Command:  npx playwright test
 
 ## Known Test Status
 
-### ✅ Passing (Confirmed)
-- TypeScript compilation: 0 errors
+### ✅ Passing Tests (64)
+**Files passing all tests:**
+- `tests/api/assistant-simple.test.ts` (6 tests)
+- `tests/api/crm-contacts.test.ts` (7 tests)
+- `tests/api/workflows.test.ts` (17 tests)
+- `tests/api/knowledge-upload.test.ts` (4 tests)
+- `tests/lib/api-error-handler.test.ts` (14 tests)
+- `tests/api/campaigns.test.ts` (16/19 tests, 3 skipped)
+- `tests/lib/utils.test.ts` (10 tests)
+- `tests/lib/rate-limit.test.ts` (12 tests)
+- `tests/api/assistant-chat-stream.test.ts` (4 tests)
 
-### ⚠️ Unknown Status (Needs Verification)
-- Unit test suite
-- Integration test suite
-- E2E test suite
-- Test coverage percentage
+### ❌ Failing Tests by Category (93 failures)
 
-### ❌ Known Failures (Pre-Existing)
+#### Category 1: Component Test Infrastructure (72 failures)
+**Root Cause:** Missing test data setup and undefined props
 
-**Component Tests:**
-- `defaultProps is not defined` - Multiple dashboard tests
-- Cannot read properties of undefined (length, includes) - Data guard issues
+**ConversationsDashboard (24/24 failed):**
+- All tests fail due to missing mock conversation data
+- Component renders but can't find expected text/elements
+- Tests expect specific data but components show empty states
 
-**API Tests:**
-- Finance API tests failing (status 400/500 instead of 201)
-- Invoice API returning unexpected data shape
+**KnowledgeBaseDashboard (24/24 failed):**
+- Runtime error: `Cannot read properties of undefined (reading 'length')`
+- Missing currentItems/currentCollections initialization
+- All tests fail immediately on render
 
-**E2E Tests:**
-- Playwright config issues with test.describe() placement
-- Server connection errors (ECONNREFUSED ::1:3000)
+**AgentsDashboard (16/22 failed):**
+- `ReferenceError: defaultProps is not defined` (6 tests)
+- Component shows stats as "0" instead of expected mock values
+- Test data not properly injected into component
 
-**Test Infrastructure:**
-- Mock setup issues with SWR and other dependencies
-- Test environment not starting dev server
-- Missing test fixtures/fixtures for dashboard components
+**MarketingDashboard (11/20 failed):**
+- SWR mocking issues: `vi.mocked(...).mockImplementation is not a function`
+- Tab switching tests fail due to incorrect test selectors
+- Empty state tests expecting non-empty data
 
-**Total Failures:** 147 tests (as of 2025-12-17)
+**CRMDashboard (2/4 failed):**
+- Stats badge tests fail (expecting specific counts)
+- Tab switching test failures
+
+**Common Issues:**
+- Tests use hardcoded mock data but components don't receive it
+- Accessibility tests fail: missing `aria-label` attributes
+- Tests query by text that doesn't exist in rendered output
+
+#### Category 2: API Integration Tests (14 failures)
+**Root Cause:** API response shape mismatch and status code issues
+
+**Finance API (`tests/api/finance.test.ts` - 14/22 failed):**
+
+GET /api/finance/invoices:
+- Expected: `Array` → Received: `{ invoices: [], pagination: {} }`
+- Test assumes direct array, API returns wrapped object
+- 4 tests fail due to wrong data structure assumption
+
+POST /api/finance/invoices:
+- Expected: `201 Created` → Received: `400 Bad Request`
+- Invoice creation failing validation
+- 3 tests affected
+
+GET /api/integrations/status:
+- Expected: `200 OK` → Received: `500 Server Error`
+- Integration status endpoint broken
+- All integration tests fail (7 tests)
+
+**Common Issues:**
+- Tests expect direct arrays, APIs return wrapped responses
+- Validation errors not properly handled in tests
+- Integration endpoint throwing uncaught errors
+
+#### Category 3: File Upload/Security Tests (2 failures)
+**Root Cause:** Service unavailable errors
+
+**Validation API (`tests/api/validation.test.ts` - 2/20 failed):**
+- Expected: `< 500` → Received: `503 Service Unavailable`
+- File upload tests hitting unavailable service
+- Tests: "should accept valid file types", "should prevent path traversal"
+
+#### Category 4: Module Resolution (1 failure)
+**Root Cause:** Missing file or incorrect import path
+
+**Agents API (`tests/api/agents.test.ts` - entire suite failed):**
+- Error: `Failed to resolve import "@/lib/workflow-executor"`
+- File doesn't exist or path is incorrect
+- Blocks entire test suite from running
+
+#### Category 5: E2E Configuration (5 suites failed)
+**Root Cause:** Playwright misconfiguration with Vitest
+
+**All E2E tests fail before running:**
+- `tests/e2e/auth.spec.ts`
+- `tests/e2e/campaigns.spec.ts`
+- `tests/e2e/crm.spec.ts`
+- `tests/e2e/knowledge.spec.ts`
+- `tests/e2e/marketing-qa.spec.ts`
+
+**Error:** `Playwright Test did not expect test.describe() to be called here`
+**Issue:** E2E tests using Playwright syntax but running in Vitest context
+**Fix:** E2E tests should run with `npx playwright test`, not `vitest`
 
 ---
 
@@ -191,12 +263,91 @@ Lines:             ??%
 
 ---
 
+## Fix Priority Recommendations
+
+### 🔥 Critical (Fix First)
+**Impact:** Blocking entire test suites from running
+
+1. **Fix Module Resolution Error** (1 suite blocked)
+   - File: `tests/api/agents.test.ts`
+   - Issue: Missing `@/lib/workflow-executor` file
+   - Action: Check if file exists, fix import path, or remove test
+   - Estimated effort: 10 minutes
+
+2. **Fix E2E Test Configuration** (5 suites blocked)
+   - Files: All `tests/e2e/*.spec.ts`
+   - Issue: E2E tests running in Vitest instead of Playwright
+   - Action: Exclude E2E tests from vitest.config.ts or run separately
+   - Estimated effort: 15 minutes
+
+### ⚡ High Priority (Quick Wins)
+**Impact:** Large number of failures, easy to fix
+
+3. **Fix Finance API Response Structure** (4 tests)
+   - File: `tests/api/finance.test.ts`
+   - Issue: Tests expect array, API returns `{ invoices: [], pagination: {} }`
+   - Action: Update test expectations to match API shape
+   - Estimated effort: 10 minutes
+
+4. **Fix AgentsDashboard defaultProps** (6 tests)
+   - File: `tests/components/AgentsDashboard.test.tsx`
+   - Issue: `ReferenceError: defaultProps is not defined`
+   - Action: Define defaultProps variable in test file
+   - Estimated effort: 5 minutes
+
+5. **Fix Integration Status Endpoint** (7 tests)
+   - File: API endpoint `/api/integrations/status`
+   - Issue: Endpoint returns 500 error
+   - Action: Debug endpoint, add error handling
+   - Estimated effort: 30 minutes
+
+### 🔧 Medium Priority (Requires Investigation)
+**Impact:** Large number of failures, needs deeper fixes
+
+6. **Fix Component Test Data Setup** (66 tests)
+   - Files: Dashboard test files (Conversations, Knowledge, Marketing, etc.)
+   - Issue: Components don't receive mock data, tests query non-existent elements
+   - Action: Refactor test setup to properly inject mock data via props/context
+   - Estimated effort: 2-4 hours
+
+7. **Fix Invoice Creation Validation** (3 tests)
+   - File: `tests/api/finance.test.ts`
+   - Issue: POST requests return 400 instead of 201
+   - Action: Debug validation logic, fix test data to match schema
+   - Estimated effort: 30 minutes
+
+### 📋 Low Priority (Nice to Have)
+**Impact:** Small number of failures, non-critical
+
+8. **Fix File Upload Service Availability** (2 tests)
+   - File: `tests/api/validation.test.ts`
+   - Issue: Tests return 503 Service Unavailable
+   - Action: Mock file upload service or fix availability check
+   - Estimated effort: 15 minutes
+
+9. **Add Accessibility Attributes** (multiple tests)
+   - Files: Various dashboard components
+   - Issue: Missing `aria-label` attributes causing test failures
+   - Action: Add accessibility attributes to components
+   - Estimated effort: 1 hour
+
+### 🎯 Estimated Impact by Priority
+
+| Priority | Tests Fixed | Effort | ROI |
+|----------|-------------|--------|-----|
+| Critical | 6 suites unblocked | 25 min | 🔥🔥🔥 |
+| High     | 20 tests | 1.5 hrs | ⚡⚡⚡ |
+| Medium   | 69 tests | 3-5 hrs | 🔧🔧 |
+| Low      | 2+ tests | 1-2 hrs | 📋 |
+
+**Quick Win Path:** Fix Critical + High Priority = ~47 tests passing in ~2 hours
+
 ## Next Steps
 
-1. **Immediate:** Run test audit checklist above
-2. **Short-term:** Establish coverage baseline and document
-3. **Ongoing:** Add tests for new features
-4. **Monthly:** Review coverage and address gaps
+1. **Immediate:** Fix critical blockers (module resolution, E2E config)
+2. **Short-term:** Fix high-priority quick wins (API structure, defaultProps)
+3. **Ongoing:** Refactor component test infrastructure
+4. **Monthly:** Measure coverage and address gaps
 
 ---
 
