@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-17 (a97955c)  
+**Updated Through:** 2025-12-17 (8dceaf0)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-17 8dceaf0 docs: update handoff with completed autonomy settings work
 - 2025-12-17 a97955c feat(neptune): implement autonomy settings UI
 - 2025-12-17 e121760 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-17 b0a7b9f feat(neptune): complete audit & autonomy enhancements
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 f6633fc chore: remove dead documentation files from source code
 - 2025-12-17 613299b docs: implement new documentation system (WARP.md, AGENTS.md, START.md, STUBS.md, tests/STATUS.md)
 - 2025-12-16 59ba484 chore: redeploy with corrected NEXT_PUBLIC_APP_URL environment variable
-- 2025-12-16 969729e chore: trigger redeploy after fixing Vercel environment variables
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
