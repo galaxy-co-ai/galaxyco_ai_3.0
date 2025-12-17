@@ -10,8 +10,9 @@
 
 ```bash
 TypeScript:  ✅ 0 errors (npm run typecheck)
-Tests:       ⚠️  Status unknown - needs verification
-Deployment:  ✅ Production live
+Build:       ✅ Production build successful
+Tests:       ❌ 147 failing (pre-existing, documented in tests/STATUS.md)
+Deployment:  ✅ Production live (f6633fc pushed, Vercel deploying)
 Database:    ✅ Schema current, migrations up to date
 ```
 
@@ -61,11 +62,13 @@ e35d5fc - docs(status): update AI context
 
 ## Active Work
 
-**Current Sprint:** Documentation system overhaul
+**Current Sprint:** Documentation system + cleanup
 - ✅ Updated WARP.md with foundation layer
 - ✅ Rewrote AGENTS.md as AI agent playbook
-- 🚧 Creating START.md (this file)
-- ⏳ Next: STUBS.md and tests/STATUS.md
+- ✅ Created START.md, STUBS.md, tests/STATUS.md
+- ✅ Removed 21 dead files from src/ and root (4174 lines deleted)
+- ✅ Build verified (TypeScript 0 errors, production build successful)
+- ✅ Test suite audited (147 pre-existing failures documented)
 
 **Blocked Items:** None currently
 

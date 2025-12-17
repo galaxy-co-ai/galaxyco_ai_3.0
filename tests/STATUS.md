@@ -9,13 +9,13 @@
 ## Quick Status
 
 ```bash
-Unit Tests:        ⚠️  Status needs verification
-Integration Tests: ⚠️  Status needs verification
-E2E Tests:         ⚠️  Playwright configured, needs audit
+Unit Tests:        ❌ 147 failed (pre-existing issues)
+Integration Tests: ❌ Multiple failures (API, finance, validation)
+E2E Tests:         ❌ Playwright tests have setup issues
 Coverage:          ⚠️  Not measured yet
 ```
 
-**Action Required:** Run full test audit to establish baseline
+**Status:** Test suite has significant pre-existing failures unrelated to recent changes
 
 ---
 
@@ -48,8 +48,26 @@ Command:  npx playwright test
 - E2E test suite
 - Test coverage percentage
 
-### ❌ Known Failures
-*None documented yet*
+### ❌ Known Failures (Pre-Existing)
+
+**Component Tests:**
+- `defaultProps is not defined` - Multiple dashboard tests
+- Cannot read properties of undefined (length, includes) - Data guard issues
+
+**API Tests:**
+- Finance API tests failing (status 400/500 instead of 201)
+- Invoice API returning unexpected data shape
+
+**E2E Tests:**
+- Playwright config issues with test.describe() placement
+- Server connection errors (ECONNREFUSED ::1:3000)
+
+**Test Infrastructure:**
+- Mock setup issues with SWR and other dependencies
+- Test environment not starting dev server
+- Missing test fixtures/fixtures for dashboard components
+
+**Total Failures:** 147 tests (as of 2025-12-17)
 
 ---
 
