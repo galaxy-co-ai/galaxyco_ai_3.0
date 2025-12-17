@@ -37,48 +37,7 @@ vi.mock('@/components/agents/laboratory/LaboratoryWizard', () => ({
   default: () => <div>Laboratory Wizard</div>,
 }));
 
-describe('MyAgentsDashboard', () => {
-  const defaultProps = {
-    initialAgents: [
-      {
-        id: 'agent-1',
-        name: 'Sales Assistant',
-        description: 'Helps with sales tasks',
-        type: 'sales',
-        status: 'active',
-        executionCount: 15,
-        lastExecutedAt: new Date('2025-12-01'),
-        createdAt: new Date('2025-11-01'),
-      },
-      {
-        id: 'agent-2',
-        name: 'Support Agent',
-        description: 'Customer support automation',
-        type: 'support',
-        status: 'paused',
-        executionCount: 8,
-        lastExecutedAt: new Date('2025-11-28'),
-        createdAt: new Date('2025-10-15'),
-      },
-      {
-        id: 'agent-3',
-        name: 'Research Bot',
-        description: 'Research and data gathering',
-        type: 'research',
-        status: 'inactive',
-        executionCount: 0,
-        lastExecutedAt: null,
-        createdAt: new Date('2025-12-03'),
-      },
-    ],
-    stats: {
-      totalAgents: 3,
-      activeAgents: 1,
-      totalExecutions: 23,
-      averageExecutionTime: 1500,
-    },
-  };
-
+// Test props available to all describ
   beforeEach(() => {
     vi.clearAllMocks();
   });

@@ -347,8 +347,8 @@ describe('POST /api/agents/test-run', () => {
   });
 
   it('should handle execution errors gracefully', async () => {
-    const { executeAgent } = await import('@/lib/workflow-executor');
-    vi.mocked(executeAgent).mockRejectedValueOnce(new Error('Execution failed'));
+    const { executeAgentTask } = await import('@/trigger/workflow-executor');
+    vi.mocked(executeAgentTask.trigger).mockRejectedValueOnce(new Error('Execution failed'));
 
     const request = new NextRequest('http://localhost:3000/api/agents/test-run', {
       method: 'POST',

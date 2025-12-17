@@ -102,8 +102,9 @@ describe('GET /api/finance/invoices', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(Array.isArray(data)).toBe(true);
-    expect(data).toHaveLength(1);
+    expect(data).toHaveProperty('invoices');
+    expect(data).toHaveProperty('pagination');
+    expect(Array.isArray(data.invoices)).toBe(true);
   });
 
   it('should return invoices with correct structure', async () => {
@@ -111,7 +112,8 @@ describe('GET /api/finance/invoices', () => {
     const response = await GET_INVOICES(request);
     const data = await response.json();
 
-    const invoice = data[0];
+    expect(data.invoices).toHaveLength(1);
+    const invoice = data.invoices[0];
     expect(invoice).toHaveProperty('id');
     expect(invoice).toHaveProperty('invoiceNumber');
     expect(invoice).toHaveProperty('clientName');
@@ -129,7 +131,8 @@ describe('GET /api/finance/invoices', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toHaveLength(0);
+    expect(data.invoices).toHaveLength(0);
+    expect(data.pagination.total).toBe(0);
   });
 
   it('should calculate amounts correctly (cents to dollars)', async () => {
@@ -137,7 +140,7 @@ describe('GET /api/finance/invoices', () => {
     const response = await GET_INVOICES(request);
     const data = await response.json();
 
-    const invoice = data[0];
+    const invoice = data.invoices[0];
     expect(invoice.amount).toBe(100000); // Should remain in cents
   });
 });
