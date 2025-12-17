@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-17 (56570af)  
+**Updated Through:** 2025-12-17 (e6621e6)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-17 e6621e6 feat(ai): implement create_agent tool for Neptune
 - 2025-12-17 56570af feat(crm): implement hot leads tracking with leadStatus field
 - 2025-12-17 1100998 fix(security): replace mock sessions with Clerk sessions + revoke endpoint
 - 2025-12-17 23e1061 fix(metrics): implement avgResponseTime, agentRuns, newMessages calculations
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-16 1492e1a feat(ui): add branded styling to dashboard and Neptune panel
 - 2025-12-16 f9e7013 fix: resolve TypeScript error in assistant page and add QuickBooks payment scope
 - 2025-12-15 9a0f5c7 feat(oauth): add QuickBooks and Shopify OAuth support
-- 2025-12-15 1b8527d fix(assistant): handle SSE streaming for Neptune chat
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
