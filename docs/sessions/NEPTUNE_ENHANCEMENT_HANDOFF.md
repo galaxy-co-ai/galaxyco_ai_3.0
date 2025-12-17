@@ -281,52 +281,37 @@ Manage which actions Neptune can execute automatically
 
 ### MEDIUM PRIORITY (1-2 weeks)
 
-#### 4. Convert AI Template Tools (16 hours)
-**Problem:** Some tools return templates instead of executing  
-**Solution:** Use GPT-4o to fill templates automatically
+#### 4. ~~Convert AI Template Tools~~ ✅ COMPLETED (Dec 17, 2025)
+**Status:** All content generation tools now use GPT-4o for actual content generation  
+**Implementation:** Enhanced 4 tools to generate real content instead of templates
 
-**Affected Tools:**
-- `generate_marketing_copy` — Returns prompt template
-- `create_content_calendar` — Returns structure
-- `draft_email` — Returns email outline
-- `generate_brand_guidelines` — Returns guideline structure
+**Completed Enhancements:**
+- ✅ `generate_marketing_copy` - Generates actual copy with GPT-4o
+  - Temperature: 0.8 (high creativity for marketing)
+  - Tone-aware (professional, casual, playful, urgent, inspirational)
+  - Max tokens: 1000
+- ✅ `create_content_calendar` - Generates detailed, actionable calendars
+  - Includes specific post ideas, timing, content types
+  - Max tokens: 2000 (calendars need more detail)
+  - Temperature: 0.7
+- ✅ `draft_email` - Generates complete email drafts
+  - Includes subject line, greeting, body, CTA, sign-off
+  - Max tokens: 800
+  - Temperature: 0.7
+- ✅ `generate_brand_guidelines` - Creates comprehensive brand docs
+  - Voice & tone, messaging framework, examples
+  - Temperature: 0.6 (lower for consistency)
+  - Max tokens: 2500
 
-**Implementation Pattern:**
-```typescript
-// BEFORE (current):
-async generate_marketing_copy(args, context) {
-  const prompt = `Generate ${type} for ${audience}...`;
-  return { success: true, data: { copy: prompt }};
-}
+**Implementation Details:**
+- All tools use `getOpenAI()` from `@/lib/ai-providers`
+- Proper error handling with fallback messages
+- Save-to-library functionality preserved
+- System prompts optimized for each tool's purpose
+- Temperature/max_tokens tuned per content type
 
-// AFTER (enhanced):
-async generate_marketing_copy(args, context) {
-  const { getOpenAI } = await import('@/lib/ai-providers');
-  const openai = getOpenAI();
-  
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: 'You are a marketing copywriter...' },
-      { role: 'user', content: `Generate ${type} for ${audience}...` }
-    ]
-  });
-  
-  const generatedCopy = completion.choices[0].message.content;
-  
-  // Optionally save to library
-  if (args.save_to_library) {
-    await db.insert(knowledgeItems).values({
-      workspaceId: context.workspaceId,
-      title: `Marketing Copy: ${type}`,
-      content: generatedCopy,
-      createdBy: context.userId
-    });
-  }
-  
-  return { success: true, data: { copy: generatedCopy }};
-}
-```
+**Commit:** `c0afb1b` - "feat(neptune): enhance content generation tools to use GPT-4o"  
+**Files Modified:** `src/lib/ai/tools.ts` (+154 lines, -36 lines)
 
 ---
 
