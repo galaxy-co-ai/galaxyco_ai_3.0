@@ -1149,6 +1149,46 @@ export const aiTools: ChatCompletionTool[] = [
   {
     type: 'function',
     function: {
+      name: 'create_agent',
+      description: 'Create a new AI agent or automation. Use this when the user wants to create an agent to automate a task, process, or workflow.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Name of the agent (required)',
+          },
+          description: {
+            type: 'string',
+            description: 'Description of what the agent does',
+          },
+          type: {
+            type: 'string',
+            enum: ['scope', 'call', 'email', 'note', 'task', 'roadmap', 'content', 'custom', 'browser', 'cross-app', 'knowledge', 'sales', 'trending', 'research', 'meeting', 'code', 'data', 'security'],
+            description: 'Type of agent: scope (scoping/planning), call (phone call automation), email (email automation), note (note-taking), task (task automation), roadmap (roadmap generation), content (content creation), custom (general purpose), browser (web automation), cross-app (multi-app workflow), knowledge (knowledge base), sales (sales automation), trending (trend analysis), research (research agent), meeting (meeting automation), code (code generation), data (data processing), security (security checks)',
+          },
+          systemPrompt: {
+            type: 'string',
+            description: 'Specific instructions for how the agent should behave or what task it should perform',
+          },
+          capabilities: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'List of capabilities the agent should have (e.g., ["email", "crm", "web_search"])',
+          },
+          status: {
+            type: 'string',
+            enum: ['draft', 'active'],
+            description: 'Initial status: draft (needs review) or active (ready to use). Default: active',
+          },
+        },
+        required: ['name'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'run_agent',
       description: 'Trigger/run an AI agent or automation workflow.',
       parameters: {
@@ -3174,6 +3214,58 @@ const toolImplementations: Record<string, ToolFunction> = {
       return {
         success: false,
         message: 'Failed to list agents',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Agents: Create Agent
+  async create_agent(args, context): Promise<ToolResult> {
+    try {
+      const name = args.name as string;
+      const type = args.type as typeof agents.type.enumValues[number];
+      const description = args.description as string | undefined;
+      const config = args.config as Record<string, any> | undefined;
+      const status = (args.status as typeof agents.status.enumValues[number]) || 'active';
+
+      // Validate agent type
+      const validTypes = ['scope', 'call', 'email', 'note', 'task', 'roadmap', 'content', 'custom', 'browser', 'cross-app', 'knowledge', 'sales', 'trending', 'research', 'meeting', 'code', 'data', 'security'];
+      if (!validTypes.includes(type)) {
+        return {
+          success: false,
+          message: `Invalid agent type "${type}". Valid types: ${validTypes.join(', ')}`,
+        };
+      }
+
+      // Create agent in database
+      const [newAgent] = await db.insert(agents).values({
+        workspaceId: context.workspaceId,
+        name,
+        description: description || null,
+        type,
+        status,
+        config: config || {},
+        createdBy: context.userId,
+      }).returning();
+
+      logger.info('AI created agent', { agentId: newAgent.id, name, type, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Created agent "${newAgent.name}" (${newAgent.type})`,
+        data: {
+          id: newAgent.id,
+          name: newAgent.name,
+          type: newAgent.type,
+          status: newAgent.status,
+          description: newAgent.description,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_agent failed', error);
+      return {
+        success: false,
+        message: 'Failed to create agent',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
