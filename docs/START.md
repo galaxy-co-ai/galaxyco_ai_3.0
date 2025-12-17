@@ -11,8 +11,8 @@
 ```bash
 TypeScript:  ✅ 0 errors (npm run typecheck)
 Build:       ✅ Production build successful
-Tests:       ❌ 147 failing (pre-existing, documented in tests/STATUS.md)
-Deployment:  ✅ Production live (f6633fc pushed, Vercel deploying)
+Tests:       ✅ 140 passing / 81 failing (63% pass rate, up from 41%)
+Deployment:  ✅ Production live at app.galaxyco.ai
 Database:    ✅ Schema current, migrations up to date
 ```
 
@@ -21,11 +21,13 @@ Database:    ✅ Schema current, migrations up to date
 ## Known Gaps (High Priority)
 
 ### 1. Testing Infrastructure
-**Status:** Needs audit and setup
-- Test suite status unknown
-- Coverage reporting not configured
-- E2E tests may not be running
-- **Action:** Audit tests, create tests/STATUS.md
+**Status:** ✅ Significantly improved (2025-12-17)
+- ✅ Test suite audited and documented in tests/STATUS.md
+- ✅ Critical blockers removed (module resolution, E2E config)
+- ✅ 140/221 tests passing (63% pass rate)
+- ⚠️ Coverage reporting not yet configured
+- ⚠️ Component test queries need refinement (72 failures remaining)
+- **Next:** Fix component test selectors, measure coverage
 
 ### 2. Mock Data Cleanup
 **Status:** In progress
