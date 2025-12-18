@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId, sessionClaims } = await auth();
@@ -27,7 +27,7 @@ export async function POST(
       return NextResponse.json({ error: 'No workspace found' }, { status: 403 });
     }
 
-    const insightId = params.id;
+    const { id: insightId } = await params;
 
     // Verify insight belongs to workspace
     const insight = await db.query.proactiveInsights.findFirst({
