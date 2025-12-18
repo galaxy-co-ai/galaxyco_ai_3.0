@@ -315,15 +315,57 @@ Manage which actions Neptune can execute automatically
 
 ---
 
-#### 5. Multi-Platform Social Media (12 hours)
-**Problem:** Only Twitter posting works  
-**Solution:** Add LinkedIn and Facebook APIs
+#### 5. ~~Multi-Platform Social Media~~ ✅ COMPLETED (Dec 18, 2025)
+**Status:** LinkedIn and Facebook integration fully implemented  
+**Implementation:** Complete multi-platform social media posting support
 
-**Implementation:**
-- LinkedIn API integration
-- Facebook Graph API integration
-- Update `post_to_social_media` tool
-- Update `schedule_social_posts` tool
+**Completed Enhancements:**
+- ✅ **LinkedIn Integration** (`src/lib/social/linkedin.ts` - 274 lines)
+  - Full OAuth flow with r_liteprofile, r_emailaddress, w_member_social scopes
+  - `getLinkedInUser()` - Fetch user profile with picture
+  - `postLinkedInUpdate()` - Post updates via UGC API
+  - `getLinkedInIntegration()` - Workspace integration lookup
+  - Character limit: 3,000 characters
+  
+- ✅ **Facebook Integration** (`src/lib/social/facebook.ts` - 235 lines)
+  - Full OAuth flow with public_profile, email, pages_manage_posts scopes
+  - `getFacebookUser()` - Fetch user profile with picture
+  - `postFacebookUpdate()` - Post to user timeline via Graph API
+  - `getFacebookIntegration()` - Workspace integration lookup
+  - Character limit: 63,206 characters (recommended)
+  
+- ✅ **OAuth Configuration** (`src/lib/oauth.ts`)
+  - Added LinkedIn to OAuthProvider type
+  - Added Facebook to OAuthProvider type
+  - Complete OAuth configurations with proper scopes
+  
+- ✅ **Database Schema** (`src/db/schema.ts`)
+  - Added 'linkedin' to integrationProviderEnum
+  - Added 'facebook' to integrationProviderEnum
+  
+- ✅ **Enhanced Tools** (`src/lib/ai/tools.ts`)
+  - `post_to_social_media` - Now supports Twitter, LinkedIn, and Facebook
+  - `schedule_social_posts` - Uses GPT-4o for platform-specific content generation
+  - Platform-specific character validation
+  - Proper error handling for each platform
+  
+**Character Limits Implemented:**
+- Twitter: 280 characters
+- LinkedIn: 3,000 characters
+- Facebook: 63,206 characters
+
+**OAuth Scopes:**
+- LinkedIn: r_liteprofile, r_emailaddress, w_member_social
+- Facebook: public_profile, email, pages_show_list, pages_read_engagement, pages_manage_posts, publish_to_groups
+
+**Environment Variables Required:**
+- LINKEDIN_CLIENT_ID
+- LINKEDIN_CLIENT_SECRET
+- FACEBOOK_CLIENT_ID
+- FACEBOOK_CLIENT_SECRET
+
+**Commit:** `84c2fd8` - "feat(neptune): add LinkedIn and Facebook social media integration"  
+**Status:** ✅ Deployed to main branch
 
 ---
 
