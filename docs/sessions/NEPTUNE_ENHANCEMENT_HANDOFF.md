@@ -371,9 +371,67 @@ Manage which actions Neptune can execute automatically
 
 ### LOW PRIORITY (1 month)
 
-#### 6. Proactive Insights System (12 hours)
-**Problem:** `proactive_insights` table exists but unused  
-**Solution:** Implement insight generation and surfacing
+#### 6. ~~Proactive Insights System~~ ✅ COMPLETED (Dec 18, 2025)
+**Status:** Full proactive insights system implemented and integrated  
+**Implementation:** Complete insights generation, display, and Neptune integration
+
+**Completed Enhancements:**
+- ✅ **API Layer** (`src/app/api/insights/`)
+  - GET `/api/insights` - Fetch active insights with category filtering
+  - POST `/api/insights/[id]/dismiss` - Dismiss insights
+  - POST `/api/insights/generate-test` - Generate test data (dev only)
+  
+- ✅ **UI Components** (`src/components/insights/`)
+  - `InsightsDashboard` - Full-featured insights display with:
+    - Category filtering (Sales, Marketing, Operations, Finance, Content)
+    - Type-specific styling (Opportunity, Warning, Suggestion, Achievement)
+    - Suggested actions display with tool names
+    - Dismiss functionality
+    - Empty states and loading states
+  - `InsightsWidget` - Compact widget showing top 3 insights
+  
+- ✅ **Pages** (`src/app/(app)/insights/`)
+  - Dedicated `/insights` page with stats overview
+  
+- ✅ **Dashboard Integration** (`src/components/dashboard/`)
+  - Created `WorkspacePanel` - Unified tabbed card with 3 tabs:
+    - 🧭 Roadmap tab
+    - ✨ Insights tab (with InsightsWidget)
+    - ⚡ Activity tab
+  - Tabs show icons only on mobile, icon+label on desktop
+  - Matches Neptune's Chat/History tab pattern
+  
+- ✅ **Neptune Context Integration** (already existed)
+  - Top insights automatically included in Neptune's system prompt
+  - Neptune can reference insights naturally in conversations
+  - Suggested actions map to Neptune tool calls
+  
+- ✅ **Test Utilities** (`src/lib/ai/generate-test-insights.ts`)
+  - 8 sample insights covering all categories and types
+  - API endpoint for generating test data
+
+**Priority System:**
+- Priority 9-10: High (urgent action required)
+- Priority 7-8: Medium (important but not urgent)
+- Priority 1-6: Low (nice to have)
+
+**Insight Categories:**
+- Sales: Lead opportunities, pipeline value, stalled deals
+- Marketing: Campaign performance, content suggestions
+- Operations: Overdue tasks, upcoming meetings
+- Finance: Outstanding invoices, payment reminders
+- Content: High-priority topics, source suggestions
+
+**Background Job:** Daily insight generation already exists (`src/trigger/precompute-insights.ts`)
+
+**Commits:**
+- `264ff5b` - "feat(neptune): implement proactive insights system"
+- `1960378` - "fix(insights): update dismiss route to handle async params in Next.js 15+"
+- `45085f5` - "feat(dashboard): consolidate right column into tabbed WorkspacePanel"
+
+**Status:** ✅ Fully deployed to production
+
+---
 
 #### 7. Advanced Workflow Builder UI (20 hours)
 **Problem:** Workflow creation is code-based  
