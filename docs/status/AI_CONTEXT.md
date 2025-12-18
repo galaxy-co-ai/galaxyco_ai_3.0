@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-17 (a2820ff)  
+**Updated Through:** 2025-12-17 (264ff5b)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-17 264ff5b feat(neptune): implement proactive insights system
 - 2025-12-17 a2820ff chore: add LinkedIn and Facebook OAuth to .env.example
 - 2025-12-17 08844b6 docs(neptune): mark Priority #5 multi-platform social media as complete
 - 2025-12-17 8164b75 feat(neptune): add LinkedIn and Facebook social media integration
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 23e1061 fix(metrics): implement avgResponseTime, agentRuns, newMessages calculations
 - 2025-12-17 7c4b452 docs: finalize test infrastructure improvement session
 - 2025-12-17 e1db78b fix(tests): update ConversationsDashboard test data structure
-- 2025-12-17 4fd0866 docs(tests): update STATUS with Option A results
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
