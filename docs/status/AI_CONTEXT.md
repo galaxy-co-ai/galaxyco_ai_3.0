@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-17 (c5dec55)  
+**Updated Through:** 2025-12-17 (64a2264)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-17 64a2264 feat(dashboard): consolidate right column into tabbed WorkspacePanel
 - 2025-12-17 c5dec55 fix(insights): update dismiss route to handle async params in Next.js 15+
 - 2025-12-17 264ff5b feat(neptune): implement proactive insights system
 - 2025-12-17 a2820ff chore: add LinkedIn and Facebook OAuth to .env.example
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 56570af feat(crm): implement hot leads tracking with leadStatus field
 - 2025-12-17 1100998 fix(security): replace mock sessions with Clerk sessions + revoke endpoint
 - 2025-12-17 23e1061 fix(metrics): implement avgResponseTime, agentRuns, newMessages calculations
-- 2025-12-17 7c4b452 docs: finalize test infrastructure improvement session
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
