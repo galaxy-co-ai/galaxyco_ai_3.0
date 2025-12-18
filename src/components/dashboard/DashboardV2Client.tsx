@@ -17,16 +17,14 @@ import {
   Users, 
   Bot, 
   Plug,
-  Compass,
   TrendingUp,
   TrendingDown,
 } from 'lucide-react';
 import { DashboardV2Data, DashboardStats } from '@/types/dashboard';
 import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
 import NeptuneDashboardWelcome from './NeptuneDashboardWelcome';
-import RoadmapCard, { DashboardRoadmapItem } from './RoadmapCard';
-import ActivityFeed from './ActivityFeed';
-import { InsightsWidget } from '@/components/insights/InsightsWidget';
+import { DashboardRoadmapItem } from './RoadmapCard';
+import WorkspacePanel from './WorkspacePanel';
 import { useNeptune } from '@/contexts/neptune-context';
 import { useRealtime } from '@/hooks/use-realtime';
 import type { PusherEvent } from '@/lib/pusher-client';
@@ -234,7 +232,7 @@ export default function DashboardV2Client({
           </div>
         )}
 
-        {/* Content Grid: Neptune (main), Roadmap (right), Activity (right bottom) */}
+        {/* Content Grid: Neptune (main), Workspace Panel (right) */}
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 px-6 pt-4 pb-6">
           {/* Neptune Chat Interface - Main column with branded border */}
           <div className="min-w-0 min-h-0 flex flex-col rounded-lg border-2 border-nebula-violet/20 bg-white/50 backdrop-blur-sm shadow-soft overflow-hidden">
@@ -246,48 +244,20 @@ export default function DashboardV2Client({
             />
           </div>
 
-          {/* Right Column: Roadmap + Insights + Activity Feed */}
-          <div className="min-w-0 min-h-0 flex flex-col gap-6">
-            {/* Roadmap Card - Top of right column */}
-            <div className="min-w-0 overflow-hidden flex flex-col" style={{ minHeight: '300px', maxHeight: '35%' }}>
-              {workspaceId && workspaceId.trim() !== '' ? (
-                <RoadmapCard 
-                  items={roadmapItems}
-                  completionPercentage={completionPercentage}
-                />
-              ) : (
-                <Card className="h-full flex flex-col overflow-hidden">
-                  <div className="border-b bg-background px-6 py-4 shrink-0">
-                    <PageTitle
-                      title="Roadmap"
-                      icon={Compass}
-                      as="h2"
-                      titleClassName="text-base md:text-xl"
-                      iconClassName="w-6 h-6 md:w-6 md:h-6"
-                    />
-                  </div>
-                  <div className="flex-1 flex items-center justify-center p-6">
-                    <p className="text-sm text-muted-foreground">Unable to load roadmap</p>
-                  </div>
-                </Card>
-              )}
-            </div>
-
-            {/* Proactive Insights Widget */}
-            <div className="min-w-0 shrink-0">
-              <InsightsWidget />
-            </div>
-
-            {/* Activity Feed - Bottom of right column */}
-            <div className="min-w-0 flex-1 overflow-hidden" style={{ minHeight: '300px' }}>
-              {workspaceId && workspaceId.trim() !== '' ? (
-                <ActivityFeed workspaceId={workspaceId} userId={userId} />
-              ) : (
-                <Card className="h-full flex items-center justify-center">
-                  <p className="text-sm text-muted-foreground">Unable to load activity</p>
-                </Card>
-              )}
-            </div>
+          {/* Right Column: Tabbed Workspace Panel (Roadmap / Insights / Activity) */}
+          <div className="min-w-0 min-h-0">
+            {workspaceId && workspaceId.trim() !== '' ? (
+              <WorkspacePanel
+                workspaceId={workspaceId}
+                userId={userId}
+                roadmapItems={roadmapItems}
+                completionPercentage={completionPercentage}
+              />
+            ) : (
+              <Card className="h-full flex items-center justify-center">
+                <p className="text-sm text-muted-foreground">Unable to load workspace</p>
+              </Card>
+            )}
           </div>
         </div>
       </div>
