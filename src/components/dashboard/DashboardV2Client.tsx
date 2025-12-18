@@ -26,6 +26,7 @@ import NeptuneAssistPanel from '@/components/conversations/NeptuneAssistPanel';
 import NeptuneDashboardWelcome from './NeptuneDashboardWelcome';
 import RoadmapCard, { DashboardRoadmapItem } from './RoadmapCard';
 import ActivityFeed from './ActivityFeed';
+import { InsightsWidget } from '@/components/insights/InsightsWidget';
 import { useNeptune } from '@/contexts/neptune-context';
 import { useRealtime } from '@/hooks/use-realtime';
 import type { PusherEvent } from '@/lib/pusher-client';
@@ -245,10 +246,10 @@ export default function DashboardV2Client({
             />
           </div>
 
-          {/* Right Column: Roadmap + Activity Feed */}
+          {/* Right Column: Roadmap + Insights + Activity Feed */}
           <div className="min-w-0 min-h-0 flex flex-col gap-6">
             {/* Roadmap Card - Top of right column */}
-            <div className="min-w-0 overflow-hidden flex flex-col" style={{ minHeight: '300px', maxHeight: '45%' }}>
+            <div className="min-w-0 overflow-hidden flex flex-col" style={{ minHeight: '300px', maxHeight: '35%' }}>
               {workspaceId && workspaceId.trim() !== '' ? (
                 <RoadmapCard 
                   items={roadmapItems}
@@ -272,8 +273,13 @@ export default function DashboardV2Client({
               )}
             </div>
 
+            {/* Proactive Insights Widget */}
+            <div className="min-w-0 shrink-0">
+              <InsightsWidget />
+            </div>
+
             {/* Activity Feed - Bottom of right column */}
-            <div className="min-w-0 flex-1 overflow-hidden" style={{ minHeight: '400px' }}>
+            <div className="min-w-0 flex-1 overflow-hidden" style={{ minHeight: '300px' }}>
               {workspaceId && workspaceId.trim() !== '' ? (
                 <ActivityFeed workspaceId={workspaceId} userId={userId} />
               ) : (
