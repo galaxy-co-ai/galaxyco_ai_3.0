@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-17 (47402c1)  
+**Updated Through:** 2025-12-17 (8164b75)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-17 8164b75 feat(neptune): add LinkedIn and Facebook social media integration
 - 2025-12-17 47402c1 docs(neptune): mark content generation tools enhancement as complete
 - 2025-12-17 3ac8b3d feat(neptune): enhance content generation tools to use GPT-4o
 - 2025-12-17 5782b7b docs(neptune): update handoff - calendar integration already complete
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 4fd0866 docs(tests): update STATUS with Option A results
 - 2025-12-17 aee2b62 fix(tests): critical + high priority test fixes
 - 2025-12-17 63f7ce7 docs(tests): comprehensive test failure analysis
-- 2025-12-17 79248f3 docs: update STATUS.md and START.md with test audit results
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
