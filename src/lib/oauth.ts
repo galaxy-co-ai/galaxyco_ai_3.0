@@ -5,7 +5,7 @@
 
 import crypto from 'crypto';
 
-export type OAuthProvider = 'google' | 'microsoft' | 'quickbooks' | 'shopify' | 'twitter';
+export type OAuthProvider = 'google' | 'microsoft' | 'quickbooks' | 'shopify' | 'twitter' | 'linkedin' | 'facebook';
 
 export interface OAuthConfig {
   clientId: string;
@@ -85,6 +85,31 @@ export const oauthProviders: Record<OAuthProvider, OAuthConfig> = {
       'tweet.write',
       'users.read',
       'offline.access', // For refresh tokens
+    ],
+  },
+  linkedin: {
+    clientId: process.env.LINKEDIN_CLIENT_ID || '',
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET || '',
+    authUrl: 'https://www.linkedin.com/oauth/v2/authorization',
+    tokenUrl: 'https://www.linkedin.com/oauth/v2/accessToken',
+    scopes: [
+      'r_liteprofile',
+      'r_emailaddress',
+      'w_member_social', // Permission to post on behalf of user
+    ],
+  },
+  facebook: {
+    clientId: process.env.FACEBOOK_CLIENT_ID || '',
+    clientSecret: process.env.FACEBOOK_CLIENT_SECRET || '',
+    authUrl: 'https://www.facebook.com/v18.0/dialog/oauth',
+    tokenUrl: 'https://graph.facebook.com/v18.0/oauth/access_token',
+    scopes: [
+      'public_profile',
+      'email',
+      'pages_show_list',
+      'pages_read_engagement',
+      'pages_manage_posts', // Permission to create posts
+      'publish_to_groups', // Permission to post to groups
     ],
   },
 };

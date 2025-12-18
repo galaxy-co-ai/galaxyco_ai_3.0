@@ -241,6 +241,8 @@ export const integrationProviderEnum = pgEnum('integration_provider', [
   'stripe',
   'shopify',
   'twitter',
+  'linkedin',
+  'facebook',
 ]);
 
 export const integrationStatusEnum = pgEnum('integration_status', [

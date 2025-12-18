@@ -2032,22 +2032,22 @@ export const aiTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'post_to_social_media',
-      description: 'Post content to a connected social media account. Requires a connected account for the platform. Currently supports Twitter/X.',
+      description: 'Post content to a connected social media account. Requires a connected account for the platform. Supports Twitter/X, LinkedIn, and Facebook.',
       parameters: {
         type: 'object',
         properties: {
           platform: {
             type: 'string',
-            enum: ['twitter'],
+            enum: ['twitter', 'linkedin', 'facebook'],
             description: 'Social media platform to post to',
           },
           content: {
             type: 'string',
-            description: 'The content to post (for Twitter: max 280 characters)',
+            description: 'The content to post. Character limits: Twitter (280), LinkedIn (3000), Facebook (63206)',
           },
           scheduleFor: {
             type: 'string',
-            description: 'Optional ISO date string to schedule the post for later (e.g., "2025-12-07T10:00:00Z")',
+            description: 'Optional ISO date string to schedule the post for later (e.g., "2025-12-07T10:00:00Z"). Note: Scheduling currently only supported for Twitter.',
           },
         },
         required: ['platform', 'content'],
@@ -7088,14 +7088,41 @@ Looking forward to your response!`;
       const topic = args.topic as string;
       const count = (args.count as number) || 3;
 
-      // Generate social media posts
+      // Generate platform-specific content using GPT-4o
+      const { getOpenAI } = await import('@/lib/ai-providers');
+      const openai = getOpenAI();
+      
+      // Platform-specific guidelines
+      const platformGuidelines = {
+        twitter: 'Max 280 characters. Be concise, engaging, use hashtags.',
+        linkedin: 'Max 3000 characters. Professional tone, focus on insights and value.',
+        facebook: 'Max 63,206 characters. Conversational, engaging, can be longer form.',
+      };
+
       const posts = [];
+      
       for (let i = 0; i < count; i++) {
         for (const platform of platforms) {
+          // Generate platform-optimized content
+          const systemPrompt = `You are a social media expert. Create engaging, platform-optimized social media content. Follow best practices for ${platform}.`;
+          const userPrompt = `Create post ${i + 1} about ${topic} for ${platform}.\n\nGuidelines: ${platformGuidelines[platform as keyof typeof platformGuidelines] || 'Keep it engaging and authentic.'}\n\nProvide ONLY the post content, no meta-commentary.`;
+
+          const completion = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.8, // High creativity for social content
+            max_tokens: platform === 'twitter' ? 100 : 500,
+          });
+
+          const generatedContent = completion.choices[0]?.message?.content || `Draft post ${i + 1} about ${topic} for ${platform}`;
+
           posts.push({
             platform,
             topic,
-            content: `Draft post ${i + 1} about ${topic} for ${platform}`,
+            content: generatedContent,
             status: 'draft',
             scheduledFor: new Date(Date.now() + (i + 1) * 24 * 60 * 60 * 1000), // Space out by days
           });
@@ -7104,7 +7131,7 @@ Looking forward to your response!`;
 
       return {
         success: true,
-        message: `Created ${posts.length} draft social media posts across ${platforms.length} platforms. Ready for review.`,
+        message: `Created ${posts.length} AI-generated draft posts across ${platforms.length} platforms. Ready for review and scheduling.`,
         data: {
           platforms,
           topic,
@@ -8194,107 +8221,219 @@ Provide analysis in JSON format:
       const scheduleFor = args.scheduleFor as string | undefined;
 
       // Validate platform
-      if (platform !== 'twitter') {
+      const supportedPlatforms = ['twitter', 'linkedin', 'facebook'];
+      if (!supportedPlatforms.includes(platform)) {
         return {
           success: false,
-          message: `Platform "${platform}" is not yet supported. Currently only Twitter is supported.`,
+          message: `Platform "${platform}" is not yet supported. Supported platforms: ${supportedPlatforms.join(', ')}.`,
           error: 'Unsupported platform',
         };
       }
 
-      // Check if Twitter is connected
-      const { getTwitterIntegration } = await import('@/lib/social/twitter');
-      const twitterIntegration = await getTwitterIntegration(context.workspaceId);
+      // Handle each platform
+      if (platform === 'twitter') {
+        const { getTwitterIntegration, postTweet } = await import('@/lib/social/twitter');
+        const integration = await getTwitterIntegration(context.workspaceId);
 
-      if (!twitterIntegration) {
-        return {
-          success: false,
-          message: 'Twitter account not connected. Please connect your Twitter account in Connected Apps first.',
-          error: 'Twitter not connected',
-        };
-      }
-
-      // Validate content length for Twitter
-      if (content.length > 280) {
-        return {
-          success: false,
-          message: `Tweet exceeds 280 character limit (${content.length} characters). Please shorten it.`,
-          error: 'Content too long',
-        };
-      }
-
-      // If scheduled, save to database for background job
-      if (scheduleFor) {
-        const scheduledDate = new Date(scheduleFor);
-        if (scheduledDate <= new Date()) {
+        if (!integration) {
           return {
             success: false,
-            message: 'Scheduled time must be in the future.',
-            error: 'Invalid schedule time',
+            message: 'Twitter account not connected. Please connect your Twitter account in Connected Apps first.',
+            error: 'Twitter not connected',
           };
         }
 
-        // Save scheduled post
+        // Validate content length for Twitter
+        if (content.length > 280) {
+          return {
+            success: false,
+            message: `Tweet exceeds 280 character limit (${content.length} characters). Please shorten it.`,
+            error: 'Content too long',
+          };
+        }
+
+        // Handle scheduling/posting
+        if (scheduleFor) {
+          const scheduledDate = new Date(scheduleFor);
+          if (scheduledDate <= new Date()) {
+            return {
+              success: false,
+              message: 'Scheduled time must be in the future.',
+              error: 'Invalid schedule time',
+            };
+          }
+
+          const { socialMediaPosts } = await import('@/db/schema');
+          const [post] = await db
+            .insert(socialMediaPosts)
+            .values({
+              workspaceId: context.workspaceId,
+              integrationId: integration.id,
+              userId: context.userId,
+              platform: 'twitter',
+              content,
+              status: 'scheduled',
+              scheduledFor: scheduledDate,
+            })
+            .returning();
+
+          return {
+            success: true,
+            message: `Scheduled tweet for ${scheduledDate.toLocaleString()}. It will be posted automatically.`,
+            data: {
+              postId: post.id,
+              platform: 'twitter',
+              scheduledFor: scheduledDate,
+              status: 'scheduled',
+            },
+          };
+        }
+
+        // Post immediately
+        const result = await postTweet(integration.id, content);
+
+        if (!result.success) {
+          return {
+            success: false,
+            message: `Failed to post to Twitter: ${result.error}`,
+            error: result.error,
+          };
+        }
+
+        // Save post to database
         const { socialMediaPosts } = await import('@/db/schema');
-        const [post] = await db
-          .insert(socialMediaPosts)
-          .values({
-            workspaceId: context.workspaceId,
-            integrationId: twitterIntegration.id,
-            userId: context.userId,
-            platform: 'twitter',
-            content,
-            status: 'scheduled',
-            scheduledFor: scheduledDate,
-          })
-          .returning();
+        await db.insert(socialMediaPosts).values({
+          workspaceId: context.workspaceId,
+          integrationId: integration.id,
+          userId: context.userId,
+          platform: 'twitter',
+          content,
+          status: 'posted',
+          postedAt: new Date(),
+          externalPostId: result.tweetId,
+        });
 
         return {
           success: true,
-          message: `Scheduled tweet for ${scheduledDate.toLocaleString()}. It will be posted automatically.`,
+          message: `Posted to Twitter! ${result.url ? `View it here: ${result.url}` : ''}`,
           data: {
-            postId: post.id,
             platform: 'twitter',
-            scheduledFor: scheduledDate,
-            status: 'scheduled',
+            tweetId: result.tweetId,
+            url: result.url,
+            status: 'posted',
+          },
+        };
+      } else if (platform === 'linkedin') {
+        const { getLinkedInIntegration, postLinkedInUpdate } = await import('@/lib/social/linkedin');
+        const integration = await getLinkedInIntegration(context.workspaceId);
+
+        if (!integration) {
+          return {
+            success: false,
+            message: 'LinkedIn account not connected. Please connect your LinkedIn account in Connected Apps first.',
+            error: 'LinkedIn not connected',
+          };
+        }
+
+        if (content.length > 3000) {
+          return {
+            success: false,
+            message: `LinkedIn post exceeds 3000 character limit (${content.length} characters). Please shorten it.`,
+            error: 'Content too long',
+          };
+        }
+
+        const result = await postLinkedInUpdate(integration.id, content);
+
+        if (!result.success) {
+          return {
+            success: false,
+            message: `Failed to post to LinkedIn: ${result.error}`,
+            error: result.error,
+          };
+        }
+
+        const { socialMediaPosts } = await import('@/db/schema');
+        await db.insert(socialMediaPosts).values({
+          workspaceId: context.workspaceId,
+          integrationId: integration.id,
+          userId: context.userId,
+          platform: 'linkedin',
+          content,
+          status: 'posted',
+          postedAt: new Date(),
+          externalPostId: result.postId,
+        });
+
+        return {
+          success: true,
+          message: `Posted to LinkedIn! ${result.url ? `View it here: ${result.url}` : ''}`,
+          data: {
+            platform: 'linkedin',
+            postId: result.postId,
+            url: result.url,
+            status: 'posted',
+          },
+        };
+      } else if (platform === 'facebook') {
+        const { getFacebookIntegration, postFacebookUpdate } = await import('@/lib/social/facebook');
+        const integration = await getFacebookIntegration(context.workspaceId);
+
+        if (!integration) {
+          return {
+            success: false,
+            message: 'Facebook account not connected. Please connect your Facebook account in Connected Apps first.',
+            error: 'Facebook not connected',
+          };
+        }
+
+        if (content.length > 63206) {
+          return {
+            success: false,
+            message: `Facebook post exceeds recommended character limit (${content.length} characters). Please shorten it.`,
+            error: 'Content too long',
+          };
+        }
+
+        const result = await postFacebookUpdate(integration.id, content);
+
+        if (!result.success) {
+          return {
+            success: false,
+            message: `Failed to post to Facebook: ${result.error}`,
+            error: result.error,
+          };
+        }
+
+        const { socialMediaPosts } = await import('@/db/schema');
+        await db.insert(socialMediaPosts).values({
+          workspaceId: context.workspaceId,
+          integrationId: integration.id,
+          userId: context.userId,
+          platform: 'facebook',
+          content,
+          status: 'posted',
+          postedAt: new Date(),
+          externalPostId: result.postId,
+        });
+
+        return {
+          success: true,
+          message: `Posted to Facebook! ${result.url ? `View it here: ${result.url}` : ''}`,
+          data: {
+            platform: 'facebook',
+            postId: result.postId,
+            url: result.url,
+            status: 'posted',
           },
         };
       }
 
-      // Post immediately
-      const { postTweet } = await import('@/lib/social/twitter');
-      const result = await postTweet(twitterIntegration.id, content);
-
-      if (!result.success) {
-        return {
-          success: false,
-          message: `Failed to post to Twitter: ${result.error}`,
-          error: result.error,
-        };
-      }
-
-      // Save post to database
-      const { socialMediaPosts } = await import('@/db/schema');
-      await db.insert(socialMediaPosts).values({
-        workspaceId: context.workspaceId,
-        integrationId: twitterIntegration.id,
-        userId: context.userId,
-        platform: 'twitter',
-        content,
-        status: 'posted',
-        postedAt: new Date(),
-        externalPostId: result.tweetId,
-      });
-
+      // Fallback for unsupported platforms (should never reach here due to validation above)
       return {
-        success: true,
-        message: `Posted to Twitter! ${result.url ? `View it here: ${result.url}` : ''}`,
-        data: {
-          platform: 'twitter',
-          tweetId: result.tweetId,
-          url: result.url,
-          status: 'posted',
-        },
+        success: false,
+        message: `Platform "${platform}" is not supported.`,
+        error: 'Unsupported platform',
       };
     } catch (error) {
       logger.error('AI post_to_social_media failed', error);
