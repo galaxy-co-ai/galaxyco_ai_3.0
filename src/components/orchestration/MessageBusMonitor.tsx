@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Pusher from 'pusher-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -141,12 +141,15 @@ export function MessageBusMonitor({ workspaceId }: MessageBusMonitorProps) {
     return true;
   });
 
-  // Stats
-  const stats = {
-    total: events.length,
-    perSecond: events.filter(e => Date.now() - e.timestamp.getTime() < 60000).length / 60,
-    channels: uniqueChannels.length,
-  };
+  // Stats - use useMemo to avoid calling Date.now() during render
+  const stats = useMemo(() => {
+    const now = Date.now();
+    return {
+      total: events.length,
+      perSecond: events.filter(e => now - e.timestamp.getTime() < 60000).length / 60,
+      channels: uniqueChannels.length,
+    };
+  }, [events, uniqueChannels.length]);
 
   const getEventColor = (event: string) => {
     return eventTypeColors[event] || eventTypeColors.default;

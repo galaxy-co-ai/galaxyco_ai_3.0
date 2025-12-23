@@ -43,7 +43,6 @@ import {
   Lightbulb,
   ChevronDown,
   Command,
-  Keyboard,
   // Additional icons for enhanced content
   Workflow,
   Brain,
@@ -67,11 +66,8 @@ import {
   Link,
   Globe,
   Lock,
-  Unlock,
   ShieldCheck,
   UserCog,
-  CreditCard,
-  Receipt,
   Activity,
   Terminal,
   GitBranch,
@@ -81,7 +77,6 @@ import {
   Layers,
   Grid3X3,
   ListChecks,
-  ClipboardList,
   FileCode,
   AlertTriangle,
   Info,
@@ -90,14 +85,10 @@ import {
   Timer,
   Gauge,
   Network,
-  Share2,
   Copy,
   Repeat,
-  Shuffle,
   Plus,
-  Minus,
-  RotateCcw,
-  type LucideIcon
+  RotateCcw
 } from "lucide-react";
 
 type UserType = "end-users" | "developers" | "admins" | "ai-agents";

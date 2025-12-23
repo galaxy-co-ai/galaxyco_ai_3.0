@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Bot, AlertCircle, Loader2, RotateCcw, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface AutonomyPreference {
   toolName: string;

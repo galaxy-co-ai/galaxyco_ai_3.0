@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { registry, registerRoute, successResponse } from '../registry';
+import { registerRoute, successResponse } from '../registry';
 import { UsageSchema } from '../schemas/common';
 
 /**

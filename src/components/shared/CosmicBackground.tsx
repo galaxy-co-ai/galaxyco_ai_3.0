@@ -1,29 +1,30 @@
 "use client";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function CosmicBackground() {
   // Generate stars only on client to avoid hydration mismatch
-  const [stars, setStars] = useState<Array<{
+  // Use lazy initialization to avoid setState in useEffect
+  const [stars] = useState<Array<{
     id: number;
     x: number;
     y: number;
     size: number;
     duration: number;
     delay: number;
-  }>>([]);
-
-  useEffect(() => {
-    // Generate stars only on client side
-    setStars(Array.from({ length: 100 }, (_, i) => ({
+  }>>(() => {
+    // Check if we're on client side
+    if (typeof window === 'undefined') return [];
+    
+    return Array.from({ length: 100 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 2 + 0.5,
       duration: Math.random() * 3 + 2,
       delay: Math.random() * 5,
-    })));
-  }, []);
+    }));
+  });
 
   // Create shooting stars (these are deterministic, no hydration issue)
   const shootingStars = Array.from({ length: 3 }, (_, i) => ({

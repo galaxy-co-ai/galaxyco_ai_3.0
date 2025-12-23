@@ -57,9 +57,9 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
 
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<Array<{ id: string; info: Record<string, unknown> }>>([]);
+  const [workspaceChannel, setWorkspaceChannel] = useState<Channel | null>(null);
+  const [userChannel, setUserChannel] = useState<Channel | null>(null);
   
-  const workspaceChannelRef = useRef<Channel | null>(null);
-  const userChannelRef = useRef<Channel | null>(null);
   const presenceChannelRef = useRef<PresenceChannel | null>(null);
 
   // Subscribe to workspace channel
@@ -71,7 +71,7 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
     const channel = subscribeToWorkspace(workspaceId);
     if (!channel) return;
 
-    workspaceChannelRef.current = channel;
+    setWorkspaceChannel(channel);
 
     // Handle connection state
     channel.bind('pusher:subscription_succeeded', () => {
@@ -117,7 +117,7 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
 
     return () => {
       unsubscribeFromChannel(`private-workspace-${workspaceId}`);
-      workspaceChannelRef.current = null;
+      setWorkspaceChannel(null);
     };
   }, [workspaceId, enabled, onActivity, onLeadUpdate, onDealUpdate, onAgentUpdate, onCampaignUpdate]);
 
@@ -130,7 +130,7 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
     const channel = subscribeToUser(userId);
     if (!channel) return;
 
-    userChannelRef.current = channel;
+    setUserChannel(channel);
 
     // Bind to notification events
     if (onNotification) {
@@ -139,7 +139,7 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
 
     return () => {
       unsubscribeFromChannel(`private-user-${userId}`);
-      userChannelRef.current = null;
+      setUserChannel(null);
     };
   }, [userId, enabled, onNotification]);
 
@@ -181,8 +181,8 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
   return {
     isConnected,
     onlineUsers,
-    workspaceChannel: workspaceChannelRef.current,
-    userChannel: userChannelRef.current,
+    workspaceChannel,
+    userChannel,
   };
 }
 
@@ -204,7 +204,7 @@ interface UseChannelOptions {
  */
 export function useChannel(options: UseChannelOptions): Channel | null {
   const { channelName, events, enabled = true } = options;
-  const channelRef = useRef<Channel | null>(null);
+  const [channel, setChannel] = useState<Channel | null>(null);
 
   useEffect(() => {
     if (!enabled || !isPusherClientAvailable()) {
@@ -214,25 +214,25 @@ export function useChannel(options: UseChannelOptions): Channel | null {
     const client = getPusherClient();
     if (!client) return;
 
-    const channel = client.subscribe(channelName);
-    channelRef.current = channel;
+    const newChannel = client.subscribe(channelName);
+    setChannel(newChannel);
 
     // Bind all events
     for (const event of events) {
-      bindEvent(channel, event.name, event.callback);
+      bindEvent(newChannel, event.name, event.callback);
     }
 
     return () => {
       // Unbind all events
       for (const event of events) {
-        unbindEvent(channel, event.name, event.callback);
+        unbindEvent(newChannel, event.name, event.callback);
       }
       unsubscribeFromChannel(channelName);
-      channelRef.current = null;
+      setChannel(null);
     };
   }, [channelName, events, enabled]);
 
-  return channelRef.current;
+  return channel;
 }
 
 // ============================================================================
@@ -248,7 +248,11 @@ export function useEvent<T = Record<string, unknown>>(
   callback: (event: PusherEvent<T>) => void
 ): void {
   const callbackRef = useRef(callback);
-  callbackRef.current = callback;
+  
+  // Update ref in useEffect to avoid accessing during render
+  useEffect(() => {
+    callbackRef.current = callback;
+  });
 
   useEffect(() => {
     if (!channel) return;

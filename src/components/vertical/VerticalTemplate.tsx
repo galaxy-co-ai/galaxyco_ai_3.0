@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, ArrowRight, Sparkles, Target, Zap, TrendingUp, Users, BarChart3, Workflow, Palette, Rocket, FileText, Calendar, Brain, Clock, Shield, FolderLock, AlertCircle, MessageSquare } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { SmartNavigation } from "@/components/shared/SmartNavigation";
 import { Footer } from "@/components/landing/Footer";

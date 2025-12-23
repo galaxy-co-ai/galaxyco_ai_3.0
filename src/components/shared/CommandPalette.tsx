@@ -48,22 +48,23 @@ interface CommandPaletteProps {
 export default function CommandPalette({ workspaceId }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
-  const router = useRouter();
-
-  // Load recent items from localStorage
-  useEffect(() => {
+  // Load recent items from localStorage using lazy initialization
+  const [recentItems, setRecentItems] = useState<RecentItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    
     const stored = localStorage.getItem(`command-palette-recent-${workspaceId}`);
     if (stored) {
       try {
         const items = JSON.parse(stored) as RecentItem[];
         // Sort by timestamp and keep last 5
-        setRecentItems(items.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5));
+        return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
       } catch (e) {
         console.error('Failed to parse recent items', e);
       }
     }
-  }, [workspaceId]);
+    return [];
+  });
+  const router = useRouter();
 
   // Save recent items to localStorage
   const saveRecentItem = useCallback((item: Omit<RecentItem, 'timestamp'>) => {

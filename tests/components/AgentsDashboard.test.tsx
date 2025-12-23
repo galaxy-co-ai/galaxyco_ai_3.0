@@ -37,7 +37,36 @@ vi.mock('@/components/agents/laboratory/LaboratoryWizard', () => ({
   default: () => <div>Laboratory Wizard</div>,
 }));
 
-// Test props available to all describ
+describe('MyAgentsDashboard', () => {
+  const defaultProps = {
+    initialAgents: [
+      {
+        id: 'agent-1',
+        name: 'Sales Assistant',
+        status: 'active' as const,
+        type: 'custom' as const,
+        executionCount: 42,
+        lastExecuted: new Date('2025-12-05T10:00:00Z'),
+      },
+      {
+        id: 'agent-2',
+        name: 'Support Agent',
+        status: 'paused' as const,
+        type: 'custom' as const,
+        executionCount: 15,
+        lastExecuted: new Date('2025-12-04T15:30:00Z'),
+      },
+      {
+        id: 'agent-3',
+        name: 'Research Bot',
+        status: 'inactive' as const,
+        type: 'template' as const,
+        executionCount: 8,
+        lastExecuted: new Date('2025-12-03T09:15:00Z'),
+      },
+    ],
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -200,6 +229,7 @@ vi.mock('@/components/agents/laboratory/LaboratoryWizard', () => ({
     expect(screen.getByText('Sales Assistant')).toBeInTheDocument();
   });
 });
+
 
 describe('MyAgentsDashboard - Laboratory', () => {
   beforeEach(() => {

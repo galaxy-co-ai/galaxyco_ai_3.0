@@ -54,6 +54,7 @@ const config: Config = {
       },
     },
   },
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Tailwind v4 config format requires CommonJS
   plugins: [require('@tailwindcss/typography')],
 };
 

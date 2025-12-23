@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { registry, registerRoute, successResponse, paginatedResponse } from '../registry';
+import { registerRoute, successResponse, paginatedResponse } from '../registry';
 import { UserRefSchema } from '../schemas/common';
 
 /**
