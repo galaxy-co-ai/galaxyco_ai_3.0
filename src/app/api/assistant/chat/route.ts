@@ -525,8 +525,16 @@ export async function POST(request: Request) {
 
       // Track frequent question (async, non-blocking)
       trackFrequentQuestion(workspaceId, userRecord.id, message).catch(() => {});
+
+      // Get conversation history
+      const history = await db.query.aiMessages.findMany({
+        where: eq(aiMessages.conversationId, conversation.id),
+        orderBy: [asc(aiMessages.createdAt)],
+        limit: 30,
+      });
       
       // Phase 2A: Analyze user's communication style (every 5 messages)
+      // Run in background after history is loaded
       if (conversation.messageCount > 0 && conversation.messageCount % 5 === 0) {
         (async () => {
           try {
@@ -555,13 +563,6 @@ export async function POST(request: Request) {
           }
         })();
       }
-
-      // Get conversation history
-      const history = await db.query.aiMessages.findMany({
-        where: eq(aiMessages.conversationId, conversation.id),
-        orderBy: [asc(aiMessages.createdAt)],
-        limit: 30,
-      });
 
       // Detect URLs in the current user message and inject tool call hint
       const detectedUrls = detectUrls(message);
