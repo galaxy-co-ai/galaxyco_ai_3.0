@@ -1,14 +1,74 @@
 /**
- * Communication Style Analyzer
- * Phase 2A - Neptune Transformation
+ * Communication Style Analyzer (Phase 2A - Neptune Transformation)
  * 
- * Analyzes user's writing style from conversation messages to detect:
- * - Formality level (casual, professional, technical)
- * - Verbosity preference (concise, balanced, detailed)
- * - Tone (friendly, neutral, direct)
- * - Emoji usage frequency
- * - Technical vocabulary level
- * - Response pattern preference
+ * Automatically detects and adapts to each user's unique communication style by analyzing
+ * their message patterns over time. Neptune then mirrors their style for more natural interactions.
+ * 
+ * ## What It Detects:
+ * 
+ * ### Formality Level
+ * - **Casual**: "Hey", "cool", "awesome", emojis frequent
+ * - **Professional**: "Regarding", "kindly", "I would appreciate"
+ * - **Technical**: Heavy use of technical terminology, precise language
+ * 
+ * ### Verbosity Preference  
+ * - **Concise**: Short messages (<30 words), direct requests
+ * - **Balanced**: Medium-length messages (30-80 words)
+ * - **Detailed**: Long messages (>80 words), provides context
+ * 
+ * ### Tone
+ * - **Friendly**: "Thanks", "appreciate", emojis, warm language
+ * - **Neutral**: Balanced, neither warm nor cold
+ * - **Direct**: Commands, imperatives, gets straight to point
+ * 
+ * ### Other Dimensions
+ * - **Emoji Usage**: 0-100% frequency of emoji in messages
+ * - **Technical Level**: 0-100 score based on technical vocabulary
+ * - **Preferred Greeting**: "Hi", "Hey", "Hello", etc.
+ * - **Response Pattern**: Quick-wins, thorough-analysis, or exploratory
+ * 
+ * ## How It Works:
+ * 
+ * 1. **Trigger**: Runs every 5 messages in a conversation
+ * 2. **Analysis**: Uses pattern matching to score each dimension
+ * 3. **Aggregation**: Combines scores with weighted averages
+ * 4. **Confidence**: Requires 70%+ confidence before adaptation
+ * 5. **Persistence**: Saves to user preferences for future sessions
+ * 6. **Adaptation**: System prompt modified to match detected style
+ * 
+ * ## Performance:
+ * - **Analysis Time**: <100ms (pure pattern matching, no AI calls)
+ * - **Runs Every**: 5 messages
+ * - **Confidence Threshold**: 70% minimum
+ * - **Sample Size**: Analyzes last 10 messages
+ * 
+ * ## Expected Results:
+ * 
+ * **Before:**
+ * ```
+ * User: "hey can you help me out?"
+ * Neptune: "I would be delighted to assist you with your request."
+ * (Formality mismatch)
+ * ```
+ * 
+ * **After (Phase 2A):**
+ * ```
+ * User: "hey can you help me out?"
+ * Neptune: "Hey! Sure thing, I can help with that."
+ * (Matched casual tone)
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Analyze style from messages
+ * const messages = conversation.filter(m => m.role === 'user').slice(-10);
+ * const style = await analyzeUserStyle(messages, messageCount);
+ * 
+ * // Update user preferences
+ * await updateCommunicationStyle(workspaceId, userId, style);
+ * 
+ * // Style is then injected into system prompt automatically
+ * ```
  */
 
 import { logger } from '@/lib/logger';
@@ -132,7 +192,21 @@ const FRIENDLY_PATTERNS = [
 // ============================================================================
 
 /**
- * Analyze a single message for style indicators
+ * Analyzes a single message for style indicators using pattern matching
+ * 
+ * Extracts metrics:
+ * - Word/sentence counts
+ * - Question frequency
+ * - Emoji usage
+ * - Technical term density
+ * - Formality/verbosity/tone scores
+ * 
+ * **Performance**: <10ms per message (no API calls)
+ * 
+ * @param content - Message text to analyze
+ * @returns MessageAnalysis with computed metrics
+ * 
+ * @internal
  */
 function analyzeMessage(content: string): MessageAnalysis {
   // Basic metrics

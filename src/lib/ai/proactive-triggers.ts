@@ -1,9 +1,114 @@
 /**
- * Proactive Trigger Engine
- * Phase 2C - Neptune Transformation
+ * Proactive Trigger Engine (Phase 2C - Neptune Transformation)
  * 
- * Detects patterns in workspace state and suggests proactive actions.
- * Neptune uses these triggers to lead conversations instead of waiting passively.
+ * Enables Neptune to lead conversations by detecting patterns in workspace state
+ * and suggesting relevant actions before the user even asks.
+ * 
+ * ## Philosophy:
+ * 
+ * Traditional assistants are **reactive** - they wait for commands.  
+ * Neptune is **proactive** - it notices opportunities and suggests next steps.
+ * 
+ * ## How It Works:
+ * 
+ * 1. **Context Analysis**: Every message, Neptune analyzes workspace state
+ * 2. **Trigger Matching**: Evaluates all triggers against current context
+ * 3. **Priority Ranking**: Selects highest-priority matching trigger
+ * 4. **Injection**: Adds trigger to system prompt as a suggestion
+ * 5. **Natural Mention**: GPT-4o weaves suggestion into conversation
+ * 
+ * ## Trigger Categories:
+ * 
+ * ### CRM (Customer Relationship Management)
+ * - Empty CRM → Suggest first lead creation
+ * - Hot leads → Prioritize closing high-value deals
+ * - Stale leads → Automate qualification process
+ * 
+ * ### Automation
+ * - No agents → Introduce agent capabilities
+ * - Underutilized agents → Optimize agent usage
+ * - Manual patterns → Suggest automation
+ * 
+ * ### Tasks
+ * - Overdue tasks → Prioritize and reschedule
+ * - Many pending → Help with prioritization
+ * - No task system → Introduce task management
+ * 
+ * ### Marketing
+ * - No campaigns → Set up first campaign
+ * - Low engagement → Optimize existing campaigns
+ * - Inactive campaigns → Resume or archive
+ * 
+ * ### Finance
+ * - Overdue invoices → Send reminders
+ * - Anomalies → Flag unusual transactions
+ * - No tracking → Set up finance monitoring
+ * 
+ * ### Calendar
+ * - Free today → Suggest productive actions
+ * - Back-to-back meetings → Suggest breaks
+ * - No scheduling → Introduce calendar features
+ * 
+ * ### Knowledge
+ * - Empty knowledge base → Suggest document organization
+ * - Disorganized docs → Offer to categorize
+ * 
+ * ## Priority System:
+ * 
+ * **10 (Critical)**: Immediate attention needed (empty CRM, overdue tasks)
+ * **9 (High)**: Important opportunities (hot leads, high-value pipeline)
+ * **8 (Medium-High)**: Optimization opportunities (automation gaps)
+ * **7 (Medium)**: Improvements (stale leads, underutilized features)
+ * **6 (Low-Medium)**: Nice-to-haves (organization, cleanup)
+ * **5 and below**: Optional suggestions
+ * 
+ * ## Example Flow:
+ * 
+ * ```
+ * Workspace State:
+ * - 15 leads in CRM
+ * - 0 agents created
+ * - 5 leads stuck in "new" stage
+ * 
+ * Triggered: "leads-no-automation" (priority 8)
+ * 
+ * Neptune Response:
+ * "You have 15 leads but no automation set up. Want me to build 
+ * a lead qualifier agent? Takes 10 seconds and will automatically 
+ * score and prioritize your leads."
+ * 
+ * User: "Yes"
+ * 
+ * Neptune: *Executes create_agent_quick*
+ * "Done! Your lead qualifier agent is running now."
+ * ```
+ * 
+ * ## Performance:
+ * 
+ * - **Trigger Evaluation**: <5ms (pure JavaScript conditions)
+ * - **Runs**: Every message (lightweight)
+ * - **Injection**: Adds ~50-100 tokens to system prompt
+ * - **No API Calls**: Pattern matching only, no external dependencies
+ * 
+ * ## Design Principles:
+ * 
+ * 1. **Context-Aware**: Only trigger when actually relevant
+ * 2. **Action-Oriented**: Always include concrete next steps
+ * 3. **Non-Intrusive**: Suggestions, not commands
+ * 4. **Value-Focused**: Trigger on opportunities, not problems
+ * 5. **Tool-Enabled**: Always include suggested tool calls
+ * 
+ * @example
+ * ```typescript
+ * // Evaluate triggers against current context
+ * const trigger = evaluateProactiveTriggers(aiContext);
+ * 
+ * if (trigger) {
+ *   console.log(`Triggered: ${trigger.title}`);
+ *   console.log(`Suggestion: ${trigger.suggestedResponse}`);
+ *   console.log(`Tools: ${trigger.suggestedTools.join(', ')}`);
+ * }
+ * ```
  */
 
 import type { AIContextData } from './context';

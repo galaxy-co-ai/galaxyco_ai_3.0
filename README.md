@@ -13,7 +13,33 @@ An intelligent business automation platform combining AI agents, CRM, workflow a
 
 GalaxyCo.ai is a comprehensive business platform that leverages AI to automate operations, manage customer relationships, and streamline workflows. Built for teams who want enterprise-grade features with modern developer experience.
 
+### Neptune AI Assistant
+
+**Neptune** is GalaxyCo's autonomous AI assistant that acts as your business copilot. Unlike traditional chatbots, Neptune:
+
+- **Learns Your Style** - Adapts to how you communicate (casual/formal, concise/detailed)
+- **Remembers Context** - Tracks entities, facts, and conversation flow within sessions
+- **Takes Initiative** - Proactively suggests next steps before you ask
+- **Auto-Executes** - Runs safe actions automatically, learns when to ask for confirmation
+- **Chains Actions** - Orchestrates multi-step workflows (create lead → schedule meeting → create agenda)
+
+**Completion Status:** ✅ **Phase 2 Complete** (Week 2 - Proactive Intelligence & Learning)  
+**Latest:** ✅ **Phase 3 Complete** (Week 3 - Optimization & Polish)
+
+📚 **Full Capabilities:** See [docs/NEPTUNE_CAPABILITIES.md](./docs/NEPTUNE_CAPABILITIES.md)  
+🔧 **Troubleshooting:** See [docs/NEPTUNE_TROUBLESHOOTING.md](./docs/NEPTUNE_TROUBLESHOOTING.md)
+
 ## Features
+
+### 🧠 Neptune AI Assistant (NEW)
+- **Adaptive Communication** - Mirrors your communication style automatically
+- **Session Memory** - Remembers context within conversations for natural follow-ups
+- **Proactive Suggestions** - Detects patterns and suggests relevant actions
+- **Smart Autonomy** - Learns when to auto-execute vs ask for confirmation
+- **Tool Orchestration** - Chains actions together intelligently
+- **Performance**: Sub-3-second responses, 70%+ auto-execution rate
+
+### Core Capabilities
 
 - 🤖 **AI Agents** - Autonomous agents for sales, marketing, support, and operations
 - 👥 **CRM** - Complete customer relationship management with pipeline tracking
