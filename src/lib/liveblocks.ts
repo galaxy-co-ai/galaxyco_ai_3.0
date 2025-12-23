@@ -3,16 +3,15 @@ import { createRoomContext, createLiveblocksContext } from '@liveblocks/react';
 
 // Create the Liveblocks client
 export const liveblocksClient = createClient({
-  publicApiKey: process.env.NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY!,
+  authEndpoint: '/api/liveblocks/auth',
   throttle: 100,
 });
 
-// Presence type for cursor tracking
+// Presence type for Neptune conversations
 export type Presence = {
-  cursor: { x: number; y: number } | null;
-  name: string;
-  color: string;
-  selection: string | null;
+  isTyping: boolean;
+  lastActive: number;
+  currentMessage?: string;
 };
 
 // Storage type for collaborative documents
@@ -81,4 +80,9 @@ export function generateUserColor(): string {
 // Generate room ID from document ID
 export function getDocumentRoomId(documentId: string): string {
   return `document:${documentId}`;
+}
+
+// Generate room ID for Neptune conversations
+export function getNeptuneRoomId(workspaceId: string, conversationId: string): string {
+  return `neptune:workspace:${workspaceId}:conversation:${conversationId}`;
 }
