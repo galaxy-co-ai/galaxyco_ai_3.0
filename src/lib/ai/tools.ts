@@ -1227,6 +1227,35 @@ export const aiTools: ChatCompletionTool[] = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'create_agent_quick',
+      description: 'Create an AI agent using natural language description and smart templates. This is the FAST path - it automatically matches templates, infers capabilities, and applies smart defaults. Use this for one-shot agent creation.',
+      parameters: {
+        type: 'object',
+        properties: {
+          description: {
+            type: 'string',
+            description: 'What the agent should do, in natural language. Example: "follow up with leads weekly" or "respond to customer emails"',
+          },
+          templateId: {
+            type: 'string',
+            description: 'Optional template ID to use as starting point (lead-followup, email-responder, data-enrichment, report-generator, meeting-scheduler, lead-scorer, social-monitor, invoice-reminder)',
+          },
+          name: {
+            type: 'string',
+            description: 'Optional custom name for the agent. If not provided, will be generated from description.',
+          },
+          customizations: {
+            type: 'object',
+            description: 'Optional customizations (trigger timing, capabilities, etc.)',
+          },
+        },
+        required: ['description'],
+      },
+    },
+  },
 
   // ============================================================================
   // TEAM COLLABORATION TOOLS
@@ -3267,6 +3296,101 @@ const toolImplementations: Record<string, ToolFunction> = {
         success: false,
         message: 'Failed to create agent',
         error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Agents: Quick Create Agent (One-Shot Mode)
+  async create_agent_quick(args, context): Promise<ToolResult> {
+    try {
+      const { quickCreateAgent } = await import('./agent-wizard');
+      const { gatherAIContext } = await import('./context');
+      
+      const description = args.description as string;
+      const templateId = args.templateId as string | undefined;
+      const name = args.name as string | undefined;
+      const customizations = args.customizations as Record<string, unknown> | undefined;
+      
+      // Get full AI context for template matching
+      const aiContext = await gatherAIContext(context.workspaceId, context.userId);
+      
+      if (!aiContext) {
+        return {
+          success: false,
+          message: 'Failed to gather workspace context',
+          error: 'Context gathering failed'
+        };
+      }
+      
+      // Create the agent
+      const result = await quickCreateAgent(
+        description,
+        aiContext,
+        {
+          workspaceId: context.workspaceId,
+          userId: context.userId
+        },
+        {
+          templateId,
+          customizations: {
+            name,
+            ...customizations
+          }
+        }
+      );
+      
+      if (!result.success) {
+        if (result.needsClarification) {
+          return {
+            success: false,
+            message: result.clarificationQuestion || 'Need more information to create agent',
+            error: 'Clarification needed'
+          };
+        }
+        return {
+          success: false,
+          message: result.error || 'Failed to create agent',
+          error: result.error
+        };
+      }
+      
+      const agent = result.agent!;
+      
+      logger.info('AI created agent via quick create', { 
+        agentId: agent.agentId, 
+        name: agent.name,
+        template: agent.template,
+        workspaceId: context.workspaceId 
+      });
+      
+      let message = `✅ Created **${agent.name}**!\n\n`;
+      message += `**Type:** ${agent.type}\n`;
+      message += `**Capabilities:** ${agent.capabilities.join(', ')}\n`;
+      
+      if (agent.template) {
+        message += `**Template:** ${agent.template}\n`;
+      }
+      
+      message += `\nYour agent is active and ready to use. Try saying "run ${agent.name}" to test it!`;
+      
+      return {
+        success: true,
+        message,
+        data: {
+          agentId: agent.agentId,
+          name: agent.name,
+          description: agent.description,
+          type: agent.type,
+          capabilities: agent.capabilities,
+          template: agent.template
+        }
+      };
+    } catch (error) {
+      logger.error('AI create_agent_quick failed', error);
+      return {
+        success: false,
+        message: 'Failed to create agent. Please try again.',
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   },
@@ -10097,10 +10221,10 @@ export const toolsByCategory = {
   calendar: ['schedule_meeting', 'get_upcoming_events', 'find_available_times', 'book_meeting_rooms'],
   tasks: ['create_task', 'prioritize_tasks', 'batch_similar_tasks', 'assign_to_team_member'],
   analytics: ['get_pipeline_summary', 'get_hot_leads', 'get_conversion_metrics', 'forecast_revenue', 'get_team_performance'],
-  agents: ['list_agents', 'run_agent', 'get_agent_status'],
+  agents: ['list_agents', 'run_agent', 'get_agent_status', 'create_agent_quick'],
   content: ['draft_email', 'send_email', 'generate_document', 'create_professional_document', 'generate_image', 'organize_documents', 'save_upload_to_library'],
   knowledge: ['search_knowledge', 'create_document', 'generate_document', 'create_collection', 'list_collections', 'create_professional_document', 'organize_documents', 'save_upload_to_library', 'search_web'],
-  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'search_knowledge', 'analyze_company_website', 'post_to_social_media', 'search_web', 'generate_image', 'create_professional_document', 'navigate_to_page', 'generate_pdf'],
+  dashboard: ['update_dashboard_roadmap', 'create_lead', 'create_contact', 'create_task', 'schedule_meeting', 'create_agent', 'create_agent_quick', 'search_knowledge', 'analyze_company_website', 'post_to_social_media', 'search_web', 'generate_image', 'create_professional_document', 'navigate_to_page', 'generate_pdf'],
   automation: ['create_automation'],
   team: ['list_team_members', 'assign_to_team_member'],
   content_cockpit: [

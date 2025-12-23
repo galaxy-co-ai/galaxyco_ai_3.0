@@ -101,17 +101,32 @@ function buildIntentAwareSection(
       break;
       
     case 'agent_creation':
-      section += `**Agent Creation Request**\n\n`;
-      section += `The user wants to create an AI agent. Guide them through:\n`;
-      section += `1. What the agent should do (objective)\n`;
-      section += `2. When it should run (trigger)\n`;
-      section += `3. What data it needs (context)\n`;
-      section += `4. What success looks like (output)\n\n`;
-      section += `Be conversational - one question at a time. Don't overwhelm them with forms.\n`;
+      section += `**Agent Creation Request - ONE-SHOT MODE**\n\n`;
+      section += `The user wants to create an agent. Use the FAST path:\n\n`;
+      section += `1. **Immediately call create_agent_quick** with their description\n`;
+      section += `2. Let the wizard match templates and infer capabilities automatically\n`;
+      section += `3. Only ask ONE clarifying question if absolutely necessary\n`;
+      section += `4. Create the agent and confirm what it does\n\n`;
+      section += `**DO NOT** interview them with 10 questions. Just build it.\n\n`;
       
-      if (suggestedTools.includes('create_agent')) {
-        section += `\n**Ready to Create:** When you have enough info, use the create_agent tool.\n`;
+      section += `**Available Templates:**\n`;
+      section += `- lead-followup: Follows up with leads based on stage\n`;
+      section += `- email-responder: Categorizes and drafts email replies\n`;
+      section += `- data-enrichment: Enriches contacts with company data\n`;
+      section += `- report-generator: Creates scheduled reports\n`;
+      section += `- meeting-scheduler: Books meetings based on availability\n`;
+      section += `- lead-scorer: Scores leads based on criteria\n`;
+      section += `- social-monitor: Watches for mentions/keywords\n`;
+      section += `- invoice-reminder: Sends payment reminders\n\n`;
+      
+      if (context.agents.activeAgents === 0) {
+        section += `**First Agent:** Make this experience magical - they've never created an agent before. Show excitement!\n`;
       }
+      
+      section += `\n**Example Flow:**\n`;
+      section += `User: "Create an agent that follows up with leads"\n`;
+      section += `You: *immediately call create_agent_quick with description="follows up with leads"*\n`;
+      section += `Result: "✅ Created Lead Follow-up Agent! It's active and ready to use."\n`;
       break;
       
     case 'information':
