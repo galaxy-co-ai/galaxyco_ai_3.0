@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (cc1a66e)  
+**Updated Through:** 2025-12-23 (aac5e43)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 aac5e43 feat(neptune): rebalance autonomy for 70%+ auto-execution rate
 - 2025-12-23 cc1a66e feat(neptune): intelligent next-step suggestions in tool orchestration
 - 2025-12-23 81e1572 fix(build): resolve TypeScript errors and deprecation warnings blocking Vercel deployment
 - 2025-12-23 c585b0a Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-22 c2bac91 feat(neptune): robust website analysis with Playwright + intelligent fallbacks
 - 2025-12-22 75d003d fix(ui): replace synthetic keyboard events with custom event
 - 2025-12-22 7f08f52 feat(ui): consolidate search bars - use top bar for command palette
-- 2025-12-22 949db7f feat(admin): enhance Backlog with screenshots, tags, and filtering
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
