@@ -50,7 +50,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'crm',
     description: 'Multiple leads in late-stage pipeline',
     condition: (ctx) => ctx.crm.hotLeads.length >= 3,
-    suggestedResponse: `You've got ${ctx.crm.hotLeads.length} hot leads in proposal/negotiation. Want me to help prioritize them or draft follow-ups?`,
+    suggestedResponse: "You've got multiple hot leads in proposal/negotiation. Want me to help prioritize them or draft follow-ups?",
     suggestedTools: ['create_task', 'send_email'],
   },
   
@@ -86,7 +86,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'automation',
     description: 'CRM has leads but no agents',
     condition: (ctx) => ctx.crm.totalLeads >= 5 && ctx.agents.activeAgents === 0,
-    suggestedResponse: `You have ${ctx.crm.totalLeads} leads but no automation. Let me build a lead qualifier agent - takes 10 seconds and will score/prioritize them automatically.`,
+    suggestedResponse: "You have multiple leads but no automation. Let me build a lead qualifier agent - takes 10 seconds and will score/prioritize them automatically.",
     suggestedTools: ['create_agent_quick'],
   },
   
@@ -108,7 +108,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'automation',
     description: 'Agents exist but rarely execute',
     condition: (ctx) => ctx.agents.activeAgents > 0 && ctx.agents.totalExecutions < ctx.agents.activeAgents * 5,
-    suggestedResponse: `You have ${ctx.agents.activeAgents} agent(s) but they're barely running. Want me to check if they're configured correctly or suggest better use cases?`,
+    suggestedResponse: "You have agents but they're barely running. Want me to check if they're configured correctly or suggest better use cases?",
     suggestedTools: ['list_agents', 'update_agent'],
   },
   
@@ -122,7 +122,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'tasks',
     description: 'User has overdue tasks',
     condition: (ctx) => ctx.tasks.overdueTasks >= 3,
-    suggestedResponse: `Heads up - ${ctx.tasks.overdueTasks} overdue tasks. Want to reschedule them or knock them out together? I can help prioritize.`,
+    suggestedResponse: "Heads up - multiple overdue tasks. Want to reschedule them or knock them out together? I can help prioritize.",
     suggestedTools: ['list_tasks', 'update_task', 'delete_task'],
   },
   
@@ -133,7 +133,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'tasks',
     description: 'Multiple high-priority tasks waiting',
     condition: (ctx) => ctx.tasks.highPriorityTasks.length >= 3,
-    suggestedResponse: `You've got ${ctx.tasks.highPriorityTasks.length} high-priority tasks on your plate. Want me to help you tackle the most important one first?`,
+    suggestedResponse: "You've got multiple high-priority tasks on your plate. Want me to help you tackle the most important one first?",
     suggestedTools: ['list_tasks', 'create_agent_quick'],
   },
   
@@ -144,7 +144,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'tasks',
     description: 'Many pending tasks accumulating',
     condition: (ctx) => ctx.tasks.pendingTasks >= 10,
-    suggestedResponse: `Your task list is growing (${ctx.tasks.pendingTasks} pending). Want me to help organize them by priority or identify what can be automated?`,
+    suggestedResponse: "Your task list is growing. Want me to help organize them by priority or identify what can be automated?",
     suggestedTools: ['list_tasks', 'create_agent_quick'],
   },
   
@@ -162,7 +162,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
       const avgOpenRate = parseFloat(ctx.marketing.campaignStats.avgOpenRate.replace('%', ''));
       return avgOpenRate > 0 && avgOpenRate < 15 && ctx.marketing.totalCampaigns > 2;
     },
-    suggestedResponse: `Your campaigns are averaging ${ctx.marketing?.campaignStats.avgOpenRate} open rate (industry average is 21%). Want optimization tips to improve engagement?`,
+    suggestedResponse: "Your campaigns have low open rates (below industry average of 21%). Want optimization tips to improve engagement?",
     suggestedTools: ['analyze_campaign', 'create_campaign'],
   },
   
@@ -188,7 +188,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
       const avgOpenRate = parseFloat(ctx.marketing.campaignStats.avgOpenRate.replace('%', ''));
       return avgOpenRate >= 25 && ctx.marketing.activeCampaigns.length > 0;
     },
-    suggestedResponse: `Your campaigns are crushing it with ${ctx.marketing?.campaignStats.avgOpenRate} open rate! Want to scale these winners or replicate the success?`,
+    suggestedResponse: "Your campaigns are crushing it with high open rates! Want to scale these winners or replicate the success?",
     suggestedTools: ['create_campaign', 'analyze_campaign'],
   },
   
@@ -234,7 +234,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'calendar',
     description: 'Many meetings scheduled today',
     condition: (ctx) => ctx.calendar.todayEventCount >= 4,
-    suggestedResponse: `Busy day - ${ctx.calendar.todayEventCount} meetings scheduled. Want me to prep agendas or block focus time between calls?`,
+    suggestedResponse: "Busy day with many meetings scheduled. Want me to prep agendas or block focus time between calls?",
     suggestedTools: ['list_events', 'create_document'],
   },
   
@@ -245,7 +245,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'calendar',
     description: 'Overbooked calendar',
     condition: (ctx) => ctx.calendar.thisWeekEventCount >= 15,
-    suggestedResponse: `You have ${ctx.calendar.thisWeekEventCount} meetings this week. Want me to help identify what could be async or consolidated?`,
+    suggestedResponse: "You have many meetings this week. Want me to help identify what could be async or consolidated?",
     suggestedTools: ['list_events', 'update_event'],
   },
   
@@ -280,7 +280,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
              ctx.crm.totalLeads === 0 &&
              ctx.agents.activeAgents === 0;
     },
-    suggestedResponse: `I analyzed your website (${ctx.website?.companyName || 'your company'}), but you haven't set anything up yet. Want me to walk you through adding your first lead or creating an automation?`,
+    suggestedResponse: "I analyzed your website, but you haven't set anything up yet. Want me to walk you through adding your first lead or creating an automation?",
     suggestedTools: ['create_lead', 'create_agent_quick'],
   },
 ];
