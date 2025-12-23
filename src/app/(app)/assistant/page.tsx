@@ -55,6 +55,12 @@ interface Message {
       result: { data?: unknown };
     }>;
   };
+  nextSteps?: Array<{
+    action: string;
+    reason: string;
+    prompt: string;
+    autoSuggest: boolean;
+  }>;
 }
 
 interface Attachment {
@@ -100,8 +106,40 @@ export default function AssistantPage() {
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [streamError, setStreamError] = useState<{ message: string; conversationId?: string } | null>(null);
+  const [isToolExecuting, setIsToolExecuting] = useState(false);
+  const [executingTools, setExecutingTools] = useState<string[]>([]);
+  const [detectedIntent, setDetectedIntent] = useState<{ type: string; confidence: number } | null>(null);
+  const [progress, setProgress] = useState<{ current: number; max: number; message: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Restore conversation from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const savedConvId = sessionStorage.getItem('neptune_current_conversation');
+      if (savedConvId) {
+        setCurrentConversationId(savedConvId);
+        setSelectedConversation(savedConvId);
+        logger.debug('Restored conversation from session', { conversationId: savedConvId });
+      }
+    } catch (error) {
+      logger.warn('Failed to restore conversation from session', error);
+    }
+  }, []);
+
+  // Save conversation to sessionStorage when it changes
+  useEffect(() => {
+    try {
+      if (currentConversationId) {
+        sessionStorage.setItem('neptune_current_conversation', currentConversationId);
+      } else {
+        sessionStorage.removeItem('neptune_current_conversation');
+      }
+    } catch (error) {
+      logger.warn('Failed to save conversation to session', error);
+    }
+  }, [currentConversationId]);
 
   // Fetch conversations from API
   const { 
@@ -307,6 +345,7 @@ export default function AssistantPage() {
     setInputValue("");
     setPendingAttachments([]);
     setIsLoading(true);
+    setStreamError(null);
 
     try {
       const response = await fetch('/api/assistant/chat', {
@@ -326,7 +365,7 @@ export default function AssistantPage() {
         throw new Error('Failed to send message');
       }
 
-      // Handle SSE streaming response
+      // Handle SSE streaming response with timeout
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       
@@ -338,6 +377,9 @@ export default function AssistantPage() {
       let messageId = '';
       let convId = currentConversationId;
       let metadata: Message['metadata'];
+      let nextSteps: Message['nextSteps'];
+      let lastChunkTime = Date.now();
+      const STREAM_TIMEOUT_MS = 30000; // 30 second timeout
 
       // Create optimistic assistant message
       const tempAssistantMessage: Message = {
@@ -348,10 +390,23 @@ export default function AssistantPage() {
       };
       setMessages(prev => [...prev, tempAssistantMessage]);
 
+      // Timeout checker
+      const timeoutChecker = setInterval(() => {
+        if (Date.now() - lastChunkTime > STREAM_TIMEOUT_MS) {
+          reader.cancel();
+          setStreamError({
+            message: 'Connection lost. Please try again.',
+            conversationId: convId || undefined,
+          });
+          clearInterval(timeoutChecker);
+        }
+      }, 1000);
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
+        lastChunkTime = Date.now();
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split('\n');
 
@@ -373,6 +428,43 @@ export default function AssistantPage() {
                 setSelectedConversation(parsed.conversationId);
               }
 
+              // Capture intent classification
+              if (parsed.intent) {
+                setDetectedIntent({
+                  type: parsed.intent.type,
+                  confidence: parsed.intent.confidence,
+                });
+              }
+
+              // Capture progress indicators
+              if (parsed.progress) {
+                setProgress(parsed.progress);
+              }
+
+              // Handle tool execution indicators
+              if (parsed.toolExecutionStart || parsed.toolExecution) {
+                setIsToolExecuting(true);
+                if (parsed.tools && Array.isArray(parsed.tools)) {
+                  setExecutingTools(parsed.tools);
+                }
+              }
+
+              // Handle tool results completion
+              if (parsed.toolResults) {
+                setIsToolExecuting(false);
+                setExecutingTools([]);
+                setProgress(null);
+              }
+
+              // Handle errors
+              if (parsed.error) {
+                setStreamError({
+                  message: parsed.error,
+                  conversationId: convId || undefined,
+                });
+                break;
+              }
+
               // Accumulate content
               if (parsed.content) {
                 assistantContent += parsed.content;
@@ -382,6 +474,11 @@ export default function AssistantPage() {
                     ? { ...m, content: assistantContent }
                     : m
                 ));
+              }
+
+              // Capture next steps
+              if (parsed.nextSteps && Array.isArray(parsed.nextSteps)) {
+                nextSteps = parsed.nextSteps;
               }
 
               // Store final data
@@ -398,6 +495,11 @@ export default function AssistantPage() {
         }
       }
 
+      clearInterval(timeoutChecker);
+      setIsToolExecuting(false);
+      setExecutingTools([]);
+      setProgress(null);
+
       // Update with final message
       setMessages(prev => prev.map(m => 
         m.id === tempAssistantMessage.id 
@@ -405,7 +507,8 @@ export default function AssistantPage() {
               ...m, 
               id: messageId || m.id,
               content: assistantContent || 'No response generated',
-              metadata 
+              metadata,
+              nextSteps,
             }
           : m
       ));
@@ -414,11 +517,18 @@ export default function AssistantPage() {
       mutateConversations();
     } catch (error) {
       logger.error('Failed to send message', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to send message. Please try again.');
+      setStreamError({
+        message: error instanceof Error ? error.message : 'Failed to send message. Please try again.',
+        conversationId: currentConversationId || undefined,
+      });
       // Remove the optimistic user message on error
       setMessages(prev => prev.filter(m => m.id !== userMessage.id));
     } finally {
       setIsLoading(false);
+      setIsToolExecuting(false);
+      setExecutingTools([]);
+      setProgress(null);
+      setDetectedIntent(null);
     }
   };
 
@@ -469,7 +579,21 @@ export default function AssistantPage() {
     setCurrentConversationId(null);
     setMessages([]);
     setLeftPanelView("capabilities");
+    setStreamError(null);
     toast.success("Started new conversation");
+  };
+
+  const handleRetryLastMessage = () => {
+    if (messages.length > 0) {
+      // Find the last user message
+      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+      if (lastUserMessage) {
+        setInputValue(lastUserMessage.content);
+        setStreamError(null);
+        // Remove failed messages
+        setMessages(prev => prev.filter(m => m.timestamp <= lastUserMessage.timestamp));
+      }
+    }
   };
 
   const handleDeleteConversation = async (convId: string, e: React.MouseEvent) => {
@@ -794,7 +918,19 @@ export default function AssistantPage() {
                     <selectedCapabilityData.icon className={cn("h-5 w-5", selectedCapabilityData.color)} aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-[15px] text-gray-900">{selectedCapabilityData.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-[15px] text-gray-900">{selectedCapabilityData.title}</h3>
+                      {detectedIntent && (
+                        <Badge 
+                          variant="outline" 
+                          className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700 border-indigo-200"
+                          title={`${Math.round(detectedIntent.confidence * 100)}% confidence`}
+                        >
+                          <Target className="h-3 w-3 mr-1" aria-hidden="true" />
+                          {detectedIntent.type.replace(/_/g, ' ')}
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500">{selectedCapabilityData.description}</p>
                   </div>
                 </div>
@@ -805,6 +941,7 @@ export default function AssistantPage() {
                   onClick={() => {
                     setMessages([]);
                     setSelectedConversation(null);
+                    setDetectedIntent(null);
                     toast.success("Conversation cleared");
                   }}
                   aria-label="Clear conversation"
@@ -988,6 +1125,32 @@ export default function AssistantPage() {
                           );
                         })()}
                         
+                        {/* Next Steps Actions */}
+                        {message.nextSteps && message.nextSteps.length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-xs font-medium text-gray-600 flex items-center gap-1.5">
+                              <Lightbulb className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
+                              Suggested next steps:
+                            </p>
+                            {message.nextSteps.map((step, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => setInputValue(step.prompt)}
+                                className="w-full text-left p-2.5 text-xs bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:border-blue-300 hover:shadow-sm transition-all group"
+                                aria-label={`Use suggestion: ${step.prompt}`}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <ChevronRight className="h-3.5 w-3.5 text-blue-600 mt-0.5 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-gray-700 font-medium">{step.action}</p>
+                                    <p className="text-gray-500 text-[11px] mt-0.5">{step.reason}</p>
+                                  </div>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        
                         <p className={cn(
                           "text-[10px] mt-2",
                           message.role === "user" ? "text-indigo-200" : "text-gray-400"
@@ -1002,7 +1165,42 @@ export default function AssistantPage() {
                       )}
                     </div>
                   ))}
-                  {isLoading && (
+                  {isToolExecuting && (
+                    <div className="flex gap-3 justify-start">
+                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", selectedCapabilityData.bgColor)}>
+                        <Bot className={cn("h-4 w-4", selectedCapabilityData.color)} aria-hidden="true" />
+                      </div>
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl rounded-bl-md px-4 py-3">
+                        <div className="flex items-center gap-2 text-sm text-blue-700">
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                          <div>
+                            <p className="font-medium">
+                              {progress ? progress.message : 'Executing tools...'}
+                            </p>
+                            {executingTools.length > 0 && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                {executingTools.map(tool => tool.replace(/_/g, ' ')).join(', ')}
+                              </p>
+                            )}
+                            {progress && (
+                              <div className="mt-2 flex items-center gap-2">
+                                <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                                    style={{ width: `${(progress.current / progress.max) * 100}%` }}
+                                  />
+                                </div>
+                                <span className="text-[10px] text-blue-600 font-medium">
+                                  {progress.current}/{progress.max}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {isLoading && !isToolExecuting && (
                     <div className="flex gap-3 justify-start">
                       <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0", selectedCapabilityData.bgColor)}>
                         <Bot className={cn("h-4 w-4", selectedCapabilityData.color)} aria-hidden="true" />
@@ -1011,6 +1209,30 @@ export default function AssistantPage() {
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                           Thinking...
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {streamError && (
+                    <div className="flex gap-3 justify-start">
+                      <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <AlertCircle className="h-4 w-4 text-red-600" aria-hidden="true" />
+                      </div>
+                      <div className="bg-red-50 border-2 border-red-200 rounded-2xl rounded-bl-md px-4 py-3 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-red-900">Connection Error</p>
+                            <p className="text-xs text-red-700 mt-1">{streamError.message}</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={handleRetryLastMessage}
+                            className="bg-red-600 hover:bg-red-700 text-white shrink-0"
+                            aria-label="Retry message"
+                          >
+                            <RefreshCw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+                            Retry
+                          </Button>
                         </div>
                       </div>
                     </div>

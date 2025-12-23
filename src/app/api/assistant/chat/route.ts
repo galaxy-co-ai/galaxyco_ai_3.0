@@ -363,7 +363,9 @@ export async function POST(request: Request) {
 
       if (!rateLimitResult.success) {
         logger.warn('[AI Chat Stream] Rate limit exceeded', { userId: currentUser.id });
-        sse.sendError('Rate limit exceeded. Please try again in a moment.');
+        const retryAfterSeconds = rateLimitResult.reset ? Math.ceil((rateLimitResult.reset - Date.now()) / 1000) : 60;
+        sse.sendError(`Rate limit exceeded. Please try again in ${retryAfterSeconds} seconds.`);
+        sse.send({ rateLimitExceeded: true, retryAfter: retryAfterSeconds });
         sse.sendDone();
         return;
       }
@@ -469,13 +471,7 @@ export async function POST(request: Request) {
         }
       }
       
-      let systemPrompt = generateSystemPrompt(
-        aiContext, 
-        feature || context?.feature || undefined,
-        intentClassification
-      );
-
-      // Get or create conversation
+      // Get or create conversation FIRST (needed for session memory)
       let conversation;
       if (conversationId) {
         const existing = await db.query.aiConversations.findFirst({
@@ -513,8 +509,73 @@ export async function POST(request: Request) {
         logger.debug('[AI Chat Stream] Created new conversation', { conversationId: newConv.id });
       }
 
+      // Phase 2B: Load session memory BEFORE generating system prompt
+      // This ensures memory is included from the very first message
+      let sessionMemory = null;
+      let sessionContext = '';
+      try {
+        const { 
+          getSessionMemory, 
+          initializeSessionMemory, 
+          buildSessionContext 
+        } = await import('@/lib/ai/session-memory');
+        
+        // Get or initialize session memory
+        sessionMemory = await getSessionMemory(conversation.id);
+        if (!sessionMemory && conversationId) {
+          // Only initialize if this is an existing conversation being reopened
+          sessionMemory = await initializeSessionMemory(
+            workspaceId,
+            userRecord.id,
+            conversation.id
+          );
+        }
+        
+        // Build memory context for injection if memory exists
+        if (sessionMemory && (sessionMemory.entities.length > 0 || sessionMemory.facts.length > 0 || sessionMemory.summary)) {
+          sessionContext = buildSessionContext(sessionMemory);
+          
+          logger.info('[AI Chat Stream] Session memory loaded BEFORE prompt generation', {
+            conversationId: conversation.id,
+            entities: sessionMemory.entities.length,
+            facts: sessionMemory.facts.length,
+            hasSummary: !!sessionMemory.summary,
+            currentTopic: sessionMemory.currentTopic,
+          });
+        }
+      } catch (error) {
+        logger.warn('[AI Chat Stream] Session memory loading failed (non-blocking)', { error });
+      }
+
+      // NOW generate system prompt WITH session memory context
+      let systemPrompt = generateSystemPrompt(
+        aiContext, 
+        feature || context?.feature || undefined,
+        intentClassification
+      );
+
+      // Inject session memory into system prompt if available
+      if (sessionContext) {
+        systemPrompt += `\n\n${sessionContext}\n\n**IMPORTANT:** Use this session memory naturally. Reference entities and facts from previous messages. Build on what you already know. Never ask for information you already have.`;
+      }
+
       // Send conversation ID early so client can track it
       sse.send({ conversationId: conversation.id });
+
+      // Send intent classification for transparency (Phase 3)
+      if (intentClassification && intentClassification.confidence >= 0.7) {
+        sse.send({
+          intent: {
+            type: intentClassification.intent,
+            confidence: intentClassification.confidence,
+            method: intentClassification.detectionMethod,
+          }
+        });
+        logger.debug('[AI Chat Stream] Intent sent to client', {
+          intent: intentClassification.intent,
+          confidence: intentClassification.confidence,
+        });
+      }
 
       // Process document attachments
       let documentContext = '';
@@ -554,45 +615,6 @@ export async function POST(request: Request) {
         orderBy: [asc(aiMessages.createdAt)],
         limit: 50, // Increased from 30 to 50 for Phase 2B
       });
-      
-      // Phase 2B: Load session memory and inject into system prompt
-      let sessionMemory = null;
-      let sessionContext = '';
-      try {
-        const { 
-          getSessionMemory, 
-          initializeSessionMemory, 
-          buildSessionContext 
-        } = await import('@/lib/ai/session-memory');
-        
-        // Get or initialize session memory
-        sessionMemory = await getSessionMemory(conversation.id);
-        if (!sessionMemory) {
-          sessionMemory = await initializeSessionMemory(
-            workspaceId,
-            userRecord.id,
-            conversation.id
-          );
-        }
-        
-        // Build memory context for injection
-        if (sessionMemory && (sessionMemory.entities.length > 0 || sessionMemory.facts.length > 0 || sessionMemory.summary)) {
-          sessionContext = buildSessionContext(sessionMemory);
-          
-          // Inject session memory into system prompt
-          systemPrompt += `\n\n${sessionContext}\n\n**IMPORTANT:** Use this session memory naturally. Reference entities and facts from previous messages. Build on what you already know. Never ask for information you already have.`;
-          
-          logger.info('[AI Chat Stream] Session memory loaded', {
-            conversationId: conversation.id,
-            entities: sessionMemory.entities.length,
-            facts: sessionMemory.facts.length,
-            hasSummary: !!sessionMemory.summary,
-            currentTopic: sessionMemory.currentTopic,
-          });
-        }
-      } catch (error) {
-        logger.warn('[AI Chat Stream] Session memory failed (non-blocking)', { error });
-      }
       
       // Phase 2A: Analyze user's communication style (every 5 messages)
       // Run in background after history is loaded
@@ -703,7 +725,7 @@ export async function POST(request: Request) {
       const toolCallsMade: Array<{ name: string; result: ToolResult }> = [];
       let iterations = 0;
       const maxIterations = 5;
-      const totalTokensUsed = 0; // Track token usage for observability
+      let totalTokensUsed = 0; // Track token usage for observability
       const wasResponseCached = false; // Track if response came from cache
       const ragResultsCount = 0; // Track RAG results count
 
@@ -711,6 +733,21 @@ export async function POST(request: Request) {
       let continueLoop = true;
       while (continueLoop && iterations < maxIterations) {
         iterations++;
+        
+        // Send iteration progress for multi-turn tool calls
+        if (iterations > 1) {
+          sse.send({
+            progress: {
+              current: iterations,
+              max: maxIterations,
+              message: `Processing step ${iterations}...`
+            }
+          });
+          logger.debug('[AI Chat Stream] Multi-turn progress', {
+            iteration: iterations,
+            max: maxIterations,
+          });
+        }
         
         // Detect complex questions that need chain-of-thought reasoning
         const isComplexQuestion = detectComplexQuestion(message);
@@ -764,6 +801,11 @@ Show your reasoning process naturally in your response.`;
           const delta = chunk.choices[0]?.delta;
           finishReason = chunk.choices[0]?.finish_reason || finishReason;
 
+          // Track token usage
+          if (chunk.usage) {
+            totalTokensUsed += chunk.usage.total_tokens || 0;
+          }
+
           // Stream content tokens immediately
           if (delta?.content) {
             currentContent += delta.content;
@@ -806,8 +848,9 @@ Show your reasoning process naturally in your response.`;
             iteration: iterations 
           });
 
-          // Notify client that we're executing tools
+          // Notify client that we're starting tool execution
           sse.send({ 
+            toolExecutionStart: true,
             toolExecution: true, 
             tools: currentToolCalls.map(tc => tc.function.name) 
           });
