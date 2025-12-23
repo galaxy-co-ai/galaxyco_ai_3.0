@@ -58,15 +58,16 @@ export default function WorkspacePanel({
                   'hover:bg-accent hover:text-accent-foreground',
                   isActive && 'bg-accent text-accent-foreground font-medium'
                 )}
+                aria-label={tab.label}
               >
-                {/* Icon - visible on mobile, hidden on larger screens when text shows */}
+                {/* Icon - always visible */}
                 <Icon className={cn(
                   'h-4 w-4',
-                  'md:mr-2' // Add margin on desktop when label shows
+                  'lg:mr-2' // Add margin on laptop+ when label shows
                 )} />
                 
-                {/* Label - hidden on mobile, visible on larger screens */}
-                <span className="hidden md:inline">{tab.label}</span>
+                {/* Label - hidden below laptop, visible on laptop+ */}
+                <span className="hidden lg:inline">{tab.label}</span>
 
                 {/* Active indicator */}
                 {isActive && (

@@ -448,11 +448,10 @@ export default function NeptuneAssistPanel({
                     clearConversation();
                     setViewMode("chat");
                   }}
-                  className="text-muted-foreground hover:text-foreground px-2 md:px-3"
+                  className="text-muted-foreground hover:text-foreground px-2"
                   aria-label="Start new conversation"
                 >
-                  <Plus className="h-4 w-4 md:mr-1" />
-                  <span className="hidden md:inline">New Chat</span>
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
