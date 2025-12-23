@@ -397,7 +397,7 @@ export async function analyzeWebsiteQuick(
         logger.info('Trying Playwright (JS-heavy fallback)', { url: normalizedUrl });
         
         // Import Playwright crawler dynamically
-        const { crawlWithPlaywright } = await import('@/lib/ai/website-crawler-playwright');
+        const { crawlWithPlaywright } = await import('@/lib/website-crawler');
         
         const playwrightResult = await crawlWithPlaywright(normalizedUrl, {
           waitForNetworkIdle: true,

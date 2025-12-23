@@ -9,7 +9,6 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { analyzeWebsiteQuick } from '../src/lib/ai/website-analyzer';
-import { logger } from '../src/lib/logger';
 
 // Single quick test to verify Firecrawl is working
 async function testFirecrawl() {

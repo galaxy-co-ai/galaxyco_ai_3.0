@@ -4,7 +4,6 @@
  */
 
 import { analyzeWebsiteQuick } from '../src/lib/ai/website-analyzer';
-import { logger } from '../src/lib/logger';
 
 // Test websites covering different scenarios
 const testWebsites = [

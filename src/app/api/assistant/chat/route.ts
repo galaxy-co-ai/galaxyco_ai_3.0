@@ -864,7 +864,7 @@ Show your reasoning process naturally in your response.`;
             }))
           });
 
-          // Phase 2D: Extract and log suggested next steps
+          // Phase 2D: Extract and inject suggested next steps into response
           const nextSteps = toolResults
             .map(r => {
               try {
@@ -881,6 +881,28 @@ Show your reasoning process naturally in your response.`;
               conversationId: conversation.id,
               steps: nextSteps.map(s => s.action),
             });
+            
+            // Inject next steps into response stream for user visibility
+            const nextStepPrompts = nextSteps.map(step => {
+              if (step.autoSuggest) {
+                return `\n\n✓ Done. ${step.prompt}`;
+              }
+              return `\n\n💡 Suggestion: ${step.prompt}`;
+            }).join('');
+            
+            // Send next steps as part of the response
+            if (nextStepPrompts) {
+              sse.send({ 
+                content: nextStepPrompts,
+                nextSteps: nextSteps.map(s => ({
+                  action: s.action,
+                  reason: s.reason,
+                  prompt: s.prompt,
+                  autoSuggest: s.autoSuggest,
+                }))
+              });
+              fullResponse += nextStepPrompts;
+            }
           }
 
           // Continue loop to get AI response to tool results
