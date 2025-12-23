@@ -375,7 +375,9 @@ export async function POST(request: Request) {
             processingTime: `${intentClassification.processingTimeMs}ms`,
           });
         } catch (error) {
-          logger.warn('[AI Chat Stream] Intent classification failed (non-blocking)', error);
+          logger.warn('[AI Chat Stream] Intent classification failed (non-blocking)', { 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          });
           intentClassification = undefined;
         }
       }
