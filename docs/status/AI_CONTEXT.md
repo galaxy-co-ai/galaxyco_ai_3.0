@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (0eae11b)  
+**Updated Through:** 2025-12-23 (6421c04)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 6421c04 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-23 13b1c87 fix(neptune): address audit gaps - identity, next steps UX, playwright path
 - 2025-12-23 0eae11b fix(neptune): restore technical formality option with proper logic
 - 2025-12-23 b2b26ea fix(neptune): remove unreachable 'technical' formality option
 - 2025-12-23 954a995 docs(neptune): comprehensive documentation and JSDoc comments
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 5964335 fix(neptune): move style analysis after history load
 - 2025-12-23 a181bb0 feat(neptune): adaptive communication style with user matching
 - 2025-12-23 c5a4b38 feat(neptune): dynamic roadmap with progress tracking
-- 2025-12-23 094bed8 feat(neptune): workspace health assessment and gap analysis
-- 2025-12-23 c2a93af feat(neptune): one-shot smart agent creation with templates
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
