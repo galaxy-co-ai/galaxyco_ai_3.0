@@ -78,7 +78,7 @@ import { logger } from '@/lib/logger';
 // ============================================================================
 
 export interface CommunicationStyle {
-  formality: 'casual' | 'professional' | 'technical';
+  formality: 'casual' | 'professional'; // Simplified: casual vs professional (technical level separate)
   verbosity: 'concise' | 'balanced' | 'detailed';
   tone: 'friendly' | 'neutral' | 'direct';
   emojiUsage: number; // 0-100 percentage

@@ -50,7 +50,7 @@ export interface UserPreferencesContext {
   enableRag: boolean;
   enableProactiveInsights: boolean;
   detectedStyle?: {
-    formality: 'casual' | 'professional' | 'technical';
+    formality: 'casual' | 'professional';
     verbosity: 'concise' | 'balanced' | 'detailed';
     tone: 'friendly' | 'neutral' | 'direct';
     emojiUsage: number;
@@ -341,7 +341,7 @@ async function getUserPreferencesContext(
         ['friendly', 'neutral', 'direct'].includes(tone)
       ) {
         detectedStyle = {
-          formality: formality as 'casual' | 'professional' | 'technical',
+          formality: formality as 'casual' | 'professional',
           verbosity: verbosity as 'concise' | 'balanced' | 'detailed',
           tone: tone as 'friendly' | 'neutral' | 'direct',
           emojiUsage: 0,
