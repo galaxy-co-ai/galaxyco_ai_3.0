@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-22 (c2bac91)  
+**Updated Through:** 2025-12-23 (89008ad)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 89008ad feat(neptune): add intent classification for proactive suggestions
 - 2025-12-22 c2bac91 feat(neptune): robust website analysis with Playwright + intelligent fallbacks
 - 2025-12-22 75d003d fix(ui): replace synthetic keyboard events with custom event
 - 2025-12-22 7f08f52 feat(ui): consolidate search bars - use top bar for command palette
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 64a2264 feat(dashboard): consolidate right column into tabbed WorkspacePanel
 - 2025-12-17 c5dec55 fix(insights): update dismiss route to handle async params in Next.js 15+
 - 2025-12-17 264ff5b feat(neptune): implement proactive insights system
-- 2025-12-17 a2820ff chore: add LinkedIn and Facebook OAuth to .env.example
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
