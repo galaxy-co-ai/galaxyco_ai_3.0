@@ -437,20 +437,52 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         }
 
         logger.error("[Neptune] Send message failed", error);
-        const errorMsg =
-          error instanceof Error
-            ? error.message
-            : "Failed to get response from Neptune";
-        toast.error(errorMsg);
+        
+        // Determine error type for specific messaging
+        let errorContent = "I encountered an issue. Please try again or rephrase your question.";
+        let errorTitle = "Something went wrong";
+        
+        if (error instanceof Error) {
+          const errorMsg = error.message.toLowerCase();
+          
+          // Network/connection errors
+          if (errorMsg.includes("network") || errorMsg.includes("fetch") || errorMsg.includes("connection") || error.name === "TypeError") {
+            errorTitle = "Connection Lost";
+            errorContent = "Your internet connection was interrupted. Check your connection and try again.";
+          }
+          // Server errors (5xx)
+          else if (errorMsg.includes("500") || errorMsg.includes("502") || errorMsg.includes("503") || errorMsg.includes("504")) {
+            errorTitle = "Server Error";
+            errorContent = "Our servers encountered an issue. We're looking into it. Please try again in a moment.";
+          }
+          // Rate limiting (429)
+          else if (errorMsg.includes("429") || errorMsg.includes("rate limit")) {
+            errorTitle = "Too Many Requests";
+            errorContent = "You've sent too many messages. Please wait a moment before trying again.";
+          }
+          // Auth errors (401, 403)
+          else if (errorMsg.includes("401") || errorMsg.includes("403") || errorMsg.includes("unauthorized") || errorMsg.includes("forbidden")) {
+            errorTitle = "Session Expired";
+            errorContent = "Your session has expired. Please refresh the page to continue.";
+          }
+          // Validation errors (400)
+          else if (errorMsg.includes("400") || errorMsg.includes("validation") || errorMsg.includes("invalid")) {
+            errorTitle = "Invalid Message";
+            errorContent = "Your message couldn't be processed. Try rephrasing or shortening it.";
+          }
+          
+          toast.error(errorTitle);
+        } else {
+          toast.error("Failed to get response from Neptune");
+        }
 
-        // Update assistant message with error
+        // Update assistant message with specific error
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
               ? {
                   ...msg,
-                  content:
-                    "I encountered an issue. Please try again or rephrase your question.",
+                  content: `**${errorTitle}**\n\n${errorContent}`,
                   isStreaming: false,
                 }
               : msg

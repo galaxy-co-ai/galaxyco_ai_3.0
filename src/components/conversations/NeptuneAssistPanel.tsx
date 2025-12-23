@@ -26,6 +26,7 @@ import {
   ThumbsDown,
   Mic,
   Volume2,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
@@ -96,6 +97,7 @@ export default function NeptuneAssistPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [tabHeld, setTabHeld] = useState(false);
+  const [lastFailedMessage, setLastFailedMessage] = useState<{ message: string; attachments?: Attachment[] } | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -219,11 +221,11 @@ export default function NeptuneAssistPanel({
     }
   };
 
-  const handleSend = async (messageOverride?: string) => {
+  const handleSend = async (messageOverride?: string, attachmentsOverride?: Attachment[]) => {
     const messageToSend = messageOverride || input;
-    if (!messageToSend.trim() && pendingAttachments.length === 0) return;
+    if (!messageToSend.trim() && (attachmentsOverride || pendingAttachments).length === 0) return;
 
-    const attachmentsToSend = [...pendingAttachments];
+    const attachmentsToSend = attachmentsOverride || [...pendingAttachments];
     setInput("");
     setPendingAttachments([]);
     // Reset textarea height
@@ -231,7 +233,23 @@ export default function NeptuneAssistPanel({
       inputRef.current.style.height = '44px';
     }
 
-    await sendMessage(messageToSend, attachmentsToSend, feature);
+    // Track for retry functionality
+    setLastFailedMessage({ message: messageToSend, attachments: attachmentsToSend });
+    
+    try {
+      await sendMessage(messageToSend, attachmentsToSend, feature);
+      // Clear failed message on success
+      setLastFailedMessage(null);
+    } catch (error) {
+      // Error is already handled in neptune context
+      logger.debug('Message send failed, retry available', { message: messageToSend });
+    }
+  };
+  
+  const handleRetry = async () => {
+    if (lastFailedMessage) {
+      await handleSend(lastFailedMessage.message, lastFailedMessage.attachments);
+    }
   };
 
   // Voice input handlers
@@ -671,7 +689,7 @@ export default function NeptuneAssistPanel({
                 <div
                   className={`max-w-[85%] rounded-lg p-3 ${
                     msg.role === "user"
-                      ? "bg-nebula-violet text-white"
+                      ? "bg-[#007AFF]/90 backdrop-blur-sm text-white shadow-lg shadow-blue-500/20"
                       : "bg-muted"
                   }`}
                 >
@@ -715,16 +733,37 @@ export default function NeptuneAssistPanel({
                   {msg.content ? (
                     msg.role === "user" ? (
                       // User messages: render Markdown so lists show rounded bullets and checklists
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <div className="prose prose-sm prose-invert max-w-none [&_*]:text-white">
                         <MarkdownContent content={msg.content} />
                       </div>
                     ) : (
                       // Assistant messages: rich markdown rendering
-                      <NeptuneMessage
-                        content={msg.content}
-                        isStreaming={msg.isStreaming}
-                        metadata={msg.metadata}
-                      />
+                      <>
+                        <NeptuneMessage
+                          content={msg.content}
+                          isStreaming={msg.isStreaming}
+                          metadata={msg.metadata}
+                        />
+                        {/* Show retry button if message contains error indicators */}
+                        {(msg.content.includes('Connection Lost') || 
+                          msg.content.includes('Server Error') || 
+                          msg.content.includes('Something Went Wrong') ||
+                          msg.content.includes('Session Expired') ||
+                          msg.content.includes('Too Many Requests') ||
+                          msg.content.includes('Invalid Message')) && 
+                          lastFailedMessage && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleRetry}
+                            disabled={isLoading}
+                            className="mt-3 h-8 text-xs"
+                          >
+                            <RefreshCw className={`h-3 w-3 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
+                            {isLoading ? 'Retrying...' : 'Try Again'}
+                          </Button>
+                        )}
+                      </>
                     )
                   ) : msg.isStreaming ? (
                     <div className="flex items-center gap-2">
