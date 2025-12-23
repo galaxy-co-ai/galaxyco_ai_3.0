@@ -736,7 +736,7 @@ export default function NeptuneAssistPanel({
                       // User messages: smart formatting with professional typography
                       // Check if message contains markdown list syntax
                       msg.content.includes('- ') || msg.content.includes('* ') || /^\d+\./m.test(msg.content) ? (
-                        <div className="prose prose-sm prose-invert max-w-none [&_*]:text-white [&_p]:leading-[1.6] [&_p]:mb-3 [&_ul]:space-y-2 [&_li]:leading-[1.6]">
+                        <div className="prose prose-sm prose-invert max-w-none [&_*]:text-white [&_p]:leading-[1.6] [&_p]:mb-3 [&_ul]:space-y-2 [&_li]:leading-[1.6] [&_ul_li_span]:bg-white">
                           <MarkdownContent content={msg.content} />
                         </div>
                       ) : (
@@ -1160,6 +1160,12 @@ export default function NeptuneAssistPanel({
               }}
               onPaste={handlePaste}
               onKeyDown={(e) => {
+                // Ctrl+Enter or Cmd+Enter: Send message
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                  e.preventDefault();
+                  handleSend(undefined);
+                  return;
+                }
                 // Track Tab hold state for Tab+Enter quick-send
                 if (e.key === 'Tab') {
                   e.preventDefault();

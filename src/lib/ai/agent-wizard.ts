@@ -322,8 +322,9 @@ export async function quickCreateAgent(
     // Analyze intent
     const intent = await analyzeAgentIntent(description, context);
     
-    // If we need clarification, return early
-    if (intent.needsClarification && intent.confidence === 'low') {
+    // Only ask for clarification if description is completely unclear (very short or vague)
+    // Don't block creation if we have reasonable intent
+    if (intent.needsClarification && intent.confidence === 'low' && description.length < 15) {
       return {
         success: false,
         needsClarification: true,

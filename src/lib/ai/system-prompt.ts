@@ -106,11 +106,13 @@ function buildIntentAwareSection(
     case 'agent_creation':
       section += `**Agent Creation Request - ONE-SHOT MODE**\n\n`;
       section += `The user wants to create an agent. Use the FAST path:\n\n`;
-      section += `1. **Immediately call create_agent_quick** with their description\n`;
+      section += `1. **Immediately call create_agent_quick** with their description - NO CONFIRMATION NEEDED\n`;
       section += `2. Let the wizard match templates and infer capabilities automatically\n`;
-      section += `3. Only ask ONE clarifying question if absolutely necessary\n`;
-      section += `4. Create the agent and confirm what it does\n\n`;
-      section += `**DO NOT** interview them with 10 questions. Just build it.\n\n`;
+      section += `3. Never ask for confirmation when user explicitly requests "create"\n`;
+      section += `4. Only ask ONE clarifying question if their request is genuinely ambiguous\n`;
+      section += `5. Create the agent immediately and confirm what it does\n\n`;
+      section += `**CRITICAL:** When user says "Create X", "Build X", "Make X" - that IS the confirmation. Act immediately.\n`;
+      section += `**DO NOT** ask "Would you like me to proceed?" or "Should I create this?" - Just do it.\n\n`;
       
       section += `**Available Templates:**\n`;
       section += `- lead-followup: Follows up with leads based on stage\n`;
@@ -149,10 +151,11 @@ function buildIntentAwareSection(
     case 'action':
       section += `**Action Request**\n\n`;
       section += `User wants to DO something. Execute it immediately:\n`;
-      section += `1. Use the appropriate tool (don't ask for confirmation)\n`;
-      section += `2. Confirm what you did with specifics\n`;
-      section += `3. Suggest the logical next step\n\n`;
-      section += `**DO NOT** say "would you like me to" - just do it.\n`;
+      section += `1. Use the appropriate tool (NO confirmation needed)\n`;
+      section += `2. When user says "create", "build", "make", "add" - that IS the command. Act immediately.\n`;
+      section += `3. Confirm what you did with specifics afterward\n`;
+      section += `4. Suggest the logical next step\n\n`;
+      section += `**CRITICAL:** DO NOT ask "would you like me to" or "should I" - they already told you. Just execute.\n`;
       break;
       
     case 'guidance':
