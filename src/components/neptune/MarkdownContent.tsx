@@ -45,24 +45,24 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
           ),
           // Paragraphs
           p: ({ children }) => (
-            <p className="text-sm leading-relaxed mb-2 text-foreground">
+            <p className="text-sm leading-[1.6] mb-3 text-foreground last:mb-0">
               {children}
             </p>
           ),
           // Lists - custom styled with accent color
           ul: ({ children }) => (
-            <ul className="list-none space-y-1.5 my-2 pl-0">
+            <ul className="list-none space-y-2 my-3 pl-0">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal space-y-1.5 my-2 pl-5">
+            <ol className="list-decimal space-y-2 my-3 pl-5">
               {children}
             </ol>
           ),
           li: ({ children }) => (
-            <li className="flex items-start gap-2 text-sm text-foreground">
-              <span className="mt-2 inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+            <li className="flex items-start gap-2.5 text-sm text-foreground leading-[1.6]">
+              <span className="mt-1.5 inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
               <span className="flex-1">{children}</span>
             </li>
           ),

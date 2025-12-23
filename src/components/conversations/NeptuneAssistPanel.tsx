@@ -35,6 +35,7 @@ import { useNeptune, type Attachment } from "@/contexts/neptune-context";
 import type { Conversation } from "./ConversationsDashboard";
 import { NeptuneMessage } from "@/components/neptune/NeptuneMessage";
 import { MarkdownContent } from "@/components/neptune/MarkdownContent";
+import { SmartMessageFormatter } from "@/components/neptune/SmartMessageFormatter";
 
 // Wrapper component for fullscreen variant to add card styling
 function NeptuneCardWrapper({
@@ -732,10 +733,16 @@ export default function NeptuneAssistPanel({
 
                   {msg.content ? (
                     msg.role === "user" ? (
-                      // User messages: render Markdown so lists show rounded bullets and checklists
-                      <div className="prose prose-sm prose-invert max-w-none [&_*]:text-white">
-                        <MarkdownContent content={msg.content} />
-                      </div>
+                      // User messages: smart formatting with professional typography
+                      // Check if message contains markdown list syntax
+                      msg.content.includes('- ') || msg.content.includes('* ') || /^\d+\./m.test(msg.content) ? (
+                        <div className="prose prose-sm prose-invert max-w-none [&_*]:text-white [&_p]:leading-[1.6] [&_p]:mb-3 [&_ul]:space-y-2 [&_li]:leading-[1.6]">
+                          <MarkdownContent content={msg.content} />
+                        </div>
+                      ) : (
+                        // Plain text or structured data - use smart formatter
+                        <SmartMessageFormatter content={msg.content} />
+                      )
                     ) : (
                       // Assistant messages: rich markdown rendering
                       <>
@@ -1186,12 +1193,51 @@ export default function NeptuneAssistPanel({
                 }
                 if (e.key === 'Enter') {
                   const ta = e.currentTarget;
-                  if (e.shiftKey || tabHeld) {
+                  // Tab+Enter: Send message
+                  if (tabHeld) {
                     e.preventDefault();
                     handleSend(undefined);
                     return;
                   }
-                  // Smart newline with list continuation
+                  // Shift+Enter: Start list formatting (insert "- " if not in list)
+                  if (e.shiftKey) {
+                    e.preventDefault();
+                    const start = ta.selectionStart ?? 0;
+                    const end = ta.selectionEnd ?? 0;
+                    const value = ta.value;
+                    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                    const currentLine = value.slice(lineStart, start);
+                    // Check if already in a list
+                    const bulletMatch = currentLine.match(/^(\s*)([-*]|(\d+)\.)\s+/);
+                    let insert = '\n';
+                    if (bulletMatch) {
+                      // Continue list
+                      const indent = bulletMatch[1] || '';
+                      const number = bulletMatch[3] ? parseInt(bulletMatch[3], 10) : null;
+                      if (currentLine.trim().length === bulletMatch[0].trim().length) {
+                        // Empty bullet -> exit list
+                        insert = '\n';
+                      } else if (number !== null) {
+                        insert = `\n${indent}${number + 1}. `;
+                      } else {
+                        insert = `\n${indent}- `;
+                      }
+                    } else {
+                      // Start new list
+                      insert = '\n- ';
+                    }
+                    const newVal = value.slice(0, start) + insert + value.slice(end);
+                    setInput(newVal);
+                    requestAnimationFrame(() => {
+                      const newPos = start + insert.length;
+                      ta.selectionStart = ta.selectionEnd = newPos;
+                      // Auto-resize
+                      ta.style.height = '44px';
+                      ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`;
+                    });
+                    return;
+                  }
+                  // Plain Enter: Just newline with smart list continuation
                   e.preventDefault();
                   const start = ta.selectionStart ?? 0;
                   const end = ta.selectionEnd ?? 0;
