@@ -36,6 +36,7 @@ import type { Conversation } from "./ConversationsDashboard";
 import { NeptuneMessage } from "@/components/neptune/NeptuneMessage";
 import { MarkdownContent } from "@/components/neptune/MarkdownContent";
 import { SmartMessageFormatter } from "@/components/neptune/SmartMessageFormatter";
+import { PresenceAvatars } from "@/components/neptune/PresenceAvatars";
 
 // Wrapper component for fullscreen variant to add card styling
 function NeptuneCardWrapper({
@@ -489,7 +490,12 @@ export default function NeptuneAssistPanel({
                 <Sparkles className="h-5 w-5 text-purple-500" />
                 <h3 className="font-semibold">Neptune</h3>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-3">
+                {/* Presence Avatars */}
+                <PresenceAvatars className="hidden sm:flex" />
+                
+                {/* Controls */}
+                <div className="flex items-center gap-1">
                 {/* Chat/History Toggle (compact) */}
                 <div className="flex items-center rounded-md border bg-muted/50 p-0.5">
                   <Button
@@ -525,6 +531,7 @@ export default function NeptuneAssistPanel({
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </Button>
+                </div>
               </div>
             </div>
           </div>
