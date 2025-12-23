@@ -139,10 +139,6 @@ function getExtensionFromType(mimeType: string): string {
 
 /**
  * Configuration for the route
+ * Note: bodyParser config is handled by Next.js App Router automatically
  */
-export const config = {
-  api: {
-    bodyParser: false, // Required for file uploads
-  },
-};
 

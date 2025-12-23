@@ -9,6 +9,9 @@ import type { AIContextData } from './context';
 import type { IntentClassification } from './intent-classifier';
 import { MARKETING_EXPERTISE } from './marketing-expertise';
 import { shouldPruneContext, getPrunedContext, type PrunedContext } from './context-pruning';
+import { detectTriggers } from './proactive-triggers';
+import { logger } from '@/lib/logger';
+import { generateStylePrompt } from './style-matcher';
 
 // ============================================================================
 // PERSONALITY TRAITS
@@ -449,7 +452,7 @@ These are proactive suggestions based on your workspace activity. Consider menti
  * Build optimized context section from pruned context items
  * Used when context is large and needs token-efficient representation
  */
-function buildPrunedContextSection(pruned: PrunedContext, fullContext: AIContextData): string {
+function buildPrunedContextSection(pruned: PrunedContext, _fullContext: AIContextData): string {
   const sections: string[] = [];
   
   // Group items by type
@@ -601,7 +604,6 @@ function buildInstructionsSection(context: AIContextData): string {
   // Inject adaptive communication style if detected (Phase 2A)
   let adaptiveStyleSection = '';
   if (context.preferences.detectedStyle && context.preferences.detectedStyle.confidence >= 30) {
-    const { generateStylePrompt } = require('./style-matcher');
     adaptiveStyleSection = '\n\n' + generateStylePrompt(context.preferences.detectedStyle);
   }
 
@@ -784,7 +786,6 @@ ${i + 1}. ${gapEmoji} **${gap.area}:** ${gap.description}
  */
 function buildProactiveTriggersSection(context: AIContextData): string {
   try {
-    const { detectTriggers } = require('./proactive-triggers');
     const activeTriggers = detectTriggers(context);
     
     if (activeTriggers.length === 0) {
@@ -1371,7 +1372,7 @@ export function generateGreeting(context: AIContextData | null): string {
     return "Hi! I'm Neptune, your AI assistant. How can I help you today?";
   }
 
-  const { user, currentTime, calendar, tasks, crm } = context;
+  const { user, calendar, tasks, crm } = context;
   const firstName = user.firstName || user.fullName.split(' ')[0];
   
   // Determine time of day
