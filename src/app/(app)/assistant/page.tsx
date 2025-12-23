@@ -124,7 +124,7 @@ export default function AssistantPage() {
         logger.debug('Restored conversation from session', { conversationId: savedConvId });
       }
     } catch (error) {
-      logger.warn('Failed to restore conversation from session', error);
+      logger.warn('Failed to restore conversation from session', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }, []);
 
@@ -137,7 +137,7 @@ export default function AssistantPage() {
         sessionStorage.removeItem('neptune_current_conversation');
       }
     } catch (error) {
-      logger.warn('Failed to save conversation to session', error);
+      logger.warn('Failed to save conversation to session', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }, [currentConversationId]);
 
