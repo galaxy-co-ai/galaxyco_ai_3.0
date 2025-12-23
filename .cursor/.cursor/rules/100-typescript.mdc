@@ -1,0 +1,45 @@
+---
+description: TypeScript coding standards for type safety, naming conventions, and patterns.
+globs: **/*.ts,**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript Standards
+
+## Type Safety
+- Strict mode always enabled
+- Never use `any` — use `unknown` then narrow, or define proper types
+- Prefer `interface` for object shapes, `type` for unions/intersections
+- Use generics when behavior works across multiple types
+
+## Naming
+- Variables: camelCase with auxiliary verbs (`isLoading`, `hasError`, `canSubmit`)
+- Interfaces: PascalCase, no `I` prefix (`User` not `IUser`)
+- Type parameters: Single uppercase or descriptive (`T`, `TData`, `TResponse`)
+- Constants: SCREAMING_SNAKE_CASE (`API_BASE_URL`)
+
+## Patterns
+```typescript
+// ✅ Good: Explicit return types for public functions
+export function calculateTotal(items: CartItem[]): number
+
+// ✅ Good: Discriminated unions for state
+type RequestState<T> = 
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; data: T }
+  | { status: 'error'; error: Error }
+
+// ✅ Good: Zod for runtime validation
+const UserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().min(1),
+})
+type User = z.infer<typeof UserSchema>
+```
+
+## Imports
+- Named exports over default exports
+- Group imports: external → internal → types
+- Use absolute imports with `@/` alias

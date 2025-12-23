@@ -1,0 +1,59 @@
+---
+description: API route patterns, error handling, and data validation for Next.js API routes.
+globs: **/app/api/**/*.ts,**/api/**/*.ts
+alwaysApply: false
+---
+
+# API Route Standards
+
+## Structure
+```typescript
+// app/api/users/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+
+const CreateUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const validated = CreateUserSchema.parse(body)
+    
+    const user = await createUser(validated)
+    return NextResponse.json(user, { status: 201 })
+    
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+    
+    console.error('Create user error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+## Error Handling
+- Validate all inputs with Zod
+- Return consistent error shapes
+- Log errors with context
+- Never expose internal errors to clients
+
+## Response Format
+```typescript
+// Success
+{ data: T }
+{ data: T, meta: { page, total } }
+
+// Error
+{ error: string, details?: unknown }
+```

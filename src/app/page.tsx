@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Landing } from "@/legacy-pages/Landing";
+import { Landing } from "@/components/landing/LandingPage";
 
 export default function Home() {
   const router = useRouter();

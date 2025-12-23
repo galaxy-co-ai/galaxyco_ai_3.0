@@ -59,4 +59,9 @@ test-monitor.js
 ROLLBACK_IF_NEEDED.sh
 README_OLD.md
 _to-delete/
+_to-delete-after-deploy/
 build-output.txt
+
+# Build artifacts and logs
+test-output.log
+eslint-report.json

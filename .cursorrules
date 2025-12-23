@@ -1,540 +1,73 @@
-# GalaxyCo AI 3.0 - Cursor Rules
+# GalaxyCo Development Standards
+# v2 — Optimized for Cursor | 2025-12-22
 
-## Project Context
+You are a senior full-stack developer and AI cofounder working with Dalton at GalaxyCo.ai.
 
-This is **GalaxyCo.ai 3.0**, an AI-powered business operations platform combining CRM, Finance, Marketing, Knowledge Management, and Workflow Automation. The platform is built around "Neptune," an AI assistant that executes actions across all modules via natural language.
-
-**Status:** Production-ready (100% complete), deployed on Vercel  
-**Last Updated:** December 10, 2025
+## Behavior
+- Ship code directly — no "would you like me to..." just do it
+- Explain new concepts with simple analogies
+- Challenge bad ideas, suggest better approaches
+- Keep momentum — call out blockers, suggest next steps
 
 ## Tech Stack
+TypeScript (strict), Next.js 14+ App Router, Tailwind CSS, Zod validation, Neon PostgreSQL, Pinecone vectors, Claude API
 
-### Core Framework
-- **Next.js 16.0.4** (App Router) - Latest stable with React 19
-- **TypeScript 5.7.2** - Strict mode enabled
-- **React 19.2.0** - Latest with concurrent features
-- **Tailwind CSS 4.0** - Latest with CSS-first config
+## Code Rules
 
-### Database & ORM
-- **PostgreSQL** (Neon serverless)
-- **Drizzle ORM 0.44.7** - Type-safe queries
-- **80+ tables** - Multi-tenant schema with workspace isolation
+### TypeScript
+- Strict mode, no `any` types ever
+- `interface` for objects, `type` for unions/primitives
+- Naming: `isLoading`, `hasError`, `canSubmit`
+- Named exports, functional components only
 
-### AI & ML
-- **OpenAI GPT-4o** - Primary AI provider (chat, vision, DALL-E 3)
-- **Anthropic Claude** - Fallback AI provider
-- **Google Gemini** - Secondary AI provider
-- **Pinecone** - Vector database for semantic search
-- **Upstash Vector** - Alternative vector DB
+### Structure
+```
+src/app/        → Pages (App Router)
+src/components/ → Reusable UI
+src/lib/        → Utilities, API clients
+src/hooks/      → Custom hooks
+src/types/      → Interfaces
+```
 
-### Infrastructure
-- **Clerk 6.35.3** - Authentication with Organizations
-- **Vercel Blob 2.0** - File storage
-- **Upstash Redis 1.35.6** - Caching and rate limiting
-- **Trigger.dev 4.1.2** - Background jobs
-- **Sentry 10.27.0** - Error monitoring
+### Naming
+- Folders: `kebab-case`
+- Components: `PascalCase.tsx`
+- Utils: `camelCase.ts`
+- Constants: `SCREAMING_SNAKE`
 
-### UI & Components
-- **Radix UI** - Accessible component primitives (30+ components)
-- **Framer Motion 12.23.24** - Animations
-- **Lucide React 0.487** - Icons
-- **React Flow 11.11.4** - Workflow builder
-- **Recharts 3.4.1** - Charts and analytics
-- **Tiptap 3.12.0** - Rich text editor
+### React
+- Prefer Server Components, minimize `'use client'`
+- Wrap client components in `Suspense`
+- Early returns for error/loading states
+- Components under 200 lines
 
-### Integrations
-- **Stripe 20.0.0** - Payments and subscriptions
-- **Resend 6.5.2** - Email sending
-- **Pusher 5.2.0** - Real-time updates
-- **Twitter/X OAuth** - Social media posting
-- **QuickBooks, Shopify, Gamma.app** - Business integrations
+### Error Handling
+- Zod for all input validation
+- Handle errors at boundaries with early returns
+- User-friendly messages, detailed logs
+
+### Accessibility
+- Keyboard accessible, proper heading hierarchy
+- Alt text, aria-labels, focus indicators
+- WCAG AA color contrast
 
 ### Testing
-- **Vitest 4.0.14** - Unit and integration tests (70% coverage)
-- **Playwright 1.57.0** - E2E tests
-- **Testing Library 16.3.0** - React component tests
+- Unit tests for utils and hooks
+- Integration tests for critical paths
+- Test file next to source: `Button.test.tsx`
 
-## Project Structure & Conventions
+### Git Commits
+- Format: `type(scope): description`
+- Types: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`
+- Example: `feat(auth): add OAuth login flow`
 
-### Directory Structure
-```
-src/
-├── app/
-│   ├── (app)/              # Protected app routes (requires auth)
-│   │   ├── dashboard/      # Main dashboard with Neptune AI
-│   │   ├── crm/            # CRM with leads, contacts, organizations
-│   │   ├── creator/        # Content creation with AI templates
-│   │   ├── finance/        # Finance HQ dashboard
-│   │   ├── library/        # Knowledge base with document management
-│   │   ├── launchpad/      # Blog and learning platform
-│   │   ├── marketing/      # Marketing campaigns and channels
-│   │   ├── orchestration/  # Multi-agent teams and workflows
-│   │   ├── assistant/      # Neptune AI full-page interface
-│   │   └── admin/          # Mission Control (admin dashboard)
-│   │       └── content/    # Content Cockpit (article studio, hit list, sources)
-│   ├── api/                # 130+ API endpoints (RESTful)
-│   │   ├── assistant/      # Neptune AI chat endpoints
-│   │   ├── crm/            # CRM CRUD operations
-│   │   ├── creator/        # Content creation and AI generation
-│   │   ├── knowledge/      # Document upload and semantic search
-│   │   ├── marketing/      # Campaign and channel management
-│   │   ├── orchestration/  # Multi-agent orchestration
-│   │   ├── admin/          # Admin and analytics endpoints
-│   │   └── webhooks/       # External webhook handlers (Clerk, Stripe)
-│   └── shared/             # Public shared document viewing
-├── components/
-│   ├── ui/                 # Shadcn/Radix base components (50+)
-│   ├── dashboard/          # Dashboard-specific components
-│   ├── crm/                # CRM components (LeadCard, ContactForm, etc.)
-│   ├── creator/            # Content creator components
-│   ├── knowledge-base/     # Library and document components
-│   ├── marketing/          # Marketing components
-│   ├── orchestration/      # Agent and workflow components
-│   ├── admin/              # Admin dashboard components
-│   │   ├── ContentCockpit/ # Article Studio, Hit List, Sources Hub
-│   │   └── AlertBadges/    # Proactive alert system
-│   └── neptune/            # Neptune AI assistant components
-├── lib/
-│   ├── ai/                 # AI provider utilities
-│   │   ├── providers.ts    # OpenAI, Anthropic, Google clients
-│   │   ├── rag.ts          # RAG with vector search
-│   │   ├── neptune/        # Neptune AI tools (50+ tools)
-│   │   └── orchestration/  # Multi-agent coordination
-│   ├── integrations/       # OAuth and external API integrations
-│   ├── cache.ts            # Redis caching utilities
-│   ├── db.ts               # Database connection
-│   ├── auth.ts             # Clerk authentication helpers
-│   ├── analytics.ts        # Event tracking utilities
-│   └── utils.ts            # General utilities
-├── db/
-│   └── schema.ts           # Drizzle schema (80+ tables, all enums)
-└── trigger/                # Background job definitions
-```
+## Comments
+- Comment WHY, not what
+- TODO format: `// TODO(dalton): description`
 
-### File Naming Conventions
-- **Components**: PascalCase (`NeptuneButton.tsx`, `LeadCard.tsx`)
-- **Pages**: lowercase with hyphens (`dashboard/page.tsx`, `hit-list/page.tsx`)
-- **API routes**: lowercase with hyphens (`/api/crm/contacts/route.ts`)
-- **Utilities**: camelCase (`auth.ts`, `vectorSearch.ts`)
-- **Types**: PascalCase with `.d.ts` or in `types/` folder
-
-### Import Aliases
-Always use `@/` prefix for imports:
-```typescript
-import { cn } from "@/lib/utils";
-import { NeptuneButton } from "@/components/neptune/NeptuneButton";
-import { db } from "@/lib/db";
-import { users } from "@/db/schema";
-```
-
-## Code Standards & Best Practices
-
-### TypeScript - MANDATORY STRICT MODE
-- **ALWAYS use TypeScript strict mode** - No exceptions
-- **NEVER use `any` type** - Use `unknown` when type is uncertain, then narrow it
-- If `any` is absolutely required, add comment justification: `// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Reason`
-- Define types for all function parameters and return values
-- Use `as const` for literal types
-- Prefer interfaces for object shapes, types for unions/intersections
-
-### Next.js App Router Patterns
-- **Server Components by default** - This is the primary pattern
-- **ONLY add `'use client'`** when you need:
-  - `useState`, `useEffect`, `useContext`, or other React hooks
-  - Event handlers (`onClick`, `onChange`, etc.)
-  - Browser APIs (`window`, `document`, `localStorage`)
-  - Third-party libraries that require client-side rendering
-- **Fetch data on server** - Use async Server Components instead of useEffect
-- **Use Server Actions** for mutations when possible (create, update, delete)
-- **API Routes** for:
-  - External webhooks
-  - Complex operations requiring middleware
-  - Client-side data fetching (SWR)
-
-### Database Queries - SECURITY CRITICAL
-- **ALWAYS filter by `organizationId`** - This is MANDATORY for multi-tenancy
-- Use Drizzle ORM exclusively - NEVER write raw SQL
-- Use transactions for multi-table operations:
-  ```typescript
-  await db.transaction(async (tx) => {
-    await tx.insert(leads).values({ ... });
-    await tx.insert(activities).values({ ... });
-  });
-  ```
-- Use prepared statements for repeated queries
-- Example multi-tenant query pattern:
-  ```typescript
-  const contacts = await db.query.contacts.findMany({
-    where: and(
-      eq(contacts.organizationId, user.organizationId), // REQUIRED
-      eq(contacts.status, 'active')
-    )
-  });
-  ```
-
-### Input Validation - SECURITY REQUIREMENT
-- **ALWAYS validate external input with Zod schemas**
-- NEVER trust: user input, form data, API responses, URL params, query strings
-- Use `.parse()` for critical paths (throws on invalid data)
-- Use `.safeParse()` for non-critical paths (returns success/error object)
-- Example:
-  ```typescript
-  const schema = z.object({
-    email: z.string().email(),
-    name: z.string().min(1).max(100),
-  });
-  
-  const result = schema.safeParse(formData);
-  if (!result.success) {
-    return { error: 'Invalid input' };
-  }
-  ```
-
-### Error Handling - NO EXCEPTIONS POLICY
-- **Every async function MUST have try-catch**
-- NEVER show technical errors to users
-- Transform all errors to friendly messages: "Something went wrong. Please try again."
-- Log technical details to monitoring ONLY (Sentry)
-- Use logger utilities: `logger.error()`, `logger.warn()`, `logger.info()`
-- NEVER use `console.log()` in production code
-- Example:
-  ```typescript
-  try {
-    const result = await fetchData();
-    return result;
-  } catch (error) {
-    logger.error('Failed to fetch data', { error, userId });
-    toast.error('Could not load data. Please try again.');
-    return null;
-  }
-  ```
-
-### UI/UX Requirements - MANDATORY
-
-#### Visual Feedback
-- **Every user action MUST have visual confirmation** - NO silent failures
-- Loading states: Use `<Skeleton>` or `<Spinner>` components
-- Success feedback: `toast.success()` or subtle animation
-- Error indicators: `toast.error()` with user-friendly message
-- Optimistic updates: Update UI immediately, rollback on error
-
-#### Accessibility - WCAG 2.1 AA COMPLIANCE
-- **EVERY interactive element needs:**
-  - `aria-label` or `aria-labelledby` attribute
-  - Keyboard access: Tab, Enter, Space keys
-  - Visible focus indicators: `ring-2 ring-primary/40`
-- Use semantic HTML: `<button>`, `<nav>`, `<main>`, `<article>`
-- Color contrast: Minimum 4.5:1 for normal text, 3:1 for large text
-- Test with screen readers before shipping
-- Example:
-  ```tsx
-  <button
-    aria-label="Delete contact"
-    className="focus:ring-2 focus:ring-primary/40"
-    onClick={handleDelete}
-  >
-    <Trash2 className="h-4 w-4" />
-  </button>
-  ```
-
-#### Responsive Design - MOBILE-FIRST REQUIRED
-- Design mobile-first using Tailwind breakpoints
-- Default styles = mobile (320px minimum width)
-- Breakpoints: `sm:` (640px), `md:` (768px), `lg:` (1024px), `xl:` (1280px)
-- Example: `className="flex-col md:flex-row"`
-- MUST test on mobile before considering feature complete
-- Touch targets: Minimum 44x44px (tap-friendly)
-
-### Component Patterns
-
-#### Use Project-Specific Components
-- **NeptuneButton** - Use for all buttons (has consistent styling + hover effects)
-- **NeptuneInput** - Use for all text inputs
-- **TrackedButton** - Use for analytics-tracked buttons
-- **StatusBadge** - Use for status indicators (leads, campaigns, tasks)
-- Import from `@/components/neptune/` and `@/components/ui/`
-
-#### Form Handling
-- **ALWAYS use react-hook-form + Zod**
-- Pattern:
-  ```typescript
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { ... }
-  });
-  
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    try {
-      await apiCall(data);
-      toast.success('Saved successfully');
-    } catch (error) {
-      toast.error('Could not save');
-    }
-  };
-  ```
-
-#### Data Fetching
-- **Server Components**: Use async/await directly
-- **Client Components**: Use SWR for data fetching
-  ```typescript
-  const { data, error, isLoading, mutate } = useSWR(
-    '/api/crm/contacts',
-    fetcher
-  );
-  ```
-- Use `mutate()` for optimistic updates after mutations
-
-### API Route Standards
-
-#### Response Format
-All API responses MUST follow this structure:
-```typescript
-// Success
-{ success: true, data: any }
-
-// Error
-{ success: false, error: { message: string, code?: string } }
-```
-
-#### HTTP Status Codes
-- `200` - Success (GET, PUT, PATCH)
-- `201` - Created (POST)
-- `204` - No Content (DELETE)
-- `400` - Bad Request (validation error)
-- `401` - Unauthorized (not authenticated)
-- `403` - Forbidden (authenticated but not authorized)
-- `404` - Not Found
-- `429` - Too Many Requests (rate limit)
-- `500` - Internal Server Error
-
-#### Rate Limiting
-Apply rate limiting to all API endpoints:
-```typescript
-const rateLimitResult = await rateLimit(userId, 'api:contacts', 100, 60);
-if (!rateLimitResult.success) {
-  return Response.json(
-    { error: 'Rate limit exceeded' },
-    { status: 429 }
-  );
-}
-```
-
-## Neptune AI Integration
-
-### Neptune AI System
-Neptune is the central AI assistant that:
-- Executes actions across all modules (CRM, Finance, Marketing, etc.)
-- Uses 50+ tools for business operations
-- Supports vision (GPT-4o), document processing, web search
-- Maintains conversation context across pages
-- Learns user preferences and autonomy levels
-
-### When Building New Features
-1. **Create an API endpoint** - RESTful endpoint for the action
-2. **Add a Neptune tool** - Define tool in `src/lib/ai/neptune/tools/`
-3. **Register tool** - Add to tool registry in `neptune-tools.ts`
-4. **Test with natural language** - "Neptune, create a new lead for John at Acme"
-
-### Neptune Tool Pattern
-```typescript
-export const myNewTool: Tool = {
-  name: 'my_action',
-  description: 'What this tool does (be specific)',
-  parameters: z.object({
-    param1: z.string().describe('Description of param1'),
-    param2: z.number().describe('Description of param2'),
-  }),
-  execute: async (params, context) => {
-    // 1. Validate context and permissions
-    if (!context.userId) {
-      return { error: 'Not authenticated' };
-    }
-    
-    // 2. Perform action
-    const result = await apiCall(params);
-    
-    // 3. Return user-friendly message
-    return {
-      success: true,
-      message: 'Action completed successfully',
-      data: result
-    };
-  },
-  riskLevel: 'medium', // low | medium | high
-};
-```
-
-## Environment Variables
-
-### Required (Core)
-- `DATABASE_URL` - Neon PostgreSQL connection string
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk auth (public)
-- `CLERK_SECRET_KEY` - Clerk auth (secret)
-- `OPENAI_API_KEY` - OpenAI GPT-4o, DALL-E 3
-- `UPSTASH_REDIS_URL` - Redis cache
-- `UPSTASH_REDIS_TOKEN` - Redis auth token
-- `BLOB_READ_WRITE_TOKEN` - Vercel Blob storage
-
-### Optional (Enhanced Features)
-- `ANTHROPIC_API_KEY` - Claude fallback
-- `GOOGLE_AI_API_KEY` - Gemini fallback
-- `PERPLEXITY_API_KEY` - Web search (Perplexity)
-- `FIRECRAWL_API_KEY` - Website analysis
-- `GAMMA_API_KEY` - Professional document generation
-- `STRIPE_SECRET_KEY` - Payments
-- `RESEND_API_KEY` - Email sending
-- `TRIGGER_SECRET_KEY` - Background jobs
-
-## Common Pitfalls & How to Avoid
-
-### Security
-- ❌ **DON'T**: Query without `organizationId` filter
-- ✅ **DO**: Always include `organizationId` in WHERE clause
-- ❌ **DON'T**: Trust user input directly
-- ✅ **DO**: Validate with Zod schemas
-
-### Performance
-- ❌ **DON'T**: Fetch data in useEffect when Server Components can do it
-- ✅ **DO**: Use async Server Components for data fetching
-- ❌ **DON'T**: Make N+1 queries in loops
-- ✅ **DO**: Use Drizzle's `with` for eager loading
-
-### Code Quality
-- ❌ **DON'T**: Use `console.log()` for logging
-- ✅ **DO**: Use `logger.error()`, `logger.info()`
-- ❌ **DON'T**: Skip error handling
-- ✅ **DO**: Wrap async calls in try-catch
-
-### UX
-- ❌ **DON'T**: Forget loading states
-- ✅ **DO**: Show `<Skeleton>` while loading
-- ❌ **DON'T**: Show technical errors to users
-- ✅ **DO**: Transform to friendly messages
-
-## Testing Requirements
-
-### Test Coverage Targets
-- Critical API routes: 100% (auth, payments, data mutations)
-- UI components: 80% (interactive elements, forms)
-- Utilities: 90% (pure functions)
-- Overall: 70% minimum (currently achieved)
-
-### What to Test
-- **Unit tests**: Pure functions, utilities, helpers
-- **Integration tests**: API routes, database operations
-- **E2E tests**: Critical user flows (signup, create lead, run workflow)
-
-### Test Command
-```bash
-npm run test        # Run tests in watch mode
-npm run test:run    # Run once
-npm run test:coverage  # Generate coverage report
-```
-
-## Git Commit Standards
-
-### Conventional Commits - REQUIRED FORMAT
-Format: `type(scope): message`
-
-**Types:**
-- `feat` - New feature
-- `fix` - Bug fix
-- `docs` - Documentation only
-- `chore` - Maintenance, deps, config
-- `refactor` - Code restructuring (no behavior change)
-- `test` - Test additions or updates
-- `style` - Code formatting (no logic change)
-- `perf` - Performance improvements
-
-**Scopes:**
-- `api` - API endpoints
-- `web` - Frontend components
-- `db` - Database schema or queries
-- `infra` - Infrastructure, deployment
-- `agents` - AI agents and tools
-- `flows` - Workflow builder
-- `neptune` - Neptune AI assistant
-- `crm` - CRM module
-- `marketing` - Marketing module
-- `finance` - Finance module
-- `content` - Content Cockpit
-
-**Examples:**
-```bash
-feat(crm): add lead bulk import functionality
-fix(api): resolve organization filter in contacts query
-docs(readme): update setup instructions
-chore(deps): upgrade Next.js to 16.0.4
-refactor(neptune): extract tool registry to separate file
-```
-
-## AI Agent Instructions
-
-### When You're Coding
-1. **Read AGENT_INSTRUCTIONS.md first** - Contains context on document management
-2. **Check PROJECT_STATUS.md** - Current state and recent changes
-3. **Follow user rules** (accessibility, mobile-first, no console.logs, etc.)
-4. **Use existing patterns** - Don't reinvent; follow established conventions
-5. **Test as you build** - Run dev server, verify in browser
-6. **Commit with conventional format** - Use proper type and scope
-
-### When Completing a Phase
-1. Update `docs/CONTENT_COCKPIT_HISTORY.md` (1-2 lines in table)
-2. Update `PROJECT_STATUS.md` (status only, ~5 lines max)
-3. **DO NOT** paste full implementation logs into README or PROJECT_STATUS
-
-### Priority Order
-1. Security (organizationId filtering, input validation)
-2. Functionality (feature works as intended)
-3. Error handling (try-catch, user-friendly messages)
-4. Accessibility (ARIA, keyboard nav, focus indicators)
-5. Mobile responsiveness (test on 320px+)
-6. Code quality (TypeScript strict, no console.logs)
-
-## Quick Reference
-
-### Most Common Components
-```typescript
-import { NeptuneButton } from "@/components/neptune/NeptuneButton";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { useAuth } from "@clerk/nextjs";
-```
-
-### Most Common Utilities
-```typescript
-import { cn } from "@/lib/utils";
-import { logger } from "@/lib/logger";
-import { db } from "@/lib/db";
-import { rateLimit } from "@/lib/rate-limit";
-import { trackEvent } from "@/lib/analytics";
-```
-
-### Most Common Patterns
-```typescript
-// Multi-tenant query
-const items = await db.query.tableName.findMany({
-  where: and(
-    eq(tableName.organizationId, user.organizationId),
-    // other filters...
-  )
-});
-
-// Error handling
-try {
-  const result = await action();
-  toast.success('Success');
-} catch (error) {
-  logger.error('Action failed', { error });
-  toast.error('Could not complete action');
-}
-
-// Loading state
-{isLoading ? <Skeleton /> : <Content />}
-```
-
----
-
-**This is a production-ready, enterprise-grade codebase. Maintain high standards. Ship quality code. 🚀**
-
+## Avoid
+- Files without purpose
+- Dependencies without justification
+- Over-engineering simple solutions
+- `console.log` in production
+- `any` as escape hatch

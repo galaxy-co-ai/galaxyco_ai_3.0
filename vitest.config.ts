@@ -23,7 +23,7 @@ export default defineConfig({
         '**/*.config.{ts,js}',
         '**/types/**',
         'Figma Make Project/**',
-        'src/legacy-pages/**',
+        '_to-delete-after-deploy/**',
         '.next/**',
       ],
       thresholds: {

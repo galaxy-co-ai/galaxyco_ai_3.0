@@ -1,0 +1,54 @@
+---
+description: Tailwind CSS patterns, responsive design, and accessibility standards.
+globs: **/*.tsx,**/*.css
+alwaysApply: false
+---
+
+# Styling & Accessibility Standards
+
+## Tailwind Patterns
+```tsx
+// ✅ Mobile-first responsive
+<div className="p-4 md:p-6 lg:p-8">
+
+// ✅ Consistent spacing scale
+// Use: 1, 2, 3, 4, 6, 8, 12, 16, 24, 32
+
+// ✅ Component variants with cn()
+import { cn } from '@/lib/utils'
+
+function Button({ variant, className, ...props }) {
+  return (
+    <button
+      className={cn(
+        'px-4 py-2 rounded-md font-medium transition-colors',
+        variant === 'primary' && 'bg-blue-600 text-white hover:bg-blue-700',
+        variant === 'secondary' && 'bg-gray-200 text-gray-900 hover:bg-gray-300',
+        className
+      )}
+      {...props}
+    />
+  )
+}
+```
+
+## Accessibility (WCAG AA)
+- All interactive elements keyboard accessible
+- Proper heading hierarchy (h1 → h2 → h3, no skipping)
+- Alt text for images: descriptive, not "image of..."
+- aria-label for icon-only buttons
+- Focus indicators visible (don't remove outlines)
+- Color contrast: 4.5:1 for text, 3:1 for large text
+
+## Responsive Breakpoints
+```
+sm: 640px   // Large phones
+md: 768px   // Tablets  
+lg: 1024px  // Laptops
+xl: 1280px  // Desktops
+2xl: 1536px // Large screens
+```
+
+## Dark Mode
+- Use `dark:` variant consistently
+- Test both modes before shipping

@@ -1,0 +1,61 @@
+---
+description: React and Next.js App Router patterns, component structure, and performance optimization.
+globs: **/*.tsx,**/app/**/*,**/components/**/*
+alwaysApply: false
+---
+
+# React & Next.js Standards
+
+## Component Architecture
+- Functional components only, no classes
+- Keep components under 200 lines
+- Extract complex logic into custom hooks
+- One component per file (except small helpers)
+
+## Server vs Client Components
+```typescript
+// Default: Server Components (no directive needed)
+// Only add 'use client' when you need:
+// - useState, useEffect, useContext
+// - Browser APIs (window, document)
+// - Event handlers (onClick, onChange)
+
+// ✅ Keep data fetching in Server Components
+export default async function Page() {
+  const data = await fetchData()
+  return <ClientWrapper data={data} />
+}
+
+// ✅ Small client wrappers for interactivity
+'use client'
+export function LikeButton({ postId }: { postId: string }) {
+  const [liked, setLiked] = useState(false)
+  return <button onClick={() => setLiked(!liked)}>♥</button>
+}
+```
+
+## File Structure
+```
+src/
+├── app/              # Routes and layouts
+│   ├── (auth)/       # Route groups
+│   ├── api/          # API routes
+│   └── layout.tsx    # Root layout
+├── components/
+│   ├── ui/           # Primitives (Button, Input)
+│   └── features/     # Domain components
+├── lib/              # Utilities
+├── hooks/            # Custom hooks
+└── types/            # Shared types
+```
+
+## Patterns
+- Use `Suspense` with meaningful fallbacks
+- Implement error boundaries via `error.tsx`
+- Early returns for loading/error states
+- Prefer URL state over React state when shareable
+
+## Performance
+- Dynamic imports for heavy components
+- Optimize images with `next/image`
+- Use `loading="lazy"` for below-fold content

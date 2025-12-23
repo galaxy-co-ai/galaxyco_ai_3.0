@@ -256,3 +256,13 @@ Extends existing `FloatingAIAssistant` with:
 
 
 
+
+
+
+
+
+
+
+
+
+
