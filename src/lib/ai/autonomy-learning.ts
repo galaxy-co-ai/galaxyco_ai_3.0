@@ -91,71 +91,71 @@ export const TOOL_RISK_LEVELS: Record<string, ActionRiskLevel> = {
   // MEDIUM-RISK TOOLS: Ask first, learn over time (creates/modifies data)
   // ============================================================================
   
-  // CRM Operations
-  create_lead: { toolName: 'create_lead', level: 'medium', defaultConfidence: 0 },
-  create_contact: { toolName: 'create_contact', level: 'medium', defaultConfidence: 0 },
-  update_lead_stage: { toolName: 'update_lead_stage', level: 'medium', defaultConfidence: 0 },
-  add_note: { toolName: 'add_note', level: 'medium', defaultConfidence: 0 },
-  create_deal: { toolName: 'create_deal', level: 'medium', defaultConfidence: 0 },
-  update_deal: { toolName: 'update_deal', level: 'medium', defaultConfidence: 0 },
+  // CRM Operations (increased confidence - common, reversible actions)
+  create_lead: { toolName: 'create_lead', level: 'medium', defaultConfidence: 50 },
+  create_contact: { toolName: 'create_contact', level: 'medium', defaultConfidence: 50 },
+  update_lead_stage: { toolName: 'update_lead_stage', level: 'medium', defaultConfidence: 45 },
+  create_deal: { toolName: 'create_deal', level: 'medium', defaultConfidence: 45 },
+  update_deal: { toolName: 'update_deal', level: 'medium', defaultConfidence: 40 },
   
-  // Task Management
-  create_task: { toolName: 'create_task', level: 'medium', defaultConfidence: 0 },
-  assign_to_team_member: { toolName: 'assign_to_team_member', level: 'medium', defaultConfidence: 0 },
+  // Task Management & Notes (RECLASSIFIED TO LOW - safe, reversible, UI-only)
+  create_task: { toolName: 'create_task', level: 'low', defaultConfidence: 80 },
+  add_note: { toolName: 'add_note', level: 'low', defaultConfidence: 85 },
+  assign_to_team_member: { toolName: 'assign_to_team_member', level: 'medium', defaultConfidence: 40 },
   
-  // Agent & Orchestration
-  create_agent: { toolName: 'create_agent', level: 'medium', defaultConfidence: 0 },
-  run_agent: { toolName: 'run_agent', level: 'medium', defaultConfidence: 0 },
-  create_agent_team: { toolName: 'create_agent_team', level: 'medium', defaultConfidence: 0 },
-  run_agent_team: { toolName: 'run_agent_team', level: 'medium', defaultConfidence: 0 },
-  delegate_to_agent: { toolName: 'delegate_to_agent', level: 'medium', defaultConfidence: 0 },
-  coordinate_agents: { toolName: 'coordinate_agents', level: 'medium', defaultConfidence: 0 },
-  store_shared_context: { toolName: 'store_shared_context', level: 'medium', defaultConfidence: 0 },
+  // Agent & Orchestration (increased confidence - core Neptune functionality)
+  create_agent: { toolName: 'create_agent', level: 'medium', defaultConfidence: 60 },
+  run_agent: { toolName: 'run_agent', level: 'medium', defaultConfidence: 55 },
+  create_agent_team: { toolName: 'create_agent_team', level: 'medium', defaultConfidence: 50 },
+  run_agent_team: { toolName: 'run_agent_team', level: 'medium', defaultConfidence: 50 },
+  delegate_to_agent: { toolName: 'delegate_to_agent', level: 'medium', defaultConfidence: 50 },
+  coordinate_agents: { toolName: 'coordinate_agents', level: 'medium', defaultConfidence: 45 },
+  store_shared_context: { toolName: 'store_shared_context', level: 'low', defaultConfidence: 80 },
   
-  // Workflow & Automation
-  create_workflow: { toolName: 'create_workflow', level: 'medium', defaultConfidence: 0 },
-  execute_workflow: { toolName: 'execute_workflow', level: 'medium', defaultConfidence: 0 },
-  create_automation: { toolName: 'create_automation', level: 'medium', defaultConfidence: 0 },
+  // Workflow & Automation (increased confidence)
+  create_workflow: { toolName: 'create_workflow', level: 'medium', defaultConfidence: 45 },
+  execute_workflow: { toolName: 'execute_workflow', level: 'medium', defaultConfidence: 40 },
+  create_automation: { toolName: 'create_automation', level: 'medium', defaultConfidence: 40 },
   
-  // Marketing Operations
-  create_campaign: { toolName: 'create_campaign', level: 'medium', defaultConfidence: 0 },
-  launch_campaign: { toolName: 'launch_campaign', level: 'medium', defaultConfidence: 0 },
-  update_campaign_roadmap: { toolName: 'update_campaign_roadmap', level: 'medium', defaultConfidence: 0 },
-  optimize_campaign: { toolName: 'optimize_campaign', level: 'medium', defaultConfidence: 0 },
-  segment_audience: { toolName: 'segment_audience', level: 'medium', defaultConfidence: 0 },
-  create_content_calendar: { toolName: 'create_content_calendar', level: 'medium', defaultConfidence: 0 },
-  generate_brand_guidelines: { toolName: 'generate_brand_guidelines', level: 'medium', defaultConfidence: 0 },
-  suggest_next_marketing_action: { toolName: 'suggest_next_marketing_action', level: 'medium', defaultConfidence: 0 },
+  // Marketing Operations (increased confidence + reclassify safe ones)
+  create_campaign: { toolName: 'create_campaign', level: 'medium', defaultConfidence: 50 },
+  launch_campaign: { toolName: 'launch_campaign', level: 'medium', defaultConfidence: 35 },
+  update_campaign_roadmap: { toolName: 'update_campaign_roadmap', level: 'low', defaultConfidence: 80 },
+  optimize_campaign: { toolName: 'optimize_campaign', level: 'low', defaultConfidence: 75 },
+  segment_audience: { toolName: 'segment_audience', level: 'low', defaultConfidence: 75 },
+  create_content_calendar: { toolName: 'create_content_calendar', level: 'low', defaultConfidence: 70 },
+  generate_brand_guidelines: { toolName: 'generate_brand_guidelines', level: 'low', defaultConfidence: 70 },
+  suggest_next_marketing_action: { toolName: 'suggest_next_marketing_action', level: 'low', defaultConfidence: 85 },
   
-  // Content Generation
-  generate_image: { toolName: 'generate_image', level: 'medium', defaultConfidence: 0 },
-  generate_marketing_copy: { toolName: 'generate_marketing_copy', level: 'medium', defaultConfidence: 0 },
-  generate_document: { toolName: 'generate_document', level: 'medium', defaultConfidence: 0 },
-  create_document: { toolName: 'create_document', level: 'medium', defaultConfidence: 0 },
-  create_professional_document: { toolName: 'create_professional_document', level: 'medium', defaultConfidence: 0 },
-  generate_pdf: { toolName: 'generate_pdf', level: 'medium', defaultConfidence: 0 },
-  save_upload_to_library: { toolName: 'save_upload_to_library', level: 'medium', defaultConfidence: 0 },
+  // Content Generation (RECLASSIFIED - safe, creates drafts not final content)
+  generate_image: { toolName: 'generate_image', level: 'low', defaultConfidence: 75 },
+  generate_marketing_copy: { toolName: 'generate_marketing_copy', level: 'low', defaultConfidence: 70 },
+  generate_document: { toolName: 'generate_document', level: 'low', defaultConfidence: 70 },
+  create_document: { toolName: 'create_document', level: 'low', defaultConfidence: 75 },
+  create_professional_document: { toolName: 'create_professional_document', level: 'low', defaultConfidence: 70 },
+  generate_pdf: { toolName: 'generate_pdf', level: 'low', defaultConfidence: 70 },
+  save_upload_to_library: { toolName: 'save_upload_to_library', level: 'low', defaultConfidence: 90 },
   
-  // Knowledge Base
-  create_collection: { toolName: 'create_collection', level: 'medium', defaultConfidence: 0 },
-  add_content_source: { toolName: 'add_content_source', level: 'medium', defaultConfidence: 0 },
-  add_to_hit_list: { toolName: 'add_to_hit_list', level: 'medium', defaultConfidence: 0 },
+  // Knowledge Base (RECLASSIFIED - organizational, safe)
+  create_collection: { toolName: 'create_collection', level: 'low', defaultConfidence: 80 },
+  add_content_source: { toolName: 'add_content_source', level: 'low', defaultConfidence: 75 },
+  add_to_hit_list: { toolName: 'add_to_hit_list', level: 'low', defaultConfidence: 80 },
   
-  // Calendar & Meetings
-  schedule_meeting: { toolName: 'schedule_meeting', level: 'medium', defaultConfidence: 0 },
-  book_meeting_rooms: { toolName: 'book_meeting_rooms', level: 'medium', defaultConfidence: 0 },
+  // Calendar & Meetings (increased confidence - common actions)
+  schedule_meeting: { toolName: 'schedule_meeting', level: 'medium', defaultConfidence: 45 },
+  book_meeting_rooms: { toolName: 'book_meeting_rooms', level: 'medium', defaultConfidence: 40 },
   
-  // Social Media (drafts/scheduling)
-  schedule_social_posts: { toolName: 'schedule_social_posts', level: 'medium', defaultConfidence: 0 },
-  post_to_social_media: { toolName: 'post_to_social_media', level: 'medium', defaultConfidence: 0 },
+  // Social Media (drafts/scheduling - increased confidence)
+  schedule_social_posts: { toolName: 'schedule_social_posts', level: 'medium', defaultConfidence: 40 },
+  post_to_social_media: { toolName: 'post_to_social_media', level: 'medium', defaultConfidence: 30 },
   
   // Dashboard & Roadmap (Phase 1E - auto-update on actions)
   update_dashboard_roadmap: { toolName: 'update_dashboard_roadmap', level: 'low', defaultConfidence: 95 },
   
-  // Drafting (requires review)
-  draft_email: { toolName: 'draft_email', level: 'medium', defaultConfidence: 0 },
-  draft_proposal: { toolName: 'draft_proposal', level: 'medium', defaultConfidence: 0 },
-  create_follow_up_sequence: { toolName: 'create_follow_up_sequence', level: 'medium', defaultConfidence: 0 },
+  // Drafting (RECLASSIFIED - creates drafts, not final content)
+  draft_email: { toolName: 'draft_email', level: 'low', defaultConfidence: 75 },
+  draft_proposal: { toolName: 'draft_proposal', level: 'low', defaultConfidence: 70 },
+  create_follow_up_sequence: { toolName: 'create_follow_up_sequence', level: 'low', defaultConfidence: 70 },
   
   // ============================================================================
   // HIGH-RISK TOOLS: Always confirm (irreversible external actions)
