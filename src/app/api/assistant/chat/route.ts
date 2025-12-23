@@ -447,7 +447,7 @@ export async function POST(request: Request) {
         }
       }
       
-      const systemPrompt = generateSystemPrompt(
+      let systemPrompt = generateSystemPrompt(
         aiContext, 
         feature || context?.feature || undefined,
         intentClassification
@@ -530,8 +530,47 @@ export async function POST(request: Request) {
       const history = await db.query.aiMessages.findMany({
         where: eq(aiMessages.conversationId, conversation.id),
         orderBy: [asc(aiMessages.createdAt)],
-        limit: 30,
+        limit: 50, // Increased from 30 to 50 for Phase 2B
       });
+      
+      // Phase 2B: Load session memory and inject into system prompt
+      let sessionMemory = null;
+      let sessionContext = '';
+      try {
+        const { 
+          getSessionMemory, 
+          initializeSessionMemory, 
+          buildSessionContext 
+        } = await import('@/lib/ai/session-memory');
+        
+        // Get or initialize session memory
+        sessionMemory = await getSessionMemory(conversation.id);
+        if (!sessionMemory) {
+          sessionMemory = await initializeSessionMemory(
+            workspaceId,
+            userRecord.id,
+            conversation.id
+          );
+        }
+        
+        // Build memory context for injection
+        if (sessionMemory && (sessionMemory.entities.length > 0 || sessionMemory.facts.length > 0 || sessionMemory.summary)) {
+          sessionContext = buildSessionContext(sessionMemory);
+          
+          // Inject session memory into system prompt
+          systemPrompt += `\n\n${sessionContext}\n\n**IMPORTANT:** Use this session memory naturally. Reference entities and facts from previous messages. Build on what you already know. Never ask for information you already have.`;
+          
+          logger.info('[AI Chat Stream] Session memory loaded', {
+            conversationId: conversation.id,
+            entities: sessionMemory.entities.length,
+            facts: sessionMemory.facts.length,
+            hasSummary: !!sessionMemory.summary,
+            currentTopic: sessionMemory.currentTopic,
+          });
+        }
+      } catch (error) {
+        logger.warn('[AI Chat Stream] Session memory failed (non-blocking)', { error });
+      }
       
       // Phase 2A: Analyze user's communication style (every 5 messages)
       // Run in background after history is loaded
@@ -845,6 +884,38 @@ Show your reasoning process naturally in your response.`;
           updatedAt: new Date(),
         })
         .where(eq(aiConversations.id, conversation.id));
+      
+      // Phase 2B: Update session memory with new messages
+      if (sessionMemory) {
+        (async () => {
+          try {
+            const { updateSessionMemory } = await import('@/lib/ai/session-memory');
+            
+            // Get updated history with the new messages
+            const updatedHistory = await db.query.aiMessages.findMany({
+              where: eq(aiMessages.conversationId, conversation.id),
+              orderBy: [asc(aiMessages.createdAt)],
+            });
+            
+            // Update session memory with assistant's response
+            await updateSessionMemory(
+              conversation.id,
+              { role: 'assistant', content: fullResponse },
+              updatedHistory.map(m => ({
+                role: m.role as 'user' | 'assistant' | 'system',
+                content: m.content,
+              }))
+            );
+            
+            logger.debug('[AI Chat Stream] Session memory updated', {
+              conversationId: conversation.id,
+              messageCount: updatedHistory.length,
+            });
+          } catch (err) {
+            logger.warn('[AI Chat Stream] Session memory update failed (non-blocking)', { err });
+          }
+        })();
+      }
 
       // Trigger background learning after 5+ message exchanges
       if (conversation.messageCount >= 10) {

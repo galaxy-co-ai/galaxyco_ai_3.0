@@ -79,9 +79,9 @@ export interface Message {
 // ============================================================================
 
 const CONFIG = {
-  // Session memory settings
+  // Session memory settings (Phase 2B: Increased window size)
   SESSION_TTL_HOURS: 4,           // Session expires after 4 hours of inactivity
-  WINDOW_SIZE: 10,                // Keep last 10 messages in full detail
+  WINDOW_SIZE: 50,                // Keep last 50 messages in full detail (increased from 10)
   SUMMARIZE_THRESHOLD: 20,        // Summarize after 20 messages
   MAX_ENTITIES: 50,               // Max entities to track per session
   MAX_FACTS: 30,                  // Max facts to track per session
