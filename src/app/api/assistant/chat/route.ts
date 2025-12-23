@@ -17,6 +17,7 @@ import { shouldAutoExecute, recordActionExecution } from '@/lib/ai/autonomy-lear
 import { getCachedResponse, cacheResponse } from '@/lib/ai/cache';
 import { trackNeptuneRequest, trackNeptuneError } from '@/lib/observability';
 import { classifyIntent } from '@/lib/ai/intent-classifier';
+import { getConnectedApps } from '@/lib/integrations';
 
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
 
@@ -706,12 +707,20 @@ export async function POST(request: Request) {
         ? getToolsForCapability(activeFeature)
         : aiTools;
 
+      // Get connected apps/integrations for tool context
+      const connectedApps = await getConnectedApps(workspaceId, userRecord.id);
+      logger.debug('[AI Chat Stream] Retrieved connected apps', {
+        count: connectedApps.length,
+        providers: connectedApps.map(a => a.provider),
+      });
+
       // Setup tool context
       const toolContext: ToolContext = {
         workspaceId,
         userId: clerkUserId,
         userEmail: userRecord.email,
         userName: [userRecord.firstName, userRecord.lastName].filter(Boolean).join(' ') || userRecord.email.split('@')[0],
+        connectedApps,
       };
 
       // Call OpenAI with streaming

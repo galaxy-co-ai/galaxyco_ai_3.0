@@ -36,6 +36,13 @@ export interface ToolContext {
   userId: string;
   userEmail: string;
   userName: string;
+  connectedApps?: Array<{
+    provider: string;
+    type: string;
+    scopes: string[];
+    accessToken?: string;
+    status: string;
+  }>;
 }
 
 export interface ToolResult {

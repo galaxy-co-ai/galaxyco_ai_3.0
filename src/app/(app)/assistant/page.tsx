@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import useSWR from "swr";
+import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Sparkles, 
@@ -42,6 +44,34 @@ import { logger } from "@/lib/logger";
 
 // SWR fetcher
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+// Error message constants for specific error types
+const ERROR_MESSAGES = {
+  NETWORK_TIMEOUT: {
+    title: 'Connection Lost',
+    message: 'Your internet connection was interrupted. Check your connection and try again.',
+  },
+  SERVER_ERROR: {
+    title: 'Server Error',
+    message: 'Our servers encountered an issue. We\'re looking into it. Please try again in a moment.',
+  },
+  RATE_LIMIT: {
+    title: 'Too Many Requests',
+    message: 'You\'ve sent too many messages. Please wait a moment before trying again.',
+  },
+  AUTH_ERROR: {
+    title: 'Session Expired',
+    message: 'Your session has expired. Please refresh the page to continue.',
+  },
+  VALIDATION_ERROR: {
+    title: 'Invalid Message',
+    message: 'Your message couldn\'t be processed. Try rephrasing or shortening it.',
+  },
+  GENERIC: {
+    title: 'Something Went Wrong',
+    message: 'An unexpected error occurred. Please try again.',
+  },
+} as const;
 
 interface Message {
   id: string;
@@ -106,13 +136,19 @@ export default function AssistantPage() {
   const [isDeletingConversation, setIsDeletingConversation] = useState<string | null>(null);
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [streamError, setStreamError] = useState<{ message: string; conversationId?: string } | null>(null);
+  const [streamError, setStreamError] = useState<{ 
+    type: keyof typeof ERROR_MESSAGES;
+    message: string; 
+    conversationId?: string;
+    retryAfter?: number;
+  } | null>(null);
   const [isToolExecuting, setIsToolExecuting] = useState(false);
   const [executingTools, setExecutingTools] = useState<string[]>([]);
   const [detectedIntent, setDetectedIntent] = useState<{ type: string; confidence: number } | null>(null);
   const [progress, setProgress] = useState<{ current: number; max: number; message: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const conversationButtonRef = useRef<HTMLButtonElement>(null);
 
   // Restore conversation from sessionStorage on mount
   useEffect(() => {
@@ -395,7 +431,8 @@ export default function AssistantPage() {
         if (Date.now() - lastChunkTime > STREAM_TIMEOUT_MS) {
           reader.cancel();
           setStreamError({
-            message: 'Connection lost. Please try again.',
+            type: 'NETWORK_TIMEOUT',
+            message: ERROR_MESSAGES.NETWORK_TIMEOUT.message,
             conversationId: convId || undefined,
           });
           clearInterval(timeoutChecker);
@@ -458,9 +495,12 @@ export default function AssistantPage() {
 
               // Handle errors
               if (parsed.error) {
+                const errorType = (parsed.errorType as keyof typeof ERROR_MESSAGES) || 'GENERIC';
                 setStreamError({
+                  type: errorType,
                   message: parsed.error,
                   conversationId: convId || undefined,
+                  retryAfter: parsed.retryAfter,
                 });
                 break;
               }
@@ -518,7 +558,8 @@ export default function AssistantPage() {
     } catch (error) {
       logger.error('Failed to send message', error);
       setStreamError({
-        message: error instanceof Error ? error.message : 'Failed to send message. Please try again.',
+        type: 'GENERIC',
+        message: error instanceof Error ? error.message : ERROR_MESSAGES.GENERIC.message,
         conversationId: currentConversationId || undefined,
       });
       // Remove the optimistic user message on error
@@ -566,6 +607,11 @@ export default function AssistantPage() {
       }));
       
       setMessages(loadedMessages);
+      
+      // Restore focus to conversation button for keyboard users
+      setTimeout(() => {
+        conversationButtonRef.current?.focus();
+      }, 100);
     } catch (error) {
       logger.error('Failed to load conversation', error);
       toast.error('Failed to load conversation');
@@ -859,16 +905,21 @@ export default function AssistantPage() {
                     return (
                       <button
                         key={conv.id}
+                        ref={isSelected ? conversationButtonRef : null}
                         onClick={() => handleSelectConversation(conv)}
                         className={cn(
-                          "w-full text-left p-4 rounded-lg border-2 transition-all duration-200 group",
+                          "w-full text-left p-4 rounded-lg border-2 transition-all duration-200 group relative",
                           isSelected 
-                            ? `${convBgColor} border-indigo-200 shadow-md` 
+                            ? `${convBgColor} border-indigo-500 shadow-lg ring-2 ring-indigo-200` 
                             : "bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50"
                         )}
                         aria-label={`View conversation: ${conv.title}`}
                         aria-pressed={isSelected}
                       >
+                        {/* Active indicator bar */}
+                        {isSelected && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 bg-indigo-600 rounded-r-full" />
+                        )}
                         <div className="flex items-start gap-3">
                           <div className={cn("p-2 rounded-lg", convBgColor)}>
                             <ConvIcon className={cn("h-5 w-5", convColor)} aria-hidden="true" />
@@ -1076,10 +1127,13 @@ export default function AssistantPage() {
                             <div className="mt-3 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
                               {/* Image Preview */}
                               <div className="relative group">
-                                <img 
+                                <Image 
                                   src={imageData.imageUrl}
                                   alt={imageData.revisedPrompt || "Generated image"}
+                                  width={1024}
+                                  height={1024}
                                   className="w-full h-auto max-h-96 object-contain bg-white"
+                                  unoptimized
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
                               </div>
@@ -1221,8 +1275,13 @@ export default function AssistantPage() {
                       <div className="bg-red-50 border-2 border-red-200 rounded-2xl rounded-bl-md px-4 py-3 flex-1">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-sm font-medium text-red-900">Connection Error</p>
+                            <p className="text-sm font-medium text-red-900">
+                              {ERROR_MESSAGES[streamError.type]?.title || 'Error'}
+                            </p>
                             <p className="text-xs text-red-700 mt-1">{streamError.message}</p>
+                            {streamError.retryAfter && (
+                              <p className="text-xs text-red-600 mt-1">Retry in {streamError.retryAfter}s</p>
+                            )}
                           </div>
                           <Button
                             size="sm"
@@ -1287,15 +1346,21 @@ export default function AssistantPage() {
                     <Paperclip className="h-5 w-5" />
                   )}
                 </Button>
-                <Input
+                <Textarea
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                    // Auto-resize textarea
+                    e.target.style.height = '44px';
+                    e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+                  }}
                   onPaste={handlePaste}
                   onKeyDown={handleKeyPress}
                   placeholder={`Ask about ${selectedCapabilityData.title.toLowerCase()}...`}
-                  className="flex-1 h-11 bg-slate-50 border-slate-200 focus:border-indigo-300 focus:ring-indigo-200"
+                  className="flex-1 min-h-[44px] max-h-[200px] resize-none bg-slate-50 border-slate-200 focus:border-indigo-300 focus:ring-indigo-200"
                   disabled={isLoading}
                   aria-label="Type your message"
+                  rows={1}
                 />
                 <Button
                   onClick={handleSendMessage}
@@ -1311,7 +1376,7 @@ export default function AssistantPage() {
                 </Button>
               </div>
               <p className="text-[11px] text-gray-400 mt-2 text-center">
-                Press Enter to send • Powered by GPT-4
+                Press Enter to send • Shift+Enter for new line • Powered by GPT-4
               </p>
             </div>
           </div>
