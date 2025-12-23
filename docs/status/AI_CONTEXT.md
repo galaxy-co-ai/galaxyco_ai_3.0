@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (2f38c6d)  
+**Updated Through:** 2025-12-23 (1afd957)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 1afd957 feat(neptune): rounded bullets and interactive checklists in chat
 - 2025-12-23 2f38c6d feat(neptune): unify chat input on dashboard + floating assistant with multiline, smart lists, and new send key
 - 2025-12-23 1f7a3c6 fix(neptune): implement Tier 1 critical fixes
 - 2025-12-23 ce53d7e Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 81e1572 fix(build): resolve TypeScript errors and deprecation warnings blocking Vercel deployment
 - 2025-12-23 c585b0a Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 c280b35 fix(neptune): remove dynamic value from proactive trigger message
-- 2025-12-23 44f30df Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
