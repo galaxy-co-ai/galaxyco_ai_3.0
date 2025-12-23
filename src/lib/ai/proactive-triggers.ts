@@ -72,7 +72,7 @@ export const PROACTIVE_TRIGGERS: ProactiveTrigger[] = [
     category: 'crm',
     description: 'Significant pipeline value at risk',
     condition: (ctx) => ctx.crm.totalPipelineValue > 50000 && ctx.crm.hotLeads.length > 0,
-    suggestedResponse: `Your pipeline is worth $${(ctx.crm.totalPipelineValue / 1000).toFixed(0)}K. Let me help you focus on the highest-value deals to close them faster.`,
+    suggestedResponse: "Your pipeline has significant value. Let me help you focus on the highest-value deals to close them faster.",
     suggestedTools: ['create_task', 'create_document'],
   },
   
