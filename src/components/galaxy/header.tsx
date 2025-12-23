@@ -5,10 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Command, Settings, Plug, Gauge, LogOut } from "lucide-react";
 import { OrganizationSwitcher, useUser, useClerk } from "@clerk/nextjs";
-import { AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import {
@@ -21,8 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { SearchResults, type SearchResult } from "@/components/shared/SearchResults";
-import { useDebounce } from "@/hooks/useDebounce";
 
 /**
  * System admin email whitelist (client-side mirror of server-side list)
@@ -49,21 +45,6 @@ export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   actions?: React.ReactNode;
 }
 
-// Search response type
-interface SearchResponse {
-  query: string;
-  results: SearchResult[];
-  categories: {
-    contacts: SearchResult[];
-    campaigns: SearchResult[];
-    knowledge: SearchResult[];
-    creator: SearchResult[];
-    agents: SearchResult[];
-    blog: SearchResult[];
-  };
-  totalCount: number;
-}
-
 export function Header({
   title,
   description,
@@ -76,91 +57,9 @@ export function Header({
   ...props
 }: HeaderProps) {
   const router = useRouter();
-  const [searchOpen, setSearchOpen] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState("");
-  const [searchResults, setSearchResults] = React.useState<SearchResponse | null>(null);
-  const [isSearching, setIsSearching] = React.useState(false);
-  const debouncedQuery = useDebounce(searchQuery, 300);
   const { trackEvent } = useAnalytics({ trackPageViews: false });
-  const searchSubmittedRef = React.useRef(false); // Prevent duplicate tracking
-  const searchContainerRef = React.useRef<HTMLDivElement>(null);
   const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
-
-  // Fetch search results when debounced query changes
-  React.useEffect(() => {
-    const fetchResults = async () => {
-      if (debouncedQuery.length < 2) {
-        setSearchResults(null);
-        return;
-      }
-
-      setIsSearching(true);
-      try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&limit=5`);
-        if (response.ok) {
-          const data = await response.json();
-          setSearchResults(data);
-        }
-      } catch {
-        // Silently handle search errors
-        setSearchResults(null);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    fetchResults();
-  }, [debouncedQuery]);
-
-  // Close search on click outside
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-        setSearchOpen(false);
-        setSearchQuery("");
-        setSearchResults(null);
-      }
-    };
-
-    if (searchOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [searchOpen]);
-
-  // Handle keyboard shortcut to open search
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  const handleSearchClose = () => {
-    setSearchOpen(false);
-    setSearchQuery("");
-    setSearchResults(null);
-  };
-
-  const handleSearchSelect = (result: SearchResult) => {
-    trackEvent({
-      eventType: 'click',
-      eventName: 'search_result_click',
-      metadata: {
-        query: searchQuery,
-        resultType: result.type,
-        resultId: result.id,
-        resultTitle: result.title,
-      }
-    });
-    handleSearchClose();
-  };
 
   // Check if user is system admin (by metadata OR email whitelist)
   const isSystemAdmin = React.useMemo(() => {
@@ -239,74 +138,30 @@ export function Header({
           </div>
         )}
 
-        {/* Search (Center) */}
+        {/* Search (Center) - Now triggers CommandPalette */}
         {showSearch && (
-          <div className="flex-1 max-w-md mx-auto" ref={searchContainerRef}>
-            {searchOpen ? (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search contacts, campaigns, documents..."
-                  className="pl-9 pr-9"
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      handleSearchClose();
-                    } else if (e.key === 'Enter' && searchQuery.trim() && !searchResults?.results.length) {
-                      // Only track if no results (results have their own tracking)
-                      searchSubmittedRef.current = true;
-                      trackEvent({
-                        eventType: 'search',
-                        eventName: 'global_search',
-                        metadata: {
-                          searchQuery: searchQuery.trim(),
-                          source: 'header',
-                          method: 'enter',
-                          hasResults: false
-                        }
-                      });
-                    }
-                  }}
-                  aria-label="Search"
-                  aria-expanded={searchOpen && (isSearching || (searchResults?.results.length ?? 0) > 0)}
-                  aria-controls="search-results"
-                  aria-autocomplete="list"
-                />
-                <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                  esc
-                </kbd>
-
-                {/* Search Results Dropdown */}
-                <AnimatePresence>
-                  {(isSearching || searchQuery.length >= 2) && (
-                    <SearchResults
-                      results={searchResults?.results || []}
-                      categories={searchResults?.categories}
-                      isLoading={isSearching}
-                      query={searchQuery}
-                      onSelect={handleSearchSelect}
-                      onClose={handleSearchClose}
-                    />
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                className="w-full justify-start text-muted-foreground"
-                onClick={() => setSearchOpen(true)}
-                aria-label="Open search"
-              >
-                <Search className="h-4 w-4" />
-                <span className="hidden sm:inline-flex">Search...</span>
-                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:ml-auto sm:flex">
-                  <Command className="h-3 w-3" />K
-                </kbd>
-              </Button>
-            )}
+          <div className="flex-1 max-w-md mx-auto">
+            <Button
+              variant="outline"
+              className="w-full justify-start text-muted-foreground"
+              onClick={() => {
+                // Trigger CommandPalette by simulating Cmd+K
+                const event = new KeyboardEvent('keydown', {
+                  key: 'k',
+                  metaKey: true,
+                  ctrlKey: true,
+                  bubbles: true,
+                });
+                document.dispatchEvent(event);
+              }}
+              aria-label="Open command palette"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline-flex">Search...</span>
+              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:ml-auto sm:flex">
+                <Command className="h-3 w-3" />K
+              </kbd>
+            </Button>
           </div>
         )}
 
