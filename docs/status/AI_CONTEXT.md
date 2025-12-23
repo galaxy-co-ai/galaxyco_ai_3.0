@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (9122c60)  
+**Updated Through:** 2025-12-23 (0655157)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 0655157 feat(neptune): fix keyboard shortcuts and enhance typography
 - 2025-12-23 9122c60 feat(neptune): improve error messages and add iOS-style message bubbles
 - 2025-12-23 ece2c4a fix(neptune): textarea resets to base height after send (dashboard + floating assistant)
 - 2025-12-23 1afd957 feat(neptune): rounded bullets and interactive checklists in chat
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 ec5ab41 perf(neptune): optimize to sub-3-second response times
 - 2025-12-23 aac5e43 feat(neptune): rebalance autonomy for 70%+ auto-execution rate
 - 2025-12-23 cc1a66e feat(neptune): intelligent next-step suggestions in tool orchestration
-- 2025-12-23 81e1572 fix(build): resolve TypeScript errors and deprecation warnings blocking Vercel deployment
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
