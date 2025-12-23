@@ -226,6 +226,10 @@ export default function NeptuneAssistPanel({
     const attachmentsToSend = [...pendingAttachments];
     setInput("");
     setPendingAttachments([]);
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = '44px';
+    }
 
     await sendMessage(messageToSend, attachmentsToSend, feature);
   };

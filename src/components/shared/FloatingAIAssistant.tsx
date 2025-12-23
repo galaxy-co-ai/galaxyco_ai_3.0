@@ -165,6 +165,10 @@ export function FloatingAIAssistant() {
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = '36px';
+    }
     setIsTyping(true);
 
     try {
