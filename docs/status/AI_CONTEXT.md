@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-22 (c4456f2)  
+**Updated Through:** 2025-12-22 (481c931)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-22 481c931 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-22 a00d9eb chore: major project cleanup and reorganization
 - 2025-12-22 c4456f2 feat(web): convert New Chat and workspace tabs to icon-only on mobile
 - 2025-12-17 a5a9fd9 docs: update handoff with Priority #6 completion (Proactive Insights)
 - 2025-12-17 64a2264 feat(dashboard): consolidate right column into tabbed WorkspacePanel
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 158cbe6 docs: add Neptune AI assistant audit handoff document
 - 2025-12-17 c552233 docs: add comprehensive user journey test report (97% pass rate)
 - 2025-12-17 b59421b feat(finance): implement document persistence to content library
-- 2025-12-17 e6621e6 feat(ai): implement create_agent tool for Neptune
-- 2025-12-17 56570af feat(crm): implement hot leads tracking with leadStatus field
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
