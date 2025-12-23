@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageTitle } from "@/components/ui/page-title";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles,
   Send,
@@ -92,7 +93,8 @@ export default function NeptuneAssistPanel({
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [tabHeld, setTabHeld] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -1094,23 +1096,99 @@ export default function NeptuneAssistPanel({
                 <Paperclip className="h-4 w-4" />
               )}
             </Button>
-            <input
+            <Textarea
               ref={inputRef}
-              type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // Auto-resize
+                e.target.style.height = '44px';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+              }}
               onPaste={handlePaste}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
+                // Track Tab hold state for Tab+Enter quick-send
+                if (e.key === 'Tab') {
                   e.preventDefault();
-                  handleSend(undefined);
+                  setTabHeld(true);
+                  const ta = e.currentTarget;
+                  const start = ta.selectionStart ?? 0;
+                  const end = ta.selectionEnd ?? 0;
+                  const value = ta.value;
+                  // Indent/outdent lists
+                  if (e.shiftKey) {
+                    // Outdent current line
+                    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                    const line = value.slice(lineStart, end);
+                    if (line.startsWith('  ')) {
+                      const newValue = value.slice(0, lineStart) + line.slice(2) + value.slice(end);
+                      setInput(newValue);
+                      // Restore caret
+                      requestAnimationFrame(() => {
+                        ta.selectionStart = ta.selectionEnd = start - 2;
+                      });
+                    }
+                  } else {
+                    // Insert two spaces
+                    const newVal = value.slice(0, start) + '  ' + value.slice(end);
+                    setInput(newVal);
+                    requestAnimationFrame(() => {
+                      ta.selectionStart = ta.selectionEnd = start + 2;
+                    });
+                  }
+                  return;
+                }
+                if (e.key === 'Enter') {
+                  const ta = e.currentTarget;
+                  if (e.shiftKey || tabHeld) {
+                    e.preventDefault();
+                    handleSend(undefined);
+                    return;
+                  }
+                  // Smart newline with list continuation
+                  e.preventDefault();
+                  const start = ta.selectionStart ?? 0;
+                  const end = ta.selectionEnd ?? 0;
+                  const value = ta.value;
+                  const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                  const currentLine = value.slice(lineStart, start);
+                  const bulletMatch = currentLine.match(/^(\s*)([-*]|(\d+)\.)\s+/);
+                  let insert = '\n';
+                  if (bulletMatch) {
+                    const indent = bulletMatch[1] || '';
+                    const number = bulletMatch[3] ? parseInt(bulletMatch[3], 10) : null;
+                    if (currentLine.trim().length === bulletMatch[0].trim().length) {
+                      // Empty bullet -> exit list
+                      insert = '\n';
+                    } else if (number !== null) {
+                      insert = `\n${indent}${number + 1}. `;
+                    } else {
+                      insert = `\n${indent}- `;
+                    }
+                  }
+                  const newVal = value.slice(0, start) + insert + value.slice(end);
+                  setInput(newVal);
+                  requestAnimationFrame(() => {
+                    const newPos = start + insert.length;
+                    ta.selectionStart = ta.selectionEnd = newPos;
+                    // Auto-resize
+                    ta.style.height = '44px';
+                    ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`;
+                  });
+                  return;
                 }
               }}
+              onKeyUp={(e) => {
+                if (e.key === 'Tab') setTabHeld(false);
+              }}
               placeholder="Ask Neptune... (⌘K to focus)"
-              className="flex-1 rounded-md border bg-background px-3 py-2 text-sm min-w-0"
+              className="flex-1 min-h-[44px] max-h-[200px] resize-none rounded-md border bg-background px-3 py-2 text-sm min-w-0"
               disabled={isLoading || isRecording}
               aria-label="Message Neptune, press Command+K to focus"
+              rows={1}
             />
+            
+            
             <Button
               variant={isRecording ? "destructive" : "ghost"}
               size="icon"

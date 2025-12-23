@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
-import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import {
   Sparkles,
@@ -66,7 +66,8 @@ export function FloatingAIAssistant() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [tabHeld, setTabHeld] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -553,20 +554,88 @@ export function FloatingAIAssistant() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Input
+                    <Textarea
                       ref={inputRef}
                       placeholder="Ask me anything..."
                       value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        // Auto-resize
+                        e.target.style.height = '36px';
+                        e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+                      }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
+                        if (e.key === 'Tab') {
                           e.preventDefault();
-                          handleSendMessage();
+                          setTabHeld(true);
+                          const ta = e.currentTarget;
+                          const start = ta.selectionStart ?? 0;
+                          const end = ta.selectionEnd ?? 0;
+                          const value = ta.value;
+                          if (e.shiftKey) {
+                            const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                            const line = value.slice(lineStart, end);
+                            if (line.startsWith('  ')) {
+                              const newValue = value.slice(0, lineStart) + line.slice(2) + value.slice(end);
+                              setInputValue(newValue);
+                              requestAnimationFrame(() => {
+                                ta.selectionStart = ta.selectionEnd = start - 2;
+                              });
+                            }
+                          } else {
+                            const newVal = value.slice(0, start) + '  ' + value.slice(end);
+                            setInputValue(newVal);
+                            requestAnimationFrame(() => {
+                              ta.selectionStart = ta.selectionEnd = start + 2;
+                            });
+                          }
+                          return;
+                        }
+                        if (e.key === 'Enter') {
+                          const ta = e.currentTarget;
+                          if (e.shiftKey || tabHeld) {
+                            e.preventDefault();
+                            handleSendMessage();
+                            return;
+                          }
+                          // Smart newline with bullet continuation
+                          e.preventDefault();
+                          const start = ta.selectionStart ?? 0;
+                          const end = ta.selectionEnd ?? 0;
+                          const value = ta.value;
+                          const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                          const currentLine = value.slice(lineStart, start);
+                          const bulletMatch = currentLine.match(/^(\s*)([-*]|(\d+)\.)\s+/);
+                          let insert = '\n';
+                          if (bulletMatch) {
+                            const indent = bulletMatch[1] || '';
+                            const number = bulletMatch[3] ? parseInt(bulletMatch[3], 10) : null;
+                            if (currentLine.trim().length === bulletMatch[0].trim().length) {
+                              insert = '\n';
+                            } else if (number !== null) {
+                              insert = `\n${indent}${number + 1}. `;
+                            } else {
+                              insert = `\n${indent}- `;
+                            }
+                          }
+                          const newVal = value.slice(0, start) + insert + value.slice(end);
+                          setInputValue(newVal);
+                          requestAnimationFrame(() => {
+                            const newPos = start + insert.length;
+                            ta.selectionStart = ta.selectionEnd = newPos;
+                            ta.style.height = '36px';
+                            ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+                          });
+                          return;
                         }
                       }}
+                      onKeyUp={(e) => { if (e.key === 'Tab') setTabHeld(false); }}
                       disabled={isTyping}
-                      className="flex-1 h-9 rounded-full border-gray-300 bg-gray-50 focus:bg-white text-sm"
+                      className="flex-1 min-h-[36px] max-h-[160px] resize-none rounded-full border-gray-300 bg-gray-50 focus:bg-white text-sm px-3 py-2"
+                      rows={1}
                     />
+                    
+                    <div className="text-[10px] text-gray-400 ml-2 hidden sm:block">Enter = new line • Shift+Enter/Tab+Enter = send</div>
                     <Button
                       onClick={() => handleSendMessage()}
                       disabled={!inputValue.trim() || isTyping}
