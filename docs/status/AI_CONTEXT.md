@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-22 (e0f2998)  
+**Updated Through:** 2025-12-22 (416f3d8)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-22 416f3d8 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-22 2a4ee18 chore(docs): consolidate all handoff documents into docs/handoffs/
 - 2025-12-22 e0f2998 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-22 6844342 chore: remove completed cleanup plan doc
 - 2025-12-22 1323490 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 3ac8b3d feat(neptune): enhance content generation tools to use GPT-4o
 - 2025-12-17 5782b7b docs(neptune): update handoff - calendar integration already complete
 - 2025-12-17 8dceaf0 docs: update handoff with completed autonomy settings work
-- 2025-12-17 a97955c feat(neptune): implement autonomy settings UI
-- 2025-12-17 e121760 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
