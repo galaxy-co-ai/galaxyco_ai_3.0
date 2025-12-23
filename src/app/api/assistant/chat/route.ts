@@ -834,6 +834,25 @@ Show your reasoning process naturally in your response.`;
             }))
           });
 
+          // Phase 2D: Extract and log suggested next steps
+          const nextSteps = toolResults
+            .map(r => {
+              try {
+                const parsed = JSON.parse(r.result);
+                return parsed.suggestedNextStep;
+              } catch {
+                return null;
+              }
+            })
+            .filter(Boolean);
+
+          if (nextSteps.length > 0) {
+            logger.info('[AI Chat] Tool suggested next steps', {
+              conversationId: conversation.id,
+              steps: nextSteps.map(s => s.action),
+            });
+          }
+
           // Continue loop to get AI response to tool results
         } else {
           // No more tool calls, we're done

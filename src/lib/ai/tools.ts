@@ -43,6 +43,12 @@ export interface ToolResult {
   message: string;
   data?: Record<string, unknown>;
   error?: string;
+  suggestedNextStep?: {
+    action: string;
+    reason: string;
+    prompt: string;
+    autoSuggest: boolean;
+  };
 }
 
 type ToolFunction = (
@@ -2698,6 +2704,12 @@ const toolImplementations: Record<string, ToolFunction> = {
           company: prospect.company,
           stage: prospect.stage,
         },
+        suggestedNextStep: {
+          action: 'schedule_meeting',
+          reason: 'New B2B leads typically benefit from a discovery call to qualify their needs',
+          prompt: `Want me to schedule a discovery call with ${prospect.name}${prospect.company ? ` at ${prospect.company}` : ''}?`,
+          autoSuggest: true,
+        },
       };
     } catch (error) {
       logger.error('AI create_lead failed', error);
@@ -2866,6 +2878,12 @@ const toolImplementations: Record<string, ToolFunction> = {
           email: contact.email,
           company: contact.company,
         },
+        suggestedNextStep: {
+          action: 'add_to_campaign',
+          reason: 'New contacts benefit from automated nurture sequences',
+          prompt: 'Want to add them to a nurture campaign?',
+          autoSuggest: false,
+        },
       };
     } catch (error) {
       logger.error('AI create_contact failed', error);
@@ -2938,6 +2956,12 @@ const toolImplementations: Record<string, ToolFunction> = {
           startTime: event.startTime,
           endTime: event.endTime,
           attendeeCount: attendees.length,
+        },
+        suggestedNextStep: {
+          action: 'create_agenda',
+          reason: 'Meetings are more productive with prepared agendas',
+          prompt: 'Want me to create an agenda for this meeting?',
+          autoSuggest: true,
         },
       };
     } catch (error) {
@@ -3107,6 +3131,12 @@ const toolImplementations: Record<string, ToolFunction> = {
           title: task.title,
           priority: task.priority,
           dueDate: task.dueDate,
+        },
+        suggestedNextStep: {
+          action: 'assign_to_agent',
+          reason: 'Repetitive tasks can be automated with agents',
+          prompt: 'Is this something that happens regularly? I can automate it.',
+          autoSuggest: false,
         },
       };
     } catch (error) {
@@ -3383,7 +3413,13 @@ const toolImplementations: Record<string, ToolFunction> = {
           type: agent.type,
           capabilities: agent.capabilities,
           template: agent.template
-        }
+        },
+        suggestedNextStep: {
+          action: 'run_agent',
+          reason: 'New agents should be tested to ensure they work as expected',
+          prompt: `Want me to run ${agent.name} now to test it out?`,
+          autoSuggest: true,
+        },
       };
     } catch (error) {
       logger.error('AI create_agent_quick failed', error);
@@ -4006,6 +4042,12 @@ A: [Detailed answer]`,
           type: doc.type,
           collectionId: collectionId,
         },
+        suggestedNextStep: {
+          action: 'share_document',
+          reason: 'Documents are most useful when shared with stakeholders',
+          prompt: 'Want to share this with your team or a contact?',
+          autoSuggest: false,
+        },
       };
     } catch (error) {
       logger.error('AI create_document failed', error);
@@ -4544,6 +4586,12 @@ A: [Detailed answer]`,
           type: campaign.type,
           status: campaign.status,
         },
+        suggestedNextStep: {
+          action: 'add_contacts_to_campaign',
+          reason: 'Campaigns need an audience to be effective',
+          prompt: 'Want to select contacts for this campaign?',
+          autoSuggest: true,
+        },
       };
     } catch (error) {
       logger.error('AI create_campaign failed', error);
@@ -4670,6 +4718,12 @@ A: [Detailed answer]`,
           items,
           // Flag for client-side to dispatch event
           dispatchEvent: 'dashboard-roadmap-update',
+        },
+        suggestedNextStep: {
+          action: 'complete_next_milestone',
+          reason: 'Progress is made by tackling the next milestone',
+          prompt: 'Ready to work on the next item in your roadmap?',
+          autoSuggest: true,
         },
       };
     } catch (error) {
@@ -4810,6 +4864,12 @@ A: [Detailed answer]`,
             messageId: result.messageId,
             status: 'sent',
             sentAt: new Date().toISOString(),
+          },
+          suggestedNextStep: {
+            action: 'create_task',
+            reason: 'Follow-ups ensure important emails don\'t fall through the cracks',
+            prompt: 'Want to set a reminder to follow up if they don\'t respond?',
+            autoSuggest: false,
           },
         };
       } else {
@@ -8284,6 +8344,12 @@ Provide analysis in JSON format:
             contentLength: insights.contentLength,
             needsMoreInfo: isPartial,
             analysisNote: insights.analysisNote,
+          },
+          suggestedNextStep: {
+            action: 'update_dashboard_roadmap',
+            reason: 'Website analysis informs personalized setup recommendations',
+            prompt: 'Want me to build a personalized setup plan based on this analysis?',
+            autoSuggest: true,
           },
         };
       }
