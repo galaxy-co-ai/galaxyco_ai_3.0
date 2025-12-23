@@ -775,6 +775,56 @@ ${i + 1}. ${gapEmoji} **${gap.area}:** ${gap.description}
 }
 
 // ============================================================================
+// PROACTIVE TRIGGERS SECTION (Phase 2C)
+// ============================================================================
+
+/**
+ * Build proactive triggers prompt section
+ * Injects detected patterns and suggested actions
+ */
+function buildProactiveTriggersSection(context: AIContextData): string {
+  try {
+    const { detectTriggers } = require('./proactive-triggers');
+    const activeTriggers = detectTriggers(context);
+    
+    if (activeTriggers.length === 0) {
+      return '';
+    }
+    
+    let section = `
+## 🎯 PROACTIVE ACTION ITEMS (Phase 2C)
+
+I've detected ${activeTriggers.length} pattern(s) in the workspace that need attention. Mention these proactively when relevant:
+
+`;
+    
+    activeTriggers.forEach((trigger, i) => {
+      const urgencyEmoji = trigger.priority >= 9 ? '🔴' : trigger.priority >= 7 ? '⚠️' : '💡';
+      section += `
+${i + 1}. ${urgencyEmoji} **${trigger.title}** (Priority ${trigger.priority}/10)
+   📋 Context: ${trigger.description}
+   💬 Suggested Response: "${trigger.suggestedResponse}"
+   🔧 Relevant Tools: ${trigger.suggestedTools.join(', ')}
+`;
+    });
+    
+    section += `
+**How to Use These Triggers:**
+- Mention them naturally when the conversation flows there
+- Don't force all triggers into one response
+- Lead with the highest priority item if relevant
+- Use the suggested response as a starting point, adapt to context
+- Actually execute the suggested tools when user agrees
+`;
+    
+    return section;
+  } catch (error) {
+    logger.error('Failed to build proactive triggers section', { error });
+    return '';
+  }
+}
+
+// ============================================================================
 // FINANCE PROMPT SECTION
 // ============================================================================
 
@@ -881,6 +931,12 @@ export function generateSystemPrompt(
     const financeSection = buildFinanceSection(context, feature);
     if (financeSection) {
       sections.push(financeSection);
+    }
+    
+    // Proactive triggers (Phase 2C)
+    const triggersSection = buildProactiveTriggersSection(context);
+    if (triggersSection) {
+      sections.push(triggersSection);
     }
     
     // Proactive insights (if enabled)
