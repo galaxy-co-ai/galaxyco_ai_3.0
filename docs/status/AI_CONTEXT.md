@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (0d8c0be)  
+**Updated Through:** 2025-12-23 (ce53d7e)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 ce53d7e Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-23 ee1b1c4 fix(website-analyzer): correct import path for crawlWithPlaywright function - Fixed import from website-crawler to website-crawler-playwright module where the function is actually exported
 - 2025-12-23 0d8c0be Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 7c31721 fix(neptune): resolve TypeScript error in logger calls - Fixed logger.warn() calls in sessionStorage error handlers to properly format error parameter as LogMetadata instead of passing unknown type directly
 - 2025-12-23 8233918 feat(neptune): fix 9 critical UX gaps - session memory, intent visibility, progress indicators
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 44f30df Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 4e3aa77 fix(neptune): remove template literals from trigger suggestedResponse fields - TypeScript error
 - 2025-12-23 05ec4e9 feat(neptune): context-aware proactive triggers - Phase 2C complete with 20+ triggers across 7 categories
-- 2025-12-23 203fb2a feat(neptune): session memory for coherent multi-turn conversations
-- 2025-12-23 d0335de Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0 # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
