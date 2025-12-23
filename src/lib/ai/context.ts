@@ -49,6 +49,18 @@ export interface UserPreferencesContext {
   defaultModel: string;
   enableRag: boolean;
   enableProactiveInsights: boolean;
+  detectedStyle?: {
+    formality: 'casual' | 'professional' | 'technical';
+    verbosity: 'concise' | 'balanced' | 'detailed';
+    tone: 'friendly' | 'neutral' | 'direct';
+    emojiUsage: number;
+    technicalLevel: number;
+    preferredGreeting: string | null;
+    responsePattern: 'quick-wins' | 'thorough-analysis' | 'exploratory';
+    confidence: number;
+    lastUpdated: Date;
+  };
+  styleLastUpdated?: Date;
 }
 
 export interface CRMContext {
@@ -314,6 +326,34 @@ async function getUserPreferencesContext(
       prefs = newPrefs;
     }
 
+    // Parse detected style from communicationStyle field if it contains structured data
+    // Format: "formality_verbosity_tone" or legacy "balanced"
+    let detectedStyle: UserPreferencesContext['detectedStyle'];
+    const styleString = prefs.communicationStyle || 'balanced';
+    
+    // Try to parse structured style (e.g., "casual_concise_friendly")
+    const styleParts = styleString.split('_');
+    if (styleParts.length === 3) {
+      const [formality, verbosity, tone] = styleParts;
+      if (
+        ['casual', 'professional', 'technical'].includes(formality) &&
+        ['concise', 'balanced', 'detailed'].includes(verbosity) &&
+        ['friendly', 'neutral', 'direct'].includes(tone)
+      ) {
+        detectedStyle = {
+          formality: formality as 'casual' | 'professional' | 'technical',
+          verbosity: verbosity as 'concise' | 'balanced' | 'detailed',
+          tone: tone as 'friendly' | 'neutral' | 'direct',
+          emojiUsage: 0,
+          technicalLevel: 0,
+          preferredGreeting: null,
+          responsePattern: 'quick-wins',
+          confidence: 50,
+          lastUpdated: prefs.updatedAt || new Date(),
+        };
+      }
+    }
+    
     return {
       communicationStyle: prefs.communicationStyle || 'balanced',
       topicsOfInterest: prefs.topicsOfInterest || [],
@@ -321,6 +361,8 @@ async function getUserPreferencesContext(
       defaultModel: prefs.defaultModel || 'gpt-4o',
       enableRag: prefs.enableRag,
       enableProactiveInsights: prefs.enableProactiveInsights,
+      detectedStyle,
+      styleLastUpdated: prefs.updatedAt || undefined,
     };
   } catch (error) {
     logger.error('Failed to get user preferences', error);

@@ -598,8 +598,15 @@ function buildInstructionsSection(context: AIContextData): string {
   const style = PERSONALITY.communicationStyles[context.preferences.communicationStyle as keyof typeof PERSONALITY.communicationStyles] 
     || PERSONALITY.communicationStyles.balanced;
 
+  // Inject adaptive communication style if detected (Phase 2A)
+  let adaptiveStyleSection = '';
+  if (context.preferences.detectedStyle && context.preferences.detectedStyle.confidence >= 30) {
+    const { generateStylePrompt } = require('./style-matcher');
+    adaptiveStyleSection = '\n\n' + generateStylePrompt(context.preferences.detectedStyle);
+  }
+
   return `## Communication Style
-${style}
+${style}${adaptiveStyleSection}
 
 ## Response Formatting
 Use markdown to make responses scannable and structured:

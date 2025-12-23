@@ -525,6 +525,36 @@ export async function POST(request: Request) {
 
       // Track frequent question (async, non-blocking)
       trackFrequentQuestion(workspaceId, userRecord.id, message).catch(() => {});
+      
+      // Phase 2A: Analyze user's communication style (every 5 messages)
+      if (conversation.messageCount > 0 && conversation.messageCount % 5 === 0) {
+        (async () => {
+          try {
+            const { analyzeUserStyle, updateCommunicationStyle } = await import('@/lib/ai/communication-analyzer');
+            
+            // Get recent messages for style analysis
+            const recentMessages = history.slice(-10).map(msg => ({
+              role: msg.role,
+              content: msg.content,
+            }));
+            
+            const detectedStyle = await analyzeUserStyle(recentMessages, conversation.messageCount);
+            
+            // Update user preferences in background
+            await updateCommunicationStyle(workspaceId, userRecord.id, detectedStyle);
+            
+            logger.info('[AI Chat] Communication style analyzed and updated', {
+              workspaceId,
+              userId: userRecord.id,
+              messageCount: conversation.messageCount,
+              style: `${detectedStyle.formality}/${detectedStyle.verbosity}/${detectedStyle.tone}`,
+              confidence: detectedStyle.confidence,
+            });
+          } catch (err) {
+            logger.warn('[AI Chat] Style analysis failed (non-blocking)', { err });
+          }
+        })();
+      }
 
       // Get conversation history
       const history = await db.query.aiMessages.findMany({
