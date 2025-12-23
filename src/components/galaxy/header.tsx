@@ -49,8 +49,8 @@ export function Header({
   title,
   description,
   showSearch = false,
-  showNotifications = true,
-  notificationCount = 0,
+  showNotifications: _showNotifications = true,
+  notificationCount: _notificationCount = 0,
   user,
   actions,
   className,
@@ -276,4 +276,3 @@ export function Header({
     </header>
   );
 }
-

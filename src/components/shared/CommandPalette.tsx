@@ -107,6 +107,16 @@ export default function CommandPalette({ workspaceId }: CommandPaletteProps) {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
+  // Listen for custom event to open command palette (from header search button)
+  useEffect(() => {
+    const handleOpen = () => {
+      setOpen(true);
+    };
+
+    window.addEventListener('open-command-palette', handleOpen);
+    return () => window.removeEventListener('open-command-palette', handleOpen);
+  }, []);
+
   // Get icon component from string
   const getIcon = (iconName: string) => {
     const icons: Record<string, typeof Home> = {
