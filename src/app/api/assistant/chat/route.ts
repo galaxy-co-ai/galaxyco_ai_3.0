@@ -44,6 +44,65 @@ const chatSchema = z.object({
 });
 
 // ============================================================================
+// ROADMAP RECALCULATION (Phase 1E)
+// ============================================================================
+
+/**
+ * Trigger roadmap recalculation after significant actions
+ * Runs async to not block the response stream
+ */
+async function triggerRoadmapRecalculation(
+  workspaceId: string, 
+  toolName: string
+): Promise<void> {
+  // Only recalculate for milestone-relevant actions
+  const milestoneActions = [
+    'create_lead',
+    'create_contact',
+    'create_agent',
+    'create_agent_quick',
+    'run_agent',
+    'create_document',
+    'create_collection',
+    'connect_integration',
+    'create_task',
+    'create_campaign',
+  ];
+  
+  if (!milestoneActions.includes(toolName)) {
+    return; // Skip non-milestone actions
+  }
+  
+  try {
+    // Import health assessment
+    const { assessWorkspaceHealth } = await import('@/lib/ai/workspace-health');
+    const { generateDynamicRoadmap } = await import('@/lib/ai/roadmap-engine');
+    const { gatherAIContext } = await import('@/lib/ai/context');
+    
+    // Get fresh workspace health
+    const health = await assessWorkspaceHealth(workspaceId);
+    
+    // Get company type from context
+    const context = await gatherAIContext(workspaceId, workspaceId); // Using workspaceId as placeholder
+    const companyType = context?.website?.companyDescription 
+      ? (await import('@/lib/ai/roadmap-engine')).detectCompanyVertical(context.website.companyDescription)
+      : 'other';
+    
+    // Regenerate roadmap
+    const roadmap = await generateDynamicRoadmap(health, companyType);
+    
+    logger.debug('Roadmap recalculated after action', {
+      workspaceId,
+      toolName,
+      progress: roadmap.progress.percentage,
+      completed: roadmap.progress.completedCount,
+    });
+  } catch (error) {
+    logger.warn('Roadmap recalculation failed (non-critical)', { error, toolName });
+  }
+}
+
+// ============================================================================
 // COMPLEX QUESTION DETECTION
 // ============================================================================
 
@@ -219,6 +278,12 @@ async function processToolCalls(
             executionTime,
             result.success ? 'success' : 'failed'
           ).catch(err => logger.warn('Failed to record execution', { err }));
+          
+          // Phase 1E: Trigger roadmap recalculation after successful actions
+          if (result.success) {
+            triggerRoadmapRecalculation(toolContext.workspaceId, func.name)
+              .catch(err => logger.warn('Failed to recalculate roadmap', { err }));
+          }
         } else {
           result = {
             success: false,

@@ -149,8 +149,8 @@ export const TOOL_RISK_LEVELS: Record<string, ActionRiskLevel> = {
   schedule_social_posts: { toolName: 'schedule_social_posts', level: 'medium', defaultConfidence: 0 },
   post_to_social_media: { toolName: 'post_to_social_media', level: 'medium', defaultConfidence: 0 },
   
-  // Dashboard & Roadmap
-  update_dashboard_roadmap: { toolName: 'update_dashboard_roadmap', level: 'medium', defaultConfidence: 0 },
+  // Dashboard & Roadmap (Phase 1E - auto-update on actions)
+  update_dashboard_roadmap: { toolName: 'update_dashboard_roadmap', level: 'low', defaultConfidence: 95 },
   
   // Drafting (requires review)
   draft_email: { toolName: 'draft_email', level: 'medium', defaultConfidence: 0 },
