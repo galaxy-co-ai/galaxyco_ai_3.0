@@ -342,7 +342,7 @@ function detectResponsePattern(messages: Array<{ content: string }>): 'quick-win
   }
   
   const total = directCommands + complexQuestions + exploratory;
-  if (total === 0) return 'balanced' as 'quick-wins'; // Default
+  if (total === 0) return 'quick-wins'; // Default when no clear pattern
   
   const directPercent = directCommands / total;
   const complexPercent = complexQuestions / total;
@@ -406,7 +406,7 @@ export async function analyzeUserStyle(
     const formality: CommunicationStyle['formality'] = 
       avgFormalityScore < 35 ? 'casual' :
       avgFormalityScore > 65 ? 'professional' :
-      'technical';
+      'professional'; // Mid-range defaults to professional (neutral business tone)
     
     const verbosity: CommunicationStyle['verbosity'] =
       avgVerbosityScore < 35 ? 'concise' :
