@@ -1,6 +1,5 @@
 ---
 description: Core development standards for all GalaxyCo projects. Defines coding philosophy, communication style, and fundamental patterns.
-globs: 
 alwaysApply: true
 ---
 
