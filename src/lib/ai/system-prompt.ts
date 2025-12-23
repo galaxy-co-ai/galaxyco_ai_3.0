@@ -714,6 +714,60 @@ ${insights.join('\n')}`;
 }
 
 // ============================================================================
+// WORKSPACE HEALTH PROMPT SECTION
+// ============================================================================
+
+/**
+ * Build workspace health prompt section
+ */
+function buildWorkspaceHealthSection(context: AIContextData): string {
+  const health = context.workspaceHealth;
+  
+  if (!health) {
+    return '';
+  }
+
+  const emoji = health.overall >= 80 ? '🚀' : health.overall >= 60 ? '✅' : health.overall >= 40 ? '⚠️' : '🔴';
+  
+  let section = `
+## WORKSPACE HEALTH: ${emoji} ${health.overall}%
+
+**Health Breakdown:**
+- CRM Health: ${health.dimensions.crmHealth}%
+- Agent Utilization: ${health.dimensions.agentUtilization}%
+- Workflow Coverage: ${health.dimensions.workflowCoverage}%
+- Knowledge Depth: ${health.dimensions.knowledgeDepth}%
+- Integration Health: ${health.dimensions.integrationHealth}%`;
+
+  // Add gaps if they exist
+  if (health.hasGaps && health.topGaps.length > 0) {
+    section += `
+
+**Priority Gaps to Address:**`;
+    
+    health.topGaps.forEach((gap, i) => {
+      const gapEmoji = gap.severity === 'critical' ? '🔴' : gap.severity === 'high' ? '⚠️' : '💡';
+      section += `
+${i + 1}. ${gapEmoji} **${gap.area}:** ${gap.description}
+   → Recommendation: ${gap.recommendation}`;
+    });
+    
+    section += `
+
+**Proactive Behavior:**
+- When workspace health is low (<50%), proactively suggest the top gap fixes
+- After user completes actions, acknowledge progress toward improving health
+- If a gap is critical, mention it naturally in conversation when relevant`;
+  } else {
+    section += `
+
+✨ Workspace is healthy! No critical gaps detected.`;
+  }
+
+  return section;
+}
+
+// ============================================================================
 // FINANCE PROMPT SECTION
 // ============================================================================
 
@@ -809,6 +863,12 @@ export function generateSystemPrompt(
     
     sections.push(buildContextSection(context));
     sections.push(buildInstructionsSection(context));
+    
+    // Workspace health (Phase 1D)
+    const healthSection = buildWorkspaceHealthSection(context);
+    if (healthSection) {
+      sections.push(healthSection);
+    }
     
     // Finance section (if finance integrations connected)
     const financeSection = buildFinanceSection(context, feature);

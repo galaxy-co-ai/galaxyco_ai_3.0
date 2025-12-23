@@ -215,6 +215,24 @@ export interface ContentCockpitContext {
   hasContentCockpit: boolean;
 }
 
+export interface WorkspaceHealthContext {
+  overall: number;
+  dimensions: {
+    crmHealth: number;
+    agentUtilization: number;
+    workflowCoverage: number;
+    knowledgeDepth: number;
+    integrationHealth: number;
+  };
+  topGaps: Array<{
+    area: string;
+    severity: string;
+    description: string;
+    recommendation: string;
+  }>;
+  hasGaps: boolean;
+}
+
 export interface AIContextData {
   user: UserContext;
   preferences: UserPreferencesContext;
@@ -228,6 +246,7 @@ export interface AIContextData {
   website?: WebsiteContext;
   proactiveInsights?: ProactiveInsightsContext;
   contentCockpit?: ContentCockpitContext;
+  workspaceHealth?: WorkspaceHealthContext;
   currentTime: string;
   currentDate: string;
   dayOfWeek: string;
@@ -1112,6 +1131,57 @@ async function getContentCockpitContext(workspaceId: string): Promise<ContentCoc
 }
 
 /**
+ * Get workspace health context
+ * Cached for 5 minutes - health changes slowly
+ */
+async function getWorkspaceHealthContext(workspaceId: string): Promise<WorkspaceHealthContext> {
+  const cacheKey = ContextCacheKeys.workspace(workspaceId) + ':health';
+  
+  return getCacheOrFetch<WorkspaceHealthContext>(
+    cacheKey,
+    () => fetchWorkspaceHealthContext(workspaceId),
+    { ttl: CONTEXT_CACHE_TTL.CRM, prefix: '' } // 5 minutes
+  );
+}
+
+/**
+ * Fetch fresh workspace health from assessment
+ */
+async function fetchWorkspaceHealthContext(workspaceId: string): Promise<WorkspaceHealthContext> {
+  try {
+    const { assessWorkspaceHealth } = await import('./workspace-health');
+    
+    const health = await assessWorkspaceHealth(workspaceId);
+    
+    return {
+      overall: health.overall,
+      dimensions: health.dimensions,
+      topGaps: health.gaps.slice(0, 5).map(gap => ({
+        area: gap.area,
+        severity: gap.severity,
+        description: gap.description,
+        recommendation: gap.recommendation,
+      })),
+      hasGaps: health.gaps.length > 0,
+    };
+  } catch (error) {
+    logger.error('Failed to get workspace health context', error);
+    return {
+      overall: 0,
+      dimensions: {
+        crmHealth: 0,
+        agentUtilization: 0,
+        workflowCoverage: 0,
+        knowledgeDepth: 0,
+        integrationHealth: 0,
+      },
+      topGaps: [],
+      hasGaps: false,
+    };
+  }
+}
+
+/**
  * Gather comprehensive AI context for the current user and workspace
  */
 export async function gatherAIContext(
@@ -1126,7 +1196,7 @@ export async function gatherAIContext(
     }
 
     // Gather all contexts in parallel for performance
-    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing, website, proactive, contentCockpit] = await Promise.all([
+    const [preferences, crm, calendar, taskCtx, agentCtx, conversationHistory, finance, marketing, website, proactive, contentCockpit, workspaceHealth] = await Promise.all([
       getUserPreferencesContext(workspaceId, user.id),
       getCRMContext(workspaceId),
       getCalendarContext(workspaceId),
@@ -1138,6 +1208,7 @@ export async function gatherAIContext(
       getWebsiteContext(workspaceId),
       getProactiveInsightsContext(workspaceId, user.id),
       getContentCockpitContext(workspaceId),
+      getWorkspaceHealthContext(workspaceId),
     ]);
 
     const now = new Date();
@@ -1156,6 +1227,7 @@ export async function gatherAIContext(
       website,
       proactiveInsights: proactive,
       contentCockpit,
+      workspaceHealth,
       currentTime: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
       currentDate: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       dayOfWeek: days[now.getDay()],
