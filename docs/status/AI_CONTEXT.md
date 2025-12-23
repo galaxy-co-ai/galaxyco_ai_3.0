@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (c2a93af)  
+**Updated Through:** 2025-12-23 (094bed8)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 094bed8 feat(neptune): workspace health assessment and gap analysis
 - 2025-12-23 c2a93af feat(neptune): one-shot smart agent creation with templates
 - 2025-12-23 b3f1051 fix(neptune): TypeScript error in intent classification error handling
 - 2025-12-23 89008ad feat(neptune): add intent classification for proactive suggestions
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-22 a00d9eb chore: major project cleanup and reorganization
 - 2025-12-22 c4456f2 feat(web): convert New Chat and workspace tabs to icon-only on mobile
 - 2025-12-17 a5a9fd9 docs: update handoff with Priority #6 completion (Proactive Insights)
-- 2025-12-17 64a2264 feat(dashboard): consolidate right column into tabbed WorkspacePanel
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
