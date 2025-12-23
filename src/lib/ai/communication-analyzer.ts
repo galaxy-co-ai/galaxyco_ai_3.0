@@ -78,7 +78,7 @@ import { logger } from '@/lib/logger';
 // ============================================================================
 
 export interface CommunicationStyle {
-  formality: 'casual' | 'professional'; // Simplified: casual vs professional (technical level separate)
+  formality: 'casual' | 'professional' | 'technical';
   verbosity: 'concise' | 'balanced' | 'detailed';
   tone: 'friendly' | 'neutral' | 'direct';
   emojiUsage: number; // 0-100 percentage
@@ -406,7 +406,7 @@ export async function analyzeUserStyle(
     const formality: CommunicationStyle['formality'] = 
       avgFormalityScore < 35 ? 'casual' :
       avgFormalityScore > 65 ? 'professional' :
-      'professional'; // Mid-range defaults to professional (neutral business tone)
+      technicalLevel > 50 ? 'technical' : 'professional'; // Use technical if high technical term usage
     
     const verbosity: CommunicationStyle['verbosity'] =
       avgVerbosityScore < 35 ? 'concise' :

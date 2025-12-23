@@ -46,6 +46,14 @@ export function generateStylePrompt(style: CommunicationStyle): string {
       sections.push('- Maintain a respectful, courteous tone');
       sections.push('- Use "please" and "thank you" appropriately');
       break;
+      
+    case 'technical':
+      sections.push('**Formality:** Technical and precise');
+      sections.push('- Use industry terminology and technical terms');
+      sections.push('- Be specific about implementation details');
+      sections.push('- Reference standards, patterns, and best practices');
+      sections.push('- Assume technical knowledge');
+      break;
   }
   
   sections.push('');
