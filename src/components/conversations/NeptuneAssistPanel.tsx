@@ -37,6 +37,8 @@ import { NeptuneMessage } from "@/components/neptune/NeptuneMessage";
 import { MarkdownContent } from "@/components/neptune/MarkdownContent";
 import { SmartMessageFormatter } from "@/components/neptune/SmartMessageFormatter";
 import { PresenceAvatars } from "@/components/neptune/PresenceAvatars";
+import { TypingIndicator } from "@/components/neptune/TypingIndicator";
+import { NeptuneRoom } from "@/components/neptune/NeptuneRoom";
 
 // Wrapper component for fullscreen variant to add card styling
 function NeptuneCardWrapper({
@@ -72,6 +74,7 @@ export default function NeptuneAssistPanel({
 }: NeptuneAssistPanelProps) {
   // Use shared Neptune context
   const {
+    conversationId,
     messages,
     isLoading,
     isInitialized,
@@ -428,10 +431,11 @@ export default function NeptuneAssistPanel({
   }
 
   return (
-    <NeptuneCardWrapper isFullscreen={isFullscreen}>
-      <div
-        className={`flex h-full w-full flex-col ${isFullscreen ? "bg-card" : "bg-background"}`}
-      >
+    <NeptuneRoom conversationId={conversationId}>
+      <NeptuneCardWrapper isFullscreen={isFullscreen}>
+        <div
+          className={`flex h-full w-full flex-col ${isFullscreen ? "bg-card" : "bg-background"}`}
+        >
         {/* Header */}
         {isFullscreen ? (
           <div className="border-b bg-background px-6 py-4 shrink-0">
@@ -1101,7 +1105,11 @@ export default function NeptuneAssistPanel({
 
         {/* Input - Only show in chat mode */}
         {viewMode === "chat" && (
-        <div className={`border-t ${isFullscreen ? "p-6" : "p-4"} shrink-0`}>
+        <>
+          {/* Typing Indicator */}
+          <TypingIndicator />
+          
+          <div className={`border-t ${isFullscreen ? "p-6" : "p-4"} shrink-0`}>
           <input
             ref={fileInputRef}
             type="file"
@@ -1317,8 +1325,10 @@ export default function NeptuneAssistPanel({
             </Button>
           </div>
         </div>
+        </>
         )}
-      </div>
-    </NeptuneCardWrapper>
+        </div>
+      </NeptuneCardWrapper>
+    </NeptuneRoom>
   );
 }
