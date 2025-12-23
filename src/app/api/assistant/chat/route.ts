@@ -16,6 +16,7 @@ import { processDocuments } from '@/lib/document-processing';
 import { shouldAutoExecute, recordActionExecution } from '@/lib/ai/autonomy-learning';
 import { getCachedResponse, cacheResponse } from '@/lib/ai/cache';
 import { trackNeptuneRequest, trackNeptuneError } from '@/lib/observability';
+import { classifyIntent } from '@/lib/ai/intent-classifier';
 
 import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources/chat/completions';
 
@@ -360,7 +361,30 @@ export async function POST(request: Request) {
 
       // Gather AI context
       const aiContext = await gatherAIContext(workspaceId, clerkUserId);
-      const systemPrompt = generateSystemPrompt(aiContext, feature || context?.feature || undefined);
+      
+      // Classify intent for proactive suggestions (Phase 1B)
+      let intentClassification;
+      if (aiContext) {
+        try {
+          intentClassification = await classifyIntent(message, aiContext);
+          
+          logger.info('[AI Chat Stream] Intent classified', {
+            intent: intentClassification.intent,
+            confidence: intentClassification.confidence,
+            method: intentClassification.detectionMethod,
+            processingTime: `${intentClassification.processingTimeMs}ms`,
+          });
+        } catch (error) {
+          logger.warn('[AI Chat Stream] Intent classification failed (non-blocking)', error);
+          intentClassification = undefined;
+        }
+      }
+      
+      const systemPrompt = generateSystemPrompt(
+        aiContext, 
+        feature || context?.feature || undefined,
+        intentClassification
+      );
 
       // Get or create conversation
       let conversation;

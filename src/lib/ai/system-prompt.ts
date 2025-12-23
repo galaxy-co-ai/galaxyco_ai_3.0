@@ -6,6 +6,7 @@
  */
 
 import type { AIContextData } from './context';
+import type { IntentClassification } from './intent-classifier';
 import { MARKETING_EXPERTISE } from './marketing-expertise';
 import { shouldPruneContext, getPrunedContext, type PrunedContext } from './context-pruning';
 
@@ -56,6 +57,114 @@ function formatDate(date: Date): string {
   if (diffDays === 1) return 'tomorrow';
   if (diffDays < 7) return date.toLocaleDateString('en-US', { weekday: 'long' });
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ============================================================================
+// INTENT-AWARE RESPONSE SECTION (Phase 1B)
+// ============================================================================
+
+/**
+ * Build intent-aware proactive suggestions
+ * Injects contextual hints based on detected user intent
+ */
+function buildIntentAwareSection(
+  intent: IntentClassification,
+  context: AIContextData
+): string {
+  const { intent: intentType, confidence, proactiveResponse, suggestedTools } = intent;
+  
+  // Only inject if confidence is high enough
+  if (confidence < 0.6) return '';
+  
+  let section = `## DETECTED INTENT: ${intentType.toUpperCase()}\n`;
+  section += `Confidence: ${(confidence * 100).toFixed(0)}%\n\n`;
+  
+  // Intent-specific guidance
+  switch (intentType) {
+    case 'automation':
+      section += `**Automation Opportunity Detected**\n\n`;
+      section += `The user is describing a repetitive or manual process. Your job is to:\n`;
+      section += `1. Ask clarifying questions about the current process\n`;
+      section += `2. Identify what triggers the task (time, event, condition)\n`;
+      section += `3. Proactively suggest creating an agent or workflow\n`;
+      section += `4. Offer to set it up for them immediately\n\n`;
+      
+      if (context.agents.activeAgents === 0) {
+        section += `**Note:** User has NO agents yet. This is their first automation opportunity - make it count!\n`;
+      } else {
+        section += `**Context:** User has ${context.agents.activeAgents} active agent(s). They're familiar with automation.\n`;
+      }
+      
+      if (proactiveResponse) {
+        section += `\n**Suggested Opening:** "${proactiveResponse}"\n`;
+      }
+      break;
+      
+    case 'agent_creation':
+      section += `**Agent Creation Request**\n\n`;
+      section += `The user wants to create an AI agent. Guide them through:\n`;
+      section += `1. What the agent should do (objective)\n`;
+      section += `2. When it should run (trigger)\n`;
+      section += `3. What data it needs (context)\n`;
+      section += `4. What success looks like (output)\n\n`;
+      section += `Be conversational - one question at a time. Don't overwhelm them with forms.\n`;
+      
+      if (suggestedTools.includes('create_agent')) {
+        section += `\n**Ready to Create:** When you have enough info, use the create_agent tool.\n`;
+      }
+      break;
+      
+    case 'information':
+      section += `**Information Query**\n\n`;
+      section += `User wants to know something. Prioritize:\n`;
+      section += `1. Check their actual workspace data first\n`;
+      section += `2. Use search_knowledge if it's about their documents\n`;
+      section += `3. Use search_web for current/external information\n`;
+      section += `4. Be specific - reference real numbers and names\n\n`;
+      
+      // Suggest relevant data sources
+      if (context.crm.totalLeads > 0) {
+        section += `**Available Data:** ${context.crm.totalLeads} leads, ${context.crm.totalContacts} contacts\n`;
+      }
+      break;
+      
+    case 'action':
+      section += `**Action Request**\n\n`;
+      section += `User wants to DO something. Execute it immediately:\n`;
+      section += `1. Use the appropriate tool (don't ask for confirmation)\n`;
+      section += `2. Confirm what you did with specifics\n`;
+      section += `3. Suggest the logical next step\n\n`;
+      section += `**DO NOT** say "would you like me to" - just do it.\n`;
+      break;
+      
+    case 'guidance':
+      section += `**Guidance Request**\n\n`;
+      section += `User wants help understanding something. Provide:\n`;
+      section += `1. Clear, step-by-step instructions\n`;
+      section += `2. Context about WHY (not just HOW)\n`;
+      section += `3. Relevant examples from their workspace\n`;
+      section += `4. Offer to do it FOR them\n\n`;
+      break;
+      
+    case 'creation':
+      section += `**Content Creation Request**\n\n`;
+      section += `User wants to create content. Ask about:\n`;
+      section += `1. Audience - who is this for?\n`;
+      section += `2. Goal - what should happen after they read it?\n`;
+      section += `3. Tone - professional or conversational?\n\n`;
+      
+      if (context.website?.brandVoice) {
+        section += `**Brand Voice:** ${context.website.brandVoice}\n`;
+      }
+      break;
+  }
+  
+  // Add suggested tools if available
+  if (suggestedTools.length > 0) {
+    section += `\n**Relevant Tools:** ${suggestedTools.join(', ')}\n`;
+  }
+  
+  return section;
 }
 
 // ============================================================================
@@ -662,7 +771,8 @@ When discussing finances:
  */
 export function generateSystemPrompt(
   context: AIContextData | null,
-  feature?: string
+  feature?: string,
+  intentClassification?: IntentClassification
 ): string {
   const sections: string[] = [];
 
@@ -674,6 +784,14 @@ export function generateSystemPrompt(
 
   // Context (if available)
   if (context) {
+    // Intent-aware section (Phase 1B - before other context)
+    if (intentClassification) {
+      const intentSection = buildIntentAwareSection(intentClassification, context);
+      if (intentSection) {
+        sections.push(intentSection);
+      }
+    }
+    
     sections.push(buildContextSection(context));
     sections.push(buildInstructionsSection(context));
     
