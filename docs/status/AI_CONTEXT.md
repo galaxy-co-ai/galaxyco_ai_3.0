@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (ce53d7e)  
+**Updated Through:** 2025-12-23 (1f7a3c6)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 1f7a3c6 fix(neptune): implement Tier 1 critical fixes
 - 2025-12-23 ce53d7e Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 ee1b1c4 fix(website-analyzer): correct import path for crawlWithPlaywright function - Fixed import from website-crawler to website-crawler-playwright module where the function is actually exported
 - 2025-12-23 0d8c0be Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 c280b35 fix(neptune): remove dynamic value from proactive trigger message
 - 2025-12-23 44f30df Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 4e3aa77 fix(neptune): remove template literals from trigger suggestedResponse fields - TypeScript error
-- 2025-12-23 05ec4e9 feat(neptune): context-aware proactive triggers - Phase 2C complete with 20+ triggers across 7 categories
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
