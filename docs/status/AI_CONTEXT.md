@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-22 (46f458e)  
+**Updated Through:** 2025-12-22 (949db7f)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-22 949db7f feat(admin): enhance Backlog with screenshots, tags, and filtering
 - 2025-12-22 46f458e feat(admin): add Backlog tab to Mission Control with manual checklist
 - 2025-12-22 8144545 fix(lint): complete Phase 1 & 2 - eliminate all errors and improve React patterns
 - 2025-12-22 416f3d8 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 08844b6 docs(neptune): mark Priority #5 multi-platform social media as complete
 - 2025-12-17 8164b75 feat(neptune): add LinkedIn and Facebook social media integration
 - 2025-12-17 47402c1 docs(neptune): mark content generation tools enhancement as complete
-- 2025-12-17 3ac8b3d feat(neptune): enhance content generation tools to use GPT-4o
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
