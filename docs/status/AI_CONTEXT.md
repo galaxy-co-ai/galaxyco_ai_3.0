@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (ec5ab41)  
+**Updated Through:** 2025-12-23 (954a995)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 954a995 docs(neptune): comprehensive documentation and JSDoc comments
+- 2025-12-23 27afb16 docs(neptune): comprehensive documentation and JSDoc comments
 - 2025-12-23 ec5ab41 perf(neptune): optimize to sub-3-second response times
 - 2025-12-23 aac5e43 feat(neptune): rebalance autonomy for 70%+ auto-execution rate
 - 2025-12-23 cc1a66e feat(neptune): intelligent next-step suggestions in tool orchestration
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 c2a93af feat(neptune): one-shot smart agent creation with templates
 - 2025-12-23 b3f1051 fix(neptune): TypeScript error in intent classification error handling
 - 2025-12-23 89008ad feat(neptune): add intent classification for proactive suggestions
-- 2025-12-22 c2bac91 feat(neptune): robust website analysis with Playwright + intelligent fallbacks
-- 2025-12-22 75d003d fix(ui): replace synthetic keyboard events with custom event
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
