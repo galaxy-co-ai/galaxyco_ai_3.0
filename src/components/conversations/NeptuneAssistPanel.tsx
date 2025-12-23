@@ -33,6 +33,7 @@ import QuickActions from "./QuickActions";
 import { useNeptune, type Attachment } from "@/contexts/neptune-context";
 import type { Conversation } from "./ConversationsDashboard";
 import { NeptuneMessage } from "@/components/neptune/NeptuneMessage";
+import { MarkdownContent } from "@/components/neptune/MarkdownContent";
 
 // Wrapper component for fullscreen variant to add card styling
 function NeptuneCardWrapper({
@@ -709,8 +710,10 @@ export default function NeptuneAssistPanel({
 
                   {msg.content ? (
                     msg.role === "user" ? (
-                      // User messages: plain text (white on primary background)
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                      // User messages: render Markdown so lists show rounded bullets and checklists
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <MarkdownContent content={msg.content} />
+                      </div>
                     ) : (
                       // Assistant messages: rich markdown rendering
                       <NeptuneMessage

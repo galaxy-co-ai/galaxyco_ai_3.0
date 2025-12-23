@@ -62,10 +62,25 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
           ),
           li: ({ children }) => (
             <li className="flex items-start gap-2 text-sm text-foreground">
-              <span className="text-primary mt-1.5 shrink-0">•</span>
+              <span className="mt-2 inline-block h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
               <span className="flex-1">{children}</span>
             </li>
           ),
+          // Task list checkboxes (interactive)
+          input: ({ type, checked, ...props }) => {
+            if ((props as any).type === 'checkbox') {
+              return (
+                <input
+                  type="checkbox"
+                  defaultChecked={checked as boolean}
+                  className="mr-2 mt-1.5 h-3.5 w-3.5 rounded border-primary text-primary focus:ring-primary"
+                  onChange={() => {/* local-only toggle */}}
+                />
+              );
+            }
+            return <input type={type as any} {...(props as any)} />;
+          },
+
           // Code blocks with syntax highlighting
           code: ({ className, children, ...props }) => {
             const match = /language-(\w+)/.exec(className || "");
