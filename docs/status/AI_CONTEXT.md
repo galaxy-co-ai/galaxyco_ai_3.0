@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-17 (a5a9fd9)  
+**Updated Through:** 2025-12-22 (c4456f2)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-22 c4456f2 feat(web): convert New Chat and workspace tabs to icon-only on mobile
 - 2025-12-17 a5a9fd9 docs: update handoff with Priority #6 completion (Proactive Insights)
 - 2025-12-17 64a2264 feat(dashboard): consolidate right column into tabbed WorkspacePanel
 - 2025-12-17 c5dec55 fix(insights): update dismiss route to handle async params in Next.js 15+
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-17 b59421b feat(finance): implement document persistence to content library
 - 2025-12-17 e6621e6 feat(ai): implement create_agent tool for Neptune
 - 2025-12-17 56570af feat(crm): implement hot leads tracking with leadStatus field
-- 2025-12-17 1100998 fix(security): replace mock sessions with Clerk sessions + revoke endpoint
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
