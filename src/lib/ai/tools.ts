@@ -8091,34 +8091,30 @@ Provide analysis in JSON format:
         }
 
         if (!insights) {
-          logger.warn('Website analysis returned null, using fallback', { url: normalizedUrl });
+          logger.warn('Website analysis returned null', { url: normalizedUrl });
           // Extract domain name for friendlier message
           let domainName = normalizedUrl;
           try {
             domainName = new URL(normalizedUrl).hostname.replace('www.', '');
           } catch {}
           
-          // Smart fallback: Infer what we can from the domain/URL
-          const inferredData = inferCompanyFromUrl(normalizedUrl);
-          
+          // Return honest failure with helpful suggestions
           return {
-            success: true, // Mark as success so Neptune uses the inferred data
-            message: `I found your website at ${domainName}! I can see it's a ${inferredData.inferredType} business. While I couldn't access all the details automatically, I'm ready to help you get started. Tell me a bit more about what you do and I'll build you a personalized roadmap!`,
+            success: false,
+            message: `I couldn't access ${domainName} automatically. This often happens with sites that:
+• Require JavaScript rendering (React, Vue, Angular apps)
+• Have bot protection (Cloudflare, Akamai)
+• Require authentication to view content
+• Block automated crawlers
+
+**Let's try this instead:**
+1. Tell me in 2-3 sentences what ${domainName} does
+2. Or I can search for public information about ${domainName}
+3. Or share a direct link to your About/Products page`,
+            error: 'Website crawl failed - all methods exhausted',
             data: {
-              companyName: inferredData.companyName,
-              description: `I found your website at ${domainName}. I'm ready to help you set up GalaxyCo.ai!`,
-              keyOfferings: inferredData.keyOfferings,
-              targetAudience: inferredData.targetAudience,
-              suggestedActions: [
-                'Share what your company does in a sentence',
-                'Tell me about your main products or services',
-                'Describe your ideal customers',
-                'I\'ll build you a personalized setup roadmap!'
-              ],
               websiteUrl: normalizedUrl,
-              analysisType: 'inferred',
-              needsMoreInfo: true,
-              methodUsed: 'inferred',
+              suggestedActions: ['manual_description', 'search_company_info', 'provide_specific_page'],
             },
           };
         }
@@ -8174,14 +8170,13 @@ Provide analysis in JSON format:
         url: args.url
       });
       
-      // Final safety net: even on catastrophic error, return a positive result
+      // Extract domain for error message
       const url = args.url as string;
       let normalizedUrl = url?.trim() || '';
       if (normalizedUrl && !normalizedUrl.startsWith('http')) {
         normalizedUrl = 'https://' + normalizedUrl;
       }
       
-      // Extract domain for friendly message
       let domainName = normalizedUrl;
       try {
         domainName = new URL(normalizedUrl).hostname.replace('www.', '');
@@ -8189,26 +8184,23 @@ Provide analysis in JSON format:
         domainName = normalizedUrl;
       }
       
-      const inferredData = inferCompanyFromUrl(normalizedUrl);
-      
+      // Return honest failure with helpful error message
       return {
-        success: true, // ALWAYS return success - never fail the tool call
-        message: `I found your website at ${domainName}! I'm ${inferredData.companyName ? `excited to help ${inferredData.companyName}` : 'excited to help you'} get started with GalaxyCo.ai. Tell me a bit about what you do and I'll build you a personalized roadmap!`,
+        success: false,
+        message: `I encountered an error analyzing ${domainName}. This could be due to:
+• Network connectivity issues
+• Unexpected site structure
+• API rate limits
+• Service temporarily unavailable
+
+**What would help:**
+1. Share key information about your business directly
+2. Try again in a moment (might be temporary)
+3. Provide a specific page URL (like /about or /products)`,
+        error: error instanceof Error ? error.message : 'Unknown error during website analysis',
         data: {
-          companyName: inferredData.companyName || domainName.split('.')[0],
-          description: `I found your website at ${domainName} and I'm ready to help you set up GalaxyCo.ai!`,
-          keyOfferings: inferredData.keyOfferings,
-          targetAudience: inferredData.targetAudience,
-          suggestedActions: [
-            'Share what your company does in a sentence',
-            'Tell me about your main products or services',
-            'Describe your ideal customers',
-            'I\'ll build you a personalized setup roadmap!'
-          ],
           websiteUrl: normalizedUrl,
-          analysisType: 'inferred',
-          needsMoreInfo: true,
-          methodUsed: 'inferred',
+          suggestedActions: ['manual_description', 'retry_later', 'provide_specific_page'],
         },
       };
     }

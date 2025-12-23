@@ -39,6 +39,7 @@ export const CONTEXT_CACHE_TTL = {
   PROACTIVE_INSIGHTS: 5 * 60, // 5 minutes - Proactive insights
   RAG_SEARCH: 10 * 60,      // 10 minutes - RAG search results (documents don't change often)
   QUERY_EXPANSION: 60 * 60, // 1 hour - Query expansions are stable for same queries
+  WEBSITE_ANALYSIS: 7 * 24 * 60 * 60, // 7 days - Website analysis results are stable
 } as const;
 
 // ============================================================================
@@ -60,6 +61,8 @@ export const ContextCacheKeys = {
   // RAG cache keys
   ragSearch: (workspaceId: string, queryHash: string) => `rag:search:${workspaceId}:${queryHash}`,
   queryExpansion: (queryHash: string) => `rag:expand:${queryHash}`,
+  // Website analysis cache key
+  websiteAnalysis: (normalizedUrl: string) => `website:analysis:${normalizedUrl}`,
 } as const;
 
 interface CacheOptions {

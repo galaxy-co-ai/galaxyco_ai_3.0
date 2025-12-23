@@ -229,11 +229,11 @@ async function retryWithBackoff<T>(
 /**
  * Quick website analysis for immediate Neptune responses.
  * Uses Firecrawl-first approach with multiple fallbacks for reliability.
- * Includes Google Custom Search enrichment when content is sparse.
+ * Includes 7-day caching to avoid re-analyzing the same websites.
  */
 export async function analyzeWebsiteQuick(
   websiteUrl: string,
-  options?: { maxPages?: number }
+  options?: { maxPages?: number; skipCache?: boolean }
 ): Promise<QuickWebsiteInsights> {
   const startTime = Date.now();
   let methodUsed = '';
@@ -267,6 +267,22 @@ export async function analyzeWebsiteQuick(
         contentLength: 0,
         fallbackUsed: false,
       };
+    }
+
+    // Check cache first (unless skipCache is true)
+    if (!options?.skipCache) {
+      const { getCache, ContextCacheKeys, CONTEXT_CACHE_TTL } = await import('@/lib/cache');
+      const cacheKey = ContextCacheKeys.websiteAnalysis(normalizedUrl);
+      const cached = await getCache<QuickWebsiteInsights>(cacheKey);
+      
+      if (cached) {
+        const duration = Date.now() - startTime;
+        logger.info('Website analysis cache hit', {
+          url: normalizedUrl,
+          duration: `${duration}ms`,
+        });
+        return cached;
+      }
     }
   
     // PRIORITY 1: Try Firecrawl FIRST (most reliable, configured)
@@ -372,11 +388,43 @@ export async function analyzeWebsiteQuick(
       }
     }
 
-    // PRIORITY 3: Fallback to direct fetch if previous methods failed
+    // PRIORITY 3: Fallback to Playwright if previous methods failed (JS-heavy sites)
+    if (!contentSummary || contentSummary.length < 200) {
+      fallbackUsed = true;
+      const playwrightStart = Date.now();
+      
+      try {
+        logger.info('Trying Playwright (JS-heavy fallback)', { url: normalizedUrl });
+        
+        // Import Playwright crawler dynamically
+        const { crawlWithPlaywright } = await import('@/lib/ai/website-crawler-playwright');
+        
+        const playwrightResult = await crawlWithPlaywright(normalizedUrl, {
+          waitForNetworkIdle: true,
+          waitForTimeout: 2000,
+          maxTimeout: 15000,
+        });
+        
+        if (playwrightResult.content && playwrightResult.content.length > 200) {
+          contentSummary = playwrightResult.content.slice(0, 8000);
+          methodUsed = 'playwright';
+          const duration = Date.now() - playwrightStart;
+          logger.info('Got content from Playwright', {
+            url: normalizedUrl,
+            length: contentSummary.length,
+            duration: `${duration}ms`,
+          });
+        }
+      } catch (playwrightError) {
+        logger.warn('Playwright failed', { url: normalizedUrl, error: playwrightError });
+      }
+    }
+
+    // PRIORITY 4: Fallback to direct fetch as last resort before giving up
     if (!contentSummary || contentSummary.length < 200) {
       const fetchStart = Date.now();
       const fetchResult = await retryWithBackoff(async () => {
-        logger.info('Trying direct fetch (fallback)', { url: normalizedUrl });
+        logger.info('Trying direct fetch (last resort)', { url: normalizedUrl });
         
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -436,7 +484,7 @@ export async function analyzeWebsiteQuick(
       }
     }
 
-    // PRIORITY 4: Google Custom Search enrichment if content is sparse
+    // PRIORITY 5: Google Custom Search enrichment if content is sparse
     if ((!contentSummary || contentSummary.length < 500) && process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
       try {
         logger.info('Content sparse, enriching with Google Search', { url: normalizedUrl });
@@ -574,13 +622,22 @@ export async function analyzeWebsiteQuick(
         aiDuration: `${aiDuration}ms`
       });
       
-      return { 
+      const result: QuickWebsiteInsights = { 
         ...analysis, 
         websiteUrl,
         methodUsed: methodUsed || 'unknown',
         contentLength: contentSummary.length,
         fallbackUsed,
       };
+
+      // Cache the successful result for 7 days
+      if (!options?.skipCache) {
+        const { setCache, ContextCacheKeys, CONTEXT_CACHE_TTL } = await import('@/lib/cache');
+        const cacheKey = ContextCacheKeys.websiteAnalysis(normalizedUrl);
+        await setCache(cacheKey, result, { ttl: CONTEXT_CACHE_TTL.WEBSITE_ANALYSIS });
+      }
+      
+      return result;
     } catch (aiError) {
       logger.error('AI analysis failed', { 
         url: websiteUrl, 
