@@ -23,23 +23,24 @@ import { trackCacheHit, type CacheType } from '@/lib/observability';
 
 // ============================================================================
 // NEPTUNE CONTEXT CACHE TTL CONFIGURATION (in seconds)
+// Phase 3B: Increased TTLs for stable data to improve cache hit rate
 // ============================================================================
 
 export const CONTEXT_CACHE_TTL = {
-  CRM: 5 * 60,              // 5 minutes - CRM data changes frequently but not per-request
-  CALENDAR: 2 * 60,         // 2 minutes - Calendar needs to be relatively fresh
-  WORKSPACE: 60 * 60,       // 1 hour - Workspace intelligence changes rarely
-  USER_PREFS: 15 * 60,      // 15 minutes - User preferences are stable
-  TASKS: 3 * 60,            // 3 minutes - Tasks change moderately
-  AGENTS: 10 * 60,          // 10 minutes - Agent list is relatively stable
-  MARKETING: 5 * 60,        // 5 minutes - Campaign stats need reasonable freshness
-  CONTENT_COCKPIT: 10 * 60, // 10 minutes - Content metrics don't change rapidly
-  FINANCE: 5 * 60,          // 5 minutes - Financial data needs reasonable freshness
-  CONVERSATION: 5 * 60,     // 5 minutes - Conversation history context
-  PROACTIVE_INSIGHTS: 5 * 60, // 5 minutes - Proactive insights
-  RAG_SEARCH: 10 * 60,      // 10 minutes - RAG search results (documents don't change often)
-  QUERY_EXPANSION: 60 * 60, // 1 hour - Query expansions are stable for same queries
-  WEBSITE_ANALYSIS: 7 * 24 * 60 * 60, // 7 days - Website analysis results are stable
+  CRM: 10 * 60,              // 10 minutes (was 5) - CRM data changes frequently but not per-request
+  CALENDAR: 5 * 60,          // 5 minutes (was 2) - Balance freshness with performance
+  WORKSPACE: 2 * 60 * 60,    // 2 hours (was 1) - Workspace intelligence changes rarely
+  USER_PREFS: 30 * 60,       // 30 minutes (was 15) - User preferences are stable
+  TASKS: 5 * 60,             // 5 minutes (was 3) - Tasks change moderately
+  AGENTS: 20 * 60,           // 20 minutes (was 10) - Agent list is relatively stable
+  MARKETING: 10 * 60,        // 10 minutes (was 5) - Campaign stats need reasonable freshness
+  CONTENT_COCKPIT: 15 * 60,  // 15 minutes (was 10) - Content metrics don't change rapidly
+  FINANCE: 10 * 60,          // 10 minutes (was 5) - Financial data needs reasonable freshness
+  CONVERSATION: 10 * 60,     // 10 minutes (was 5) - Conversation history context
+  PROACTIVE_INSIGHTS: 10 * 60, // 10 minutes (was 5) - Proactive insights
+  RAG_SEARCH: 30 * 60,       // 30 minutes (was 10) - RAG search results (documents don't change often)
+  QUERY_EXPANSION: 2 * 60 * 60, // 2 hours (was 1) - Query expansions are stable for same queries
+  WEBSITE_ANALYSIS: 14 * 24 * 60 * 60, // 14 days (was 7) - Website analysis results are stable
 } as const;
 
 // ============================================================================

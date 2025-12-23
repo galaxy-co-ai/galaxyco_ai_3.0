@@ -424,8 +424,30 @@ export async function POST(request: Request) {
         }
       }
 
-      // Gather AI context
-      const aiContext = await gatherAIContext(workspaceId, clerkUserId);
+      // Gather AI context with timeout and performance tracking (Phase 3B)
+      const contextStartTime = Date.now();
+      let aiContext;
+      try {
+        aiContext = await Promise.race([
+          gatherAIContext(workspaceId, clerkUserId),
+          new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error('Context gathering timeout')), 5000)
+          )
+        ]);
+        const contextDuration = Date.now() - contextStartTime;
+        logger.debug('[AI Chat Stream] Context gathered', {
+          duration: contextDuration,
+          target: '<1000ms',
+          performance: contextDuration < 1000 ? 'good' : 'slow',
+        });
+      } catch (error) {
+        const contextDuration = Date.now() - contextStartTime;
+        logger.warn('[AI Chat Stream] Context gathering failed or timed out', {
+          duration: contextDuration,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        aiContext = null;
+      }
       
       // Classify intent for proactive suggestions (Phase 1B)
       let intentClassification;
@@ -790,8 +812,16 @@ Show your reasoning process naturally in your response.`;
             tools: currentToolCalls.map(tc => tc.function.name) 
           });
 
-          // Execute tool calls
+          // Execute tool calls with performance tracking (Phase 3B)
+          const toolStartTime = Date.now();
           const toolResults = await processToolCalls(currentToolCalls, toolContext);
+          const toolDuration = Date.now() - toolStartTime;
+          logger.debug('[AI Chat Stream] Tools executed', {
+            duration: toolDuration,
+            target: '<2000ms',
+            performance: toolDuration < 2000 ? 'good' : 'slow',
+            toolCount: toolResults.length,
+          });
 
           // Track which tools were called
           toolCallsMade.push(...toolResults.map(r => {
