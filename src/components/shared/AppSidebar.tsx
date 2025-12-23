@@ -39,7 +39,7 @@ const mainNavItems = [
 ];
 
 const bottomNavItems = [
-  { icon: Sparkles, label: "Neptune", href: "#", id: "assistant" },
+  { icon: Sparkles, label: "Neptune HQ", href: "/neptune-hq", id: "neptune-hq" },
   { icon: Plug, label: "Connected Apps", href: "#", id: "connected-apps" },
   { icon: Settings, label: "Settings", href: "#", id: "settings" },
 ];

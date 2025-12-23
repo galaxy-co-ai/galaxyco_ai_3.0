@@ -43,6 +43,13 @@
       "when": 1765628054670,
       "tag": "0006_loose_ends_features",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1766533448820,
+      "tag": "0007_uneven_rawhide_kid",
+      "breakpoints": true
     }
   ]
 }

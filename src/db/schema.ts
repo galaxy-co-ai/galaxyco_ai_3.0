@@ -8097,4 +8097,164 @@ export type NewLegalEntity = typeof legalEntities.$inferInsert;
 export type LearningPath = typeof learningPaths.$inferSelect;
 export type NewLearningPath = typeof learningPaths.$inferInsert;
 
+// ============================================================================
+// NEPTUNE HQ - AI Assistant Control Center
+// ============================================================================
+
+// Neptune conversations table
+export const neptuneConversations = pgTable(
+  'neptune_conversations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // User who started the conversation
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Conversation metadata
+    title: text('title'),
+    summary: text('summary'),
+    topic: text('topic'), // Extracted topic/category
+    
+    // Stats
+    messageCount: integer('message_count').notNull().default(0),
+    toolExecutionCount: integer('tool_execution_count').notNull().default(0),
+    
+    // Timestamps
+    lastActiveAt: timestamp('last_active_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_conversation_tenant_idx').on(table.workspaceId),
+    userIdx: index('neptune_conversation_user_idx').on(table.userId),
+    lastActiveIdx: index('neptune_conversation_last_active_idx').on(table.lastActiveAt),
+  }),
+);
+
+// Neptune messages table
+export const neptuneMessages = pgTable(
+  'neptune_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Relationships
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => neptuneConversations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
+    // Message data
+    role: text('role').notNull(), // 'user' | 'assistant' | 'system'
+    content: text('content').notNull(),
+    
+    // Metadata
+    toolsUsed: text('tools_used').array().default([]),
+    tokenCount: integer('token_count'),
+    responseTime: integer('response_time'), // milliseconds
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_message_tenant_idx').on(table.workspaceId),
+    conversationIdx: index('neptune_message_conversation_idx').on(table.conversationId),
+    userIdx: index('neptune_message_user_idx').on(table.userId),
+  }),
+);
+
+// Neptune activity log table
+export const neptuneActivityLog = pgTable(
+  'neptune_activity_log',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Relationships
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    conversationId: uuid('conversation_id').references(() => neptuneConversations.id, { onDelete: 'set null' }),
+
+    // Activity data
+    action: text('action').notNull(), // 'started_conversation', 'sent_message', 'used_tool', etc.
+    description: text('description').notNull(),
+    metadata: jsonb('metadata').$type<Record<string, any>>().default({}),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_activity_tenant_idx').on(table.workspaceId),
+    userIdx: index('neptune_activity_user_idx').on(table.userId),
+    conversationIdx: index('neptune_activity_conversation_idx').on(table.conversationId),
+    createdAtIdx: index('neptune_activity_created_at_idx').on(table.createdAt),
+  }),
+);
+
+// Neptune feedback table
+export const neptuneFeedback = pgTable(
+  'neptune_feedback',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Relationships
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => neptuneConversations.id, { onDelete: 'cascade' }),
+    messageId: uuid('message_id').references(() => neptuneMessages.id, { onDelete: 'cascade' }),
+
+    // Feedback data
+    rating: integer('rating'), // 1-5 or thumbs up/down (1/-1)
+    comment: text('comment'),
+    tags: text('tags').array().default([]), // 'helpful', 'accurate', 'fast', 'unclear', etc.
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_feedback_tenant_idx').on(table.workspaceId),
+    userIdx: index('neptune_feedback_user_idx').on(table.userId),
+    conversationIdx: index('neptune_feedback_conversation_idx').on(table.conversationId),
+    messageIdx: index('neptune_feedback_message_idx').on(table.messageId),
+  }),
+);
+
+// Neptune HQ Types
+export type NeptuneConversation = typeof neptuneConversations.$inferSelect;
+export type NewNeptuneConversation = typeof neptuneConversations.$inferInsert;
+
+export type NeptuneMessage = typeof neptuneMessages.$inferSelect;
+export type NewNeptuneMessage = typeof neptuneMessages.$inferInsert;
+
+export type NeptuneActivityLog = typeof neptuneActivityLog.$inferSelect;
+export type NewNeptuneActivityLog = typeof neptuneActivityLog.$inferInsert;
+
+export type NeptuneFeedback = typeof neptuneFeedback.$inferSelect;
+export type NewNeptuneFeedback = typeof neptuneFeedback.$inferInsert;
 
