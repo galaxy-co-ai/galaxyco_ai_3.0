@@ -1,5 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import {
+  neptuneKnowledgeBase,
+  neptuneUserKnowledgeBase,
+  neptuneTutorials,
+  neptuneUserTutorialProgress,
+  neptuneQuickTips,
+} from '@/db/schema';
+import { eq, and, sql, asc, desc } from 'drizzle-orm';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,158 +17,139 @@ export const dynamic = 'force-dynamic';
  * GET /api/neptune-hq/training
  * Returns knowledge base items, quick tips, and tutorial progress
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const currentUserId = user?.id;
+
+    // Get knowledge base items with user starred status
+    const knowledgeBaseItems = await db
+      .select({
+        id: neptuneKnowledgeBase.id,
+        title: neptuneKnowledgeBase.title,
+        category: neptuneKnowledgeBase.category,
+        type: neptuneKnowledgeBase.contentType,
+        lastUpdated: neptuneKnowledgeBase.updatedAt,
+        views: neptuneKnowledgeBase.views,
+        starred: sql<boolean>`COALESCE(${neptuneUserKnowledgeBase.starred}, false)`,
+      })
+      .from(neptuneKnowledgeBase)
+      .leftJoin(
+        neptuneUserKnowledgeBase,
+        and(
+          eq(neptuneUserKnowledgeBase.knowledgeBaseId, neptuneKnowledgeBase.id),
+          currentUserId ? eq(neptuneUserKnowledgeBase.userId, currentUserId) : sql`false`
+        )
+      )
+      .where(eq(neptuneKnowledgeBase.workspaceId, workspaceId))
+      .orderBy(desc(neptuneKnowledgeBase.views));
+
+    // Get unique categories from knowledge base
+    const categoriesResult = await db
+      .selectDistinct({ category: neptuneKnowledgeBase.category })
+      .from(neptuneKnowledgeBase)
+      .where(eq(neptuneKnowledgeBase.workspaceId, workspaceId))
+      .orderBy(asc(neptuneKnowledgeBase.category));
+
+    const categories = categoriesResult.map((c: { category: string }) => c.category);
+
+    // Get quick tips
+    const quickTipsData = await db.query.neptuneQuickTips.findMany({
+      where: and(
+        eq(neptuneQuickTips.workspaceId, workspaceId),
+        eq(neptuneQuickTips.isActive, true)
+      ),
+      orderBy: [asc(neptuneQuickTips.sortOrder)],
+    });
+
+    // Get tutorials with user progress
+    const tutorialsData = await db
+      .select({
+        id: neptuneTutorials.id,
+        title: neptuneTutorials.title,
+        totalSteps: neptuneTutorials.totalSteps,
+        estimatedMinutes: neptuneTutorials.estimatedMinutes,
+        completedSteps: sql<number>`COALESCE(${neptuneUserTutorialProgress.completedSteps}, 0)`,
+      })
+      .from(neptuneTutorials)
+      .leftJoin(
+        neptuneUserTutorialProgress,
+        and(
+          eq(neptuneUserTutorialProgress.tutorialId, neptuneTutorials.id),
+          currentUserId ? eq(neptuneUserTutorialProgress.userId, currentUserId) : sql`false`
+        )
+      )
+      .where(eq(neptuneTutorials.workspaceId, workspaceId))
+      .orderBy(asc(neptuneTutorials.sortOrder));
+
+    // Format tutorials with progress calculation
+    interface TutorialRow {
+      id: string;
+      title: string;
+      totalSteps: number;
+      estimatedMinutes: number;
+      completedSteps: number;
     }
 
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
+    const tutorials = tutorialsData.map((t: TutorialRow) => {
+      const progress = t.totalSteps > 0 
+        ? Math.round((t.completedSteps / t.totalSteps) * 100) 
+        : 0;
+      const remainingSteps = t.totalSteps - t.completedSteps;
+      const remainingMinutes = t.totalSteps > 0 
+        ? Math.ceil((remainingSteps / t.totalSteps) * t.estimatedMinutes)
+        : 0;
+      
+      return {
+        id: t.id,
+        title: t.title,
+        progress,
+        totalSteps: t.totalSteps,
+        completedSteps: t.completedSteps,
+        estimatedTime: progress === 0 
+          ? `${t.estimatedMinutes} min`
+          : progress === 100 
+            ? 'Complete'
+            : `${remainingMinutes} min left`,
+      };
+    });
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Workspace ID required' }, { status: 400 });
+    // Format knowledge base for response
+    interface KnowledgeBaseRow {
+      id: string;
+      title: string;
+      category: string;
+      type: 'guide' | 'video' | 'document' | 'faq';
+      lastUpdated: Date | null;
+      views: number;
+      starred: boolean;
     }
 
-    // Mock data - will be replaced with real DB queries
-    const categories = ['Getting Started', 'Agents', 'Integrations', 'Best Practices', 'API Reference'];
+    const knowledgeBase = knowledgeBaseItems.map((item: KnowledgeBaseRow) => ({
+      id: item.id,
+      title: item.title,
+      category: item.category,
+      type: item.type,
+      lastUpdated: item.lastUpdated?.toISOString() ?? new Date().toISOString(),
+      views: item.views,
+      starred: item.starred,
+    }));
 
-    const knowledgeBase = [
-      {
-        id: '1',
-        title: 'Getting Started with Neptune',
-        category: 'Getting Started',
-        type: 'guide' as const,
-        lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 245,
-        starred: true,
-      },
-      {
-        id: '2',
-        title: 'Creating Your First Agent',
-        category: 'Agents',
-        type: 'video' as const,
-        lastUpdated: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 189,
-        starred: true,
-      },
-      {
-        id: '3',
-        title: 'Agent Configuration Reference',
-        category: 'Agents',
-        type: 'document' as const,
-        lastUpdated: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 156,
-      },
-      {
-        id: '4',
-        title: 'Connecting External Services',
-        category: 'Integrations',
-        type: 'guide' as const,
-        lastUpdated: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 132,
-      },
-      {
-        id: '5',
-        title: 'API Authentication Guide',
-        category: 'API Reference',
-        type: 'document' as const,
-        lastUpdated: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 98,
-      },
-      {
-        id: '6',
-        title: 'Best Practices for Prompt Engineering',
-        category: 'Best Practices',
-        type: 'guide' as const,
-        lastUpdated: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 287,
-        starred: true,
-      },
-      {
-        id: '7',
-        title: 'Workflow Automation Tutorial',
-        category: 'Agents',
-        type: 'video' as const,
-        lastUpdated: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 165,
-      },
-      {
-        id: '8',
-        title: 'Error Handling Strategies',
-        category: 'Best Practices',
-        type: 'document' as const,
-        lastUpdated: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        views: 89,
-      },
-    ];
-
-    const quickTips = [
-      {
-        id: '1',
-        title: 'Use Templates for Faster Setup',
-        description: 'Start with our pre-built agent templates to save time. You can customize them later to fit your specific needs.',
-        category: 'Productivity',
-      },
-      {
-        id: '2',
-        title: 'Enable Auto-Save',
-        description: 'Turn on auto-save in settings to prevent losing work. Your configurations are saved every 30 seconds.',
-        category: 'Settings',
-      },
-      {
-        id: '3',
-        title: 'Test in Sandbox First',
-        description: 'Always test new agents in sandbox mode before deploying to production to avoid unexpected issues.',
-        category: 'Best Practices',
-      },
-      {
-        id: '4',
-        title: 'Use Keyboard Shortcuts',
-        description: 'Press Cmd/Ctrl+K to open the command palette for quick navigation and actions.',
-        category: 'Productivity',
-      },
-    ];
-
-    const tutorials = [
-      {
-        id: '1',
-        title: 'Neptune Fundamentals',
-        progress: 75,
-        totalSteps: 8,
-        completedSteps: 6,
-        estimatedTime: '15 min left',
-      },
-      {
-        id: '2',
-        title: 'Building Custom Agents',
-        progress: 30,
-        totalSteps: 10,
-        completedSteps: 3,
-        estimatedTime: '35 min left',
-      },
-      {
-        id: '3',
-        title: 'Advanced Integrations',
-        progress: 0,
-        totalSteps: 6,
-        completedSteps: 0,
-        estimatedTime: '25 min',
-      },
-    ];
+    // Format quick tips for response
+    const quickTips = quickTipsData.map((tip) => ({
+      id: tip.id,
+      title: tip.title,
+      description: tip.description,
+      category: tip.category,
+    }));
 
     return NextResponse.json({
       knowledgeBase,
       quickTips,
       tutorials,
-      categories,
+      categories: categories.length > 0 ? categories : ['Getting Started', 'Agents', 'Integrations', 'Best Practices', 'API Reference'],
     });
   } catch (error) {
-    console.error('Error fetching training data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch training data' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Training data error');
   }
 }

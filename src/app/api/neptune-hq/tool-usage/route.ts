@@ -1,57 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { neptuneMessages } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/neptune-hq/tool-usage
+ * Returns tool usage stats aggregated from Neptune messages
+ */
+export async function GET() {
   try {
-    const { userId } = await auth();
+    const { workspaceId } = await getCurrentWorkspace();
+
+    // Fetch messages with tools used
+    const messagesWithTools = await db.query.neptuneMessages.findMany({
+      where: eq(neptuneMessages.workspaceId, workspaceId),
+      columns: {
+        toolsUsed: true,
+      },
+    });
+
+    // Aggregate tool usage counts
+    const toolCounts = new Map<string, number>();
     
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    for (const msg of messagesWithTools) {
+      if (msg.toolsUsed && Array.isArray(msg.toolsUsed)) {
+        for (const tool of msg.toolsUsed) {
+          if (tool) {
+            toolCounts.set(tool, (toolCounts.get(tool) || 0) + 1);
+          }
+        }
+      }
     }
 
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
+    // Convert to sorted array
+    const tools = Array.from(toolCounts.entries())
+      .map(([name, executions]) => ({ name, executions }))
+      .sort((a, b) => b.executions - a.executions)
+      .slice(0, 10);
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'workspaceId required' }, { status: 400 });
+    // If no tools found, return default list
+    if (tools.length === 0) {
+      return NextResponse.json({
+        tools: [
+          { name: 'No tools used yet', executions: 0 },
+        ],
+      });
     }
 
-    // TODO: Aggregate tool usage from neptune_messages.toolsUsed array
-
-    // Mock data for now
-    const mockToolUsage = [
-      {
-        name: 'CRM Query',
-        executions: 156,
-      },
-      {
-        name: 'Calendar',
-        executions: 124,
-      },
-      {
-        name: 'Documents',
-        executions: 98,
-      },
-      {
-        name: 'Analytics',
-        executions: 87,
-      },
-      {
-        name: 'Email',
-        executions: 72,
-      },
-      {
-        name: 'Search',
-        executions: 64,
-      },
-    ];
-
-    return NextResponse.json({ tools: mockToolUsage });
+    return NextResponse.json({ tools });
   } catch (error) {
-    console.error('[API] Tool usage error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Tool usage error');
   }
 }

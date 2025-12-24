@@ -1,71 +1,52 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { neptuneActivityLog } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+// Color palette for user avatars
+const USER_COLORS = ['#4ADE80', '#38BDF8', '#FB7185', '#FBBF24', '#A78BFA', '#F472B6'];
+
+/**
+ * GET /api/neptune-hq/recent-activity
+ * Returns recent activity log entries from the database
+ */
+export async function GET() {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { workspaceId } = await getCurrentWorkspace();
 
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
-
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'workspaceId required' }, { status: 400 });
-    }
-
-    // TODO: Replace with real database query
-    // const activities = await db.query.neptuneActivityLog.findMany({
-    //   where: eq(neptuneActivityLog.workspaceId, workspaceId),
-    //   orderBy: desc(neptuneActivityLog.createdAt),
-    //   limit: 20,
-    // });
-
-    // Mock data for now
-    const mockActivities = [
-      {
-        id: '1',
-        user: {
-          name: 'Sarah Chen',
-          avatar: null,
-          color: '#4ADE80',
-        },
-        action: 'asked about',
-        description: 'Q4 revenue projections',
-        timestamp: new Date(Date.now() - 2 * 60000).toISOString(),
+    const activities = await db.query.neptuneActivityLog.findMany({
+      where: eq(neptuneActivityLog.workspaceId, workspaceId),
+      orderBy: [desc(neptuneActivityLog.createdAt)],
+      limit: 20,
+      with: {
+        user: true,
       },
-      {
-        id: '2',
-        user: {
-          name: 'Mike Johnson',
-          avatar: null,
-          color: '#38BDF8',
-        },
-        action: 'ran analysis on',
-        description: 'Customer churn data',
-        timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-      },
-      {
-        id: '3',
-        user: {
-          name: 'Emma Wilson',
-          avatar: null,
-          color: '#FB7185',
-        },
-        action: 'requested',
-        description: 'Marketing campaign insights',
-        timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
-      },
-    ];
+    });
 
-    return NextResponse.json({ activities: mockActivities });
+    const formattedActivities = activities.map((activity, index) => {
+      const userName = activity.user?.firstName && activity.user?.lastName
+        ? `${activity.user.firstName} ${activity.user.lastName}`
+        : activity.user?.email?.split('@')[0] || 'Unknown';
+
+      return {
+        id: activity.id,
+        user: {
+          name: userName,
+          avatar: activity.user?.avatarUrl || null,
+          color: USER_COLORS[index % USER_COLORS.length],
+        },
+        action: activity.action,
+        description: activity.description,
+        timestamp: activity.createdAt.toISOString(),
+      };
+    });
+
+    return NextResponse.json({ activities: formattedActivities });
   } catch (error) {
-    console.error('[API] Recent activity error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Recent activity error');
   }
 }

@@ -50,6 +50,20 @@
       "when": 1766533448820,
       "tag": "0007_uneven_rawhide_kid",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1766547459131,
+      "tag": "0008_stiff_saracen",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1766547859168,
+      "tag": "0009_big_mysterio",
+      "breakpoints": true
     }
   ]
 }

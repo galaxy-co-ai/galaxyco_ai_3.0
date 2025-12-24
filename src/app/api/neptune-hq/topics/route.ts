@@ -1,58 +1,90 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { neptuneConversations } from '@/db/schema';
+import { eq, count, sql, and, gte, isNotNull } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/neptune-hq/topics
+ * Returns topic analysis from Neptune conversations
+ */
+export async function GET() {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { workspaceId } = await getCurrentWorkspace();
+
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+    // Get current week topic counts
+    const currentWeekTopics = await db
+      .select({
+        topic: neptuneConversations.topic,
+        count: count(),
+      })
+      .from(neptuneConversations)
+      .where(
+        and(
+          eq(neptuneConversations.workspaceId, workspaceId),
+          isNotNull(neptuneConversations.topic),
+          gte(neptuneConversations.createdAt, oneWeekAgo)
+        )
+      )
+      .groupBy(neptuneConversations.topic)
+      .orderBy(sql`count(*) DESC`)
+      .limit(10);
+
+    // Get previous week topic counts for trend calculation
+    const previousWeekTopics = await db
+      .select({
+        topic: neptuneConversations.topic,
+        count: count(),
+      })
+      .from(neptuneConversations)
+      .where(
+        and(
+          eq(neptuneConversations.workspaceId, workspaceId),
+          isNotNull(neptuneConversations.topic),
+          gte(neptuneConversations.createdAt, twoWeeksAgo),
+          sql`${neptuneConversations.createdAt} < ${oneWeekAgo}`
+        )
+      )
+      .groupBy(neptuneConversations.topic);
+
+    const prevTopicCounts = new Map(previousWeekTopics.map(t => [t.topic, Number(t.count)]));
+
+    // Calculate trends and format response
+    const topics = currentWeekTopics
+      .filter(t => t.topic) // Filter out null topics
+      .map(t => {
+        const currentCount = Number(t.count);
+        const prevCount = prevTopicCounts.get(t.topic!) || 0;
+        const trend = prevCount > 0 
+          ? Math.round(((currentCount - prevCount) / prevCount) * 100)
+          : currentCount > 0 ? 100 : 0;
+
+        return {
+          name: t.topic!,
+          count: currentCount,
+          trend,
+        };
+      });
+
+    // If no topics found, return some default categories
+    if (topics.length === 0) {
+      return NextResponse.json({
+        topics: [
+          { name: 'General', count: 0, trend: 0 },
+          { name: 'Technical', count: 0, trend: 0 },
+          { name: 'Business', count: 0, trend: 0 },
+        ],
+      });
     }
 
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
-
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'workspaceId required' }, { status: 400 });
-    }
-
-    // TODO: Implement topic extraction and aggregation from neptune_conversations
-
-    // Mock data for now
-    const mockTopics = [
-      {
-        name: 'Financial Analysis',
-        count: 45,
-        trend: 12,
-      },
-      {
-        name: 'Customer Data',
-        count: 38,
-        trend: 8,
-      },
-      {
-        name: 'Marketing Strategy',
-        count: 32,
-        trend: -3,
-      },
-      {
-        name: 'Product Development',
-        count: 28,
-        trend: 15,
-      },
-      {
-        name: 'Operations',
-        count: 22,
-        trend: 5,
-      },
-    ];
-
-    return NextResponse.json({ topics: mockTopics });
+    return NextResponse.json({ topics });
   } catch (error) {
-    console.error('[API] Topics error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Topics error');
   }
 }

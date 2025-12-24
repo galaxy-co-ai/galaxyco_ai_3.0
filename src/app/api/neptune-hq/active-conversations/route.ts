@@ -1,59 +1,68 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { neptuneConversations } from '@/db/schema';
+import { eq, desc } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
-export async function GET(request: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+// Color palette for user avatars
+const USER_COLORS = ['#4ADE80', '#38BDF8', '#FB7185', '#FBBF24', '#A78BFA', '#F472B6'];
+
+/**
+ * GET /api/neptune-hq/active-conversations
+ * Returns recently active conversations with user info
+ */
+export async function GET() {
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { workspaceId } = await getCurrentWorkspace();
 
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
+    // Get conversations active in the last 30 minutes
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'workspaceId required' }, { status: 400 });
-    }
-
-    // TODO: Replace with real database query
-    // const conversations = await db.query.neptuneConversations.findMany({
-    //   where: eq(neptuneConversations.workspaceId, workspaceId),
-    //   with: { activeUsers: true },
-    // });
-
-    // Mock data for now
-    const mockConversations = [
-      {
-        id: '1',
-        title: 'Q4 Financial Planning Discussion',
-        lastActiveAt: new Date().toISOString(),
-        activeUsers: [
-          {
-            id: 'user1',
-            name: 'Sarah Chen',
-            avatar: null,
-            color: '#4ADE80',
-          },
-          {
-            id: 'user2',
-            name: 'Mike Johnson',
-            avatar: null,
-            color: '#38BDF8',
-          },
-        ],
+    const conversations = await db.query.neptuneConversations.findMany({
+      where: eq(neptuneConversations.workspaceId, workspaceId),
+      orderBy: [desc(neptuneConversations.lastActiveAt)],
+      limit: 10,
+      with: {
+        user: true,
       },
-    ];
+    });
+
+    // Filter to recently active and format response
+    const activeConversations = conversations
+      .filter(c => c.lastActiveAt >= thirtyMinutesAgo)
+      .map((conv, index) => {
+        const userName = conv.user?.firstName && conv.user?.lastName
+          ? `${conv.user.firstName} ${conv.user.lastName}`
+          : conv.user?.email?.split('@')[0] || 'Unknown User';
+
+        return {
+          id: conv.id,
+          title: conv.title || conv.summary || 'Untitled Conversation',
+          lastActiveAt: conv.lastActiveAt.toISOString(),
+          topic: conv.topic,
+          messageCount: conv.messageCount,
+          activeUsers: [
+            {
+              id: conv.userId,
+              name: userName,
+              avatar: conv.user?.avatarUrl || null,
+              color: USER_COLORS[index % USER_COLORS.length],
+            },
+          ],
+        };
+      });
+
+    // Count total active users (unique)
+    const activeUserIds = new Set(activeConversations.flatMap(c => c.activeUsers.map(u => u.id)));
 
     return NextResponse.json({
-      conversations: mockConversations,
-      activeUsers: mockConversations.reduce((sum, c) => sum + c.activeUsers.length, 0),
+      conversations: activeConversations,
+      activeUsers: activeUserIds.size,
     });
   } catch (error) {
-    console.error('[API] Active conversations error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Active conversations error');
   }
 }

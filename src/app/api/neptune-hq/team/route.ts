@@ -1,106 +1,145 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { workspaceMembers, users, neptuneConversations, neptuneMessages, neptuneActivityLog } from '@/db/schema';
+import { eq, desc, count, and, gte, sql } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/neptune-hq/team
+ * Returns team members, stats, and recent activity from real database
+ */
+export async function GET() {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { workspaceId } = await getCurrentWorkspace();
 
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get('workspaceId');
+    // Get workspace members with user details
+    const membersList = await db.query.workspaceMembers.findMany({
+      where: and(
+        eq(workspaceMembers.workspaceId, workspaceId),
+        eq(workspaceMembers.isActive, true)
+      ),
+      with: {
+        user: true,
+      },
+    });
 
-    if (!workspaceId) {
-      return NextResponse.json({ error: 'Workspace ID required' }, { status: 400 });
-    }
+    // Get Neptune conversation/message stats per user for this week
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const stats = {
-      totalMembers: 6,
-      activeToday: 4,
-      totalConversations: 342,
-      avgResponseTime: 2.4,
+    // Get conversation counts per user
+    const userConversationStats = await db
+      .select({
+        userId: neptuneConversations.userId,
+        conversationCount: count(),
+      })
+      .from(neptuneConversations)
+      .where(
+        and(
+          eq(neptuneConversations.workspaceId, workspaceId),
+          gte(neptuneConversations.createdAt, oneWeekAgo)
+        )
+      )
+      .groupBy(neptuneConversations.userId);
+
+    // Get message counts per user
+    const userMessageStats = await db
+      .select({
+        userId: neptuneMessages.userId,
+        messageCount: count(),
+      })
+      .from(neptuneMessages)
+      .where(
+        and(
+          eq(neptuneMessages.workspaceId, workspaceId),
+          gte(neptuneMessages.createdAt, oneWeekAgo)
+        )
+      )
+      .groupBy(neptuneMessages.userId);
+
+    const convStatsByUser = new Map(userConversationStats.map(s => [s.userId, Number(s.conversationCount)]));
+    const msgStatsByUser = new Map(userMessageStats.map(s => [s.userId, Number(s.messageCount)]));
+
+    // Determine user online status based on last login
+    const getStatus = (lastLogin: Date | null): 'online' | 'away' | 'offline' => {
+      if (!lastLogin) return 'offline';
+      const minutesAgo = (Date.now() - lastLogin.getTime()) / (1000 * 60);
+      if (minutesAgo < 15) return 'online';
+      if (minutesAgo < 60) return 'away';
+      return 'offline';
     };
 
-    const members = [
-      {
-        id: '1',
-        name: 'Sarah Chen',
-        email: 'sarah@company.com',
-        role: 'owner' as const,
-        status: 'online' as const,
-        lastActive: new Date().toISOString(),
-        conversationsThisWeek: 45,
-        messagesThisWeek: 234,
-      },
-      {
-        id: '2',
-        name: 'Michael Roberts',
-        email: 'michael@company.com',
-        role: 'admin' as const,
-        status: 'online' as const,
-        lastActive: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-        conversationsThisWeek: 38,
-        messagesThisWeek: 189,
-      },
-      {
-        id: '3',
-        name: 'Emily Johnson',
-        email: 'emily@company.com',
-        role: 'member' as const,
-        status: 'away' as const,
-        lastActive: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-        conversationsThisWeek: 22,
-        messagesThisWeek: 98,
-      },
-      {
-        id: '4',
-        name: 'David Kim',
-        email: 'david@company.com',
-        role: 'member' as const,
-        status: 'online' as const,
-        lastActive: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-        conversationsThisWeek: 31,
-        messagesThisWeek: 156,
-      },
-      {
-        id: '5',
-        name: 'Lisa Wang',
-        email: 'lisa@company.com',
-        role: 'member' as const,
-        status: 'offline' as const,
-        lastActive: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        conversationsThisWeek: 18,
-        messagesThisWeek: 87,
-      },
-      {
-        id: '6',
-        name: 'James Wilson',
-        email: 'james@company.com',
-        role: 'admin' as const,
-        status: 'offline' as const,
-        lastActive: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        conversationsThisWeek: 28,
-        messagesThisWeek: 142,
-      },
-    ];
+    // Format members
+    const members = membersList.map(member => {
+      const user = member.user;
+      const name = user?.firstName && user?.lastName 
+        ? `${user.firstName} ${user.lastName}` 
+        : user?.email?.split('@')[0] || 'Unknown';
+      
+      return {
+        id: member.id,
+        name,
+        email: user?.email || '',
+        avatar: user?.avatarUrl || null,
+        role: member.role,
+        status: getStatus(user?.lastLoginAt || null),
+        lastActive: user?.lastLoginAt?.toISOString() || member.joinedAt.toISOString(),
+        conversationsThisWeek: convStatsByUser.get(user?.id || '') || 0,
+        messagesThisWeek: msgStatsByUser.get(user?.id || '') || 0,
+      };
+    });
 
-    const recentActivity = [
-      { id: '1', user: 'Sarah Chen', action: 'started a new conversation with Neptune', timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString() },
-      { id: '2', user: 'Michael Roberts', action: 'updated agent configuration', timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString() },
-      { id: '3', user: 'David Kim', action: 'ran Lead Scorer agent', timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString() },
-      { id: '4', user: 'Emily Johnson', action: 'exported analytics report', timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString() },
-      { id: '5', user: 'Sarah Chen', action: 'invited a new team member', timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString() },
-      { id: '6', user: 'James Wilson', action: 'modified workflow settings', timestamp: new Date(Date.now() - 90 * 60 * 1000).toISOString() },
-      { id: '7', user: 'Lisa Wang', action: 'completed Neptune training', timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-      { id: '8', user: 'Michael Roberts', action: 'created new agent template', timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
-    ];
+    // Calculate stats
+    const activeToday = members.filter(m => m.status === 'online' || m.status === 'away').length;
+    
+    // Get total conversations for workspace
+    const totalConvs = await db
+      .select({ count: count() })
+      .from(neptuneConversations)
+      .where(eq(neptuneConversations.workspaceId, workspaceId));
+
+    // Get average response time from messages
+    const avgResponseTime = await db
+      .select({ avg: sql<number>`AVG(${neptuneMessages.responseTime})` })
+      .from(neptuneMessages)
+      .where(eq(neptuneMessages.workspaceId, workspaceId));
+
+    const stats = {
+      totalMembers: members.length,
+      activeToday,
+      totalConversations: Number(totalConvs[0]?.count || 0),
+      avgResponseTime: Math.round((Number(avgResponseTime[0]?.avg || 0) / 1000) * 10) / 10, // Convert ms to seconds
+    };
+
+    // Get recent activity from neptune_activity_log
+    const activityLogs = await db.query.neptuneActivityLog.findMany({
+      where: eq(neptuneActivityLog.workspaceId, workspaceId),
+      orderBy: [desc(neptuneActivityLog.createdAt)],
+      limit: 10,
+      with: {
+        user: true,
+      },
+    });
+
+    const recentActivity = activityLogs.map(log => {
+      const userName = log.user?.firstName && log.user?.lastName
+        ? `${log.user.firstName} ${log.user.lastName}`
+        : log.user?.email?.split('@')[0] || 'Unknown';
+      
+      return {
+        id: log.id,
+        user: userName,
+        action: log.description,
+        timestamp: log.createdAt.toISOString(),
+      };
+    });
 
     return NextResponse.json({ stats, members, recentActivity });
   } catch (error) {
-    console.error('Error fetching team data:', error);
-    return NextResponse.json({ error: 'Failed to fetch team data' }, { status: 500 });
+    return createErrorResponse(error, 'Team data error');
   }
 }

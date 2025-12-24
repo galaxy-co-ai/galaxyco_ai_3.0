@@ -8245,6 +8245,158 @@ export const neptuneFeedback = pgTable(
   }),
 );
 
+// Neptune settings table
+export const neptuneSettings = pgTable(
+  'neptune_settings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' })
+      .unique(), // One settings record per workspace
+
+    // Notification settings
+    notifications: jsonb('notifications')
+      .$type<{
+        emailDigest?: boolean;
+        slackAlerts?: boolean;
+        inAppNotifications?: boolean;
+        dailySummary?: boolean;
+      }>()
+      .notNull()
+      .default({
+        emailDigest: true,
+        slackAlerts: false,
+        inAppNotifications: true,
+        dailySummary: true,
+      }),
+
+    // Behavior settings
+    behavior: jsonb('behavior')
+      .$type<{
+        autoSuggest?: boolean;
+        proactiveInsights?: boolean;
+        learningEnabled?: boolean;
+        responseLength?: 'concise' | 'balanced' | 'detailed';
+      }>()
+      .notNull()
+      .default({
+        autoSuggest: true,
+        proactiveInsights: true,
+        learningEnabled: true,
+        responseLength: 'balanced',
+      }),
+
+    // Privacy settings
+    privacy: jsonb('privacy')
+      .$type<{
+        shareAnalytics?: boolean;
+        dataRetentionDays?: number;
+        anonymizeData?: boolean;
+      }>()
+      .notNull()
+      .default({
+        shareAnalytics: true,
+        dataRetentionDays: 90,
+        anonymizeData: false,
+      }),
+
+    // Integration settings
+    integrations: jsonb('integrations')
+      .$type<{
+        connectedApps?: number;
+        apiEnabled?: boolean;
+        webhooksEnabled?: boolean;
+      }>()
+      .notNull()
+      .default({
+        connectedApps: 0,
+        apiEnabled: true,
+        webhooksEnabled: false,
+      }),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: uniqueIndex('neptune_settings_tenant_idx').on(table.workspaceId),
+  }),
+);
+
+// Neptune HQ Relations
+export const neptuneConversationsRelations = relations(neptuneConversations, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneConversations.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [neptuneConversations.userId],
+    references: [users.id],
+  }),
+  messages: many(neptuneMessages),
+  feedback: many(neptuneFeedback),
+  activityLogs: many(neptuneActivityLog),
+}));
+
+export const neptuneMessagesRelations = relations(neptuneMessages, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneMessages.workspaceId],
+    references: [workspaces.id],
+  }),
+  conversation: one(neptuneConversations, {
+    fields: [neptuneMessages.conversationId],
+    references: [neptuneConversations.id],
+  }),
+  user: one(users, {
+    fields: [neptuneMessages.userId],
+    references: [users.id],
+  }),
+}));
+
+export const neptuneActivityLogRelations = relations(neptuneActivityLog, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneActivityLog.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [neptuneActivityLog.userId],
+    references: [users.id],
+  }),
+  conversation: one(neptuneConversations, {
+    fields: [neptuneActivityLog.conversationId],
+    references: [neptuneConversations.id],
+  }),
+}));
+
+export const neptuneFeedbackRelations = relations(neptuneFeedback, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneFeedback.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [neptuneFeedback.userId],
+    references: [users.id],
+  }),
+  conversation: one(neptuneConversations, {
+    fields: [neptuneFeedback.conversationId],
+    references: [neptuneConversations.id],
+  }),
+  message: one(neptuneMessages, {
+    fields: [neptuneFeedback.messageId],
+    references: [neptuneMessages.id],
+  }),
+}));
+
+export const neptuneSettingsRelations = relations(neptuneSettings, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneSettings.workspaceId],
+    references: [workspaces.id],
+  }),
+}));
+
 // Neptune HQ Types
 export type NeptuneConversation = typeof neptuneConversations.$inferSelect;
 export type NewNeptuneConversation = typeof neptuneConversations.$inferInsert;
@@ -8257,4 +8409,270 @@ export type NewNeptuneActivityLog = typeof neptuneActivityLog.$inferInsert;
 
 export type NeptuneFeedback = typeof neptuneFeedback.$inferSelect;
 export type NewNeptuneFeedback = typeof neptuneFeedback.$inferInsert;
+
+export type NeptuneSettings = typeof neptuneSettings.$inferSelect;
+export type NewNeptuneSettings = typeof neptuneSettings.$inferInsert;
+
+// ============================================================================
+// Neptune Training Tables
+// ============================================================================
+
+// Knowledge base content type enum
+export const knowledgeBaseContentTypeEnum = pgEnum('knowledge_base_content_type', [
+  'guide',
+  'video',
+  'document',
+  'faq',
+]);
+
+// Neptune knowledge base table
+export const neptuneKnowledgeBase = pgTable(
+  'neptune_knowledge_base',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Content metadata
+    title: text('title').notNull(),
+    description: text('description'),
+    category: text('category').notNull(),
+    contentType: knowledgeBaseContentTypeEnum('content_type').notNull().default('document'),
+    content: text('content'), // For guides/documents - markdown content
+    externalUrl: text('external_url'), // For videos or external links
+    
+    // Engagement metrics
+    views: integer('views').notNull().default(0),
+    
+    // User-specific (optional - for global content, leave null)
+    createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_kb_tenant_idx').on(table.workspaceId),
+    categoryIdx: index('neptune_kb_category_idx').on(table.category),
+    contentTypeIdx: index('neptune_kb_content_type_idx').on(table.contentType),
+  }),
+);
+
+// User starred/bookmarked knowledge base items
+export const neptuneUserKnowledgeBase = pgTable(
+  'neptune_user_knowledge_base',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Relationships
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    knowledgeBaseId: uuid('knowledge_base_id')
+      .notNull()
+      .references(() => neptuneKnowledgeBase.id, { onDelete: 'cascade' }),
+
+    // User preferences
+    starred: boolean('starred').notNull().default(false),
+    lastViewedAt: timestamp('last_viewed_at'),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_user_kb_tenant_idx').on(table.workspaceId),
+    userIdx: index('neptune_user_kb_user_idx').on(table.userId),
+    uniqueUserKb: uniqueIndex('neptune_user_kb_unique').on(table.userId, table.knowledgeBaseId),
+  }),
+);
+
+// Neptune tutorials table
+export const neptuneTutorials = pgTable(
+  'neptune_tutorials',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Tutorial metadata
+    title: text('title').notNull(),
+    description: text('description'),
+    totalSteps: integer('total_steps').notNull().default(1),
+    estimatedMinutes: integer('estimated_minutes').notNull().default(10),
+    
+    // Tutorial content - array of step objects
+    steps: jsonb('steps')
+      .$type<Array<{
+        stepNumber: number;
+        title: string;
+        content: string;
+        videoUrl?: string;
+      }>>()
+      .notNull()
+      .default([]),
+    
+    // Ordering
+    sortOrder: integer('sort_order').notNull().default(0),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_tutorials_tenant_idx').on(table.workspaceId),
+    sortIdx: index('neptune_tutorials_sort_idx').on(table.sortOrder),
+  }),
+);
+
+// User tutorial progress
+export const neptuneUserTutorialProgress = pgTable(
+  'neptune_user_tutorial_progress',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Relationships
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tutorialId: uuid('tutorial_id')
+      .notNull()
+      .references(() => neptuneTutorials.id, { onDelete: 'cascade' }),
+
+    // Progress tracking
+    completedSteps: integer('completed_steps').notNull().default(0),
+    lastCompletedStep: integer('last_completed_step'),
+    isCompleted: boolean('is_completed').notNull().default(false),
+    
+    // Timestamps
+    startedAt: timestamp('started_at').notNull().defaultNow(),
+    completedAt: timestamp('completed_at'),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_user_tutorial_tenant_idx').on(table.workspaceId),
+    userIdx: index('neptune_user_tutorial_user_idx').on(table.userId),
+    uniqueUserTutorial: uniqueIndex('neptune_user_tutorial_unique').on(table.userId, table.tutorialId),
+  }),
+);
+
+// Neptune quick tips table
+export const neptuneQuickTips = pgTable(
+  'neptune_quick_tips',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Tip content
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    category: text('category').notNull(),
+    
+    // Ordering
+    sortOrder: integer('sort_order').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
+    
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('neptune_tips_tenant_idx').on(table.workspaceId),
+    categoryIdx: index('neptune_tips_category_idx').on(table.category),
+    activeIdx: index('neptune_tips_active_idx').on(table.isActive),
+  }),
+);
+
+// Neptune Training Relations
+export const neptuneKnowledgeBaseRelations = relations(neptuneKnowledgeBase, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneKnowledgeBase.workspaceId],
+    references: [workspaces.id],
+  }),
+  createdBy: one(users, {
+    fields: [neptuneKnowledgeBase.createdById],
+    references: [users.id],
+  }),
+  userEntries: many(neptuneUserKnowledgeBase),
+}));
+
+export const neptuneUserKnowledgeBaseRelations = relations(neptuneUserKnowledgeBase, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneUserKnowledgeBase.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [neptuneUserKnowledgeBase.userId],
+    references: [users.id],
+  }),
+  knowledgeBase: one(neptuneKnowledgeBase, {
+    fields: [neptuneUserKnowledgeBase.knowledgeBaseId],
+    references: [neptuneKnowledgeBase.id],
+  }),
+}));
+
+export const neptuneTutorialsRelations = relations(neptuneTutorials, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneTutorials.workspaceId],
+    references: [workspaces.id],
+  }),
+  userProgress: many(neptuneUserTutorialProgress),
+}));
+
+export const neptuneUserTutorialProgressRelations = relations(neptuneUserTutorialProgress, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneUserTutorialProgress.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [neptuneUserTutorialProgress.userId],
+    references: [users.id],
+  }),
+  tutorial: one(neptuneTutorials, {
+    fields: [neptuneUserTutorialProgress.tutorialId],
+    references: [neptuneTutorials.id],
+  }),
+}));
+
+export const neptuneQuickTipsRelations = relations(neptuneQuickTips, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [neptuneQuickTips.workspaceId],
+    references: [workspaces.id],
+  }),
+}));
+
+// Neptune Training Types
+export type NeptuneKnowledgeBase = typeof neptuneKnowledgeBase.$inferSelect;
+export type NewNeptuneKnowledgeBase = typeof neptuneKnowledgeBase.$inferInsert;
+
+export type NeptuneUserKnowledgeBase = typeof neptuneUserKnowledgeBase.$inferSelect;
+export type NewNeptuneUserKnowledgeBase = typeof neptuneUserKnowledgeBase.$inferInsert;
+
+export type NeptuneTutorial = typeof neptuneTutorials.$inferSelect;
+export type NewNeptuneTutorial = typeof neptuneTutorials.$inferInsert;
+
+export type NeptuneUserTutorialProgress = typeof neptuneUserTutorialProgress.$inferSelect;
+export type NewNeptuneUserTutorialProgress = typeof neptuneUserTutorialProgress.$inferInsert;
+
+export type NeptuneQuickTip = typeof neptuneQuickTips.$inferSelect;
+export type NewNeptuneQuickTip = typeof neptuneQuickTips.$inferInsert;
 
