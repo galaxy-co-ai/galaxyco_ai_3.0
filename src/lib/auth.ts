@@ -1,4 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { cache } from 'react';
 import { db } from '@/lib/db';
 import { workspaces, workspaceMembers, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -103,13 +104,14 @@ export async function getAdminContext() {
  * - Creates workspace automatically if user doesn't have one
  * - Creates user record if it doesn't exist (for webhook race conditions)
  * - Uses ALLOW_DEV_BYPASS env var for development (not NODE_ENV)
+ * - Memoized with React cache() to prevent duplicate calls per request
  * 
  * @example
  * ```typescript
  * const { workspaceId, workspace } = await getCurrentWorkspace();
  * ```
  */
-export async function getCurrentWorkspace() {
+export const getCurrentWorkspace = cache(async () => {
   const { userId, orgId, orgSlug } = await auth();
   
   // TEMPORARY: Development bypass for testing
@@ -376,7 +378,7 @@ export async function getCurrentWorkspace() {
     user,
     membership,
   };
-}
+});
 
 /**
  * Gets the current authenticated user from the database
