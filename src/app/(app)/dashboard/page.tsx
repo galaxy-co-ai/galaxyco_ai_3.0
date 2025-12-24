@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import DashboardV2Client from '@/components/dashboard/DashboardV2Client';
 import { getCurrentWorkspace } from '@/lib/auth';
@@ -43,6 +44,10 @@ export default async function DashboardPage() {
       initialData = await getDashboardData(workspaceId, userName);
     }
   } catch (error) {
+    // Redirect to sign-in if unauthorized
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      redirect('/sign-in');
+    }
     // Log error but don't expose details to user
     logger.error('Dashboard page error', { error });
     // initialData already set to empty state fallback
