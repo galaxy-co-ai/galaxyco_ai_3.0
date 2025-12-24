@@ -1,4 +1,4 @@
-import { task } from "@trigger.dev/sdk/v3";
+import { task, wait } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
 import { campaigns, prospects, contacts } from "@/db/schema";
 import { eq, and, or, ne } from "drizzle-orm";
@@ -184,7 +184,7 @@ export const sendCampaignTask = task({
 
 /**
  * Schedule Campaign Task
- * Schedules a campaign to be sent at a specific time
+ * Schedules a campaign to be sent at a specific time using wait.until()
  */
 export const scheduleCampaignTask = task({
   id: "schedule-campaign",
@@ -210,41 +210,59 @@ export const scheduleCampaignTask = task({
         )
       );
 
-    // Schedule the send task with idempotency key to prevent duplicate sends
     const sendTime = new Date(scheduledFor);
-    const delayMs = Math.max(0, sendTime.getTime() - Date.now());
-    const idempotencyKey = `campaign-${campaignId}-send`;
 
-    if (delayMs > 0) {
-      // Use Trigger.dev's delay capability
-      await sendCampaignTask.trigger(
-        { campaignId, workspaceId },
-        { 
-          delay: `${Math.floor(delayMs / 1000)}s`,
-          idempotencyKey,
-          idempotencyKeyTTL: "24h", // Campaign send should be unique for 24 hours
-          tags: [`workspace:${workspaceId}`, `campaign:${campaignId}`, "type:campaign-send"],
-        }
-      );
-    } else {
-      // Send immediately if scheduled time has passed
-      await sendCampaignTask.trigger(
-        { campaignId, workspaceId },
-        {
-          idempotencyKey,
-          idempotencyKeyTTL: "24h",
-          tags: [`workspace:${workspaceId}`, `campaign:${campaignId}`, "type:campaign-send"],
-        }
-      );
+    // If scheduled time is in the future, wait until then
+    if (sendTime.getTime() > Date.now()) {
+      logger.info("Waiting until scheduled time", {
+        campaignId,
+        scheduledFor,
+        workspaceId,
+      });
+
+      // Use wait.until() to pause task execution until the scheduled time
+      await wait.until({
+        date: sendTime,
+        throwIfInThePast: false, // Don't throw if time has passed, just continue
+      });
     }
 
-    logger.info("Campaign scheduled", {
+    // Re-fetch campaign to ensure it wasn't cancelled while waiting
+    const campaign = await db.query.campaigns.findFirst({
+      where: and(
+        eq(campaigns.id, campaignId),
+        eq(campaigns.workspaceId, workspaceId)
+      ),
+    });
+
+    if (!campaign || campaign.status === "completed" || campaign.status === "paused") {
+      logger.info("Campaign was cancelled or already sent", {
+        campaignId,
+        status: campaign?.status,
+      });
+      return { success: false, error: "Campaign was cancelled or already sent" };
+    }
+
+    // Now trigger the actual send with idempotency
+    const handle = await sendCampaignTask.triggerAndWait(
+      { campaignId, workspaceId },
+      {
+        idempotencyKey: `campaign-${campaignId}-send`,
+        idempotencyKeyTTL: "24h",
+        tags: [`workspace:${workspaceId}`, `campaign:${campaignId}`, "type:campaign-send"],
+      }
+    );
+
+    logger.info("Campaign scheduled send completed", {
       campaignId,
       scheduledFor,
       workspaceId,
+      result: handle.ok ? "success" : "failed",
     });
 
-    return { success: true, campaignId, scheduledFor };
+    return handle.ok
+      ? { success: true, campaignId, scheduledFor, result: handle.output }
+      : { success: false, error: handle.error };
   },
 });
 
