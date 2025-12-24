@@ -144,20 +144,43 @@ export const bulkScoreLeadsTask = task({
       count: prospectsToScore.length 
     });
 
-    // Trigger individual scoring tasks
-    const results = await Promise.all(
-      prospectsToScore.map((prospect) =>
-        scoreLeadTask.trigger({
+    if (prospectsToScore.length === 0) {
+      return {
+        success: true,
+        processed: 0,
+        results: [],
+      };
+    }
+
+    // Use batchTriggerAndWait for efficient parallel processing
+    // This is more efficient than Promise.all with multiple trigger() calls
+    const batchResults = await scoreLeadTask.batchTriggerAndWait(
+      prospectsToScore.map((prospect) => ({
+        payload: {
           prospectId: prospect.id,
           workspaceId,
-        })
-      )
+        },
+      }))
     );
+
+    // Process results
+    const successful = batchResults.runs.filter((r) => r.ok);
+    const failed = batchResults.runs.filter((r) => !r.ok);
+
+    if (failed.length > 0) {
+      logger.warn("Some lead scoring tasks failed", {
+        workspaceId,
+        failedCount: failed.length,
+        errors: failed.map((r) => !r.ok && r.error),
+      });
+    }
 
     return {
       success: true,
       processed: prospectsToScore.length,
-      taskIds: results.map((r) => r.id),
+      successful: successful.length,
+      failed: failed.length,
+      results: successful.map((r) => r.ok && r.output),
     };
   },
 });
@@ -179,17 +202,25 @@ export const scheduledLeadScoring = schedules.task({
       workspaceCount: workspacesWithProspects.length,
     });
 
-    // Trigger bulk scoring for each workspace
-    const results = await Promise.all(
-      workspacesWithProspects.map((w) =>
-        bulkScoreLeadsTask.trigger({ workspaceId: w.workspaceId })
-      )
+    if (workspacesWithProspects.length === 0) {
+      return {
+        success: true,
+        workspacesProcessed: 0,
+      };
+    }
+
+    // Use batchTrigger for fire-and-forget workspace scoring
+    // We don't need to wait for results in the scheduled job
+    const batchHandle = await bulkScoreLeadsTask.batchTrigger(
+      workspacesWithProspects.map((w) => ({
+        payload: { workspaceId: w.workspaceId },
+      }))
     );
 
     return {
       success: true,
       workspacesProcessed: workspacesWithProspects.length,
-      taskIds: results.map((r) => r.id),
+      batchId: batchHandle.id,
     };
   },
 });

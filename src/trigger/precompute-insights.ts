@@ -306,31 +306,27 @@ export const scheduledInsightsPrecompute = schedules.task({
         count: allWorkspaces.length 
       });
 
-      let processed = 0;
-      let failed = 0;
-
-      // Process each workspace
-      for (const workspace of allWorkspaces) {
-        try {
-          await precomputeWorkspaceInsightsTask.trigger({
-            workspaceId: workspace.id,
-          });
-          processed++;
-        } catch (error) {
-          logger.error('[Insights] Failed to trigger for workspace', { 
-            workspaceId: workspace.id, 
-            error 
-          });
-          failed++;
-        }
+      if (allWorkspaces.length === 0) {
+        return { processed: 0, failed: 0 };
       }
 
-      logger.info('[Insights] Daily precomputation complete', { 
-        processed, 
-        failed 
+      // Use batchTrigger for efficient parallel triggering
+      // This is fire-and-forget - we don't wait for results
+      const batchHandle = await precomputeWorkspaceInsightsTask.batchTrigger(
+        allWorkspaces.map((workspace) => ({
+          payload: { workspaceId: workspace.id },
+        }))
+      );
+
+      logger.info('[Insights] Daily precomputation batch triggered', { 
+        workspaceCount: allWorkspaces.length,
+        batchId: batchHandle.id,
       });
 
-      return { processed, failed };
+      return { 
+        processed: allWorkspaces.length, 
+        batchId: batchHandle.id,
+      };
     } catch (error) {
       logger.error('[Insights] Daily precomputation failed', { error });
       throw error;
