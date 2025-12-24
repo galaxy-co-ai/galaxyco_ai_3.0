@@ -49,6 +49,7 @@ import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
+import { usePageContext } from "@/hooks/usePageContext";
 
 export interface Lead {
   id: string;
@@ -201,6 +202,38 @@ export default function CRMDashboard({
   });
 
   const [showNeptune, setShowNeptune] = useState(false);
+
+  // Report page context to Neptune for contextual awareness
+  const { setSelectedItems, setFocusedItem } = usePageContext({
+    module: 'crm',
+    pageName: 'CRM Dashboard',
+    pageType: selectedLead || selectedOrg || selectedContact || selectedDeal ? 'view' : 'list',
+    activeTab,
+    customData: {
+      stats,
+      leadsCount: leads.length,
+      dealsCount: deals.length,
+      contactsCount: contacts.length,
+      organizationsCount: organizations.length,
+      activeFilter: activeTab === 'leads' ? stageFilter : activeTab === 'organizations' ? statusFilter : activeTab === 'deals' ? dealStageFilter : null,
+    },
+  });
+
+  // Update Neptune when selections change
+  useEffect(() => {
+    if (selectedLead) {
+      const lead = leads.find(l => l.id === selectedLead);
+      setSelectedItems([{ id: selectedLead, type: 'lead', name: lead?.name || '' }]);
+      setFocusedItem({ id: selectedLead, type: 'lead', name: lead?.name || '' });
+    } else if (selectedContact) {
+      const contact = contacts.find(c => c.id === selectedContact);
+      setSelectedItems([{ id: selectedContact, type: 'contact', name: contact?.firstName || '' }]);
+      setFocusedItem({ id: selectedContact, type: 'contact', name: contact?.firstName || '' });
+    } else {
+      setSelectedItems([]);
+      setFocusedItem(undefined);
+    }
+  }, [selectedLead, selectedContact, leads, contacts, setSelectedItems, setFocusedItem]);
 
   // Floating detail dialog states
   const [showLeadDetailDialog, setShowLeadDetailDialog] = useState(false);

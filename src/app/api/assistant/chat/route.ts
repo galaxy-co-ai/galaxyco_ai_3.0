@@ -25,6 +25,39 @@ import type { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/reso
 // SCHEMA VALIDATION
 // ============================================================================
 
+// Page context schema for rich contextual awareness
+const pageContextSchema = z.object({
+  pageName: z.string().optional(),
+  pageType: z.enum(['dashboard', 'create', 'view', 'edit', 'list', 'hq', 'wizard', 'settings']).optional(),
+  module: z.enum([
+    'dashboard', 'creator', 'crm', 'marketing', 'finance', 'agents', 
+    'library', 'conversations', 'calendar', 'orchestration', 'neptune-hq',
+    'settings', 'lunar-labs', 'launchpad'
+  ]).optional(),
+  path: z.string().optional(),
+  activeTab: z.string().optional(),
+  viewMode: z.enum(['grid', 'list', 'kanban', 'calendar', 'chart']).optional(),
+  selectedCount: z.number().optional(),
+  selectedItems: z.array(z.object({
+    id: z.string(),
+    type: z.string(),
+    name: z.string(),
+  })).optional(),
+  focusedItem: z.object({
+    id: z.string(),
+    type: z.string(),
+    name: z.string(),
+  }).optional(),
+  wizardState: z.object({
+    step: z.number(),
+    total: z.number(),
+    name: z.string(),
+  }).optional(),
+  searchQuery: z.string().optional(),
+  recentAction: z.string().optional(),
+  customData: z.record(z.unknown()).optional(),
+}).optional();
+
 const chatSchema = z.object({
   message: z.string().min(1, 'Message is required').max(10000, 'Message too long'),
   conversationId: z.string().uuid().nullish(),
@@ -42,6 +75,8 @@ const chatSchema = z.object({
     type: z.string().nullish(),
   }).nullish(),
   feature: z.string().nullish(),
+  // Rich page context for Neptune's contextual awareness
+  pageContext: pageContextSchema,
 });
 
 // ============================================================================
@@ -382,11 +417,13 @@ export async function POST(request: Request) {
         return;
       }
 
-      const { message, conversationId, attachments, context, feature } = validationResult.data;
+      const { message, conversationId, attachments, context, feature, pageContext } = validationResult.data;
       logger.debug('[AI Chat Stream] Request validated', { 
         messageLength: message.length, 
         conversationId, 
-        feature: feature || context?.feature 
+        feature: feature || context?.feature,
+        pageModule: pageContext?.module,
+        pageName: pageContext?.pageName,
       });
 
       const userRecord = currentUser;
@@ -548,11 +585,12 @@ export async function POST(request: Request) {
         logger.warn('[AI Chat Stream] Session memory loading failed (non-blocking)', { error });
       }
 
-      // NOW generate system prompt WITH session memory context
+      // NOW generate system prompt WITH session memory context and page awareness
       let systemPrompt = generateSystemPrompt(
         aiContext, 
         feature || context?.feature || undefined,
-        intentClassification
+        intentClassification,
+        pageContext // Pass page context for contextual awareness
       );
 
       // Inject session memory into system prompt if available

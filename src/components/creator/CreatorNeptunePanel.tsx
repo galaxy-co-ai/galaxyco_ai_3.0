@@ -8,12 +8,6 @@ import {
   Sparkles,
   Send,
   Loader2,
-  Lightbulb,
-  PenLine,
-  Palette,
-  TrendingUp,
-  RefreshCw,
-  Wand2,
   Copy,
   CheckCircle2,
   Paperclip,
@@ -28,78 +22,48 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { logger } from "@/lib/logger";
+import { useNeptune, type Attachment } from "@/contexts/neptune-context";
+import { useSimplePageContext } from "@/hooks/usePageContext";
+import DynamicQuickActions from "@/components/neptune/DynamicQuickActions";
 import type { CreatorTabType } from "./CreatorDashboard";
-
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  metadata?: {
-    functionCalls?: Array<{
-      name: string;
-      args: unknown;
-      result: { data?: unknown };
-    }>;
-  };
-}
-
-interface Attachment {
-  type: 'image' | 'document' | 'file';
-  url: string;
-  name: string;
-  size: number;
-  mimeType: string;
-}
-
-// Quick actions based on context
-const quickActions: Record<CreatorTabType, { icon: typeof Lightbulb; label: string; prompt: string }[]> = {
-  create: [
-    { icon: Lightbulb, label: "Suggest content ideas", prompt: "Suggest some content ideas for my business" },
-    { icon: PenLine, label: "Help me write", prompt: "Help me write compelling copy" },
-    { icon: Palette, label: "Design tips", prompt: "What design tips do you have for marketing materials?" },
-    { icon: TrendingUp, label: "What's trending", prompt: "What content types are trending right now?" },
-  ],
-  collections: [
-    { icon: RefreshCw, label: "Organize my content", prompt: "Help me organize my existing content better" },
-    { icon: Wand2, label: "Suggest collections", prompt: "What collections should I create to organize my work?" },
-    { icon: Lightbulb, label: "Content audit", prompt: "Review my content and suggest improvements" },
-    { icon: TrendingUp, label: "Best performers", prompt: "Which types of content typically perform best?" },
-  ],
-  templates: [
-    { icon: Lightbulb, label: "Recommend templates", prompt: "What templates would be most useful for my business?" },
-    { icon: PenLine, label: "Custom template", prompt: "Help me design a custom template for my needs" },
-    { icon: TrendingUp, label: "Industry standards", prompt: "What templates are standard in my industry?" },
-    { icon: Wand2, label: "Template ideas", prompt: "Give me ideas for templates I should create" },
-  ],
-};
 
 interface CreatorNeptunePanelProps {
   activeTab: CreatorTabType;
 }
 
 export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content: "Hey! 👋 I'm Neptune, your creative assistant. I can help you brainstorm content ideas, write compelling copy, suggest designs, and more. What would you like to create today?",
-      timestamp: new Date(),
-    },
-  ]);
+  // Use shared Neptune context for unified experience
+  const {
+    messages,
+    isLoading,
+    isStreaming,
+    sendMessage,
+    setPageContext,
+  } = useNeptune();
+
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Report page context to Neptune - Creator-specific
+  useSimplePageContext(
+    'creator',
+    activeTab === 'create' ? 'create' : 'dashboard',
+    'Creator Studio'
+  );
+
   // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Update page context when tab changes
+  useEffect(() => {
+    setPageContext({ activeTab });
+  }, [activeTab, setPageContext]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -157,7 +121,7 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
         const data = await res.json();
         setPendingAttachments(prev => [...prev, data.attachment]);
         toast.success("Image pasted");
-      } catch (error) {
+      } catch {
         toast.error("Failed to upload pasted image");
       } finally {
         setIsUploading(false);
@@ -165,89 +129,23 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
     }
   };
 
-  // Handle sending message
+  // Handle sending message using shared context
   const handleSend = async () => {
     if (!input.trim() && pendingAttachments.length === 0) return;
     if (isLoading) return;
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "user",
-      content: input.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    const messageToSend = input.trim();
+    const attachmentsToSend = [...pendingAttachments];
     setInput("");
     setPendingAttachments([]);
-    setIsLoading(true);
 
-    try {
-      // Call the AI assistant API
-      const response = await fetch("/api/assistant/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: input.trim(),
-          attachments: pendingAttachments,
-          context: {
-            workspace: "Creator",
-            feature: "content-creation",
-            activeTab,
-          },
-        }),
-      });
-
-      let assistantContent = "";
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`;
-        throw new Error(errorMessage);
-      }
-
-      const data = await response.json();
-      assistantContent =
-        data.message?.content ||
-        (typeof data.message === "string" ? data.message : null) ||
-        data.content ||
-        "I'm here to help you create amazing content. What would you like to work on?";
-
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: assistantContent,
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      logger.error("Neptune chat error", error);
-      const errorMsg = error instanceof Error ? error.message : "Connection issue. Please try again.";
-      
-      // Fallback response
-      const fallbackMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: `I apologize, but I'm having trouble connecting right now. Error: ${errorMsg}`,
-        timestamp: new Date(),
-      };
-      
-      setMessages((prev) => [...prev, fallbackMessage]);
-      toast.error(errorMsg);
-    } finally {
-      setIsLoading(false);
-    }
+    // Use shared Neptune context which includes page context automatically
+    await sendMessage(messageToSend, attachmentsToSend, 'content-creation');
   };
 
-  // Handle quick action
-  const handleQuickAction = (prompt: string) => {
-    setInput(prompt);
-    // Auto-send after setting input
-    setTimeout(() => {
-      const fakeEvent = { preventDefault: () => {} };
-      handleSend();
-    }, 100);
+  // Handle quick action - pass the prompt directly to shared context
+  const handleQuickAction = async (prompt: string) => {
+    await sendMessage(prompt, [], 'content-creation');
   };
 
   // Copy message content
@@ -261,8 +159,6 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
       toast.error("Failed to copy");
     }
   };
-
-  const currentQuickActions = quickActions[activeTab];
 
   return (
     <div className="flex flex-col h-full">
@@ -279,27 +175,14 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Dynamic Quick Actions - Context-aware */}
       <div className="px-4 py-3 border-b bg-gray-50/50">
-        <p className="text-xs font-medium text-gray-500 mb-2">Quick actions</p>
-        <div className="flex flex-wrap gap-2">
-          {currentQuickActions.map((action, i) => (
-            <button
-              key={i}
-              onClick={() => handleQuickAction(action.prompt)}
-              disabled={isLoading}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
-                "bg-white border border-gray-200 text-gray-600",
-                "hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
-              )}
-            >
-              <action.icon className="h-3 w-3" />
-              {action.label}
-            </button>
-          ))}
-        </div>
+        <DynamicQuickActions
+          onAction={handleQuickAction}
+          disabled={isLoading || isStreaming}
+          variant="pills"
+          maxActions={4}
+        />
       </div>
 
       {/* Messages */}
@@ -465,8 +348,8 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
           ))}
         </AnimatePresence>
 
-        {/* Loading indicator */}
-        {isLoading && (
+        {/* Loading/Streaming indicator */}
+        {(isLoading || isStreaming) && !messages.some(m => m.isStreaming) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -475,7 +358,9 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
             <div className="bg-gray-100 rounded-xl rounded-bl-md px-4 py-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin text-purple-600" />
-                <span className="text-sm text-gray-600">Thinking...</span>
+                <span className="text-sm text-gray-600">
+                  {isStreaming ? "Generating..." : "Thinking..."}
+                </span>
               </div>
             </div>
           </motion.div>
@@ -546,12 +431,12 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
           />
           <Button
             onClick={handleSend}
-            disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading}
+            disabled={(!input.trim() && pendingAttachments.length === 0) || isLoading || isStreaming}
             size="icon"
             className="rounded-full bg-purple-600 hover:bg-purple-700 h-9 w-9"
             aria-label="Send message"
           >
-            {isLoading ? (
+            {isLoading || isStreaming ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Send className="h-4 w-4" />

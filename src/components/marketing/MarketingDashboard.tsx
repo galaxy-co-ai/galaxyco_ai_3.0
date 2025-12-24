@@ -49,6 +49,7 @@ import { logger } from "@/lib/logger";
 import NeptuneAssistPanel from "@/components/conversations/NeptuneAssistPanel";
 import useSWR from 'swr';
 import { AddChannelDialog } from "./AddChannelDialog";
+import { usePageContext } from "@/hooks/usePageContext";
 
 // Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -198,6 +199,34 @@ export default function MarketingDashboard({
     },
   ]);
   const [chatInput, setChatInput] = useState("");
+
+  // Report page context to Neptune for contextual awareness
+  const { setSelectedItems, setFocusedItem } = usePageContext({
+    module: 'marketing',
+    pageName: 'Marketing Hub',
+    pageType: selectedCampaign || selectedContent ? 'view' : 'dashboard',
+    activeTab,
+    customData: {
+      stats,
+      campaignsCount: initialCampaigns.length,
+      channelsCount: channels.length,
+      activeCampaigns: stats.activeCampaigns,
+    },
+  });
+
+  // Update Neptune when selections change
+  useEffect(() => {
+    if (selectedCampaign) {
+      setSelectedItems([{ id: selectedCampaign.id, type: 'campaign', name: selectedCampaign.name }]);
+      setFocusedItem({ id: selectedCampaign.id, type: 'campaign', name: selectedCampaign.name });
+    } else if (selectedContent) {
+      setSelectedItems([{ id: selectedContent.id, type: 'content', name: selectedContent.title }]);
+      setFocusedItem({ id: selectedContent.id, type: 'content', name: selectedContent.title });
+    } else {
+      setSelectedItems([]);
+      setFocusedItem(undefined);
+    }
+  }, [selectedCampaign, selectedContent, setSelectedItems, setFocusedItem]);
   const [contentChatInput, setContentChatInput] = useState("");
   const [campaignData, setCampaignData] = useState({
     name: "",

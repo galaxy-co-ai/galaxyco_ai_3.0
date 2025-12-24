@@ -11,6 +11,23 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
+import {
+  type PageContextData,
+  type SelectedItem,
+  type WizardState,
+  type FilterState,
+  type SuggestedAction,
+  DEFAULT_PAGE_CONTEXT,
+  createPageContextFromPath,
+  mergePageContext,
+  addRecentAction,
+  updateSelectedItems as updateSelectedItemsUtil,
+  setFocusedItem as setFocusedItemUtil,
+  serializePageContext,
+} from "@/lib/neptune/page-context";
+
+// Re-export types for convenience
+export type { PageContextData, SelectedItem, WizardState, FilterState, SuggestedAction };
 
 // ============================================================================
 // TYPES
@@ -66,6 +83,10 @@ interface NeptuneContextValue {
   isLoadingHistory: boolean;
   currentPage: string;
   currentToolStatus: string | null;
+  
+  // Page Context State (new)
+  pageContext: PageContextData;
+  suggestedActions: SuggestedAction[];
 
   // Actions
   sendMessage: (
@@ -79,6 +100,17 @@ interface NeptuneContextValue {
   fetchConversationHistory: () => Promise<void>;
   deleteConversation: (conversationId: string) => Promise<void>;
   setCurrentPage: (page: string) => void;
+  
+  // Page Context Actions (new)
+  setPageContext: (context: Partial<PageContextData>) => void;
+  updatePageContext: (updates: Partial<PageContextData>) => void;
+  setSelectedItems: (items: SelectedItem[]) => void;
+  setFocusedItem: (item: SelectedItem | undefined) => void;
+  setWizardState: (state: WizardState | undefined) => void;
+  setFilterState: (state: FilterState | undefined) => void;
+  trackAction: (action: string, target?: string, metadata?: Record<string, unknown>) => void;
+  setCustomData: (data: Record<string, unknown>) => void;
+  getSerializedContext: () => Record<string, unknown>;
 }
 
 // ============================================================================
@@ -162,6 +194,8 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [currentToolStatus, setCurrentToolStatus] = useState<string | null>(null);
+  const [pageContext, setPageContextState] = useState<PageContextData>(DEFAULT_PAGE_CONTEXT);
+  const [suggestedActions, setSuggestedActions] = useState<SuggestedAction[]>([]);
   const initRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -188,6 +222,113 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
 
     setIsInitialized(true);
     logger.debug("[Neptune] Initialized with fresh conversation");
+  }, []);
+
+  // ============================================================================
+  // PAGE CONTEXT MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Set page context completely (used when navigating to new page)
+   */
+  const setPageContext = useCallback((context: Partial<PageContextData>) => {
+    setPageContextState((prev) => {
+      const newContext = mergePageContext(prev, context);
+      logger.debug("[Neptune] Page context updated", {
+        module: newContext.module,
+        pageName: newContext.pageName,
+        pageType: newContext.pageType,
+      });
+      return newContext;
+    });
+  }, []);
+
+  /**
+   * Update specific parts of page context
+   */
+  const updatePageContext = useCallback((updates: Partial<PageContextData>) => {
+    setPageContextState((prev) => mergePageContext(prev, updates));
+  }, []);
+
+  /**
+   * Update selected items in page context
+   */
+  const setSelectedItems = useCallback((items: SelectedItem[]) => {
+    setPageContextState((prev) => updateSelectedItemsUtil(prev, items));
+  }, []);
+
+  /**
+   * Set focused item in page context
+   */
+  const setFocusedItem = useCallback((item: SelectedItem | undefined) => {
+    setPageContextState((prev) => setFocusedItemUtil(prev, item));
+  }, []);
+
+  /**
+   * Set wizard state for multi-step processes
+   */
+  const setWizardState = useCallback((state: WizardState | undefined) => {
+    setPageContextState((prev) => ({
+      ...prev,
+      wizardState: state,
+      lastInteractionAt: new Date(),
+    }));
+  }, []);
+
+  /**
+   * Set filter/search state
+   */
+  const setFilterState = useCallback((state: FilterState | undefined) => {
+    setPageContextState((prev) => ({
+      ...prev,
+      filterState: state,
+      lastInteractionAt: new Date(),
+    }));
+  }, []);
+
+  /**
+   * Track a user action for context
+   */
+  const trackAction = useCallback(
+    (action: string, target?: string, metadata?: Record<string, unknown>) => {
+      setPageContextState((prev) => addRecentAction(prev, action, target, metadata));
+    },
+    []
+  );
+
+  /**
+   * Set custom page-specific data
+   */
+  const setCustomData = useCallback((data: Record<string, unknown>) => {
+    setPageContextState((prev) => ({
+      ...prev,
+      customData: { ...prev.customData, ...data },
+      lastInteractionAt: new Date(),
+    }));
+  }, []);
+
+  /**
+   * Get serialized context for API calls
+   */
+  const getSerializedContext = useCallback(() => {
+    return serializePageContext(pageContext);
+  }, [pageContext]);
+
+  /**
+   * Sync currentPage with pageContext (for backwards compatibility)
+   */
+  const setCurrentPageWithContext = useCallback((page: string) => {
+    setCurrentPage(page);
+    // Create context from page name if it looks like a path
+    if (page.startsWith('/') || page.includes('-')) {
+      setPageContextState(createPageContextFromPath(page));
+    } else {
+      setPageContextState((prev) => ({
+        ...prev,
+        pageName: page,
+        lastInteractionAt: new Date(),
+      }));
+    }
   }, []);
 
   // Send message to Neptune with streaming
@@ -225,7 +366,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
       setIsStreaming(true);
 
       try {
-        const response = await fetch("/api/assistant/chat", {
+      const response = await fetch("/api/assistant/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -237,6 +378,8 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
               feature,
             },
             feature,
+            // Include rich page context for AI awareness
+            pageContext: serializePageContext(pageContext),
           }),
           signal: abortControllerRef.current.signal,
         });
@@ -427,7 +570,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         abortControllerRef.current = null;
       }
     },
-    [conversationId]
+    [conversationId, pageContext]
   );
 
   // Clear conversation and start fresh
@@ -642,13 +785,24 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         isLoadingHistory,
         currentPage,
         currentToolStatus,
+        pageContext,
+        suggestedActions,
         sendMessage,
         clearConversation,
         refreshMessages,
         loadConversation,
         fetchConversationHistory,
         deleteConversation,
-        setCurrentPage,
+        setCurrentPage: setCurrentPageWithContext,
+        setPageContext,
+        updatePageContext,
+        setSelectedItems,
+        setFocusedItem,
+        setWizardState,
+        setFilterState,
+        trackAction,
+        setCustomData,
+        getSerializedContext,
       }}
     >
       {children}
@@ -671,6 +825,8 @@ const defaultNeptuneContext: NeptuneContextValue = {
   isLoadingHistory: false,
   currentPage: 'dashboard',
   currentToolStatus: null,
+  pageContext: DEFAULT_PAGE_CONTEXT,
+  suggestedActions: [],
   sendMessage: async () => {},
   clearConversation: async () => {},
   refreshMessages: async () => {},
@@ -678,6 +834,15 @@ const defaultNeptuneContext: NeptuneContextValue = {
   fetchConversationHistory: async () => {},
   deleteConversation: async () => {},
   setCurrentPage: () => {},
+  setPageContext: () => {},
+  updatePageContext: () => {},
+  setSelectedItems: () => {},
+  setFocusedItem: () => {},
+  setWizardState: () => {},
+  setFilterState: () => {},
+  trackAction: () => {},
+  setCustomData: () => {},
+  getSerializedContext: () => ({}),
 };
 
 export function useNeptune() {

@@ -24,6 +24,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
+import { usePageContext } from "@/hooks/usePageContext";
 import type {
   FinanceOverviewResponse,
   FinanceModulesResponse,
@@ -619,6 +620,31 @@ export function FinanceHQDashboard({ initialData }: FinanceHQDashboardProps) {
   // Document creator state
   const [isDocCreatorOpen, setIsDocCreatorOpen] = React.useState(false);
   const [docCreatorType, setDocCreatorType] = React.useState<DocumentType>("estimate");
+
+  // Report page context to Neptune for contextual awareness
+  const { setSelectedItems, setFocusedItem } = usePageContext({
+    module: 'finance',
+    pageName: 'Finance HQ',
+    pageType: selectedItem ? 'view' : 'hq',
+    customData: {
+      isDemoMode,
+      hasIntegrations: (displayIntegrations?.connected?.length ?? 0) > 0,
+      connectedIntegrations: displayIntegrations?.connected ?? [],
+      kpis: displayOverview?.kpis?.map(k => ({ label: k.label, value: k.formattedValue })),
+      dateRange: { start: dateRange.start.toISOString(), end: dateRange.end.toISOString() },
+    },
+  });
+
+  // Update Neptune when selection changes
+  React.useEffect(() => {
+    if (selectedItem) {
+      setSelectedItems([{ id: selectedItem.id, type: 'invoice', name: String(selectedItem.id) }]);
+      setFocusedItem({ id: selectedItem.id, type: 'invoice', name: String(selectedItem.id) });
+    } else {
+      setSelectedItems([]);
+      setFocusedItem(undefined);
+    }
+  }, [selectedItem, setSelectedItems, setFocusedItem]);
 
   const handleAction = (action: FinanceAction) => {
     // Map action to document type and open creator

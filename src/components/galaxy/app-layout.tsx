@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Header, HeaderProps } from "./header";
 import { Toaster } from "@/components/ui/sonner";
@@ -13,17 +13,71 @@ import { NeptuneProvider, useNeptune } from "@/contexts/neptune-context";
 import { FeedbackProvider } from "@/contexts/feedback-context";
 import { AnalyticsProvider } from "@/providers/AnalyticsProvider";
 import { cn } from "@/lib/utils";
+import {
+  createPageContextFromPath,
+  getModuleFromPath,
+  getPageTypeFromPath,
+} from "@/lib/neptune/page-context";
 
 // Component to sync current page with Neptune context
+// This enhanced version extracts rich context for Neptune's awareness
 function PageTracker() {
   const pathname = usePathname();
-  const { setCurrentPage } = useNeptune();
+  const searchParams = useSearchParams();
+  const { setCurrentPage, setPageContext } = useNeptune();
+  const previousPathRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    // Extract page name from pathname
+    // Skip if pathname hasn't changed
+    if (previousPathRef.current === pathname) return;
+    previousPathRef.current = pathname;
+
+    // Extract basic page name for backward compatibility
     const pageName = pathname === '/' ? 'home' : pathname.split('/')[1] || 'dashboard';
     setCurrentPage(pageName);
-  }, [pathname, setCurrentPage]);
+
+    // Create rich page context
+    const pageContext = createPageContextFromPath(pathname);
+
+    // Extract additional context from URL search params
+    const activeTab = searchParams?.get('tab') || searchParams?.get('view') || undefined;
+    if (activeTab) {
+      pageContext.activeTab = activeTab;
+    }
+
+    // Extract entity IDs from pathname (e.g., /crm/contacts/123)
+    const pathParts = pathname.split('/').filter(Boolean);
+    if (pathParts.length >= 3) {
+      const potentialId = pathParts[2];
+      // Check if it looks like an ID (UUID or numeric)
+      if (/^[a-f0-9-]{36}$/i.test(potentialId) || /^\d+$/.test(potentialId)) {
+        // Map path segment to valid SelectedItem type
+        const typeMap: Record<string, 'lead' | 'contact' | 'campaign' | 'template' | 'document' | 'agent' | 'invoice' | 'task' | 'event' | 'content' | 'collection'> = {
+          contacts: 'contact',
+          leads: 'lead',
+          campaigns: 'campaign',
+          templates: 'template',
+          documents: 'document',
+          agents: 'agent',
+          invoices: 'invoice',
+          tasks: 'task',
+          events: 'event',
+          content: 'content',
+          collections: 'collection',
+        };
+        const itemType = typeMap[pathParts[1]] || 'document';
+        pageContext.focusedItem = {
+          id: potentialId,
+          type: itemType,
+          name: `${pathParts[1].slice(0, -1)} ${potentialId.slice(0, 8)}`,
+        };
+        pageContext.pageType = 'view';
+      }
+    }
+
+    // Set the enriched context
+    setPageContext(pageContext);
+  }, [pathname, searchParams, setCurrentPage, setPageContext]);
 
   return null;
 }

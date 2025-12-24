@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "@/lib/logger";
-import QuickActions from "./QuickActions";
 import { useNeptune, type Attachment } from "@/contexts/neptune-context";
 import type { Conversation } from "./ConversationsDashboard";
 import { NeptuneMessage } from "@/components/neptune/NeptuneMessage";
@@ -39,6 +38,8 @@ import { SmartMessageFormatter } from "@/components/neptune/SmartMessageFormatte
 import { PresenceAvatars } from "@/components/neptune/PresenceAvatars";
 import { TypingIndicator } from "@/components/neptune/TypingIndicator";
 import { NeptuneRoom } from "@/components/neptune/NeptuneRoom";
+import DynamicQuickActions from "@/components/neptune/DynamicQuickActions";
+import { MODULE_METADATA } from "@/lib/neptune/page-context";
 
 // Wrapper component for fullscreen variant to add card styling
 function NeptuneCardWrapper({
@@ -82,12 +83,57 @@ export default function NeptuneAssistPanel({
     conversationHistory,
     isLoadingHistory,
     currentToolStatus,
+    pageContext,
     sendMessage,
     clearConversation,
     loadConversation,
     fetchConversationHistory,
     deleteConversation,
   } = useNeptune();
+
+  // Generate contextual greeting based on page context
+  const contextualGreeting = useMemo(() => {
+    if (!pageContext.module) {
+      return {
+        title: "How can I help?",
+        subtitle: "I'm Neptune, your AI copilot",
+      };
+    }
+
+    const metadata = MODULE_METADATA[pageContext.module];
+    if (!metadata) {
+      return {
+        title: "How can I help?",
+        subtitle: `I'm ready to assist with ${pageContext.pageName || 'your work'}`,
+      };
+    }
+
+    // Build contextual greeting based on module and state
+    let title = `Welcome to ${metadata.displayName}`;
+    let subtitle = metadata.description || "I'm here to help";
+
+    // If user has items selected, acknowledge that
+    if (pageContext.selectedItems && pageContext.selectedItems.length > 0) {
+      const itemCount = pageContext.selectedItems.length;
+      const itemType = pageContext.selectedItems[0].type || 'item';
+      subtitle = `${itemCount} ${itemType}${itemCount > 1 ? 's' : ''} selected — what would you like to do?`;
+    }
+
+    // If in a wizard, show progress
+    if (pageContext.wizardState) {
+      const { currentStep, totalSteps, stepName } = pageContext.wizardState;
+      title = stepName || `Step ${currentStep} of ${totalSteps}`;
+      subtitle = "Let me help you complete this";
+    }
+
+    // Tab-specific greetings
+    if (pageContext.activeTab) {
+      const tabName = pageContext.activeTab.charAt(0).toUpperCase() + pageContext.activeTab.slice(1);
+      subtitle = `Currently viewing ${tabName} — ask me anything`;
+    }
+
+    return { title, subtitle };
+  }, [pageContext]);
 
   const [input, setInput] = useState("");
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>(
@@ -364,39 +410,9 @@ export default function NeptuneAssistPanel({
     }
   };
 
-  const handleQuickAction = async (action: string) => {
-    // For quick actions on conversation context (Conversations page)
-    if (legacyConversationId && legacyConversation) {
-      try {
-        const response = await fetch("/api/conversations/neptune/action", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action,
-            conversationId: legacyConversationId,
-            conversationData: legacyConversation,
-          }),
-        });
-
-        if (!response.ok) throw new Error("Failed to perform action");
-
-        const data = await response.json();
-        toast.success(`Action completed: ${action}`);
-
-        // Send the result as a message so it appears in the unified conversation
-        await sendMessage(
-          `Performed action "${action}" on the conversation. Result: ${data.result || "Completed"}`,
-          [],
-          feature
-        );
-      } catch (error) {
-        logger.error("Neptune action error", error);
-        toast.error(`Failed to perform action: ${action}`);
-      }
-    } else {
-      // Just send the action as a message
-      await sendMessage(`Help me with: ${action}`, [], feature);
-    }
+  const handleQuickAction = async (prompt: string) => {
+    // Dynamic quick actions now pass the full prompt directly
+    await sendMessage(prompt, [], feature);
   };
 
   const isFullscreen = variant === "fullscreen";
@@ -541,13 +557,36 @@ export default function NeptuneAssistPanel({
           </div>
         )}
 
-        {/* Quick Actions - Only show in default variant with conversation context */}
-        {!isFullscreen && legacyConversation && viewMode === "chat" && (
-          <div className="border-b p-4">
-            <QuickActions
-              conversationId={legacyConversationId ?? null}
+        {/* Dynamic Quick Actions - Show contextual actions based on page */}
+        {viewMode === "chat" && messages.length === 0 && (
+          <div className={`${isFullscreen ? 'px-6 py-4' : 'p-4'} border-b`}>
+            {/* Contextual Greeting */}
+            <div className="mb-3">
+              <h4 className="text-sm font-medium text-foreground">
+                {contextualGreeting.title}
+              </h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {contextualGreeting.subtitle}
+              </p>
+            </div>
+            {/* Dynamic Quick Actions */}
+            <DynamicQuickActions
               onAction={handleQuickAction}
               disabled={isLoading}
+              variant={isFullscreen ? 'default' : 'compact'}
+              maxActions={isFullscreen ? 6 : 4}
+            />
+          </div>
+        )}
+
+        {/* Inline Quick Actions when conversation has started */}
+        {viewMode === "chat" && messages.length > 0 && messages.length < 4 && (
+          <div className={`${isFullscreen ? 'px-6 py-2' : 'px-4 py-2'} border-b bg-muted/30`}>
+            <DynamicQuickActions
+              onAction={handleQuickAction}
+              disabled={isLoading}
+              variant="pills"
+              maxActions={3}
             />
           </div>
         )}

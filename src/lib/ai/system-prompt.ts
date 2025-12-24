@@ -12,6 +12,7 @@ import { shouldPruneContext, getPrunedContext, type PrunedContext } from './cont
 import { detectTriggers } from './proactive-triggers';
 import { logger } from '@/lib/logger';
 import { generateStylePrompt } from './style-matcher';
+import { safeGeneratePagePrompt } from './page-prompts';
 
 // ============================================================================
 // PERSONALITY TRAITS
@@ -905,12 +906,32 @@ When discussing finances:
 // ============================================================================
 
 /**
+ * Serialized page context from the client
+ */
+export interface SerializedPageContext {
+  pageName?: string;
+  pageType?: string;
+  module?: string;
+  path?: string;
+  activeTab?: string;
+  viewMode?: string;
+  selectedCount?: number;
+  selectedItems?: Array<{ id: string; type: string; name: string }>;
+  focusedItem?: { id: string; type: string; name: string };
+  wizardState?: { step: number; total: number; name: string };
+  searchQuery?: string;
+  recentAction?: string;
+  customData?: Record<string, unknown>;
+}
+
+/**
  * Generate a comprehensive system prompt based on AI context
  */
 export function generateSystemPrompt(
   context: AIContextData | null,
   feature?: string,
-  intentClassification?: IntentClassification
+  intentClassification?: IntentClassification,
+  pageContext?: SerializedPageContext | null
 ): string {
   const sections: string[] = [];
 
@@ -919,6 +940,27 @@ export function generateSystemPrompt(
 
   // Capabilities
   sections.push(buildCapabilitiesSection());
+
+  // PAGE CONTEXT AWARENESS - Add this BEFORE other context for prominence
+  // This is critical for Neptune to understand where the user is
+  if (pageContext && pageContext.module) {
+    try {
+      const pagePromptSection = safeGeneratePagePrompt(
+        pageContext as Record<string, unknown>,
+        (pageContext.module as 'dashboard' | 'creator' | 'crm' | 'marketing' | 'finance' | 'agents' | 'library' | 'conversations' | 'calendar' | 'orchestration' | 'neptune-hq' | 'settings' | 'lunar-labs' | 'launchpad') || 'dashboard'
+      );
+      if (pagePromptSection) {
+        sections.push(pagePromptSection);
+        logger.debug('[System Prompt] Added page context section', {
+          module: pageContext.module,
+          pageName: pageContext.pageName,
+          activeTab: pageContext.activeTab,
+        });
+      }
+    } catch (error) {
+      logger.warn('[System Prompt] Failed to generate page prompt (non-blocking)', { error });
+    }
+  }
 
   // Context (if available)
   if (context) {
@@ -962,8 +1004,9 @@ export function generateSystemPrompt(
 Be helpful, efficient, and friendly. Take action when possible.`);
   }
 
-  // Feature-specific instructions
-  if (feature) {
+  // Feature-specific instructions (kept for backwards compatibility)
+  // Note: Page context now provides richer feature awareness
+  if (feature && !pageContext?.module) {
     const featureInstructions = getFeatureSpecificInstructions(feature);
     if (featureInstructions) {
       sections.push(featureInstructions);
