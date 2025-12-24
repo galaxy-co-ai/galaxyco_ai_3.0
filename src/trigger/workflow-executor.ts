@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import OpenAI from "openai";
 import { aiTools, executeTool, type ToolContext } from "@/lib/ai/tools";
+import { agentOutputStream } from "./streams";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -224,68 +225,145 @@ export const executeAgentTask = task({
         }
       }
 
-      // Call OpenAI
+      // Call OpenAI with streaming
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
       ];
 
-      let response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages,
-        tools: agentTools.length > 0 ? agentTools : undefined,
-        temperature: 0.7,
-        max_tokens: 2000,
-      });
-
-      // Handle tool calls in a loop
+      // Handle tool calls in a loop with streaming
       const toolResults: Array<{ tool: string; result: unknown }> = [];
       let iterations = 0;
       const maxIterations = 5; // Prevent infinite loops
+      let finalResponse = "";
+      let hasToolCalls = true;
 
-      while (response.choices[0]?.message?.tool_calls && iterations < maxIterations) {
-        iterations++;
-        const toolCalls = response.choices[0].message.tool_calls;
-
-        // Add assistant message with tool calls
-        messages.push(response.choices[0].message);
-
-        // Execute each tool call
-        for (const toolCall of toolCalls) {
-          // Type guard for function tool calls
-          if (toolCall.type !== "function") continue;
-          const toolName = toolCall.function.name;
-          const toolArgs = JSON.parse(toolCall.function.arguments || "{}");
-
-          logger.info("Agent executing tool", {
-            executionId: executionIdToUse,
-            tool: toolName,
-            args: toolArgs,
-          });
-
-          const result = await executeTool(toolName, toolArgs, toolContext);
-          toolResults.push({ tool: toolName, result });
-
-          // Add tool result to messages
-          messages.push({
-            role: "tool",
-            tool_call_id: toolCall.id,
-            content: JSON.stringify(result),
-          });
-        }
-
-        // Get next response
-        response = await openai.chat.completions.create({
+      while (hasToolCalls && iterations <= maxIterations) {
+        // Create streaming completion
+        const stream = await openai.chat.completions.create({
           model: "gpt-4o",
           messages,
           tools: agentTools.length > 0 ? agentTools : undefined,
           temperature: 0.7,
           max_tokens: 2000,
+          stream: true,
         });
+
+        // Collect response and stream to frontend
+        let responseContent = "";
+        const currentToolCalls: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall[] = [];
+        
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta;
+          
+          // Handle content streaming
+          if (delta?.content) {
+            responseContent += delta.content;
+            
+            // Pipe content to realtime stream
+            agentOutputStream.write({
+              chunk: delta.content,
+              done: false,
+            });
+          }
+          
+          // Collect tool calls
+          if (delta?.tool_calls) {
+            for (const tc of delta.tool_calls) {
+              if (tc.index !== undefined) {
+                if (!currentToolCalls[tc.index]) {
+                  currentToolCalls[tc.index] = {
+                    index: tc.index,
+                    id: tc.id || "",
+                    type: "function",
+                    function: { name: "", arguments: "" },
+                  };
+                }
+                if (tc.id) currentToolCalls[tc.index].id = tc.id;
+                if (tc.function?.name) currentToolCalls[tc.index].function!.name += tc.function.name;
+                if (tc.function?.arguments) currentToolCalls[tc.index].function!.arguments += tc.function.arguments;
+              }
+            }
+          }
+        }
+
+        // Check if we have tool calls to execute
+        const validToolCalls = currentToolCalls.filter(tc => tc?.function?.name);
+        
+        if (validToolCalls.length > 0 && iterations < maxIterations) {
+          iterations++;
+          
+          // Add assistant message with tool calls
+          messages.push({
+            role: "assistant",
+            content: responseContent || null,
+            tool_calls: validToolCalls.map(tc => ({
+              id: tc.id || `call_${Math.random().toString(36).substr(2, 9)}`,
+              type: "function" as const,
+              function: {
+                name: tc.function!.name,
+                arguments: tc.function!.arguments,
+              },
+            })),
+          });
+
+          // Execute each tool call
+          for (const toolCall of validToolCalls) {
+            const toolName = toolCall.function!.name;
+            const toolArgs = JSON.parse(toolCall.function!.arguments || "{}");
+
+            logger.info("Agent executing tool", {
+              executionId: executionIdToUse,
+              tool: toolName,
+              args: toolArgs,
+            });
+
+            // Stream tool execution notification
+            agentOutputStream.write({
+              chunk: "",
+              done: false,
+              tool: toolName,
+            });
+
+            const result = await executeTool(toolName, toolArgs, toolContext);
+            toolResults.push({ tool: toolName, result });
+
+            // Stream tool result
+            agentOutputStream.write({
+              chunk: "",
+              done: false,
+              tool: toolName,
+              toolResult: result,
+            });
+
+            // Add tool result to messages
+            messages.push({
+              role: "tool",
+              tool_call_id: toolCall.id || `call_${Math.random().toString(36).substr(2, 9)}`,
+              content: JSON.stringify(result),
+            });
+          }
+        } else {
+          // No more tool calls, we have the final response
+          hasToolCalls = false;
+          finalResponse = responseContent || "Task completed.";
+          
+          // Signal stream completion
+          agentOutputStream.write({
+            chunk: "",
+            done: true,
+          });
+        }
       }
 
-      // Get final response content
-      const finalResponse = response.choices[0]?.message?.content || "Task completed.";
+      // If we hit max iterations, use the last response
+      if (iterations >= maxIterations && !finalResponse) {
+        finalResponse = "Task completed after maximum iterations.";
+        agentOutputStream.write({
+          chunk: "",
+          done: true,
+        });
+      }
       const durationMs = Date.now() - startTime;
 
       // Build results

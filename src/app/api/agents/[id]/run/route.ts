@@ -86,8 +86,17 @@ export async function POST(
       );
     }
 
+    let triggerRunId: string | undefined;
     try {
-      await executeAgentTask.trigger(payload);
+      // Trigger the task and get the run handle for realtime streaming
+      const handle = await executeAgentTask.trigger(payload, {
+        tags: [
+          `workspace:${workspaceId}`,
+          `agent:${agentId}`,
+          `user:${user.id}`,
+        ],
+      });
+      triggerRunId = handle.id;
     } catch (err) {
       logger.error('Failed to enqueue agent run', { err, executionId: execution.id });
       await db
@@ -109,6 +118,7 @@ export async function POST(
       {
         success: true,
         executionId: execution.id,
+        runId: triggerRunId, // Trigger.dev run ID for realtime streaming
         status: 'pending',
         queuedWith: 'trigger.dev',
         testMode,
