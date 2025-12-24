@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (ba8ac6f)  
+**Updated Through:** 2025-12-23 (79b9e91)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 79b9e91 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-23 04d2168 fix(middleware): simplify Clerk middleware to fix build errors
 - 2025-12-23 ba8ac6f Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_2.0
 - 2025-12-23 2298518 fix(auth): add Clerk middleware to protect authenticated routes
 - 2025-12-23 98e078d Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 9122c60 feat(neptune): improve error messages and add iOS-style message bubbles
 - 2025-12-23 ece2c4a fix(neptune): textarea resets to base height after send (dashboard + floating assistant)
 - 2025-12-23 1afd957 feat(neptune): rounded bullets and interactive checklists in chat
-- 2025-12-23 2f38c6d feat(neptune): unify chat input on dashboard + floating assistant with multiline, smart lists, and new send key
-- 2025-12-23 1f7a3c6 fix(neptune): implement Tier 1 critical fixes
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
