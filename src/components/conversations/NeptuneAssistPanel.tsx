@@ -495,8 +495,8 @@ export default function NeptuneAssistPanel({
                 <h3 className="font-semibold">Neptune</h3>
               </div>
               <div className="flex items-center gap-3">
-                {/* Presence Avatars */}
-                <PresenceAvatars className="hidden sm:flex" />
+                {/* Presence Avatars - only show when in a Liveblocks room */}
+                {conversationId && <PresenceAvatars className="hidden sm:flex" />}
                 
                 {/* Controls */}
                 <div className="flex items-center gap-1">
@@ -1106,8 +1106,8 @@ export default function NeptuneAssistPanel({
         {/* Input - Only show in chat mode */}
         {viewMode === "chat" && (
         <>
-          {/* Typing Indicator */}
-          <TypingIndicator />
+          {/* Typing Indicator - only show when in a Liveblocks room */}
+          {conversationId && <TypingIndicator />}
           
           <div className={`border-t ${isFullscreen ? "p-6" : "p-4"} shrink-0`}>
           <input
