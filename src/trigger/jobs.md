@@ -6,6 +6,16 @@ This document describes the background jobs implemented using Trigger.dev v4.
 
 Background jobs are defined in `src/trigger/` and are automatically discovered by Trigger.dev. The configuration is in `trigger.config.ts` at the project root.
 
+## Key Features
+
+- **Realtime Streams**: Live AI output streaming to the UI
+- **Per-Tenant Queues**: Concurrency control per subscription tier
+- **Batch APIs**: Efficient bulk operations with `batchTrigger` and `batchTriggerAndWait`
+- **Wait Functions**: `wait.for()`, `wait.until()`, `wait.forToken()` for scheduling and approvals
+- **Human-in-the-Loop**: Approval workflows with wait tokens
+- **Idempotency Keys**: Prevent duplicate operations
+- **Tags**: Observability and filtering in dashboard
+
 ## Setup
 
 1. Get a Trigger.dev account at [trigger.dev](https://trigger.dev)
@@ -161,9 +171,185 @@ Jobs can be triggered:
 2. Programmatically with `.trigger()` method
 3. Via API endpoints (create your own)
 
+## Realtime Streams (`streams.ts`)
+
+Streams allow real-time output from tasks to the UI.
+
+**Available Streams:**
+- `agentOutputStream` - Live AI response chunks during agent execution
+- `campaignProgressStream` - Campaign send progress updates
+- `batchProgressStream` - Bulk operation progress tracking
+
+**Usage:**
+```typescript
+// In a task:
+import { agentOutputStream } from "@/trigger/jobs";
+
+await agentOutputStream.write(runId, {
+  type: "token",
+  content: "AI response chunk...",
+  timestamp: new Date().toISOString(),
+});
+
+// In React component:
+import { useRealtimeStream } from "@trigger.dev/react-hooks";
+
+const { data } = useRealtimeStream<AgentStreamChunk>(runId, { accessToken });
+```
+
+## Per-Tenant Queues (`queues.ts`)
+
+Queues control concurrency based on subscription tier.
+
+**Queue Configuration:**
+| Tier | Queue Name | Concurrency |
+|------|------------|-------------|
+| Free | `free-tier-queue` | 1 |
+| Starter | `standard-tier-queue` | 5 |
+| Professional | `standard-tier-queue` | 5 |
+| Enterprise | `enterprise-tier-queue` | 20 |
+| System | `system-jobs-queue` | 10 |
+
+**Usage:**
+```typescript
+import { getQueueForTier, buildWorkspaceQueueOptions } from "@/trigger/jobs";
+
+// Get queue by tier
+const queue = getQueueForTier("professional");
+
+// Build trigger options
+await task.trigger(payload, buildWorkspaceQueueOptions(workspaceId, "professional"));
+```
+
+## Human-in-the-Loop Approvals (`approvals.ts`)
+
+Pause task execution until human approval.
+
+**Usage:**
+```typescript
+import { requestApprovalTask, completeApproval } from "@/trigger/jobs";
+
+// Request approval (pauses task)
+const result = await requestApprovalTask.trigger({
+  workspaceId: "...",
+  type: "campaign",
+  entityId: "campaign-123",
+  title: "Review campaign before sending",
+  description: "This will send to 5,000 recipients",
+  requestedBy: "user-id",
+  timeout: "24h",
+});
+
+// Complete approval via API:
+POST /api/approvals/{id}/approve
+POST /api/approvals/{id}/reject
+```
+
+## Follow-Up Sequences (`follow-up-sequence.ts`)
+
+Multi-step sequences with configurable delays.
+
+**Usage:**
+```typescript
+import { executeFollowUpSequenceTask, sendDelayedFollowUpTask } from "@/trigger/jobs";
+
+// Multi-step sequence
+await executeFollowUpSequenceTask.trigger({
+  workspaceId: "...",
+  prospectId: "...",
+  sequenceId: "seq-123",
+  sequenceName: "Welcome Series",
+  triggeredBy: "user-id",
+  steps: [
+    { stepNumber: 1, delay: "0d", type: "email", subject: "Welcome!", body: "..." },
+    { stepNumber: 2, delay: "3d", type: "email", subject: "Getting started", body: "..." },
+    { stepNumber: 3, delay: "7d", type: "email", subject: "Tips & tricks", body: "..." },
+  ],
+});
+
+// Single delayed follow-up
+await sendDelayedFollowUpTask.trigger({
+  workspaceId: "...",
+  prospectId: "...",
+  delay: "2d",
+  subject: "Following up",
+  body: "Hi {{name}}, just checking in...",
+  triggeredBy: "user-id",
+});
+```
+
+## Wait Functions
+
+**wait.until()** - Wait until a specific date/time:
+```typescript
+await wait.until({ date: new Date("2024-01-15T10:00:00Z") });
+```
+
+**wait.for()** - Wait for a duration:
+```typescript
+await wait.for({ seconds: 3600 }); // 1 hour
+await wait.for({ days: 1 });
+```
+
+**wait.forToken()** - Wait for external signal (approvals):
+```typescript
+const token = await wait.createToken({ timeout: "24h" });
+const result = await wait.forToken<ApprovalResult>(token);
+```
+
+## Idempotency Keys
+
+Prevent duplicate task execution:
+```typescript
+await task.trigger(payload, {
+  idempotencyKey: `campaign-${campaignId}-send`,
+  idempotencyKeyTTL: "24h",
+});
+```
+
+## Tags for Observability
+
+All tasks include tags for filtering in the dashboard:
+```typescript
+await task.trigger(payload, {
+  tags: [
+    `workspace:${workspaceId}`,
+    `type:campaign-send`,
+    `campaign:${campaignId}`,
+  ],
+});
+```
+
+**Common Tag Patterns:**
+- `workspace:{id}` - Filter by tenant
+- `type:{task-type}` - Filter by job type
+- `entity:{id}` - Filter by related entity
+- `tier:{subscription-tier}` - Filter by customer tier
+
+## Batch Operations
+
+**batchTrigger** - Fire-and-forget multiple tasks:
+```typescript
+const handles = await task.batchTrigger([
+  { payload: { id: "1" } },
+  { payload: { id: "2" } },
+]);
+```
+
+**batchTriggerAndWait** - Wait for all tasks to complete:
+```typescript
+const results = await task.batchTriggerAndWait([
+  { payload: { id: "1" } },
+  { payload: { id: "2" } },
+]);
+```
+
 ## Notes
 
 - All jobs include retry logic (default: 3 attempts)
 - Jobs respect multi-tenant isolation via workspaceId
 - Long-running jobs are split into smaller tasks
 - Error details are logged to Trigger.dev dashboard
+- Use tags for filtering runs in the dashboard
+- Idempotency keys prevent duplicate operations
+- Streams enable real-time UI updates

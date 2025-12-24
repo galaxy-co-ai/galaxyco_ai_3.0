@@ -228,7 +228,7 @@ export const scheduledLeadScoring = schedules.task({
     return {
       success: true,
       workspacesProcessed: workspacesWithProspects.length,
-      batchId: batchHandle.id,
+      batchTriggered: true,
     };
   },
 });

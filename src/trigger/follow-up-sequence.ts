@@ -366,7 +366,7 @@ export const sendDelayedFollowUpTask = task({
       contactId,
     });
 
-    return { success: true, sent: true, messageId: result?.id };
+    return { success: true, sent: true, messageId: result?.messageId };
   },
 });
 

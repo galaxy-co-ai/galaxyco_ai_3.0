@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRealtimeStream } from "@trigger.dev/react-hooks";
-import { agentOutputStream, type AgentOutputPart } from "@/trigger/streams";
+import { useRealtimeRun } from "@trigger.dev/react-hooks";
 import { cn } from "@/lib/utils";
 import { Bot, Loader2, CheckCircle2, Wrench } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+
+// Types for streaming data
+interface AgentOutputPart {
+  chunk?: string;
+  tool?: string;
+  toolResult?: unknown;
+  done?: boolean;
+}
 
 interface AgentStreamViewerProps {
   /** The Trigger.dev run ID to subscribe to */
@@ -23,8 +30,8 @@ interface AgentStreamViewerProps {
 /**
  * AgentStreamViewer - Real-time display of AI agent output
  * 
- * Uses Trigger.dev's useRealtimeStream hook to display live
- * streaming output from agent executions.
+ * Uses Trigger.dev's useRealtimeRun hook to display live
+ * run status and output from agent executions.
  */
 export function AgentStreamViewer({
   runId,
@@ -33,55 +40,29 @@ export function AgentStreamViewer({
   onComplete,
   onError,
 }: AgentStreamViewerProps) {
-  const [streamedText, setStreamedText] = useState("");
   const [toolsExecuted, setToolsExecuted] = useState<Array<{ name: string; result?: unknown }>>([]);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Subscribe to the agent output stream
-  const { parts, error } = useRealtimeStream<AgentOutputPart>(
-    agentOutputStream,
-    runId,
-    {
-      accessToken,
-      timeoutInSeconds: 300, // 5 minute timeout for long-running agents
-      throttleInMs: 50, // Smooth updates
-      onData: (chunk) => {
-        // Handle text chunks
-        if (chunk.chunk) {
-          setStreamedText((prev) => prev + chunk.chunk);
-        }
-        
-        // Handle tool execution notifications
-        if (chunk.tool && !chunk.toolResult) {
-          setToolsExecuted((prev) => {
-            // Only add if not already executing this tool
-            const existing = prev.find((t) => t.name === chunk.tool && !t.result);
-            if (!existing) {
-              return [...prev, { name: chunk.tool }];
-            }
-            return prev;
-          });
-        }
-        
-        // Handle tool results
-        if (chunk.tool && chunk.toolResult) {
-          setToolsExecuted((prev) =>
-            prev.map((t) =>
-              t.name === chunk.tool && !t.result
-                ? { ...t, result: chunk.toolResult }
-                : t
-            )
-          );
-        }
-        
-        // Handle completion
-        if (chunk.done) {
-          setIsComplete(true);
-          onComplete?.();
-        }
-      },
+  // Subscribe to the run using realtime hooks
+  const { run, error } = useRealtimeRun(runId, {
+    accessToken,
+    enabled: !!runId && !!accessToken,
+  });
+
+  // Extract output from run when available
+  const output = run?.output as { response?: string; tools?: Array<{ name: string; result?: unknown }> } | undefined;
+  const displayText = output?.response || "";
+
+  // Handle completion
+  useEffect(() => {
+    if (run?.status === "COMPLETED" && !isComplete) {
+      setIsComplete(true);
+      if (output?.tools) {
+        setToolsExecuted(output.tools);
+      }
+      onComplete?.();
     }
-  );
+  }, [run?.status, isComplete, output, onComplete]);
 
   // Handle errors
   useEffect(() => {
@@ -90,19 +71,9 @@ export function AgentStreamViewer({
     }
   }, [error, onError]);
 
-  // Build display text from parts on initial load (when reconnecting to an existing stream)
-  // This is only used when parts are already available but onData hasn't fired yet
-  const initialText = parts && parts.length > 0 && !streamedText
-    ? parts.filter((p) => p.chunk).map((p) => p.chunk).join("")
-    : null;
-  
-  const initialComplete = parts && parts.length > 0
-    ? parts[parts.length - 1]?.done
-    : false;
-  
-  // Use initial values if streaming hasn't started populating state yet
-  const displayText = streamedText || initialText || "";
-  const displayComplete = isComplete || initialComplete;
+  // Determine display state
+  const isRunning = run?.status === "EXECUTING" || run?.status === "QUEUED";
+  const displayComplete = isComplete || run?.status === "COMPLETED";
 
   if (error) {
     return (

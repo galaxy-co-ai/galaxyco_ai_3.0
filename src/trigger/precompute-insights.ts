@@ -328,12 +328,11 @@ export const scheduledInsightsPrecompute = schedules.task({
 
       logger.info('[Insights] Daily precomputation batch triggered', { 
         workspaceCount: allWorkspaces.length,
-        batchId: batchHandle.id,
       });
 
       return { 
         processed: allWorkspaces.length, 
-        batchId: batchHandle.id,
+        batchTriggered: true,
       };
     } catch (error) {
       logger.error('[Insights] Daily precomputation failed', { error });

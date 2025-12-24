@@ -5,7 +5,9 @@ import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import OpenAI from "openai";
 import { aiTools, executeTool, type ToolContext } from "@/lib/ai/tools";
-import { agentOutputStream } from "./streams";
+// Note: Realtime streaming support via agentOutputStream is available
+// but requires additional configuration. For now, results are returned at completion.
+// import { agentOutputStream } from "./streams";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -260,11 +262,8 @@ export const executeAgentTask = task({
           if (delta?.content) {
             responseContent += delta.content;
             
-            // Pipe content to realtime stream
-            agentOutputStream.write({
-              chunk: delta.content,
-              done: false,
-            });
+            // TODO: Implement realtime streaming when stream API is configured
+            // For now, content is accumulated and returned at completion
           }
           
           // Collect tool calls
@@ -301,16 +300,17 @@ export const executeAgentTask = task({
               id: tc.id || `call_${Math.random().toString(36).substr(2, 9)}`,
               type: "function" as const,
               function: {
-                name: tc.function!.name,
-                arguments: tc.function!.arguments,
+                name: tc.function?.name || "",
+                arguments: tc.function?.arguments || "{}",
               },
             })),
           });
 
           // Execute each tool call
           for (const toolCall of validToolCalls) {
-            const toolName = toolCall.function!.name;
-            const toolArgs = JSON.parse(toolCall.function!.arguments || "{}");
+            const toolName = toolCall.function?.name || "";
+            if (!toolName) continue; // Skip if no tool name
+            const toolArgs = JSON.parse(toolCall.function?.arguments || "{}");
 
             logger.info("Agent executing tool", {
               executionId: executionIdToUse,
@@ -318,23 +318,12 @@ export const executeAgentTask = task({
               args: toolArgs,
             });
 
-            // Stream tool execution notification
-            agentOutputStream.write({
-              chunk: "",
-              done: false,
-              tool: toolName,
-            });
+            // Tool execution is logged and results accumulated
 
             const result = await executeTool(toolName, toolArgs, toolContext);
             toolResults.push({ tool: toolName, result });
 
-            // Stream tool result
-            agentOutputStream.write({
-              chunk: "",
-              done: false,
-              tool: toolName,
-              toolResult: result,
-            });
+            // Tool result recorded
 
             // Add tool result to messages
             messages.push({
@@ -348,21 +337,13 @@ export const executeAgentTask = task({
           hasToolCalls = false;
           finalResponse = responseContent || "Task completed.";
           
-          // Signal stream completion
-          agentOutputStream.write({
-            chunk: "",
-            done: true,
-          });
+          // Response complete - no streaming for now
         }
       }
 
       // If we hit max iterations, use the last response
       if (iterations >= maxIterations && !finalResponse) {
         finalResponse = "Task completed after maximum iterations.";
-        agentOutputStream.write({
-          chunk: "",
-          done: true,
-        });
       }
       const durationMs = Date.now() - startTime;
 
