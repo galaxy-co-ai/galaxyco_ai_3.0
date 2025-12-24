@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (a010832)  
+**Updated Through:** 2025-12-23 (018a51f)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,14 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 018a51f feat(trigger): add tags, observability and documentation
+- 2025-12-23 2eb6675 feat(trigger): add wait functions for scheduling and sequences
+- 2025-12-23 d054eee feat(trigger): add human-in-the-loop approval workflows
+- 2025-12-23 a2e0c87 feat(trigger): add idempotency keys to prevent duplicate operations
+- 2025-12-23 4350177 feat(trigger): add per-tenant queue configurations
+- 2025-12-23 d66ae6a feat(trigger): refactor bulk operations to use batch APIs
+- 2025-12-23 833b923 feat(trigger): add realtime AI streaming support
+- 2025-12-23 2756205 feat(trigger): add Trigger.dev realtime foundation
 - 2025-12-23 a010832 feat(neptune-hq): complete database integration for all endpoints
 - 2025-12-23 e07be81 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 789bab5 feat(neptune-hq): complete Week 3 - Team Management & Settings
@@ -33,14 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 1898ae0 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 4c040dd fix(dashboard): prevent NeptuneRoom from blocking render with Clerk loading state
 - 2025-12-23 17d09a4 fix(dashboard): add Suspense boundary to fix infinite loading state
-- 2025-12-23 163a8f1 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2025-12-23 45070dd fix(vercel): remove middleware to fix build errors
-- 2025-12-23 912801d Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_2.0
-- 2025-12-23 1aa0423 fix(middleware): remove custom matcher to fix Vercel NFT errors
-- 2025-12-23 79b9e91 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2025-12-23 04d2168 fix(middleware): simplify Clerk middleware to fix build errors
-- 2025-12-23 ba8ac6f Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_2.0
-- 2025-12-23 2298518 fix(auth): add Clerk middleware to protect authenticated routes
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
