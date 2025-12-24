@@ -88,12 +88,18 @@ export async function POST(
 
     let triggerRunId: string | undefined;
     try {
-      // Trigger the task and get the run handle for realtime streaming
+      // Trigger the task with idempotency key to prevent duplicate executions
+      // The key combines agent ID and execution ID to ensure uniqueness
+      const idempotencyKey = `agent-${agentId}-${execution.id}`;
+      
       const handle = await executeAgentTask.trigger(payload, {
+        idempotencyKey,
+        idempotencyKeyTTL: "1h", // Execution should be unique for 1 hour
         tags: [
           `workspace:${workspaceId}`,
           `agent:${agentId}`,
           `user:${user.id}`,
+          "type:agent-execution",
         ],
       });
       triggerRunId = handle.id;

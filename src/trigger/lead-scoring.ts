@@ -211,9 +211,17 @@ export const scheduledLeadScoring = schedules.task({
 
     // Use batchTrigger for fire-and-forget workspace scoring
     // We don't need to wait for results in the scheduled job
+    // Use date-based idempotency keys to prevent duplicate daily runs
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    
     const batchHandle = await bulkScoreLeadsTask.batchTrigger(
       workspacesWithProspects.map((w) => ({
         payload: { workspaceId: w.workspaceId },
+        options: {
+          idempotencyKey: `scheduled-lead-scoring-${w.workspaceId}-${today}`,
+          idempotencyKeyTTL: "24h",
+          tags: [`workspace:${w.workspaceId}`, "type:scheduled-lead-scoring"],
+        },
       }))
     );
 

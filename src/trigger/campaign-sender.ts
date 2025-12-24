@@ -19,6 +19,7 @@ export const sendCampaignTask = task({
   retry: {
     maxAttempts: 2,
   },
+  // Note: Idempotency is handled at trigger time with campaign-specific keys
   run: async (payload: { campaignId: string; workspaceId: string }) => {
     const { campaignId, workspaceId } = payload;
 
@@ -209,19 +210,32 @@ export const scheduleCampaignTask = task({
         )
       );
 
-    // Schedule the send task
+    // Schedule the send task with idempotency key to prevent duplicate sends
     const sendTime = new Date(scheduledFor);
     const delayMs = Math.max(0, sendTime.getTime() - Date.now());
+    const idempotencyKey = `campaign-${campaignId}-send`;
 
     if (delayMs > 0) {
       // Use Trigger.dev's delay capability
       await sendCampaignTask.trigger(
         { campaignId, workspaceId },
-        { delay: `${Math.floor(delayMs / 1000)}s` }
+        { 
+          delay: `${Math.floor(delayMs / 1000)}s`,
+          idempotencyKey,
+          idempotencyKeyTTL: "24h", // Campaign send should be unique for 24 hours
+          tags: [`workspace:${workspaceId}`, `campaign:${campaignId}`, "type:campaign-send"],
+        }
       );
     } else {
       // Send immediately if scheduled time has passed
-      await sendCampaignTask.trigger({ campaignId, workspaceId });
+      await sendCampaignTask.trigger(
+        { campaignId, workspaceId },
+        {
+          idempotencyKey,
+          idempotencyKeyTTL: "24h",
+          tags: [`workspace:${workspaceId}`, `campaign:${campaignId}`, "type:campaign-send"],
+        }
+      );
     }
 
     logger.info("Campaign scheduled", {

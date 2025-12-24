@@ -312,9 +312,17 @@ export const scheduledInsightsPrecompute = schedules.task({
 
       // Use batchTrigger for efficient parallel triggering
       // This is fire-and-forget - we don't wait for results
+      // Use date-based idempotency keys to prevent duplicate daily runs
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      
       const batchHandle = await precomputeWorkspaceInsightsTask.batchTrigger(
         allWorkspaces.map((workspace) => ({
           payload: { workspaceId: workspace.id },
+          options: {
+            idempotencyKey: `scheduled-insights-${workspace.id}-${today}`,
+            idempotencyKeyTTL: "24h",
+            tags: [`workspace:${workspace.id}`, "type:scheduled-insights"],
+          },
         }))
       );
 
