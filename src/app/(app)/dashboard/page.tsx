@@ -43,7 +43,12 @@ export default async function DashboardPage() {
 
     // Fetch dashboard data
     if (workspaceId) {
-      initialData = await getDashboardData(workspaceId, userName);
+      try {
+        initialData = await getDashboardData(workspaceId, userName);
+      } catch (dataError) {
+        logger.error('Failed to load dashboard data', { error: dataError });
+        // Continue with empty data
+      }
     }
   } catch (error) {
     // Redirect to sign-in if unauthorized
