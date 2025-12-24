@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (018a51f)  
+**Updated Through:** 2025-12-23 (284e4cf)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 284e4cf feat(trigger): fully optimize trigger.dev integration
 - 2025-12-23 018a51f feat(trigger): add tags, observability and documentation
 - 2025-12-23 2eb6675 feat(trigger): add wait functions for scheduling and sequences
 - 2025-12-23 d054eee feat(trigger): add human-in-the-loop approval workflows
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 8dee6a4 refactor(neptune): always start fresh conversations, remove localStorage persistence
 - 2025-12-23 1898ae0 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 4c040dd fix(dashboard): prevent NeptuneRoom from blocking render with Clerk loading state
-- 2025-12-23 17d09a4 fix(dashboard): add Suspense boundary to fix infinite loading state
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
