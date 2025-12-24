@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-24 (c725511)  
+**Updated Through:** 2025-12-24 (e8d8526)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-24 e8d8526 fix(mcp): use proxy.ts instead of middleware.ts for Clerk auth
 - 2025-12-24 c725511 fix(mcp): add middleware and OAuth discovery for ChatGPT integration
 - 2025-12-24 8d39402 feat(mcp): add Neptune MCP server for ChatGPT integration
 - 2025-12-24 38c457b fix(landing): Use string easing type for Framer Motion compatibility
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 e07be81 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 789bab5 feat(neptune-hq): complete Week 3 - Team Management & Settings
 - 2025-12-23 b74dde4 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2025-12-23 da610f4 feat(neptune-hq): implement Week 2 - Training & Agent Performance
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
