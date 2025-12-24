@@ -8676,3 +8676,100 @@ export type NewNeptuneUserTutorialProgress = typeof neptuneUserTutorialProgress.
 export type NeptuneQuickTip = typeof neptuneQuickTips.$inferSelect;
 export type NewNeptuneQuickTip = typeof neptuneQuickTips.$inferInsert;
 
+// ============================================================================
+// TRIGGER.DEV APPROVALS
+// ============================================================================
+
+export const triggerApprovalTypeEnum = pgEnum('trigger_approval_type', [
+  'campaign',
+  'content',
+  'agent',
+  'workflow',
+]);
+
+export const triggerApprovalStatusEnum = pgEnum('trigger_approval_status', [
+  'pending',
+  'approved',
+  'rejected',
+  'expired',
+]);
+
+/**
+ * Approval Requests Table
+ * Stores human-in-the-loop approval waitpoints for Trigger.dev tasks
+ */
+export const approvalRequests = pgTable(
+  'approval_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key - REQUIRED FOR ALL QUERIES
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Approval type and related entity
+    type: triggerApprovalTypeEnum('type').notNull(),
+    entityId: uuid('entity_id').notNull(), // Campaign ID, Content ID, Agent ID, etc.
+    entityName: text('entity_name'), // Display name for the entity
+
+    // Trigger.dev waitpoint token
+    waitpointTokenId: text('waitpoint_token_id').notNull(),
+    publicAccessToken: text('public_access_token'), // For frontend completion
+
+    // Status tracking
+    status: triggerApprovalStatusEnum('status').notNull().default('pending'),
+
+    // Request metadata
+    title: text('title').notNull(),
+    description: text('description'),
+    metadata: jsonb('metadata'), // Additional context for the approval
+
+    // Users
+    requestedBy: uuid('requested_by')
+      .notNull()
+      .references(() => users.id),
+    approvedBy: uuid('approved_by')
+      .references(() => users.id),
+
+    // Timestamps
+    requestedAt: timestamp('requested_at').notNull().defaultNow(),
+    respondedAt: timestamp('responded_at'),
+    expiresAt: timestamp('expires_at'),
+
+    // Response data
+    responseData: jsonb('response_data'), // Approval/rejection reason, etc.
+
+    // Standard timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    tenantIdx: index('approval_requests_tenant_idx').on(table.workspaceId),
+    statusIdx: index('approval_requests_status_idx').on(table.status),
+    typeIdx: index('approval_requests_type_idx').on(table.type),
+    entityIdx: index('approval_requests_entity_idx').on(table.entityId),
+    tokenIdx: uniqueIndex('approval_requests_token_idx').on(table.waitpointTokenId),
+    requestedByIdx: index('approval_requests_requested_by_idx').on(table.requestedBy),
+    expiresAtIdx: index('approval_requests_expires_at_idx').on(table.expiresAt),
+  }),
+);
+
+export const approvalRequestsRelations = relations(approvalRequests, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [approvalRequests.workspaceId],
+    references: [workspaces.id],
+  }),
+  requestedByUser: one(users, {
+    fields: [approvalRequests.requestedBy],
+    references: [users.id],
+  }),
+  approvedByUser: one(users, {
+    fields: [approvalRequests.approvedBy],
+    references: [users.id],
+  }),
+}));
+
+export type ApprovalRequest = typeof approvalRequests.$inferSelect;
+export type NewApprovalRequest = typeof approvalRequests.$inferInsert;
+
