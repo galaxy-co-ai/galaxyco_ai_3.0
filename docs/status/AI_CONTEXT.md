@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (912801d)  
+**Updated Through:** 2025-12-23 (163a8f1)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 163a8f1 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-23 45070dd fix(vercel): remove middleware to fix build errors
 - 2025-12-23 912801d Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_2.0
 - 2025-12-23 1aa0423 fix(middleware): remove custom matcher to fix Vercel NFT errors
 - 2025-12-23 79b9e91 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 fd95634 feat(liveblocks): Phase 2 - UI components complete
 - 2025-12-23 59534c7 feat(liveblocks): Phase 1 - Core integration complete
 - 2025-12-23 574c49e fix(neptune): critical agent creation and UX fixes
-- 2025-12-23 0655157 feat(neptune): fix keyboard shortcuts and enhance typography
-- 2025-12-23 9122c60 feat(neptune): improve error messages and add iOS-style message bubbles
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
