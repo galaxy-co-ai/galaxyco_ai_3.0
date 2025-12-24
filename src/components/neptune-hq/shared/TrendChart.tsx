@@ -21,14 +21,14 @@ export function TrendChart({
 }: TrendChartProps) {
   return (
     <Card className={cn('shadow-sm', className)}>
-      <CardHeader className="pb-4">
-        <CardTitle className="text-base font-semibold">{title}</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {description && (
-          <CardDescription className="text-sm">{description}</CardDescription>
+          <CardDescription className="text-xs">{description}</CardDescription>
         )}
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={180}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis 

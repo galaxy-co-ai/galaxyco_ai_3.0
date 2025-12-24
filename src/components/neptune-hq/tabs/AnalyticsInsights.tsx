@@ -118,8 +118,8 @@ export function AnalyticsInsights() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Topic Analysis */}
         <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Topic Analysis</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Topic Analysis</CardTitle>
           </CardHeader>
           <CardContent>
             {topicsLoading ? (
@@ -127,15 +127,15 @@ export function AnalyticsInsights() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : topics && topics.topics.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {topics.topics.map((topic, idx) => (
                   <div key={idx} className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">{topic.name}</span>
-                        <span className="text-xs text-muted-foreground">{topic.count} mentions</span>
+                        <span className="text-xs font-medium">{topic.name}</span>
+                        <span className="text-[10px] text-muted-foreground">{topic.count} mentions</span>
                       </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                         <div
                           className="h-full bg-blue-500"
                           style={{ width: `${(topic.count / topics.topics[0].count) * 100}%` }}
@@ -155,8 +155,8 @@ export function AnalyticsInsights() {
 
         {/* Tool Execution Chart */}
         <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Tool Execution</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Tool Execution</CardTitle>
           </CardHeader>
           <CardContent>
             {toolUsageLoading ? (
@@ -164,7 +164,7 @@ export function AnalyticsInsights() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : toolUsage && toolUsage.tools.length > 0 ? (
-              <ResponsiveContainer width="100%" height={240}>
+              <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={toolUsage.tools}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 

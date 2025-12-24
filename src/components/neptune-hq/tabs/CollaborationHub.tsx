@@ -8,6 +8,7 @@ import { UserAvatar } from '../shared/UserAvatar';
 import { StatusBadge } from '../shared/StatusBadge';
 import { useAuth } from '@clerk/nextjs';
 import { Users, MessageSquare, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import useSWR from 'swr';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -53,16 +54,16 @@ export function CollaborationHub() {
     { refreshInterval: 10000 } // Refresh every 10 seconds
   );
 
-  // Mock heatmap data (will be replaced with real data from API)
-  const heatmapData = generateMockHeatmap();
+  // Mock heatmap data - monthly view (will be replaced with real data from API)
+  const heatmapData = generateMockMonthlyHeatmap();
 
   return (
     <div className="space-y-6">
       {/* Live Activity Card */}
       <Card className="shadow-sm">
-        <CardHeader>
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Live Activity</CardTitle>
+            <CardTitle className="text-sm font-medium">Live Activity</CardTitle>
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
               <span className="text-sm text-muted-foreground">
@@ -119,37 +120,87 @@ export function CollaborationHub() {
 
       {/* Grid Layout: Usage Heatmap + Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Team Usage Heatmap */}
+        {/* Team Usage Heatmap - Monthly */}
         <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Team Usage Heatmap</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Team Usage - {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {heatmapData.map((day) => (
-                <div key={day.day} className="flex items-center gap-2">
-                  <div className="w-16 text-xs text-muted-foreground">{day.day}</div>
-                  <div className="flex-1 flex gap-1">
-                    {day.hours.map((hour, idx) => (
-                      <div
-                        key={idx}
-                        className="flex-1 h-6 rounded transition-opacity"
-                        style={{
-                          backgroundColor: getHeatmapColor(hour),
-                          opacity: hour === 0 ? 0.2 : 1,
-                        }}
-                        title={`${hour} activities`}
-                      />
-                    ))}
+            <div className="space-y-1">
+              {/* Day labels */}
+              <div className="grid grid-cols-7 gap-1 mb-1">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <div key={day} className="text-[10px] text-center text-muted-foreground font-medium">
+                    {day}
                   </div>
-                </div>
-              ))}
-              <div className="flex items-center justify-between pt-2 text-xs text-muted-foreground">
-                <span>12am</span>
-                <span>6am</span>
-                <span>12pm</span>
-                <span>6pm</span>
-                <span>11pm</span>
+                ))}
+              </div>
+              
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* Empty cells for offset */}
+                {Array.from({ length: heatmapData.firstDayOfWeek }).map((_, i) => (
+                  <div key={`empty-${i}`} className="aspect-square" />
+                ))}
+                
+                {/* Day cells */}
+                {heatmapData.data.map((day) => {
+                  const isToday = day.date === heatmapData.today;
+                  return (
+                    <div
+                      key={day.date}
+                      className="group relative aspect-square rounded flex items-center justify-center text-[10px] font-medium transition-all hover:ring-2 hover:ring-primary hover:z-10 cursor-pointer"
+                      style={{
+                        backgroundColor: getHeatmapColor(day.activity),
+                      }}
+                    >
+                      <span className={cn(
+                        isToday && 'font-bold',
+                        day.activity > 10 ? 'text-white' : 'text-gray-700'
+                      )}>
+                        {day.date}
+                      </span>
+                      
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-20">
+                        <div className="bg-gray-900/95 text-white text-xs rounded-lg p-2 shadow-lg whitespace-nowrap">
+                          <div className="font-semibold mb-1">{day.dayName}, {new Date().toLocaleDateString('en-US', { month: 'short' })} {day.date}</div>
+                          <div className="space-y-0.5 text-[11px]">
+                            <div className="flex justify-between gap-3">
+                              <span className="text-gray-300">Activities:</span>
+                              <span className="font-medium">{day.activity}</span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span className="text-gray-300">Conversations:</span>
+                              <span className="font-medium">{day.conversations}</span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span className="text-gray-300">Messages:</span>
+                              <span className="font-medium">{day.messages}</span>
+                            </div>
+                          </div>
+                          {/* Tooltip arrow */}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                            <div className="border-4 border-transparent border-t-gray-900/95"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Legend */}
+              <div className="flex items-center justify-end gap-1 pt-2">
+                <span className="text-[10px] text-muted-foreground mr-1">Less</span>
+                {[0, 3, 7, 11, 15].map((val) => (
+                  <div
+                    key={val}
+                    className="w-3 h-3 rounded"
+                    style={{ backgroundColor: getHeatmapColor(val) }}
+                  />
+                ))}
+                <span className="text-[10px] text-muted-foreground ml-1">More</span>
               </div>
             </div>
           </CardContent>
@@ -170,13 +221,26 @@ export function CollaborationHub() {
   );
 }
 
-// Helper function to generate mock heatmap data
-function generateMockHeatmap() {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return days.map((day) => ({
-    day,
-    hours: Array.from({ length: 24 }, () => Math.floor(Math.random() * 10)),
-  }));
+// Helper function to generate mock monthly heatmap data
+function generateMockMonthlyHeatmap() {
+  const today = new Date();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const firstDayOfWeek = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  
+  // Create array of day objects
+  const monthData = [];
+  for (let i = 1; i <= daysInMonth; i++) {
+    const date = new Date(today.getFullYear(), today.getMonth(), i);
+    monthData.push({
+      date: i,
+      dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      activity: Math.floor(Math.random() * 15), // 0-14 activities
+      conversations: Math.floor(Math.random() * 5),
+      messages: Math.floor(Math.random() * 25),
+    });
+  }
+  
+  return { data: monthData, firstDayOfWeek, today: today.getDate() };
 }
 
 // Helper function to get heatmap color based on activity level

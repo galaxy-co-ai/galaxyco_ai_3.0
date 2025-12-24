@@ -62,24 +62,24 @@ export function StatCard({
 
   return (
     <Card className={cn('overflow-hidden shadow-sm', className)}>
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="mt-2 text-3xl font-semibold">{value}</p>
+            <p className="text-xs font-medium text-muted-foreground">{title}</p>
+            <p className="mt-1.5 text-2xl font-semibold">{value}</p>
             {trend && (
-              <div className="mt-2 flex items-center gap-1">
-                <TrendIcon className={cn('h-4 w-4', styles.icon)} />
-                <span className={cn('text-sm font-medium', styles.text)}>
+              <div className="mt-1.5 flex items-center gap-1">
+                <TrendIcon className={cn('h-3 w-3', styles.icon)} />
+                <span className={cn('text-xs font-medium', styles.text)}>
                   {trend.value > 0 ? '+' : ''}{trend.value}%
                 </span>
-                <span className="text-xs text-muted-foreground">vs last month</span>
+                <span className="text-[10px] text-muted-foreground">vs last month</span>
               </div>
             )}
           </div>
           {Icon && (
-            <div className={cn('rounded-lg p-3', styles.bg)}>
-              <Icon className={cn('h-6 w-6', styles.icon)} />
+            <div className={cn('rounded-lg p-2', styles.bg)}>
+              <Icon className={cn('h-4 w-4', styles.icon)} />
             </div>
           )}
         </div>

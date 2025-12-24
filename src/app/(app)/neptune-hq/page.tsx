@@ -36,17 +36,17 @@ export default function NeptuneHQPage() {
     <div className="flex flex-col h-full w-full">
       {/* Page Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container max-w-7xl mx-auto px-6 py-6">
+        <div className="container max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold">Neptune HQ</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h1 className="text-xl font-semibold">Neptune HQ</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Complete transparency into your AI assistant
               </p>
             </div>
             {liveData && liveData.activeUsers > 0 && (
-              <Badge variant="outline" className="gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <Badge variant="outline" className="gap-1.5 text-xs h-7">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                 {liveData.activeUsers} {liveData.activeUsers === 1 ? 'person' : 'people'} active
               </Badge>
             )}
@@ -56,32 +56,32 @@ export default function NeptuneHQPage() {
 
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="container max-w-7xl mx-auto px-6 py-6">
+        <div className="container max-w-7xl mx-auto px-6 py-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* Tab Navigation */}
-            <TabsList className="w-full justify-start mb-6 bg-muted/50">
-              <TabsTrigger value="collaboration" className="gap-2">
-                <Users className="h-4 w-4" />
+            <TabsList className="w-full justify-start mb-4 bg-muted/50 h-9">
+              <TabsTrigger value="collaboration" className="gap-1.5 text-xs h-7 px-3">
+                <Users className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Collaboration</span>
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
+              <TabsTrigger value="analytics" className="gap-1.5 text-xs h-7 px-3">
+                <BarChart3 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
-              <TabsTrigger value="memory" className="gap-2">
-                <Brain className="h-4 w-4" />
+              <TabsTrigger value="memory" className="gap-1.5 text-xs h-7 px-3">
+                <Brain className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Memory</span>
               </TabsTrigger>
-              <TabsTrigger value="personality" className="gap-2">
-                <Sparkles className="h-4 w-4" />
+              <TabsTrigger value="personality" className="gap-1.5 text-xs h-7 px-3">
+                <Sparkles className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Personality</span>
               </TabsTrigger>
-              <TabsTrigger value="neural-connectors" className="gap-2">
-                <Zap className="h-4 w-4" />
+              <TabsTrigger value="neural-connectors" className="gap-1.5 text-xs h-7 px-3">
+                <Zap className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Neural Connectors</span>
               </TabsTrigger>
-              <TabsTrigger value="quality" className="gap-2">
-                <ShieldCheck className="h-4 w-4" />
+              <TabsTrigger value="quality" className="gap-1.5 text-xs h-7 px-3">
+                <ShieldCheck className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Quality</span>
               </TabsTrigger>
             </TabsList>

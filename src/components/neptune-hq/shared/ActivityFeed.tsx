@@ -27,37 +27,37 @@ export function ActivityFeed({ title = 'Recent Activity', items, className }: Ac
   return (
     <Card className={cn('shadow-sm', className)}>
       {title && (
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">{title}</CardTitle>
         </CardHeader>
       )}
       <CardContent className="p-0">
         <div className="divide-y divide-border">
           {items.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">
+            <div className="p-4 text-center text-xs text-muted-foreground">
               No recent activity
             </div>
           ) : (
             items.map((item, index) => (
-              <div key={item.id} className="flex gap-3 p-4 hover:bg-muted/50 transition-colors">
-                <Avatar className="h-8 w-8 shrink-0">
+              <div key={item.id} className="flex gap-2.5 p-3 hover:bg-muted/50 transition-colors">
+                <Avatar className="h-7 w-7 shrink-0">
                   {item.user.avatar && <AvatarImage src={item.user.avatar} alt={item.user.name} />}
                   <AvatarFallback 
                     style={{ backgroundColor: item.user.color }}
-                    className="text-white text-xs font-medium"
+                    className="text-white text-[10px] font-medium"
                   >
                     {getInitials(item.user.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">
+                  <p className="text-xs">
                     <span className="font-medium">{item.user.name}</span>{' '}
                     <span className="text-muted-foreground">{item.action}</span>
                   </p>
-                  <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
                     {item.description}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[10px] text-muted-foreground mt-1">
                     {formatDistanceToNow(item.timestamp, { addSuffix: true })}
                   </p>
                 </div>
