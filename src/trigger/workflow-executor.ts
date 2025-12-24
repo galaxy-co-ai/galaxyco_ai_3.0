@@ -1,13 +1,11 @@
-import { task, schedules } from "@trigger.dev/sdk/v3";
+import { task, schedules, metadata, logger as triggerLogger } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
 import { agents, agentExecutions, users } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import OpenAI from "openai";
 import { aiTools, executeTool, type ToolContext } from "@/lib/ai/tools";
-// Note: Realtime streaming support via agentOutputStream is available
-// but requires additional configuration. For now, results are returned at completion.
-// import { agentOutputStream } from "./streams";
+import type { ToolExecutionPart, STREAMS } from "./streams";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -240,9 +238,33 @@ export const executeAgentTask = task({
       let finalResponse = "";
       let hasToolCalls = true;
 
+      // Helper to emit tool execution events to the realtime stream
+      // Tool events are stored in metadata for realtime UI updates
+      const emitToolEvent = async (event: ToolExecutionPart) => {
+        try {
+          // Get current tool events array and append the new event
+          // This is available in the frontend via run.metadata.toolEvents
+          const currentToolsRaw = metadata.get("toolEvents");
+          const currentTools = Array.isArray(currentToolsRaw) ? currentToolsRaw : [];
+          const eventData = {
+            type: event.type,
+            toolName: event.toolName,
+            args: event.args ?? null,
+            result: event.result ?? null,
+            error: event.error ?? null,
+            timestamp: event.timestamp,
+          };
+          // Cast to any to bypass strict typing - metadata accepts JSON-serializable data
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          metadata.set("toolEvents", [...currentTools, eventData] as any);
+        } catch (err) {
+          triggerLogger.warn("Failed to emit tool event", { err });
+        }
+      };
+
       while (hasToolCalls && iterations <= maxIterations) {
         // Create streaming completion
-        const stream = await openai.chat.completions.create({
+        const openaiStream = await openai.chat.completions.create({
           model: "gpt-4o",
           messages,
           tools: agentTools.length > 0 ? agentTools : undefined,
@@ -251,22 +273,25 @@ export const executeAgentTask = task({
           stream: true,
         });
 
-        // Collect response and stream to frontend
+        // Register the OpenAI stream with Trigger.dev's realtime API
+        // This "tees" the stream - we can still iterate over it while chunks
+        // are forwarded to subscribers via useRealtimeRunWithStreams
+        const teedStream = await metadata.stream("openai", openaiStream);
+
+        // Collect response and stream to frontend via metadata.stream
         let responseContent = "";
         const currentToolCalls: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall[] = [];
         
-        for await (const chunk of stream) {
+        for await (const chunk of teedStream) {
           const delta = chunk.choices[0]?.delta;
           
-          // Handle content streaming
+          // Handle content streaming - chunks are automatically forwarded
+          // to frontend via the registered stream above
           if (delta?.content) {
             responseContent += delta.content;
-            
-            // TODO: Implement realtime streaming when stream API is configured
-            // For now, content is accumulated and returned at completion
           }
           
-          // Collect tool calls
+          // Collect tool calls from the stream
           if (delta?.tool_calls) {
             for (const tc of delta.tool_calls) {
               if (tc.index !== undefined) {
@@ -306,11 +331,19 @@ export const executeAgentTask = task({
             })),
           });
 
-          // Execute each tool call
+          // Execute each tool call with realtime event emission
           for (const toolCall of validToolCalls) {
             const toolName = toolCall.function?.name || "";
             if (!toolName) continue; // Skip if no tool name
             const toolArgs = JSON.parse(toolCall.function?.arguments || "{}");
+
+            // Emit tool_start event for realtime UI
+            await emitToolEvent({
+              type: "tool_start",
+              toolName,
+              args: toolArgs,
+              timestamp: new Date().toISOString(),
+            });
 
             logger.info("Agent executing tool", {
               executionId: executionIdToUse,
@@ -318,26 +351,49 @@ export const executeAgentTask = task({
               args: toolArgs,
             });
 
-            // Tool execution is logged and results accumulated
+            try {
+              const result = await executeTool(toolName, toolArgs, toolContext);
+              toolResults.push({ tool: toolName, result });
 
-            const result = await executeTool(toolName, toolArgs, toolContext);
-            toolResults.push({ tool: toolName, result });
+              // Emit tool_complete event for realtime UI
+              await emitToolEvent({
+                type: "tool_complete",
+                toolName,
+                result,
+                timestamp: new Date().toISOString(),
+              });
 
-            // Tool result recorded
+              // Add tool result to messages
+              messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id || `call_${Math.random().toString(36).substr(2, 9)}`,
+                content: JSON.stringify(result),
+              });
+            } catch (toolError) {
+              const errorMessage = toolError instanceof Error ? toolError.message : "Unknown error";
+              
+              // Emit tool_error event for realtime UI
+              await emitToolEvent({
+                type: "tool_error",
+                toolName,
+                error: errorMessage,
+                timestamp: new Date().toISOString(),
+              });
 
-            // Add tool result to messages
-            messages.push({
-              role: "tool",
-              tool_call_id: toolCall.id || `call_${Math.random().toString(36).substr(2, 9)}`,
-              content: JSON.stringify(result),
-            });
+              toolResults.push({ tool: toolName, result: { error: errorMessage } });
+              
+              // Add error as tool result so the LLM can recover
+              messages.push({
+                role: "tool",
+                tool_call_id: toolCall.id || `call_${Math.random().toString(36).substr(2, 9)}`,
+                content: JSON.stringify({ error: errorMessage }),
+              });
+            }
           }
         } else {
           // No more tool calls, we have the final response
           hasToolCalls = false;
           finalResponse = responseContent || "Task completed.";
-          
-          // Response complete - no streaming for now
         }
       }
 

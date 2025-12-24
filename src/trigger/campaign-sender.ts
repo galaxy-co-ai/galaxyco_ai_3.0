@@ -1,6 +1,6 @@
 import { task, wait } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
-import { campaigns, prospects, contacts } from "@/db/schema";
+import { campaigns, prospects, contacts, workspaces } from "@/db/schema";
 import { eq, and, or, ne } from "drizzle-orm";
 import { 
   sendBulkEmails, 
@@ -9,6 +9,18 @@ import {
   type EmailOptions 
 } from "@/lib/email";
 import { logger } from "@/lib/logger";
+import { buildWorkspaceQueueOptions, type WorkspaceTier } from "./queues";
+
+/**
+ * Get workspace tier for queue selection
+ */
+async function getWorkspaceTier(workspaceId: string): Promise<WorkspaceTier> {
+  const workspace = await db.query.workspaces.findFirst({
+    where: eq(workspaces.id, workspaceId),
+    columns: { subscriptionTier: true },
+  });
+  return (workspace?.subscriptionTier as WorkspaceTier) || "free";
+}
 
 /**
  * Send Campaign Task
@@ -243,10 +255,15 @@ export const scheduleCampaignTask = task({
       return { success: false, error: "Campaign was cancelled or already sent" };
     }
 
-    // Now trigger the actual send with idempotency
+    // Get workspace tier for queue options
+    const tier = await getWorkspaceTier(workspaceId);
+    const queueOptions = buildWorkspaceQueueOptions(workspaceId, tier);
+
+    // Now trigger the actual send with idempotency and queue options
     const handle = await sendCampaignTask.triggerAndWait(
       { campaignId, workspaceId },
       {
+        ...queueOptions,
         idempotencyKey: `campaign-${campaignId}-send`,
         idempotencyKeyTTL: "24h",
         tags: [`workspace:${workspaceId}`, `campaign:${campaignId}`, "type:campaign-send"],

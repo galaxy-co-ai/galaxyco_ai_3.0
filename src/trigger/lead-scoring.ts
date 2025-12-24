@@ -1,8 +1,20 @@
 import { task, schedules } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
-import { prospects } from "@/db/schema";
+import { prospects, workspaces } from "@/db/schema";
 import { eq, and, isNull, or, lt } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import { buildWorkspaceQueueOptions, type WorkspaceTier } from "./queues";
+
+/**
+ * Get workspace tier for queue selection
+ */
+async function getWorkspaceTier(workspaceId: string): Promise<WorkspaceTier> {
+  const workspace = await db.query.workspaces.findFirst({
+    where: eq(workspaces.id, workspaceId),
+    columns: { subscriptionTier: true },
+  });
+  return (workspace?.subscriptionTier as WorkspaceTier) || "free";
+}
 
 /**
  * Lead Scoring Task
@@ -152,6 +164,10 @@ export const bulkScoreLeadsTask = task({
       };
     }
 
+    // Get workspace tier for queue options
+    const tier = await getWorkspaceTier(workspaceId);
+    const queueOptions = buildWorkspaceQueueOptions(workspaceId, tier);
+
     // Use batchTriggerAndWait for efficient parallel processing
     // This is more efficient than Promise.all with multiple trigger() calls
     const batchResults = await scoreLeadTask.batchTriggerAndWait(
@@ -159,6 +175,10 @@ export const bulkScoreLeadsTask = task({
         payload: {
           prospectId: prospect.id,
           workspaceId,
+        },
+        options: {
+          ...queueOptions,
+          tags: [`workspace:${workspaceId}`, `prospect:${prospect.id}`, "type:lead-scoring"],
         },
       }))
     );

@@ -115,7 +115,7 @@ export function getConcurrencyLimitForTier(tier: WorkspaceTier): number {
  * 
  * @param workspaceId - The workspace ID (used as concurrency key)
  * @param tier - The workspace's subscription tier
- * @returns Trigger options with queue and concurrency key configured
+ * @returns Trigger options with queue name and concurrency key configured
  * 
  * @example
  * await myTask.trigger(payload, {
@@ -125,10 +125,7 @@ export function getConcurrencyLimitForTier(tier: WorkspaceTier): number {
  */
 export function buildWorkspaceQueueOptions(workspaceId: string, tier: WorkspaceTier) {
   return {
-    queue: {
-      name: getQueueNameForTier(tier),
-      concurrencyLimit: getConcurrencyLimitForTier(tier),
-    },
+    queue: getQueueNameForTier(tier),
     concurrencyKey: workspaceId,
   };
 }

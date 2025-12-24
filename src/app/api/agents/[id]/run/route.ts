@@ -87,6 +87,8 @@ export async function POST(
     }
 
     let triggerRunId: string | undefined;
+    let publicAccessToken: string | undefined;
+    
     try {
       // Trigger the task with idempotency key to prevent duplicate executions
       // The key combines agent ID and execution ID to ensure uniqueness
@@ -102,7 +104,11 @@ export async function POST(
           "type:agent-execution",
         ],
       });
+      
       triggerRunId = handle.id;
+      // The publicAccessToken allows frontend to subscribe to realtime streams
+      // via useRealtimeRunWithStreams hook without exposing the API key
+      publicAccessToken = handle.publicAccessToken;
     } catch (err) {
       logger.error('Failed to enqueue agent run', { err, executionId: execution.id });
       await db
@@ -125,6 +131,7 @@ export async function POST(
         success: true,
         executionId: execution.id,
         runId: triggerRunId, // Trigger.dev run ID for realtime streaming
+        publicAccessToken, // Token for useRealtimeRunWithStreams hook authentication
         status: 'pending',
         queuedWith: 'trigger.dev',
         testMode,

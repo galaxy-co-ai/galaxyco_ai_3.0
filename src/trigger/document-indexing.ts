@@ -1,9 +1,21 @@
 import { task } from "@trigger.dev/sdk/v3";
 import { db } from "@/lib/db";
-import { knowledgeItems } from "@/db/schema";
+import { knowledgeItems, workspaces } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { indexKnowledgeDocument, isVectorConfigured } from "@/lib/vector";
 import { logger } from "@/lib/logger";
+import { buildWorkspaceQueueOptions, type WorkspaceTier } from "./queues";
+
+/**
+ * Get workspace tier for queue selection
+ */
+async function getWorkspaceTier(workspaceId: string): Promise<WorkspaceTier> {
+  const workspace = await db.query.workspaces.findFirst({
+    where: eq(workspaces.id, workspaceId),
+    columns: { subscriptionTier: true },
+  });
+  return (workspace?.subscriptionTier as WorkspaceTier) || "free";
+}
 
 /**
  * Index Single Document Task
@@ -131,13 +143,23 @@ export const bulkIndexDocumentsTask = task({
       };
     }
 
-    // Trigger individual indexing tasks
+    // Get workspace tier for queue options
+    const tier = await getWorkspaceTier(workspaceId);
+    const queueOptions = buildWorkspaceQueueOptions(workspaceId, tier);
+
+    // Trigger individual indexing tasks with queue options
     const results = await Promise.all(
       validDocs.map((doc) =>
-        indexDocumentTask.trigger({
-          itemId: doc.id,
-          workspaceId,
-        })
+        indexDocumentTask.trigger(
+          {
+            itemId: doc.id,
+            workspaceId,
+          },
+          {
+            ...queueOptions,
+            tags: [`workspace:${workspaceId}`, `document:${doc.id}`, "type:document-indexing"],
+          }
+        )
       )
     );
 

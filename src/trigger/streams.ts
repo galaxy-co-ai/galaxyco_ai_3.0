@@ -3,16 +3,46 @@
  * 
  * Typed stream definitions for real-time data transfer
  * from Trigger.dev tasks to frontend components.
+ * 
+ * Uses metadata.stream() API to forward OpenAI streaming responses
+ * to the Trigger.dev Realtime API for consumption by frontend hooks.
  */
 
-import { streams, InferStreamType } from "@trigger.dev/sdk/v3";
+import type OpenAI from "openai";
 
 // ============================================================================
 // STREAM PART TYPES
 // ============================================================================
 
 /**
- * Type for agent output stream chunks
+ * Type for OpenAI chat completion stream chunks.
+ * This matches the OpenAI SDK's ChatCompletionChunk type exactly
+ * for proper type inference in useRealtimeRunWithStreams.
+ */
+export type OpenAIStreamPart = OpenAI.Chat.Completions.ChatCompletionChunk;
+
+/**
+ * Type for tool execution events during agent streaming.
+ * Sent alongside OpenAI chunks to show tool usage in real-time.
+ */
+export interface ToolExecutionPart {
+  /** Type discriminator */
+  type: "tool_start" | "tool_complete" | "tool_error";
+  /** Tool name being executed */
+  toolName: string;
+  /** Tool arguments (for tool_start) */
+  args?: Record<string, unknown>;
+  /** Tool result (for tool_complete) */
+  result?: unknown;
+  /** Error message (for tool_error) */
+  error?: string;
+  /** Timestamp */
+  timestamp: string;
+}
+
+/**
+ * Legacy type for agent output stream chunks (kept for backwards compatibility)
+ * @deprecated Use OpenAIStreamPart instead for new implementations
  */
 export interface AgentOutputPart {
   /** The streamed text chunk from the AI model */
@@ -60,46 +90,39 @@ export interface BatchProgressPart {
 }
 
 // ============================================================================
-// STREAM DEFINITIONS
+// STREAM TYPE DEFINITIONS FOR useRealtimeRunWithStreams
 // ============================================================================
 
 /**
- * Stream for AI agent output - enables real-time streaming of
- * LLM responses to the frontend during agent execution.
- */
-export const agentOutputStream = streams.define<AgentOutputPart>({
-  id: "agent-output",
-});
-
-/**
- * Stream for campaign sending progress - enables real-time
- * updates on bulk email campaign status.
- */
-export const campaignProgressStream = streams.define<CampaignProgressPart>({
-  id: "campaign-progress",
-});
-
-/**
- * Stream for batch operation progress - generic progress tracking
- * for bulk operations like lead scoring, document indexing, etc.
- */
-export const batchProgressStream = streams.define<BatchProgressPart>({
-  id: "batch-progress",
-});
-
-// ============================================================================
-// INFERRED TYPES FOR CONSUMERS
-// ============================================================================
-
-export type AgentOutputStreamType = InferStreamType<typeof agentOutputStream>;
-export type CampaignProgressStreamType = InferStreamType<typeof campaignProgressStream>;
-export type BatchProgressStreamType = InferStreamType<typeof batchProgressStream>;
-
-/**
- * All stream types for useRealtimeRunWithStreams
+ * All stream types for useRealtimeRunWithStreams hook.
+ * 
+ * Keys are the stream IDs used in metadata.stream(key, stream).
+ * Values are the chunk types for each stream.
+ * 
+ * @example
+ * // In a task:
+ * const stream = await openai.chat.completions.create({ stream: true, ... });
+ * await metadata.stream("openai", stream);
+ * 
+ * // In React component:
+ * const { streams } = useRealtimeRunWithStreams<typeof executeAgentTask, STREAMS>(runId, { accessToken });
+ * const text = streams.openai?.map(c => c.choices[0]?.delta?.content || "").join("");
  */
 export type STREAMS = {
-  "agent-output": AgentOutputPart;
+  /** OpenAI chat completion chunks for real-time LLM output */
+  openai: OpenAIStreamPart;
+  /** Tool execution events for showing tool usage during agent execution */
+  tools: ToolExecutionPart;
+  /** Campaign sending progress updates */
   "campaign-progress": CampaignProgressPart;
+  /** Generic batch operation progress */
   "batch-progress": BatchProgressPart;
 };
+
+// ============================================================================
+// LEGACY STREAM DEFINITIONS (for backwards compatibility)
+// ============================================================================
+
+// Note: The new Trigger.dev v3 streaming approach uses metadata.stream()
+// directly in tasks rather than defining streams upfront. These are kept
+// for backwards compatibility but new code should use the STREAMS type above.
