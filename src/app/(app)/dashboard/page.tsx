@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -5,6 +6,7 @@ import DashboardV2Client from '@/components/dashboard/DashboardV2Client';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { getDashboardData, getEmptyDashboardData } from '@/lib/dashboard';
 import { logger } from '@/lib/logger';
+import DashboardLoading from './loading';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,12 +57,14 @@ export default async function DashboardPage() {
 
   return (
     <ErrorBoundary>
-      <DashboardV2Client 
-        initialData={initialData} 
-        userId={userId}
-        workspaceId={workspaceId}
-        userName={userName}
-      />
+      <Suspense fallback={<DashboardLoading />}>
+        <DashboardV2Client 
+          initialData={initialData} 
+          userId={userId}
+          workspaceId={workspaceId}
+          userName={userName}
+        />
+      </Suspense>
     </ErrorBoundary>
   );
 }
