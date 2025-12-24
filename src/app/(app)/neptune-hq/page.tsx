@@ -7,7 +7,8 @@ import { CollaborationHub } from '@/components/neptune-hq/tabs/CollaborationHub'
 import { AnalyticsInsights } from '@/components/neptune-hq/tabs/AnalyticsInsights';
 import { TrainingResources } from '@/components/neptune-hq/tabs/TrainingResources';
 import { AgentPerformance } from '@/components/neptune-hq/tabs/AgentPerformance';
-import { EmptyState } from '@/components/neptune-hq/shared/EmptyState';
+import { TeamManagement } from '@/components/neptune-hq/tabs/TeamManagement';
+import { NeptuneSettings } from '@/components/neptune-hq/tabs/NeptuneSettings';
 import { useAuth } from '@clerk/nextjs';
 import { 
   Users, 
@@ -104,19 +105,11 @@ export default function NeptuneHQPage() {
             </TabsContent>
 
             <TabsContent value="team" className="mt-0">
-              <EmptyState
-                icon={Users2}
-                title="Team Management Coming Soon"
-                description="Manage team members, roles, and permissions. See activity and collaboration metrics for your workspace."
-              />
+              <TeamManagement />
             </TabsContent>
 
             <TabsContent value="settings" className="mt-0">
-              <EmptyState
-                icon={Settings}
-                title="Settings Coming Soon"
-                description="Configure Neptune's behavior, notification preferences, and workspace-wide settings."
-              />
+              <NeptuneSettings />
             </TabsContent>
           </Tabs>
         </div>
