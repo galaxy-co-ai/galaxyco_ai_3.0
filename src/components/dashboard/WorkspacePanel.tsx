@@ -39,10 +39,10 @@ export default function WorkspacePanel({
   const [activeTab, setActiveTab] = useState<TabValue>('roadmap');
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden">
-      {/* Tab Navigation */}
-      <div className="border-b bg-background shrink-0">
-        <div className="flex items-center px-3 py-2">
+    <Card className="h-full flex flex-col overflow-hidden border-2 border-nebula-violet/20 bg-white/50 backdrop-blur-sm shadow-soft">
+      {/* Tab Navigation - Pill toggle style matching Neptune */}
+      <div className="border-b bg-background px-4 py-3 shrink-0">
+        <div className="flex items-center rounded-lg border bg-muted/50 p-0.5 w-fit">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.value;
@@ -50,29 +50,17 @@ export default function WorkspacePanel({
             return (
               <Button
                 key={tab.value}
-                variant="ghost"
+                variant={isActive ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => setActiveTab(tab.value)}
                 className={cn(
-                  'relative h-9 px-3 rounded-md transition-colors',
-                  'hover:bg-accent hover:text-accent-foreground',
-                  isActive && 'bg-accent text-accent-foreground font-medium'
+                  'h-7 px-2 md:px-3 rounded-md transition-colors',
+                  isActive ? 'shadow-sm' : 'hover:bg-transparent'
                 )}
                 aria-label={tab.label}
               >
-                {/* Icon - always visible */}
-                <Icon className={cn(
-                  'h-4 w-4',
-                  'lg:mr-2' // Add margin on laptop+ when label shows
-                )} />
-                
-                {/* Label - hidden below laptop, visible on laptop+ */}
-                <span className="hidden lg:inline">{tab.label}</span>
-
-                {/* Active indicator */}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                )}
+                <Icon className="h-3.5 w-3.5 md:mr-1.5" />
+                <span className="hidden md:inline">{tab.label}</span>
               </Button>
             );
           })}
@@ -80,28 +68,24 @@ export default function WorkspacePanel({
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 overflow-hidden min-h-0">
+      <div className="flex-1 overflow-hidden min-h-0 p-4">
         {activeTab === 'roadmap' && (
           <div className="h-full overflow-auto">
-            <div className="p-4">
-              <RoadmapCard
-                items={roadmapItems}
-                completionPercentage={completionPercentage}
-              />
-            </div>
+            <RoadmapCard
+              items={roadmapItems}
+              completionPercentage={completionPercentage}
+            />
           </div>
         )}
 
         {activeTab === 'insights' && (
           <div className="h-full overflow-auto">
-            <div className="p-4">
-              <InsightsWidget />
-            </div>
+            <InsightsWidget />
           </div>
         )}
 
         {activeTab === 'activity' && (
-          <div className="h-full overflow-hidden">
+          <div className="h-full overflow-hidden -m-4">
             {workspaceId && workspaceId.trim() !== '' ? (
               <ActivityFeed workspaceId={workspaceId} userId={userId} />
             ) : (

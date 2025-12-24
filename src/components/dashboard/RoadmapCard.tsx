@@ -6,14 +6,15 @@
  * Displays dynamic roadmap items that Neptune builds based on conversation.
  * Items check off as Neptune helps the user complete them.
  * Now interactive - clicking items triggers Neptune prompts.
+ * 
+ * Note: When used in WorkspacePanel, the header is handled by the parent's tabs,
+ * so this component renders content only (no Card wrapper or redundant header).
  */
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PageTitle } from '@/components/ui/page-title';
-import { Compass, CheckCircle2, ChevronDown, ChevronUp, Sparkles, MessageSquare } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, Sparkles, MessageSquare } from 'lucide-react';
 
 export interface DashboardRoadmapItem {
   id: string;
@@ -69,32 +70,34 @@ export default function RoadmapCard({
   };
 
   return (
-    <Card className="h-full flex flex-col overflow-hidden bg-white/80 backdrop-blur-sm border-white/50 shadow-soft">
-      {/* Branded Header */}
-      <div className="border-b bg-gradient-to-r from-nebula-frost/50 via-white to-nebula-frost/30 px-6 py-4 shrink-0">
-        <div className="flex items-center justify-between">
-          <PageTitle
-            title="Roadmap"
-            icon={Compass}
-            as="h2"
-            titleClassName="text-base md:text-xl"
-            iconClassName="w-6 h-6 md:w-6 md:h-6"
-          />
-          {totalCount > 0 && (
-            <Badge variant="outline" className="text-xs">
-              {completedCount}/{totalCount}
-            </Badge>
-          )}
+    <div className="h-full flex flex-col">
+      {/* Progress header when items exist */}
+      {totalCount > 0 && (
+        <div className="flex items-center justify-between px-2 pb-3 border-b mb-4">
+          <div className="flex-1">
+            <div className="w-full bg-muted rounded-full h-2 mb-1">
+              <div
+                className="bg-nebula-violet h-2 rounded-full transition-all duration-300"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {completionPercentage}% complete
+            </p>
+          </div>
+          <Badge variant="outline" className="text-xs ml-4 shrink-0">
+            {completedCount}/{totalCount}
+          </Badge>
         </div>
-      </div>
+      )}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-6 flex flex-col">
+      <div className="flex-1 overflow-y-auto flex flex-col">
         {items.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center py-12">
             <div className="text-center">
-              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-              <p className="text-sm text-muted-foreground mb-2">
+              <Sparkles className="h-10 w-10 text-nebula-violet/40 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground mb-1">
                 Tell Neptune what you&apos;d like to accomplish
               </p>
               <p className="text-xs text-muted-foreground/70">
@@ -104,19 +107,6 @@ export default function RoadmapCard({
           </div>
         ) : (
           <>
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="w-full bg-muted rounded-full h-2 mb-2">
-                <div
-                  className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${completionPercentage}%` }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {completionPercentage}% complete
-              </p>
-            </div>
-
             {/* All Complete Message */}
             {completedCount === totalCount && totalCount > 0 && (
               <div className="text-center py-4 mb-4 bg-green-50 rounded-lg border border-green-200">
@@ -142,7 +132,7 @@ export default function RoadmapCard({
                       className={`px-3 py-1.5 border transition-colors w-full justify-between ${
                         item.completed 
                           ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 cursor-default' 
-                          : 'cursor-pointer bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                          : 'cursor-pointer bg-nebula-violet/10 text-nebula-violet border-nebula-violet/20 hover:bg-nebula-violet/20'
                       }`}
                       aria-label={item.completed ? `${item.title} (completed)` : `Click to view details for ${item.title}`}
                       aria-expanded={isExpanded}
@@ -151,7 +141,7 @@ export default function RoadmapCard({
                         {item.completed ? (
                           <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
                         ) : (
-                          <div className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-purple-600" />
+                          <div className="h-3.5 w-3.5 shrink-0 rounded-full border-2 border-nebula-violet" />
                         )}
                         <span className="font-semibold truncate" title={item.title}>
                           {item.title}
@@ -199,6 +189,6 @@ export default function RoadmapCard({
           </>
         )}
       </div>
-    </Card>
+    </div>
   );
 }
