@@ -33,7 +33,7 @@ const tokens = {
   },
   motion: {
     timing: { fast: 0.15, medium: 0.25, slow: 0.35 },
-    easing: [0.2, 0.8, 0.2, 1],
+    easing: "easeOut" as const,
   },
   spacing: {
     xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48,
