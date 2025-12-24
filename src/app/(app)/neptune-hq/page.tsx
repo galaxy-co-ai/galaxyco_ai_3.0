@@ -5,17 +5,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { CollaborationHub } from '@/components/neptune-hq/tabs/CollaborationHub';
 import { AnalyticsInsights } from '@/components/neptune-hq/tabs/AnalyticsInsights';
+import { TrainingResources } from '@/components/neptune-hq/tabs/TrainingResources';
+import { AgentPerformance } from '@/components/neptune-hq/tabs/AgentPerformance';
 import { EmptyState } from '@/components/neptune-hq/shared/EmptyState';
 import { useAuth } from '@clerk/nextjs';
 import { 
   Users, 
   BarChart3, 
-  Brain, 
-  Sparkles, 
-  Zap, 
-  ShieldCheck,
-  Clock,
-  Lightbulb
+  BookOpen, 
+  Bot, 
+  Settings, 
+  Users2,
 } from 'lucide-react';
 import useSWR from 'swr';
 
@@ -68,21 +68,21 @@ export default function NeptuneHQPage() {
                 <BarChart3 className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Analytics</span>
               </TabsTrigger>
-              <TabsTrigger value="memory" className="gap-1.5 text-xs h-7 px-3">
-                <Brain className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Memory</span>
+              <TabsTrigger value="training" className="gap-1.5 text-xs h-7 px-3">
+                <BookOpen className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Training</span>
               </TabsTrigger>
-              <TabsTrigger value="personality" className="gap-1.5 text-xs h-7 px-3">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Personality</span>
+              <TabsTrigger value="agents" className="gap-1.5 text-xs h-7 px-3">
+                <Bot className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Agents</span>
               </TabsTrigger>
-              <TabsTrigger value="neural-connectors" className="gap-1.5 text-xs h-7 px-3">
-                <Zap className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Neural Connectors</span>
+              <TabsTrigger value="team" className="gap-1.5 text-xs h-7 px-3">
+                <Users2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Team</span>
               </TabsTrigger>
-              <TabsTrigger value="quality" className="gap-1.5 text-xs h-7 px-3">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Quality</span>
+              <TabsTrigger value="settings" className="gap-1.5 text-xs h-7 px-3">
+                <Settings className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Settings</span>
               </TabsTrigger>
             </TabsList>
 
@@ -95,35 +95,27 @@ export default function NeptuneHQPage() {
               <AnalyticsInsights />
             </TabsContent>
 
-            <TabsContent value="memory" className="mt-0">
+            <TabsContent value="training" className="mt-0">
+              <TrainingResources />
+            </TabsContent>
+
+            <TabsContent value="agents" className="mt-0">
+              <AgentPerformance />
+            </TabsContent>
+
+            <TabsContent value="team" className="mt-0">
               <EmptyState
-                icon={Brain}
-                title="Memory System Coming Soon"
-                description="Track what Neptune remembers across conversations. View memory items, retention rates, and knowledge gaps."
+                icon={Users2}
+                title="Team Management Coming Soon"
+                description="Manage team members, roles, and permissions. See activity and collaboration metrics for your workspace."
               />
             </TabsContent>
 
-            <TabsContent value="personality" className="mt-0">
+            <TabsContent value="settings" className="mt-0">
               <EmptyState
-                icon={Sparkles}
-                title="Personality Settings Coming Soon"
-                description="Fine-tune Neptune's tone, behavior preferences, and interaction style to match your team's needs."
-              />
-            </TabsContent>
-
-            <TabsContent value="neural-connectors" className="mt-0">
-              <EmptyState
-                icon={Zap}
-                title="Neural Connectors Coming Soon"
-                description="Monitor Neptune's integrations and data sources. See which tools are being used and their performance metrics."
-              />
-            </TabsContent>
-
-            <TabsContent value="quality" className="mt-0">
-              <EmptyState
-                icon={ShieldCheck}
-                title="Quality Control Coming Soon"
-                description="Review response accuracy, error rates, and user feedback. Track improvements and identify areas needing attention."
+                icon={Settings}
+                title="Settings Coming Soon"
+                description="Configure Neptune's behavior, notification preferences, and workspace-wide settings."
               />
             </TabsContent>
           </Tabs>
