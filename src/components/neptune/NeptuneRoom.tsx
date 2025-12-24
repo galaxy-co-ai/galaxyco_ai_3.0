@@ -16,10 +16,18 @@ interface NeptuneRoomProps {
  * Handles room ID generation and initial presence state
  */
 export function NeptuneRoom({ conversationId, children }: NeptuneRoomProps) {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
-  // Don't render room if no conversation ID or user
-  if (!conversationId || !user) {
+  // Render children immediately if no conversation ID (dashboard with null conversationId)
+  // This prevents blocking the entire page while Clerk/Liveblocks loads
+  if (!conversationId) {
+    return <>{children}</>;
+  }
+
+  // If Clerk hasn't loaded yet, render children without Liveblocks
+  // Liveblocks features will be unavailable but page won't be blocked
+  if (!isLoaded || !user) {
+    logger.debug('[Neptune Room] User not loaded yet, skipping Liveblocks');
     return <>{children}</>;
   }
 
