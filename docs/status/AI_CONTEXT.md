@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (3cc1ea7)  
+**Updated Through:** 2025-12-23 (b74dde4)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 b74dde4 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-23 da610f4 feat(neptune-hq): implement Week 2 - Training & Agent Performance
 - 2025-12-23 3cc1ea7 fix(dashboard): only render Liveblocks components when inside RoomProvider
 - 2025-12-23 3dbbba6 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 9f02105 fix(dashboard): add defensive error handling to prevent crashes
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 98e078d Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 eebfd32 fix(auth): memoize getCurrentWorkspace with React cache
 - 2025-12-23 542be9f Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2025-12-23 096dbdf refactor(neptune-hq): refine UI with minimal design and monthly heatmap
-- 2025-12-23 fc8daae fix(navigation): update Neptune sidebar link to Neptune HQ
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
