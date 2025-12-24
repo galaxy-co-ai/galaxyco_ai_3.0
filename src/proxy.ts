@@ -33,6 +33,9 @@ const isPublicRoute = createRouteMatcher([
   // Public API & Webhooks
   '/api/webhooks(.*)',
   '/api/public(.*)',
+  
+  // MCP server routes (authenticated via OAuth tokens, not Clerk sessions)
+  '/api/mcp(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
