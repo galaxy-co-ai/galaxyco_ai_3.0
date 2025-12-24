@@ -165,94 +165,29 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const initRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Initialize Neptune - restore conversation if available
+  // Initialize Neptune - always start fresh, past conversations available in history
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
 
-    const initializeNeptune = async () => {
-      try {
-        // Try to restore previous conversation
-        let storedConversationId: string | null = null;
-        if (typeof window !== "undefined") {
-          storedConversationId = localStorage.getItem(STORAGE_KEY);
-        }
+    // Clear any stored conversation ID - we always start fresh now
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+    }
 
-        if (storedConversationId) {
-          // Try to load the stored conversation
-          try {
-            const response = await fetch(
-              `/api/neptune/conversation?conversationId=${storedConversationId}`
-            );
+    // Show welcome message immediately
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content:
+          "Hey! I'm Neptune. I see you're just getting started - perfect timing. Tell me about your business in a sentence or two. What do you do and who do you serve? I'll build you a personalized setup roadmap from there.",
+        timestamp: new Date(),
+      },
+    ]);
 
-            if (response.ok) {
-              const data = await response.json();
-              if (data.messages && data.messages.length > 0) {
-                setConversationId(storedConversationId);
-                setMessages(
-                  data.messages.map(
-                    (msg: {
-                      id: string;
-                      role: string;
-                      content: string;
-                      createdAt: string;
-                      attachments?: NeptuneMessage["attachments"];
-                      metadata?: NeptuneMessage["metadata"];
-                    }) => ({
-                      id: msg.id,
-                      role: msg.role as "user" | "assistant",
-                      content: msg.content,
-                      timestamp: new Date(msg.createdAt),
-                      attachments: msg.attachments,
-                      metadata: msg.metadata,
-                    })
-                  )
-                );
-                setIsInitialized(true);
-                logger.debug("[Neptune] Restored conversation", { conversationId: storedConversationId });
-                return;
-              }
-            }
-          } catch (error) {
-            logger.warn("[Neptune] Failed to restore conversation, starting fresh", { error });
-            // Clear invalid conversation ID
-            if (typeof window !== "undefined") {
-              localStorage.removeItem(STORAGE_KEY);
-            }
-          }
-        }
-
-        // No valid conversation to restore - show welcome message
-        setMessages([
-          {
-            id: "welcome",
-            role: "assistant",
-            content:
-              "Hey! I'm Neptune. I see you're just getting started - perfect timing. Tell me about your business in a sentence or two. What do you do and who do you serve? I'll build you a personalized setup roadmap from there.",
-            timestamp: new Date(),
-          },
-        ]);
-
-        setIsInitialized(true);
-        logger.debug("[Neptune] Initialized with fresh conversation");
-      } catch (error) {
-        logger.error("[Neptune] Initialization failed", error);
-        // Still mark as initialized to prevent infinite retries
-        setIsInitialized(true);
-        // Show welcome message even on error
-        setMessages([
-          {
-            id: "welcome",
-            role: "assistant",
-            content:
-              "Hey! I'm Neptune. I see you're just getting started - perfect timing. Tell me about your business in a sentence or two. What do you do and who do you serve? I'll build you a personalized setup roadmap from there.",
-            timestamp: new Date(),
-          },
-        ]);
-      }
-    };
-
-    initializeNeptune();
+    setIsInitialized(true);
+    logger.debug("[Neptune] Initialized with fresh conversation");
   }, []);
 
   // Send message to Neptune with streaming
@@ -387,9 +322,6 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         // Update conversation ID if changed
         if (newConversationId) {
           setConversationId(newConversationId);
-          if (typeof window !== "undefined") {
-            localStorage.setItem(STORAGE_KEY, newConversationId);
-          }
         }
 
         // Finalize assistant message
@@ -506,11 +438,6 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         abortControllerRef.current.abort();
       }
 
-      // Remove from localStorage
-      if (typeof window !== "undefined") {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-
       // Reset state
       setConversationId(null);
       setMessages([
@@ -523,7 +450,6 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         },
       ]);
 
-      // Create new conversation on next message
       toast.success("Started a new conversation");
     } catch (error) {
       logger.error("[Neptune] Clear conversation failed", error);
@@ -587,11 +513,8 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
 
       const data = await response.json();
 
-      // Update conversation ID and save to localStorage
+      // Update conversation ID
       setConversationId(data.conversationId);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, data.conversationId);
-      }
 
       // Load messages
       if (data.messages && data.messages.length > 0) {
@@ -688,9 +611,6 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
       // If we deleted the current conversation, clear it
       if (conversationId === targetConversationId) {
         setConversationId(null);
-        if (typeof window !== "undefined") {
-          localStorage.removeItem(STORAGE_KEY);
-        }
         setMessages([
           {
             id: "welcome",
