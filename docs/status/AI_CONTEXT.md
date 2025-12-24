@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-23 (8dee6a4)  
+**Updated Through:** 2025-12-23 (3dbbba6)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-23 3dbbba6 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2025-12-23 9f02105 fix(dashboard): add defensive error handling to prevent crashes
 - 2025-12-23 8dee6a4 refactor(neptune): always start fresh conversations, remove localStorage persistence
 - 2025-12-23 1898ae0 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2025-12-23 4c040dd fix(dashboard): prevent NeptuneRoom from blocking render with Clerk loading state
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 096dbdf refactor(neptune-hq): refine UI with minimal design and monthly heatmap
 - 2025-12-23 fc8daae fix(navigation): update Neptune sidebar link to Neptune HQ
 - 2025-12-23 13f03f0 docs: add Neptune HQ Week 1 session handoff
-- 2025-12-23 2bd92bc feat(neptune-hq): implement Neptune HQ Week 1 - Collaboration Hub & Analytics
-- 2025-12-23 abdb74e docs: add Liveblocks implementation guide
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
