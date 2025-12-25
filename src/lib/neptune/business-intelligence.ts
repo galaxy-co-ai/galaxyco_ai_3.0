@@ -250,14 +250,33 @@ async function collectCRMSignals(workspaceId: string): Promise<BusinessSignals['
  */
 async function collectMarketingSignals(workspaceId: string): Promise<BusinessSignals['marketing']> {
   try {
-    // Get campaign stats
-    const campaignStats = await db.select({
-      totalCampaigns: count(),
-      avgOpenRate: avg(campaigns.openRate),
-      avgClickRate: avg(campaigns.clickRate),
+    // Get campaign performance - calculate rates from counts
+    const allCampaigns = await db.select({
+      sentCount: campaigns.sentCount,
+      openCount: campaigns.openCount,
+      clickCount: campaigns.clickCount,
     })
       .from(campaigns)
       .where(eq(campaigns.workspaceId, workspaceId));
+    
+    const totalCampaigns = allCampaigns.length;
+    let totalOpenRate = 0;
+    let totalClickRate = 0;
+    let validOpenRates = 0;
+    let validClickRates = 0;
+    
+    allCampaigns.forEach(campaign => {
+      if (campaign.sentCount && campaign.sentCount > 0) {
+        totalOpenRate += ((campaign.openCount || 0) / campaign.sentCount) * 100;
+        validOpenRates++;
+        
+        totalClickRate += ((campaign.clickCount || 0) / campaign.sentCount) * 100;
+        validClickRates++;
+      }
+    });
+    
+    const avgOpenRate = validOpenRates > 0 ? totalOpenRate / validOpenRates : 0;
+    const avgClickRate = validClickRates > 0 ? totalClickRate / validClickRates : 0;
     
     // Active campaigns
     const activeCampaignsResult = await db.select({ count: count() })
@@ -267,13 +286,13 @@ async function collectMarketingSignals(workspaceId: string): Promise<BusinessSig
         eq(campaigns.status, 'active')
       ));
     
-    // Campaigns needing attention (low performance)
+    // Campaigns needing attention (low performance - less than 15% open rate)
     const lowPerformersResult = await db.select({ count: count() })
       .from(campaigns)
       .where(and(
         eq(campaigns.workspaceId, workspaceId),
         eq(campaigns.status, 'active'),
-        sql`${campaigns.openRate} < 15`
+        sql`(${campaigns.openCount}::float / NULLIF(${campaigns.sentCount}, 0)) * 100 < 15`
       ));
     
     // Lead source breakdown
@@ -298,8 +317,8 @@ async function collectMarketingSignals(workspaceId: string): Promise<BusinessSig
     
     return {
       activeCampaigns: Number(activeCampaignsResult[0]?.count ?? 0),
-      avgOpenRate: Number(campaignStats[0]?.avgOpenRate ?? 0),
-      avgClickRate: Number(campaignStats[0]?.avgClickRate ?? 0),
+      avgOpenRate: avgOpenRate,
+      avgClickRate: avgClickRate,
       topPerformingChannel: topChannel,
       campaignsNeedingAttention: Number(lowPerformersResult[0]?.count ?? 0),
       leadSourceBreakdown,
