@@ -244,14 +244,12 @@ export default function DashboardV2Client({
             />
           </div>
 
-          {/* Right Column: Tabbed Workspace Panel (Roadmap / Insights / Activity) */}
+          {/* Right Column: Tabbed Workspace Panel (Compass / Vision / Boards) */}
           <div className="min-w-0 min-h-0">
             {workspaceId && workspaceId.trim() !== '' ? (
               <WorkspacePanel
                 workspaceId={workspaceId}
                 userId={userId}
-                roadmapItems={roadmapItems}
-                completionPercentage={completionPercentage}
               />
             ) : (
               <Card className="h-full flex items-center justify-center">

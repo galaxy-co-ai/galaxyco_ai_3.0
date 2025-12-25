@@ -3,20 +3,18 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Compass, Sparkles, Activity, LucideIcon } from 'lucide-react';
+import { Compass, Target, FolderKanban, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import RoadmapCard, { DashboardRoadmapItem } from './RoadmapCard';
-import { InsightsWidget } from '@/components/insights/InsightsWidget';
-import ActivityFeed from './ActivityFeed';
+import CompassTab from './CompassTab';
+import VisionTab from './VisionTab';
+import BoardsTab from './BoardsTab';
 
 interface WorkspacePanelProps {
   workspaceId: string;
   userId: string;
-  roadmapItems: DashboardRoadmapItem[];
-  completionPercentage: number;
 }
 
-type TabValue = 'roadmap' | 'insights' | 'activity';
+type TabValue = 'compass' | 'vision' | 'boards';
 
 interface Tab {
   value: TabValue;
@@ -25,18 +23,16 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { value: 'roadmap', label: 'Roadmap', icon: Compass },
-  { value: 'insights', label: 'Insights', icon: Sparkles },
-  { value: 'activity', label: 'Activity', icon: Activity },
+  { value: 'compass', label: 'Compass', icon: Compass },
+  { value: 'vision', label: 'Vision', icon: Target },
+  { value: 'boards', label: 'Boards', icon: FolderKanban },
 ];
 
 export default function WorkspacePanel({
   workspaceId,
   userId,
-  roadmapItems,
-  completionPercentage,
 }: WorkspacePanelProps) {
-  const [activeTab, setActiveTab] = useState<TabValue>('roadmap');
+  const [activeTab, setActiveTab] = useState<TabValue>('compass');
 
   return (
     <Card className="h-full flex flex-col overflow-hidden border-2 border-nebula-violet/20 bg-white/50 backdrop-blur-sm shadow-soft">
@@ -69,30 +65,21 @@ export default function WorkspacePanel({
 
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden min-h-0 p-4">
-        {activeTab === 'roadmap' && (
+        {activeTab === 'compass' && (
           <div className="h-full overflow-auto">
-            <RoadmapCard
-              items={roadmapItems}
-              completionPercentage={completionPercentage}
-            />
+            <CompassTab workspaceId={workspaceId} />
           </div>
         )}
 
-        {activeTab === 'insights' && (
+        {activeTab === 'vision' && (
           <div className="h-full overflow-auto">
-            <InsightsWidget />
+            <VisionTab workspaceId={workspaceId} />
           </div>
         )}
 
-        {activeTab === 'activity' && (
-          <div className="h-full overflow-hidden -m-4">
-            {workspaceId && workspaceId.trim() !== '' ? (
-              <ActivityFeed workspaceId={workspaceId} userId={userId} />
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <p className="text-sm text-muted-foreground">Unable to load activity</p>
-              </div>
-            )}
+        {activeTab === 'boards' && (
+          <div className="h-full overflow-auto">
+            <BoardsTab workspaceId={workspaceId} />
           </div>
         )}
       </div>
