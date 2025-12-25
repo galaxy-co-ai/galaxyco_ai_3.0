@@ -157,7 +157,7 @@ async function handleSuggestReply(
     // Build prompt for caching
     const promptMessages = [
       {
-        role: 'system',
+        role: 'system' as const,
         content: `You are Neptune, an AI assistant helping draft professional responses for a ${conversation.channel} conversation. 
 Generate a helpful, professional, and friendly reply to the customer's latest message.
 Keep the response concise but thorough. Match the tone of the conversation.
@@ -165,7 +165,7 @@ Do not include greetings like "Dear Customer" - just the body of the response.
 Channel context: ${conversation.channel === 'email' ? 'This is an email, so slightly more formal is appropriate.' : 'This is a chat/message, so keep it conversational.'}`,
       },
       {
-        role: 'user',
+        role: 'user' as const,
         content: `Conversation subject: ${conversation.subject || 'General inquiry'}
 
 Conversation history:
