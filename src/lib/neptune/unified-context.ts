@@ -11,7 +11,6 @@
  * This is the main entry point for generating Neptune's context.
  */
 
-import { NEPTUNE_PERSONA } from '@/lib/ai/system-prompt';
 import { 
   generateBusinessIntelligence, 
   getBusinessSummary,
@@ -47,9 +46,6 @@ import { logger } from '@/lib/logger';
  * Complete Neptune context for AI prompt generation
  */
 export interface NeptuneContext {
-  // Core persona
-  persona: typeof NEPTUNE_PERSONA;
-  
   // Page awareness
   pageContext: PageContextData | null;
   
@@ -130,7 +126,6 @@ export async function generateNeptuneContext(
   
   // Initialize result
   const context: NeptuneContext = {
-    persona: NEPTUNE_PERSONA,
     pageContext: null,
     businessIntelligence: null,
     businessSummary: '',
