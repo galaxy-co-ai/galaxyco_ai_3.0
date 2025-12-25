@@ -1,9 +1,9 @@
 /**
  * Phone Number Provisioning Service
- * 
+ *
  * Automatically provisions dedicated phone numbers for each workspace
  * via SignalWire's REST API.
- * 
+ *
  * Features:
  * - Auto-provision number on workspace creation
  * - Purchase numbers from SignalWire available inventory
@@ -96,7 +96,7 @@ export async function searchAvailableNumbers(options: {
     }
 
     const data = await response.json();
-    
+
     return (data.available_phone_numbers || []).slice(0, limit).map((num: any) => ({
       phoneNumber: num.phone_number,
       friendlyName: num.friendly_name,
@@ -151,7 +151,7 @@ export async function provisionPhoneNumber(options: {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${config.projectId}:${config.token}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`${config.projectId}:${config.token}`).toString('base64')}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
@@ -173,8 +173,8 @@ export async function provisionPhoneNumber(options: {
 
     const data = await response.json();
 
-    logger.info('Phone number provisioned successfully', { 
-      sid: data.sid, 
+    logger.info('Phone number provisioned successfully', {
+      sid: data.sid,
       phoneNumber: data.phone_number,
       workspaceId,
     });
@@ -273,7 +273,7 @@ export async function updatePhoneNumberWebhooks(options: {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${config.projectId}:${config.token}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`${config.projectId}:${config.token}`).toString('base64')}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),
@@ -307,8 +307,8 @@ export async function autoProvisionForWorkspace(options: {
 }): Promise<ProvisionedPhoneNumber> {
   const { workspaceId, workspaceName, preferredAreaCode, preferredRegion } = options;
 
-  logger.info('Auto-provisioning phone number for workspace', { 
-    workspaceId, 
+  logger.info('Auto-provisioning phone number for workspace', {
+    workspaceId,
     preferredAreaCode,
     preferredRegion,
   });
@@ -329,7 +329,7 @@ export async function autoProvisionForWorkspace(options: {
   // 2. Pick the first available number
   const selectedNumber = availableNumbers[0];
 
-  logger.info('Selected phone number', { 
+  logger.info('Selected phone number', {
     phoneNumber: selectedNumber.phoneNumber,
     locality: selectedNumber.locality,
   });
@@ -353,7 +353,7 @@ export async function autoProvisionForWorkspace(options: {
  */
 export function formatPhoneNumber(phoneNumber: string): string {
   const cleaned = phoneNumber.replace(/\D/g, '');
-  
+
   if (cleaned.length === 11 && cleaned.startsWith('1')) {
     // US number: +1 (405) 555-1234
     const areaCode = cleaned.slice(1, 4);
@@ -361,6 +361,6 @@ export function formatPhoneNumber(phoneNumber: string): string {
     const line = cleaned.slice(7);
     return `(${areaCode}) ${prefix}-${line}`;
   }
-  
+
   return phoneNumber; // Return as-is for international numbers
 }

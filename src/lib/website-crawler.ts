@@ -1,13 +1,13 @@
 /**
  * Website Crawler Library
- * 
+ *
  * Crawls websites using Playwright to extract content for AI analysis.
  * Supports JavaScript-rendered sites, respects robots.txt, and includes rate limiting.
  */
 
 /**
  * Website Crawler Library
- * 
+ *
  * Note: Requires 'playwright' package to be installed:
  * npm install playwright
  * npx playwright install chromium
@@ -63,12 +63,12 @@ export function normalizeUrl(url: string, baseUrl?: string): string {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return new URL(url).href;
     }
-    
+
     // If relative, resolve against base URL
     if (baseUrl) {
       return new URL(url, baseUrl).href;
     }
-    
+
     return url;
   } catch (error) {
     logger.warn('Failed to normalize URL', { url, error });
@@ -96,7 +96,7 @@ function shouldCrawlUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
     const path = urlObj.pathname.toLowerCase();
-    
+
     // Skip common non-content paths
     const skipPatterns = [
       '/api/',
@@ -123,12 +123,12 @@ function shouldCrawlUrl(url: string): boolean {
       '.xml',
       '#', // Skip anchors
     ];
-    
+
     // Skip if matches any pattern
-    if (skipPatterns.some(pattern => path.includes(pattern))) {
+    if (skipPatterns.some((pattern) => path.includes(pattern))) {
       return false;
     }
-    
+
     // Only crawl http/https
     return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
   } catch {
@@ -156,12 +156,13 @@ async function extractPageContent(page: Page): Promise<PageContent> {
   const text = await page.evaluate(() => {
     // Remove script and style elements
     const scripts = document.querySelectorAll('script, style, noscript');
-    scripts.forEach(el => el.remove());
+    scripts.forEach((el) => el.remove());
 
     // Get main content areas (prioritize semantic HTML)
-    const mainContent = document.querySelector('main, article, [role="main"]') || 
-                       document.querySelector('.content, .main, #content, #main') ||
-                       document.body;
+    const mainContent =
+      document.querySelector('main, article, [role="main"]') ||
+      document.querySelector('.content, .main, #content, #main') ||
+      document.body;
 
     if (!mainContent) return '';
 
@@ -189,9 +190,9 @@ async function extractPageContent(page: Page): Promise<PageContent> {
   const links = await page.evaluate(() => {
     const anchors = Array.from(document.querySelectorAll('a[href]'));
     return anchors
-      .map(a => a.getAttribute('href'))
+      .map((a) => a.getAttribute('href'))
       .filter((href): href is string => !!href)
-      .map(href => {
+      .map((href) => {
         // Convert relative URLs to absolute
         try {
           return new URL(href, window.location.href).href;
@@ -218,29 +219,29 @@ async function extractPageContent(page: Page): Promise<PageContent> {
  */
 async function checkRobotsTxt(baseUrl: string): Promise<Set<string>> {
   const allowedPaths = new Set<string>();
-  
+
   try {
     const robotsUrl = new URL('/robots.txt', baseUrl).href;
-    const response = await fetch(robotsUrl, { 
-      signal: AbortSignal.timeout(5000) 
+    const response = await fetch(robotsUrl, {
+      signal: AbortSignal.timeout(5000),
     });
-    
+
     if (!response.ok) {
       // No robots.txt or not accessible - allow all
       return allowedPaths;
     }
-    
+
     const text = await response.text();
     const lines = text.split('\n');
     let currentUserAgent = '*';
     let inUserAgentBlock = false;
-    
+
     for (const line of lines) {
       const trimmed = line.trim().toLowerCase();
-      
+
       // Skip comments
       if (trimmed.startsWith('#')) continue;
-      
+
       // User-agent directive
       if (trimmed.startsWith('user-agent:')) {
         const agent = trimmed.replace('user-agent:', '').trim();
@@ -248,7 +249,7 @@ async function checkRobotsTxt(baseUrl: string): Promise<Set<string>> {
         inUserAgentBlock = agent === '*' || agent.includes('bot') || agent.includes('crawler');
         continue;
       }
-      
+
       // Allow directive
       if (inUserAgentBlock && trimmed.startsWith('allow:')) {
         const path = trimmed.replace('allow:', '').trim();
@@ -256,7 +257,7 @@ async function checkRobotsTxt(baseUrl: string): Promise<Set<string>> {
           allowedPaths.add(path);
         }
       }
-      
+
       // Disallow directive (we'll track disallowed paths separately if needed)
       // For simplicity, we'll just check if path is explicitly allowed
     }
@@ -264,7 +265,7 @@ async function checkRobotsTxt(baseUrl: string): Promise<Set<string>> {
     // If robots.txt check fails, allow crawling (fail open)
     logger.warn('Failed to fetch robots.txt', { baseUrl, error });
   }
-  
+
   return allowedPaths;
 }
 
@@ -289,11 +290,11 @@ export async function crawlWebsite(
 
   const baseUrl = normalizeUrl(url);
   const baseDomain = new URL(baseUrl).hostname;
-  
+
   const crawledPages: CrawledPage[] = [];
   const visitedUrls = new Set<string>();
   const urlQueue: Array<{ url: string; depth: number }> = [{ url: baseUrl, depth: 0 }];
-  
+
   let browser: Browser | null = null;
   let robotsAllowedPaths: Set<string> = new Set();
 
@@ -340,13 +341,13 @@ export async function crawlWebsite(
       try {
         // Rate limiting
         if (crawledPages.length > 0) {
-          await new Promise(resolve => setTimeout(resolve, rateLimitMs));
+          await new Promise((resolve) => setTimeout(resolve, rateLimitMs));
         }
 
         logger.info('Crawling page', { url: currentUrl, depth, pageCount: crawledPages.length });
 
         const page = await context.newPage();
-        
+
         // Set timeout
         page.setDefaultTimeout(timeout);
 
@@ -358,7 +359,7 @@ export async function crawlWebsite(
 
         // Extract content
         const content = await extractPageContent(page);
-        
+
         // Add to crawled pages
         crawledPages.push({
           url: currentUrl,
@@ -375,7 +376,7 @@ export async function crawlWebsite(
         if (depth < maxDepth) {
           for (const link of content.links) {
             const normalizedLink = normalizeUrl(link, currentUrl);
-            
+
             // Only add if same domain and not visited
             if (
               isSameDomain(normalizedLink, baseUrl) &&
@@ -404,10 +405,10 @@ export async function crawlWebsite(
     }
   }
 
-  logger.info('Website crawl complete', { 
-    url, 
+  logger.info('Website crawl complete', {
+    url,
     pagesCrawled: crawledPages.length,
-    maxPages 
+    maxPages,
   });
 
   return crawledPages;

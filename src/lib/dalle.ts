@@ -1,6 +1,6 @@
 /**
  * DALL-E 3 Image Generation Client
- * 
+ *
  * Generates images using OpenAI's DALL-E 3 and stores them in Vercel Blob
  */
 
@@ -29,7 +29,7 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
   const openai = getOpenAI();
 
   try {
-      logger.info('Generating image with DALL-E 3', {
+    logger.info('Generating image with DALL-E 3', {
       promptLength: params.prompt.length,
       size: params.size || '1024x1024',
       quality: params.quality || 'hd',
@@ -71,10 +71,10 @@ export async function generateImage(params: GenerateImageParams): Promise<Genera
     // Download image and upload to Vercel Blob for persistence
     const imageResponse = await fetch(imageUrl);
     const imageBlob = await imageResponse.blob();
-    
+
     const timestamp = Date.now();
     const filename = `dalle/${timestamp}.png`;
-    
+
     const blobResult = await uploadFile(
       new File([imageBlob], 'dalle-image.png', { type: 'image/png' }),
       filename,

@@ -26,9 +26,7 @@ export function checkBackendIntegrations(): IntegrationStatus[] {
   // Authentication
   integrations.push({
     name: 'Clerk Authentication',
-    configured: !!(
-      process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-    ),
+    configured: !!(process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY),
     status:
       process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
         ? 'ready'
@@ -79,8 +77,8 @@ export function checkBackendIntegrations(): IntegrationStatus[] {
     message: hasPinecone
       ? '✅ Pinecone configured'
       : hasUpstash
-      ? '✅ Upstash Vector configured'
-      : '❌ No vector database configured',
+        ? '✅ Upstash Vector configured'
+        : '❌ No vector database configured',
   });
 
   // File Storage
@@ -97,10 +95,7 @@ export function checkBackendIntegrations(): IntegrationStatus[] {
   integrations.push({
     name: 'Google OAuth (Gmail + Calendar)',
     configured: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-    status:
-      process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-        ? 'ready'
-        : 'missing',
+    status: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? 'ready' : 'missing',
     message:
       process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
         ? '✅ Google OAuth ready'
@@ -110,13 +105,9 @@ export function checkBackendIntegrations(): IntegrationStatus[] {
   // Microsoft OAuth
   integrations.push({
     name: 'Microsoft OAuth (Outlook + Calendar)',
-    configured: !!(
-      process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET
-    ),
+    configured: !!(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET),
     status:
-      process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET
-        ? 'ready'
-        : 'missing',
+      process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET ? 'ready' : 'missing',
     message:
       process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET
         ? '✅ Microsoft OAuth ready'
@@ -127,17 +118,14 @@ export function checkBackendIntegrations(): IntegrationStatus[] {
   integrations.push({
     name: 'Google Custom Search (Lead Intel)',
     configured: !!(
-      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY &&
-      process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
     ),
     status:
-      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY &&
-      process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
         ? 'ready'
         : 'missing',
     message:
-      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY &&
-      process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+      process.env.GOOGLE_CUSTOM_SEARCH_API_KEY && process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
         ? '✅ Web search available'
         : '❌ Google Custom Search not configured',
   });
@@ -190,28 +178,3 @@ export function getBackendHealthScore(): {
     grade,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -44,40 +44,42 @@ export async function searchWeb(
   }
 ): Promise<SearchResult[]> {
   const { logger } = await import('@/lib/logger');
-  
+
   // Check if Perplexity API key is configured
   const hasPerplexityKey = !!process.env.PERPLEXITY_API_KEY;
   const perplexityKeyPrefix = process.env.PERPLEXITY_API_KEY?.substring(0, 10) || 'not set';
-  
-  logger.info('searchWeb called', { 
-    query, 
+
+  logger.info('searchWeb called', {
+    query,
     hasPerplexityKey,
     keyPrefix: perplexityKeyPrefix,
-    hasGoogleKey: !!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY
+    hasGoogleKey: !!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY,
   });
-  
+
   // Try Perplexity first (better for real-time browsing and AI-powered results)
   if (hasPerplexityKey) {
     try {
-      logger.info('Attempting Perplexity search', { 
+      logger.info('Attempting Perplexity search', {
         query,
-        keyLength: process.env.PERPLEXITY_API_KEY?.length 
+        keyLength: process.env.PERPLEXITY_API_KEY?.length,
       });
       const result = await searchWebWithPerplexity(query, options);
       logger.info('Perplexity search succeeded', { resultCount: result.length });
       return result;
     } catch (error) {
       // Fall back to Google if Perplexity fails
-      logger.warn('Perplexity search failed, falling back to Google', { 
+      logger.warn('Perplexity search failed, falling back to Google', {
         error: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined,
-        query 
+        query,
       });
       // Don't return here - continue to Google fallback
     }
   } else {
     logger.warn('Perplexity API key not found in environment', {
-      envKeys: Object.keys(process.env).filter(k => k.includes('PERPLEXITY') || k.includes('SEARCH'))
+      envKeys: Object.keys(process.env).filter(
+        (k) => k.includes('PERPLEXITY') || k.includes('SEARCH')
+      ),
     });
   }
 
@@ -87,9 +89,9 @@ export async function searchWeb(
       logger.info('Falling back to Google Custom Search', { query });
       return await searchWebWithGoogle(query, options);
     } catch (error) {
-      logger.error('Google search also failed', { 
+      logger.error('Google search also failed', {
         error: error instanceof Error ? error.message : String(error),
-        query 
+        query,
       });
       throw error; // Re-throw if both fail
     }
@@ -99,10 +101,12 @@ export async function searchWeb(
   logger.error('Both Perplexity and Google search failed or not configured', {
     hasPerplexityKey: !!process.env.PERPLEXITY_API_KEY,
     hasGoogleKey: !!process.env.GOOGLE_CUSTOM_SEARCH_API_KEY,
-    hasGoogleEngineId: !!process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+    hasGoogleEngineId: !!process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID,
   });
-  
-  throw new Error('No search API configured or both APIs failed. Please set PERPLEXITY_API_KEY or GOOGLE_CUSTOM_SEARCH_API_KEY');
+
+  throw new Error(
+    'No search API configured or both APIs failed. Please set PERPLEXITY_API_KEY or GOOGLE_CUSTOM_SEARCH_API_KEY'
+  );
 }
 
 /**
@@ -139,9 +143,7 @@ async function searchWebWithGoogle(
     params.append('dateRestrict', options.dateRestrict);
   }
 
-  const response = await fetch(
-    `https://www.googleapis.com/customsearch/v1?${params}`
-  );
+  const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`);
 
   if (!response.ok) {
     throw new Error(`Google Search API error: ${response.statusText}`);
@@ -168,10 +170,10 @@ async function searchWebWithPerplexity(
   }
 
   const { logger } = await import('@/lib/logger');
-  logger.info('Using Perplexity AI for web search', { 
-    query, 
+  logger.info('Using Perplexity AI for web search', {
+    query,
     numResults: options?.numResults,
-    hasApiKey: !!process.env.PERPLEXITY_API_KEY 
+    hasApiKey: !!process.env.PERPLEXITY_API_KEY,
   });
 
   // Build query with optional site restriction
@@ -195,11 +197,11 @@ async function searchWebWithPerplexity(
   // Use Perplexity's chat completions API for web search
   // Try "sonar-pro" first (best quality), fall back to "sonar" if not available
   let model = 'sonar-pro'; // Online model for real-time web browsing
-  
+
   let response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+      Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -227,7 +229,7 @@ async function searchWebWithPerplexity(
       response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+          Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -255,26 +257,26 @@ async function searchWebWithPerplexity(
       statusText: response.statusText,
       errorText: errorText.substring(0, 500),
       model,
-      query: searchQuery.substring(0, 100)
+      query: searchQuery.substring(0, 100),
     });
     throw new Error(`Perplexity API error: ${response.status} - ${errorText.substring(0, 200)}`);
   }
 
   const data = await response.json();
-  
+
   // Extract the answer and search results from Perplexity response
   // Perplexity uses search_results array, not citations
   const answer = data.choices?.[0]?.message?.content || '';
   const searchResults = data.search_results || [];
-  
-  logger.info('Perplexity search completed', { 
+
+  logger.info('Perplexity search completed', {
     model,
     answerLength: answer.length,
     searchResultsCount: searchResults.length,
     hasAnswer: !!answer,
-    responseKeys: Object.keys(data)
+    responseKeys: Object.keys(data),
   });
-  
+
   // Convert Perplexity search_results to our SearchResult format
   const results: SearchResult[] = searchResults
     .slice(0, options?.numResults || 5)
@@ -320,8 +322,8 @@ async function searchWebWithPerplexity(
 
   // If we have no answer and no results, something went wrong
   if (!answer && results.length === 0) {
-    logger.warn('Perplexity returned no answer and no search results', { 
-      responseData: JSON.stringify(data).substring(0, 500) 
+    logger.warn('Perplexity returned no answer and no search results', {
+      responseData: JSON.stringify(data).substring(0, 500),
     });
     throw new Error('Perplexity API returned no results or answer');
   }
@@ -338,7 +340,7 @@ export async function searchCompanyNews(
   options?: { daysBack?: number }
 ): Promise<SearchResult[]> {
   const dateRestrict = options?.daysBack ? `d${options.daysBack}` : 'd30';
-  
+
   return searchWeb(`${companyName} news`, {
     numResults: 10,
     dateRestrict,
@@ -357,10 +359,7 @@ export async function searchCompanyInfo(companyName: string): Promise<SearchResu
 /**
  * Search within a specific website
  */
-export async function searchSite(
-  query: string,
-  site: string
-): Promise<SearchResult[]> {
+export async function searchSite(query: string, site: string): Promise<SearchResult[]> {
   return searchWeb(query, {
     numResults: 10,
     siteSearch: site,
@@ -405,43 +404,3 @@ export function getSearchProvider(): 'perplexity' | 'google' | 'none' {
   }
   return 'none';
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

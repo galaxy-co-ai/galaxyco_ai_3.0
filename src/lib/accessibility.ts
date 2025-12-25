@@ -1,6 +1,6 @@
 /**
  * Accessibility Utilities
- * 
+ *
  * Helpers for:
  * - Keyboard navigation
  * - ARIA attributes
@@ -34,55 +34,58 @@ export function useKeyboardNavigation<T extends HTMLElement>({
 }) {
   const currentIndex = useRef(0);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<T>) => {
-    const isVertical = orientation === 'vertical';
-    const nextKey = isVertical ? 'ArrowDown' : 'ArrowRight';
-    const prevKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<T>) => {
+      const isVertical = orientation === 'vertical';
+      const nextKey = isVertical ? 'ArrowDown' : 'ArrowRight';
+      const prevKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
 
-    switch (e.key) {
-      case nextKey:
-        e.preventDefault();
-        if (currentIndex.current < itemCount - 1) {
-          currentIndex.current++;
-        } else if (loop) {
+      switch (e.key) {
+        case nextKey:
+          e.preventDefault();
+          if (currentIndex.current < itemCount - 1) {
+            currentIndex.current++;
+          } else if (loop) {
+            currentIndex.current = 0;
+          }
+          break;
+
+        case prevKey:
+          e.preventDefault();
+          if (currentIndex.current > 0) {
+            currentIndex.current--;
+          } else if (loop) {
+            currentIndex.current = itemCount - 1;
+          }
+          break;
+
+        case 'Home':
+          e.preventDefault();
           currentIndex.current = 0;
-        }
-        break;
+          break;
 
-      case prevKey:
-        e.preventDefault();
-        if (currentIndex.current > 0) {
-          currentIndex.current--;
-        } else if (loop) {
+        case 'End':
+          e.preventDefault();
           currentIndex.current = itemCount - 1;
-        }
-        break;
+          break;
 
-      case 'Home':
-        e.preventDefault();
-        currentIndex.current = 0;
-        break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          onSelect?.(currentIndex.current);
+          break;
 
-      case 'End':
-        e.preventDefault();
-        currentIndex.current = itemCount - 1;
-        break;
+        case 'Escape':
+          e.preventDefault();
+          onEscape?.();
+          break;
 
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        onSelect?.(currentIndex.current);
-        break;
-
-      case 'Escape':
-        e.preventDefault();
-        onEscape?.();
-        break;
-
-      default:
-        return;
-    }
-  }, [itemCount, onSelect, onEscape, orientation, loop]);
+        default:
+          return;
+      }
+    },
+    [itemCount, onSelect, onEscape, orientation, loop]
+  );
 
   return { currentIndex: currentIndex.current, handleKeyDown };
 }
@@ -157,12 +160,12 @@ export function useRestoreFocus() {
 let idCounter = 0;
 export function useUniqueId(prefix: string = 'id'): string {
   const id = useRef<string | undefined>(undefined);
-  
+
   if (!id.current) {
     idCounter++;
     id.current = `${prefix}-${idCounter}`;
   }
-  
+
   return id.current;
 }
 
@@ -243,7 +246,7 @@ export function getFocusableElements(container: HTMLElement): HTMLElement[] {
     container.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     )
-  ).filter(el => !el.hasAttribute('disabled'));
+  ).filter((el) => !el.hasAttribute('disabled'));
 }
 
 /**
@@ -294,7 +297,7 @@ export function useAnnouncer() {
  * Calculate relative luminance of a color (WCAG 2.0)
  */
 function getLuminance(r: number, g: number, b: number): number {
-  const [rs, gs, bs] = [r, g, b].map(c => {
+  const [rs, gs, bs] = [r, g, b].map((c) => {
     c = c / 255;
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   });
@@ -322,11 +325,13 @@ export function getContrastRatio(color1: string, color2: string): number {
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16),
-  } : null;
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 }
 
 /**
@@ -339,9 +344,7 @@ export function meetsContrastStandard(
   isLargeText: boolean = false
 ): boolean {
   const ratio = getContrastRatio(color1, color2);
-  const minimumRatio = level === 'AAA'
-    ? (isLargeText ? 4.5 : 7)
-    : (isLargeText ? 3 : 4.5);
+  const minimumRatio = level === 'AAA' ? (isLargeText ? 4.5 : 7) : isLargeText ? 3 : 4.5;
 
   return ratio >= minimumRatio;
 }
@@ -379,9 +382,10 @@ export function getSkipLinks(): SkipLinkProps[] {
 export function usePrefersReducedMotion(): boolean {
   const query = '(prefers-reduced-motion: reduce)';
   const mediaQuery = typeof window !== 'undefined' ? window.matchMedia(query) : null;
-  
-  const [prefersReducedMotion, setPrefersReducedMotion] = 
-    React.useState(mediaQuery?.matches ?? false);
+
+  const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(
+    mediaQuery?.matches ?? false
+  );
 
   useEffect(() => {
     if (!mediaQuery) return;

@@ -42,10 +42,7 @@ export function getPusherClient(): Pusher | null {
  * Check if Pusher client is available
  */
 export function isPusherClientAvailable(): boolean {
-  return !!(
-    typeof window !== 'undefined' &&
-    process.env.NEXT_PUBLIC_PUSHER_KEY
-  );
+  return !!(typeof window !== 'undefined' && process.env.NEXT_PUBLIC_PUSHER_KEY);
 }
 
 /**
@@ -167,4 +164,3 @@ export function unbindEvent(
     channel.unbind(eventType);
   }
 }
-

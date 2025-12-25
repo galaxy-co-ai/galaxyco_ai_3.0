@@ -5,12 +5,12 @@ import { trackCacheHit, type CacheType } from '@/lib/observability';
 /**
  * Redis Cache Helper Utilities
  * Provides convenient functions for caching with TTL
- * 
+ *
  * Features:
  * - Graceful degradation when Redis is unavailable
  * - Health tracking to avoid spamming logs on failures
  * - Auto-recovery after temporary outages
- * 
+ *
  * Neptune Context Cache Keys:
  * - context:crm:{workspaceId} - CRM data (TTL: 5 min)
  * - context:calendar:{workspaceId} - Calendar events (TTL: 2 min)
@@ -27,18 +27,18 @@ import { trackCacheHit, type CacheType } from '@/lib/observability';
 // ============================================================================
 
 export const CONTEXT_CACHE_TTL = {
-  CRM: 10 * 60,              // 10 minutes (was 5) - CRM data changes frequently but not per-request
-  CALENDAR: 5 * 60,          // 5 minutes (was 2) - Balance freshness with performance
-  WORKSPACE: 2 * 60 * 60,    // 2 hours (was 1) - Workspace intelligence changes rarely
-  USER_PREFS: 30 * 60,       // 30 minutes (was 15) - User preferences are stable
-  TASKS: 5 * 60,             // 5 minutes (was 3) - Tasks change moderately
-  AGENTS: 20 * 60,           // 20 minutes (was 10) - Agent list is relatively stable
-  MARKETING: 10 * 60,        // 10 minutes (was 5) - Campaign stats need reasonable freshness
-  CONTENT_COCKPIT: 15 * 60,  // 15 minutes (was 10) - Content metrics don't change rapidly
-  FINANCE: 10 * 60,          // 10 minutes (was 5) - Financial data needs reasonable freshness
-  CONVERSATION: 10 * 60,     // 10 minutes (was 5) - Conversation history context
+  CRM: 10 * 60, // 10 minutes (was 5) - CRM data changes frequently but not per-request
+  CALENDAR: 5 * 60, // 5 minutes (was 2) - Balance freshness with performance
+  WORKSPACE: 2 * 60 * 60, // 2 hours (was 1) - Workspace intelligence changes rarely
+  USER_PREFS: 30 * 60, // 30 minutes (was 15) - User preferences are stable
+  TASKS: 5 * 60, // 5 minutes (was 3) - Tasks change moderately
+  AGENTS: 20 * 60, // 20 minutes (was 10) - Agent list is relatively stable
+  MARKETING: 10 * 60, // 10 minutes (was 5) - Campaign stats need reasonable freshness
+  CONTENT_COCKPIT: 15 * 60, // 15 minutes (was 10) - Content metrics don't change rapidly
+  FINANCE: 10 * 60, // 10 minutes (was 5) - Financial data needs reasonable freshness
+  CONVERSATION: 10 * 60, // 10 minutes (was 5) - Conversation history context
   PROACTIVE_INSIGHTS: 10 * 60, // 10 minutes (was 5) - Proactive insights
-  RAG_SEARCH: 30 * 60,       // 30 minutes (was 10) - RAG search results (documents don't change often)
+  RAG_SEARCH: 30 * 60, // 30 minutes (was 10) - RAG search results (documents don't change often)
   QUERY_EXPANSION: 2 * 60 * 60, // 2 hours (was 1) - Query expansions are stable for same queries
   WEBSITE_ANALYSIS: 14 * 24 * 60 * 60, // 14 days (was 7) - Website analysis results are stable
 } as const;
@@ -57,8 +57,10 @@ export const ContextCacheKeys = {
   marketing: (workspaceId: string) => `context:marketing:${workspaceId}`,
   contentCockpit: (workspaceId: string) => `context:content:${workspaceId}`,
   finance: (workspaceId: string) => `context:finance:${workspaceId}`,
-  conversation: (workspaceId: string, userId: string) => `context:conversation:${workspaceId}:${userId}`,
-  proactiveInsights: (workspaceId: string, userId: string) => `context:insights:${workspaceId}:${userId}`,
+  conversation: (workspaceId: string, userId: string) =>
+    `context:conversation:${workspaceId}:${userId}`,
+  proactiveInsights: (workspaceId: string, userId: string) =>
+    `context:insights:${workspaceId}:${userId}`,
   // RAG cache keys
   ragSearch: (workspaceId: string, queryHash: string) => `rag:search:${workspaceId}:${queryHash}`,
   queryExpansion: (queryHash: string) => `rag:expand:${queryHash}`,
@@ -83,7 +85,7 @@ export async function getCache<T>(key: string, options: CacheOptions = {}): Prom
     const cached = await redis.get(cacheKey);
 
     markRedisHealthy();
-    
+
     if (cached === null || cached === undefined) {
       return null;
     }
@@ -93,7 +95,7 @@ export async function getCache<T>(key: string, options: CacheOptions = {}): Prom
     if (typeof cached === 'string') {
       return JSON.parse(cached) as T;
     }
-    
+
     // Already parsed by Upstash
     return cached as T;
   } catch (error) {
@@ -111,11 +113,7 @@ export async function getCache<T>(key: string, options: CacheOptions = {}): Prom
 /**
  * Set cached data with TTL
  */
-export async function setCache<T>(
-  key: string,
-  data: T,
-  options: CacheOptions = {}
-): Promise<void> {
+export async function setCache<T>(key: string, data: T, options: CacheOptions = {}): Promise<void> {
   if (!shouldUseRedis() || !redis) return;
 
   try {
@@ -167,10 +165,10 @@ export async function invalidateCachePattern(
   try {
     const { prefix = 'cache' } = options;
     const fullPattern = `${prefix}:${pattern}`;
-    
+
     // Get all keys matching pattern
     const keys = await redis.keys(fullPattern);
-    
+
     if (keys.length > 0) {
       await redis.del(...keys);
     }
@@ -204,22 +202,22 @@ export async function getCacheOrFetch<T>(
 
   // Try to get from cache
   const cached = await getCache<T>(key, options);
-  
+
   if (cached !== null) {
     // Track cache hit
     trackCacheHit(cacheType, true);
-    
+
     // Increment Redis counter for API metrics
     if (shouldUseRedis() && redis) {
       redis.incr('metrics:cache:hits').catch(() => {});
     }
-    
+
     return cached;
   }
 
   // Track cache miss
   trackCacheHit(cacheType, false);
-  
+
   // Increment Redis counter for API metrics
   if (shouldUseRedis() && redis) {
     redis.incr('metrics:cache:misses').catch(() => {});
@@ -230,11 +228,3 @@ export async function getCacheOrFetch<T>(
   await setCache(key, data, options);
   return data;
 }
-
-
-
-
-
-
-
-

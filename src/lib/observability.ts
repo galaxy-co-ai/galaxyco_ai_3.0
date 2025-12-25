@@ -1,9 +1,9 @@
 /**
  * Observability Module - Sentry Performance Tracking
- * 
+ *
  * This module provides utilities for tracking Neptune AI performance metrics
  * using Sentry's metrics and tracing capabilities.
- * 
+ *
  * Metrics tracked:
  * - neptune.response_time - Request duration in milliseconds
  * - neptune.tokens_used - Token usage per request
@@ -113,13 +113,14 @@ export async function trackDatabaseQuery<T>(
   queryFn: () => Promise<T>
 ): Promise<T> {
   const start = Date.now();
-  
+
   try {
     const result = await queryFn();
     const duration = Date.now() - start;
-    
+
     // Track query time using custom event
-    if (duration > 100) { // Only track queries >100ms to reduce noise
+    if (duration > 100) {
+      // Only track queries >100ms to reduce noise
       Sentry.captureEvent({
         message: 'Neptune Database Query',
         level: duration > 500 ? 'warning' : 'info',
@@ -131,7 +132,7 @@ export async function trackDatabaseQuery<T>(
         extra: { duration },
       });
     }
-    
+
     // Flag slow queries for investigation
     if (duration > 500) {
       logger.warn('[Observability] Slow query detected', {
@@ -139,7 +140,7 @@ export async function trackDatabaseQuery<T>(
         duration,
       });
     }
-    
+
     return result;
   } catch (error) {
     // Track query errors
@@ -149,12 +150,12 @@ export async function trackDatabaseQuery<T>(
         query: queryName,
       },
     });
-    
+
     logger.error('[Observability] Database query error', {
       query: queryName,
       error,
     });
-    
+
     throw error;
   }
 }
@@ -170,12 +171,12 @@ export async function trackDatabaseQuery<T>(
 export function trackNeptuneError(error: Error, context: Record<string, any>) {
   try {
     Sentry.captureException(error, {
-      tags: { 
+      tags: {
         component: 'neptune',
         error_type: error.name,
         workspace: context.workspaceId || 'unknown',
       },
-      extra: context
+      extra: context,
     });
 
     logger.error('[Observability] Neptune error tracked', {

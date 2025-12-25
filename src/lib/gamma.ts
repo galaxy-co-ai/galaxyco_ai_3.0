@@ -1,6 +1,6 @@
 /**
  * Gamma.app API Client
- * 
+ *
  * Creates polished presentations, documents, and more using Gamma's AI.
  * API Docs: https://developers.gamma.app
  */
@@ -74,7 +74,7 @@ export async function generateWithGamma(
     const response = await fetch(`${GAMMA_API_BASE}/generate`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -87,20 +87,20 @@ export async function generateWithGamma(
     });
 
     if (!response.ok) {
-      const errorData = await response.json() as GammaError;
-      logger.error('Gamma API error', { 
-        status: response.status, 
-        error: errorData 
+      const errorData = (await response.json()) as GammaError;
+      logger.error('Gamma API error', {
+        status: response.status,
+        error: errorData,
       });
       throw new Error(errorData.message || `Gamma API error: ${response.status}`);
     }
 
-    const data = await response.json() as GammaGenerateResponse;
-    
-    logger.info('Gamma generation successful', { 
-      id: data.id, 
+    const data = (await response.json()) as GammaGenerateResponse;
+
+    logger.info('Gamma generation successful', {
+      id: data.id,
       title: data.title,
-      cardCount: data.cards?.length 
+      cardCount: data.cards?.length,
     });
 
     return data;
@@ -124,7 +124,7 @@ export async function pollGammaGeneration(
     try {
       const response = await fetch(`${GAMMA_API_BASE}/generations/${generationId}`, {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
       });
 
@@ -132,7 +132,7 @@ export async function pollGammaGeneration(
         throw new Error(`Failed to check generation status: ${response.status}`);
       }
 
-      const data = await response.json() as GammaGenerateResponse;
+      const data = (await response.json()) as GammaGenerateResponse;
 
       if (data.status === 'completed') {
         return data;
@@ -143,7 +143,7 @@ export async function pollGammaGeneration(
       }
 
       // Still processing, wait and retry
-      await new Promise(resolve => setTimeout(resolve, intervalMs));
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
     } catch (error) {
       logger.error('Error polling Gamma generation', { generationId, attempt, error });
       throw error;
@@ -156,16 +156,18 @@ export async function pollGammaGeneration(
 /**
  * Map our document types to Gamma content types
  */
-export function mapDocTypeToGammaType(docTypeId: string): GammaGenerateRequest['contentType'] | null {
+export function mapDocTypeToGammaType(
+  docTypeId: string
+): GammaGenerateRequest['contentType'] | null {
   const mapping: Record<string, GammaGenerateRequest['contentType']> = {
-    'presentation': 'presentation',
-    'document': 'document',
-    'proposal': 'document',
-    'newsletter': 'document',
-    'blog': 'document',
-    'social': 'social',
+    presentation: 'presentation',
+    document: 'document',
+    proposal: 'document',
+    newsletter: 'document',
+    blog: 'document',
+    social: 'social',
   };
-  
+
   return mapping[docTypeId] || null;
 }
 
@@ -178,27 +180,27 @@ export function buildGammaPrompt(
   answers: Record<string, string>
 ): string {
   const parts: string[] = [];
-  
+
   // Add document type context
   parts.push(`Create a professional ${docTypeName.toLowerCase()}.`);
-  
+
   // Add relevant answers as context
   const answerEntries = Object.entries(answers).filter(([_, value]) => value?.trim());
-  
+
   if (answerEntries.length > 0) {
     parts.push('\nContext and requirements:');
-    
+
     for (const [key, value] of answerEntries) {
       // Convert camelCase to readable labels
       const label = key
         .replace(/([A-Z])/g, ' $1')
-        .replace(/^./, str => str.toUpperCase())
+        .replace(/^./, (str) => str.toUpperCase())
         .trim();
-      
+
       parts.push(`- ${label}: ${value}`);
     }
   }
-  
+
   // Add type-specific instructions
   switch (docTypeId) {
     case 'presentation':
@@ -214,7 +216,7 @@ export function buildGammaPrompt(
       parts.push('\nOptimize for readability with headers, bullet points, and a compelling intro.');
       break;
   }
-  
+
   return parts.join('\n');
 }
 
@@ -223,26 +225,33 @@ export function buildGammaPrompt(
  */
 export function mapToneToGammaStyle(tone?: string): GammaGenerateRequest['style'] {
   if (!tone) return 'professional';
-  
+
   const toneLower = tone.toLowerCase();
-  
-  if (toneLower.includes('creative') || toneLower.includes('playful') || toneLower.includes('fun')) {
+
+  if (
+    toneLower.includes('creative') ||
+    toneLower.includes('playful') ||
+    toneLower.includes('fun')
+  ) {
     return 'creative';
   }
-  if (toneLower.includes('bold') || toneLower.includes('impactful') || toneLower.includes('vibrant')) {
+  if (
+    toneLower.includes('bold') ||
+    toneLower.includes('impactful') ||
+    toneLower.includes('vibrant')
+  ) {
     return 'bold';
   }
-  if (toneLower.includes('minimal') || toneLower.includes('clean') || toneLower.includes('simple')) {
+  if (
+    toneLower.includes('minimal') ||
+    toneLower.includes('clean') ||
+    toneLower.includes('simple')
+  ) {
     return 'minimal';
   }
-  
+
   return 'professional';
 }
 
 // Export types
-export type { 
-  GammaGenerateRequest, 
-  GammaGenerateResponse, 
-  GammaCard,
-  GammaError 
-};
+export type { GammaGenerateRequest, GammaGenerateResponse, GammaCard, GammaError };

@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 /**
  * Standardized API Error Handler
  * Provides consistent error handling across all API routes
- * 
+ *
  * @module api-error-handler
  * @description Centralized error handling utility for API routes.
  * Automatically classifies errors and returns appropriate HTTP status codes
@@ -20,11 +20,11 @@ export interface ApiError {
 
 /**
  * Creates a standardized error response for API routes
- * 
+ *
  * @param error - The error that occurred (Error instance or unknown)
  * @param context - Optional context string for logging (e.g., 'Create user error')
  * @returns NextResponse with standardized error format
- * 
+ *
  * @example
  * ```typescript
  * try {
@@ -39,7 +39,7 @@ export function createErrorResponse(
   context?: string
 ): NextResponse<{ error: string }> {
   const errorDetails = error instanceof Error ? error : new Error(String(error));
-  
+
   // Log error with context
   logger.error(context || 'API error', errorDetails);
 
@@ -47,15 +47,12 @@ export function createErrorResponse(
   const { statusCode, message } = classifyError(errorDetails);
 
   // Return standardized error response
-  return NextResponse.json(
-    { error: message },
-    { status: statusCode }
-  );
+  return NextResponse.json({ error: message }, { status: statusCode });
 }
 
 /**
  * Classifies errors and returns appropriate HTTP status code and user-friendly message
- * 
+ *
  * @param error - The error to classify
  * @returns Object with statusCode and message
  * @internal
@@ -183,11 +180,11 @@ function classifyError(error: Error): { statusCode: number; message: string } {
 
 /**
  * Wraps route handler functions with automatic error handling
- * 
+ *
  * @param handler - The route handler function to wrap
  * @param context - Optional context string for error logging
  * @returns Wrapped handler that automatically catches and handles errors
- * 
+ *
  * @example
  * ```typescript
  * export const GET = withErrorHandler(async (request: Request) => {
@@ -211,11 +208,11 @@ export function withErrorHandler<T extends (...args: any[]) => Promise<NextRespo
 
 /**
  * Creates a success response with consistent format
- * 
+ *
  * @param data - The data to return in the response
  * @param statusCode - HTTP status code (default: 200)
  * @returns NextResponse with data wrapped in { data } object
- * 
+ *
  * @example
  * ```typescript
  * return createSuccessResponse({ id: '123', name: 'John' }, 201);
@@ -230,11 +227,11 @@ export function createSuccessResponse<T>(
 
 /**
  * Creates a paginated response with consistent format
- * 
+ *
  * @param items - Array of items for current page
  * @param pagination - Pagination metadata
  * @returns NextResponse with items and pagination info
- * 
+ *
  * @example
  * ```typescript
  * return createPaginatedResponse(users, {
@@ -262,4 +259,3 @@ export function createPaginatedResponse<T>(
     pagination,
   });
 }
-

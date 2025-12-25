@@ -1,6 +1,6 @@
 /**
  * Dashboard v2 Data Fetching & Helper Functions
- * 
+ *
  * Centralized data fetching and business logic for the dashboard.
  */
 
@@ -26,7 +26,10 @@ import { logger } from '@/lib/logger';
  * @param userName - The user's first name for personalized greeting
  * @returns Complete dashboard data
  */
-export async function getDashboardData(workspaceId: string, userName: string = 'there'): Promise<DashboardV2Data> {
+export async function getDashboardData(
+  workspaceId: string,
+  userName: string = 'there'
+): Promise<DashboardV2Data> {
   // If no workspaceId, return empty data immediately
   if (!workspaceId) {
     logger.warn('getDashboardData called without workspaceId');
@@ -88,9 +91,10 @@ export async function getDashboardData(workspaceId: string, userName: string = '
 
       // Fetch CRM contact stats
       safeQuery(
-        db.select({
-          total: count(),
-        })
+        db
+          .select({
+            total: count(),
+          })
           .from(contacts)
           .where(eq(contacts.workspaceId, workspaceId)),
         [{ total: 0 }],
@@ -99,15 +103,17 @@ export async function getDashboardData(workspaceId: string, userName: string = '
 
       // Fetch finance integrations (simplified query)
       safeQuery(
-        db.query.integrations.findMany({
-          where: and(
-            eq(integrations.workspaceId, workspaceId),
-            eq(integrations.status, 'active')
+        db.query.integrations
+          .findMany({
+            where: and(
+              eq(integrations.workspaceId, workspaceId),
+              eq(integrations.status, 'active')
+            ),
+          })
+          .then((results) =>
+            // Filter for finance providers in JS to avoid SQL enum issues
+            results.filter((i) => ['quickbooks', 'stripe', 'shopify'].includes(i.provider))
           ),
-        }).then(results => 
-          // Filter for finance providers in JS to avoid SQL enum issues
-          results.filter(i => ['quickbooks', 'stripe', 'shopify'].includes(i.provider))
-        ),
         [],
         'integrations'
       ),
@@ -130,10 +136,7 @@ export async function getDashboardData(workspaceId: string, userName: string = '
       // Previous period: Agents (7-14 days ago)
       safeQuery(
         db.query.agents.findMany({
-          where: and(
-            eq(agents.workspaceId, workspaceId),
-            gte(agents.createdAt, fourteenDaysAgo)
-          ),
+          where: and(eq(agents.workspaceId, workspaceId), gte(agents.createdAt, fourteenDaysAgo)),
         }),
         [],
         'agents-previous'
@@ -154,12 +157,12 @@ export async function getDashboardData(workspaceId: string, userName: string = '
 
       // Previous period: CRM contacts (7-14 days ago)
       safeQuery(
-        db.select({ total: count() })
+        db
+          .select({ total: count() })
           .from(contacts)
-          .where(and(
-            eq(contacts.workspaceId, workspaceId),
-            gte(contacts.createdAt, fourteenDaysAgo)
-          )),
+          .where(
+            and(eq(contacts.workspaceId, workspaceId), gte(contacts.createdAt, fourteenDaysAgo))
+          ),
         [{ total: 0 }],
         'contacts-previous'
       ),
@@ -179,7 +182,7 @@ export async function getDashboardData(workspaceId: string, userName: string = '
     };
 
     // Calculate current stats
-    const currentAgents = agentsData.filter(a => a.status === 'active').length;
+    const currentAgents = agentsData.filter((a) => a.status === 'active').length;
     const currentTasks = tasksData.length;
     const currentContacts = crmData[0]?.total ?? 0;
 
@@ -188,23 +191,18 @@ export async function getDashboardData(workspaceId: string, userName: string = '
       db
         .select({ count: count() })
         .from(contacts)
-        .where(
-          and(
-            eq(contacts.workspaceId, workspaceId),
-            eq(contacts.leadStatus, 'hot')
-          )
-        ),
+        .where(and(eq(contacts.workspaceId, workspaceId), eq(contacts.leadStatus, 'hot'))),
       [{ count: 0 }],
       'hot-leads'
     );
     const hotLeadsCount = hotLeadsData?.count ?? 0;
 
     // Calculate previous stats (for 7-14 days ago)
-    const previousAgents = agentsDataPrevious.filter(a => {
+    const previousAgents = agentsDataPrevious.filter((a) => {
       const createdAt = new Date(a.createdAt);
       return createdAt >= fourteenDaysAgo && createdAt < sevenDaysAgo && a.status === 'active';
     }).length;
-    const previousTasks = tasksDataPrevious.filter(t => {
+    const previousTasks = tasksDataPrevious.filter((t) => {
       const completedAt = t.completedAt ? new Date(t.completedAt) : null;
       return completedAt && completedAt >= fourteenDaysAgo && completedAt < sevenDaysAgo;
     }).length;
@@ -279,7 +277,7 @@ export function getEmptyDashboardData(userName: string = 'there'): DashboardV2Da
     nextStep: {
       id: 'get-started',
       title: 'Welcome to GalaxyCo',
-      why: 'Let\'s get you set up with your first automation',
+      why: "Let's get you set up with your first automation",
       benefits: [
         'Save hours every week',
         'Never miss important tasks',
@@ -321,11 +319,7 @@ function determineNextStep(
       id: 'create-first-agent',
       title: 'Create Your First Agent',
       why: 'Agents automate repetitive work so you can focus on what matters',
-      benefits: [
-        'Save 10+ hours per week',
-        'Never miss a follow-up',
-        'Work while you sleep',
-      ],
+      benefits: ['Save 10+ hours per week', 'Never miss a follow-up', 'Work while you sleep'],
       cta: 'Create Agent',
       href: '/agents?action=create',
       priority: 10,
@@ -338,11 +332,7 @@ function determineNextStep(
       id: 'add-first-contact',
       title: 'Add Your First Contact',
       why: 'Start building relationships and tracking conversations',
-      benefits: [
-        'Organize your network',
-        'Track every interaction',
-        'Never forget to follow up',
-      ],
+      benefits: ['Organize your network', 'Track every interaction', 'Never forget to follow up'],
       cta: 'Add Contact',
       href: '/crm?action=create',
       priority: 9,
@@ -355,11 +345,7 @@ function determineNextStep(
       id: 'follow-up-hot-leads',
       title: 'Follow Up with Hot Leads',
       why: `${stats.hotLeads} lead${stats.hotLeads > 1 ? 's' : ''} rated 'Hot' need your attention`,
-      benefits: [
-        'Close deals faster',
-        'Maintain momentum',
-        'Build relationships',
-      ],
+      benefits: ['Close deals faster', 'Maintain momentum', 'Build relationships'],
       cta: 'Open CRM',
       href: '/crm?filter=hot',
       priority: 8,
@@ -388,11 +374,7 @@ function determineNextStep(
     id: 'review-activity',
     title: 'Review What Galaxy Did Today',
     why: 'See how your agents and automations are performing',
-    benefits: [
-      'Track your progress',
-      'Spot new opportunities',
-      'Optimize your workflows',
-    ],
+    benefits: ['Track your progress', 'Spot new opportunities', 'Optimize your workflows'],
     cta: 'View Activity',
     href: '/activity',
     priority: 1,
@@ -409,14 +391,17 @@ function generateWinsFromActivity(
   const wins: Win[] = [];
 
   // Group executions by agent
-  const executionsByAgent = executions.reduce((acc, exec) => {
-    const agentName = exec.agent?.name ?? 'Unknown Agent';
-    if (!acc[agentName]) {
-      acc[agentName] = { count: 0, mostRecent: exec.createdAt };
-    }
-    acc[agentName].count++;
-    return acc;
-  }, {} as Record<string, { count: number; mostRecent: Date }>);
+  const executionsByAgent = executions.reduce(
+    (acc, exec) => {
+      const agentName = exec.agent?.name ?? 'Unknown Agent';
+      if (!acc[agentName]) {
+        acc[agentName] = { count: 0, mostRecent: exec.createdAt };
+      }
+      acc[agentName].count++;
+      return acc;
+    },
+    {} as Record<string, { count: number; mostRecent: Date }>
+  );
 
   // Create wins for agent executions
   Object.entries(executionsByAgent).forEach(([agentName, data]) => {
@@ -445,9 +430,7 @@ function generateWinsFromActivity(
   }
 
   // Sort by timestamp (most recent first) and limit to 10
-  return wins
-    .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-    .slice(0, 10);
+  return wins.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 10);
 }
 
 /**
@@ -474,7 +457,10 @@ function generatePathways(stats: DashboardStats): JourneyPathway[] {
       icon: 'Users',
       iconColor: 'text-blue-600',
       iconBg: 'bg-blue-100',
-      badge: stats.hotLeads > 0 ? `${stats.hotLeads} hot lead${stats.hotLeads > 1 ? 's' : ''}` : undefined,
+      badge:
+        stats.hotLeads > 0
+          ? `${stats.hotLeads} hot lead${stats.hotLeads > 1 ? 's' : ''}`
+          : undefined,
       order: stats.hotLeads > 0 ? 1 : 2,
     },
     {
@@ -605,16 +591,16 @@ function getDefaultPathways(): JourneyPathway[] {
  */
 function calculateOnboardingCompletion(stats: DashboardStats): number {
   let completion = 0;
-  
+
   // 33% for creating agents
   if (stats.totalAgents > 0) completion += 33;
-  
+
   // 33% for adding contacts
   if (stats.crmContacts > 0) completion += 33;
-  
+
   // 34% for connecting integrations
   if (stats.financeConnections > 0) completion += 34;
-  
+
   return completion;
 }
 

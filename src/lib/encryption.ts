@@ -18,7 +18,7 @@ interface EncryptedData {
  */
 function getEncryptionKey(): Buffer {
   const key = process.env.ENCRYPTION_KEY;
-  
+
   if (!key) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error('ENCRYPTION_KEY environment variable is required in production');
@@ -88,11 +88,7 @@ export function decryptApiKey(encryptedData: string | EncryptedData): string {
     }
 
     const key = getEncryptionKey();
-    const decipher = crypto.createDecipheriv(
-      'aes-256-gcm',
-      key,
-      Buffer.from(iv, 'hex')
-    );
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'hex'));
 
     decipher.setAuthTag(Buffer.from(authTag, 'hex'));
 

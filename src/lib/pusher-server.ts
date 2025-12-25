@@ -41,11 +41,7 @@ function getPusher(): Pusher {
  * Check if Pusher is configured
  */
 export function isPusherConfigured(): boolean {
-  return !!(
-    process.env.PUSHER_APP_ID &&
-    process.env.PUSHER_KEY &&
-    process.env.PUSHER_SECRET
-  );
+  return !!(process.env.PUSHER_APP_ID && process.env.PUSHER_KEY && process.env.PUSHER_SECRET);
 }
 
 // ============================================================================
@@ -129,7 +125,7 @@ export async function triggerWorkspaceEvent(
   try {
     const pusher = getPusher();
     const channel = getWorkspaceChannel(workspaceId);
-    
+
     const event: PusherEvent = {
       type: eventType,
       data,
@@ -138,7 +134,7 @@ export async function triggerWorkspaceEvent(
     };
 
     await pusher.trigger(channel, eventType, event);
-    
+
     logger.debug('[Pusher] Event triggered', { channel, eventType });
     return true;
   } catch (error) {
@@ -165,7 +161,7 @@ export async function triggerUserEvent(
   try {
     const pusher = getPusher();
     const channel = getUserChannel(userId);
-    
+
     const event: PusherEvent = {
       type: eventType,
       data,
@@ -174,7 +170,7 @@ export async function triggerUserEvent(
     };
 
     await pusher.trigger(channel, eventType, event);
-    
+
     logger.debug('[Pusher] User event triggered', { channel, eventType });
     return true;
   } catch (error) {
@@ -202,7 +198,7 @@ export async function triggerBatchEvents(
 
   try {
     const pusher = getPusher();
-    
+
     const batch = events.map((e) => ({
       channel: e.channel,
       name: e.eventType,
@@ -214,7 +210,7 @@ export async function triggerBatchEvents(
     }));
 
     await pusher.triggerBatch(batch);
-    
+
     logger.debug('[Pusher] Batch events triggered', { count: events.length });
     return true;
   } catch (error) {
@@ -366,4 +362,3 @@ export function authenticateChannel(
   // For private channels, just authenticate
   return pusher.authorizeChannel(socketId, channel);
 }
-

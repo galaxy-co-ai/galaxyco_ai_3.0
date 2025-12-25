@@ -45,7 +45,7 @@ export async function getConnectedApps(
       workspaceId,
       userId,
       count: apps.length,
-      providers: apps.map(a => a.provider),
+      providers: apps.map((a) => a.provider),
     });
 
     return apps;
@@ -63,10 +63,7 @@ export async function getConnectedApps(
 /**
  * Check if a specific provider is connected
  */
-export function isProviderConnected(
-  connectedApps: ConnectedApp[],
-  provider: string
-): boolean {
+export function isProviderConnected(connectedApps: ConnectedApp[], provider: string): boolean {
   return connectedApps.some(
     (app) => app.provider.toLowerCase() === provider.toLowerCase() && app.status === 'active'
   );

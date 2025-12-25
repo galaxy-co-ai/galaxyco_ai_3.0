@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import { track } from '@vercel/analytics';
 
 // Generate or get session ID (matching useAnalytics hook)
 function getSessionId(): string {
   if (typeof window === 'undefined') return '';
-  
+
   let sessionId = sessionStorage.getItem('analytics_session_id');
   if (!sessionId) {
     sessionId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -16,10 +16,10 @@ function getSessionId(): string {
 
 /**
  * Track a click event
- * 
+ *
  * @param elementId - Unique identifier for the clicked element (e.g., 'sidebar_dashboard', 'cta_create_contact')
  * @param metadata - Optional additional metadata (e.g., { buttonText: 'Create', section: 'crm' })
- * 
+ *
  * @example
  * ```tsx
  * trackClick('sidebar_dashboard');
@@ -61,14 +61,17 @@ export function trackClick(elementId: string, metadata?: Record<string, unknown>
 
 /**
  * Track custom events in Vercel Analytics
- * 
+ *
  * @example
  * trackVercelEvent('Agent Created', { type: 'sales', name: agentName });
  * trackVercelEvent('Subscription Upgraded', { plan: 'Pro', amount: 29 });
  */
-export function trackVercelEvent(eventName: string, properties?: Record<string, string | number | boolean>) {
+export function trackVercelEvent(
+  eventName: string,
+  properties?: Record<string, string | number | boolean>
+) {
   if (typeof window === 'undefined') return;
-  
+
   try {
     track(eventName, properties);
   } catch (error) {
@@ -83,12 +86,12 @@ export const VercelEvents = {
   // User Onboarding
   SIGNUP_COMPLETED: 'Signup Completed',
   ONBOARDING_COMPLETED: 'Onboarding Completed',
-  
+
   // AI Features
   AGENT_CREATED: 'Agent Created',
   CHAT_STARTED: 'Chat Started',
   WORKFLOW_CREATED: 'Workflow Created',
-  
+
   // Billing
   SUBSCRIPTION_STARTED: 'Subscription Started',
   SUBSCRIPTION_UPGRADED: 'Subscription Upgraded',

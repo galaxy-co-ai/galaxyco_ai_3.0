@@ -53,9 +53,7 @@ function getResend(): Resend {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
-    throw new Error(
-      'Resend not configured. Please set RESEND_API_KEY environment variable.'
-    );
+    throw new Error('Resend not configured. Please set RESEND_API_KEY environment variable.');
   }
 
   resendClient = new Resend(apiKey);
@@ -108,12 +106,8 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
       html: options.html || undefined,
       text: options.text || undefined,
       replyTo: options.replyTo || undefined,
-      cc: options.cc 
-        ? (Array.isArray(options.cc) ? options.cc : [options.cc]) 
-        : undefined,
-      bcc: options.bcc 
-        ? (Array.isArray(options.bcc) ? options.bcc : [options.bcc]) 
-        : undefined,
+      cc: options.cc ? (Array.isArray(options.cc) ? options.cc : [options.cc]) : undefined,
+      bcc: options.bcc ? (Array.isArray(options.bcc) ? options.bcc : [options.bcc]) : undefined,
       tags: options.tags || undefined,
     };
 
@@ -139,8 +133,8 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
       messageId: data?.id,
     };
   } catch (error) {
-    logger.error('[Email] Exception sending email', { 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    logger.error('[Email] Exception sending email', {
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return {
       success: false,
@@ -180,9 +174,7 @@ export async function sendBulkEmails(
     const batch = emails.slice(i, i + batchSize);
 
     // Send batch in parallel
-    const batchResults = await Promise.all(
-      batch.map((email) => sendEmail(email))
-    );
+    const batchResults = await Promise.all(batch.map((email) => sendEmail(email)));
 
     for (const result of batchResults) {
       results.push(result);
@@ -294,7 +286,9 @@ export function getFollowUpEmailTemplate(
   companyName: string,
   customMessage?: string
 ): EmailTemplate {
-  const message = customMessage || `I wanted to follow up on our recent conversation and see if you had any questions about how ${companyName} can help your business.`;
+  const message =
+    customMessage ||
+    `I wanted to follow up on our recent conversation and see if you had any questions about how ${companyName} can help your business.`;
 
   return {
     subject: `Following up - ${senderName} from ${companyName}`,
@@ -367,14 +361,18 @@ export function getCampaignEmailTemplate(
               ${body.replace(/\n/g, '<br>')}
             </div>
             
-            ${ctaText && ctaUrl ? `
+            ${
+              ctaText && ctaUrl
+                ? `
               <div style="text-align: center; margin: 30px 0;">
                 <a href="${ctaUrl}" 
                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; padding: 14px 35px; text-decoration: none; border-radius: 25px; font-weight: 600; display: inline-block; font-size: 16px;">
                   ${ctaText}
                 </a>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
           
           <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
@@ -437,21 +435,29 @@ export function getMeetingInviteTemplate(
               ${meetingUrl ? `<p style="margin: 8px 0;"><strong>🔗 Join:</strong> <a href="${meetingUrl}" style="color: #6366f1;">${meetingUrl}</a></p>` : ''}
             </div>
             
-            ${agenda ? `
+            ${
+              agenda
+                ? `
               <div style="margin-top: 20px;">
                 <strong>Agenda:</strong>
                 <p style="color: #666;">${agenda}</p>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
             
-            ${meetingUrl ? `
+            ${
+              meetingUrl
+                ? `
               <div style="text-align: center; margin: 25px 0;">
                 <a href="${meetingUrl}" 
                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; font-weight: 600; display: inline-block;">
                   Join Meeting
                 </a>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
             
             <p style="color: #666; font-size: 14px; margin-top: 30px;">
               See you there!<br>
@@ -509,14 +515,18 @@ export function getNotificationTemplate(
             
             <p>${message}</p>
             
-            ${actionText && actionUrl ? `
+            ${
+              actionText && actionUrl
+                ? `
               <div style="margin: 25px 0;">
                 <a href="${actionUrl}" 
                    style="background: #6366f1; color: white; padding: 10px 25px; text-decoration: none; border-radius: 6px; font-weight: 500; display: inline-block;">
                   ${actionText}
                 </a>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
           
           <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">
@@ -573,4 +583,3 @@ export function textToHtml(text: string): string {
     .replace(/"/g, '&quot;')
     .replace(/\n/g, '<br>');
 }
-

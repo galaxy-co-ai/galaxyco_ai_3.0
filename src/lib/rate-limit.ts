@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 /**
  * Rate Limiting Utility using Upstash Redis
  * Implements sliding window rate limiting
- * 
+ *
  * Features:
  * - Graceful degradation when Redis is unavailable
  * - Health tracking to avoid repeated failures
@@ -19,7 +19,7 @@ export interface RateLimitResult {
 
 /**
  * Rate limit a request by identifier (user ID, IP address, etc.)
- * 
+ *
  * @param identifier - Unique identifier (userId, IP, etc.)
  * @param limit - Maximum number of requests allowed
  * @param window - Time window in seconds
@@ -42,10 +42,10 @@ export async function rateLimit(
 
   try {
     const key = `rate-limit:${identifier}`;
-    
+
     // Increment the counter
     const count = await redis.incr(key);
-    
+
     // Set expiration on first request
     if (count === 1) {
       await redis.expire(key, window);
@@ -56,9 +56,9 @@ export async function rateLimit(
     const reset = Date.now() + (ttl > 0 ? ttl * 1000 : window * 1000);
 
     const remaining = Math.max(0, limit - count);
-    
+
     markRedisHealthy();
-    
+
     return {
       success: count <= limit,
       remaining,
@@ -105,9 +105,7 @@ export async function apiRateLimit(
 /**
  * Rate limit for expensive operations (AI, vector search)
  */
-export async function expensiveOperationLimit(
-  identifier: string
-): Promise<RateLimitResult> {
+export async function expensiveOperationLimit(identifier: string): Promise<RateLimitResult> {
   return rateLimit(identifier, 10, 60); // 10 requests per minute
 }
 
@@ -121,11 +119,11 @@ interface RateLimitOptions {
 
 /**
  * Higher-order function to wrap API route handlers with rate limiting
- * 
+ *
  * @param handler - The API route handler function
  * @param options - Rate limit options (limit and window in seconds)
  * @returns Wrapped handler with rate limiting
- * 
+ *
  * @example
  * ```ts
  * export const GET = withRateLimit(async (request) => {
@@ -143,9 +141,10 @@ export function withRateLimit(
     try {
       // Get identifier (userId if authenticated, IP otherwise)
       const { userId } = await auth();
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
-                 request.headers.get('x-real-ip') || 
-                 'anonymous';
+      const ip =
+        request.headers.get('x-forwarded-for')?.split(',')[0] ||
+        request.headers.get('x-real-ip') ||
+        'anonymous';
       const identifier = userId || `ip:${ip}`;
 
       // Check rate limit
@@ -154,14 +153,14 @@ export function withRateLimit(
       if (!result.success) {
         return NextResponse.json(
           { error: 'Too many requests. Please try again later.' },
-          { 
+          {
             status: 429,
             headers: {
               'X-RateLimit-Limit': String(result.limit),
               'X-RateLimit-Remaining': String(result.remaining),
               'X-RateLimit-Reset': String(result.reset),
               'Retry-After': String(Math.ceil((result.reset - Date.now()) / 1000)),
-            }
+            },
           }
         );
       }
@@ -182,11 +181,3 @@ export function withRateLimit(
     }
   };
 }
-
-
-
-
-
-
-
-

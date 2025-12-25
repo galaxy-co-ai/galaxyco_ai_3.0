@@ -1,9 +1,9 @@
 /**
  * SignalWire Integration Library
- * 
+ *
  * Full-featured SignalWire integration for SMS, WhatsApp, Voice, and Video.
  * Compatible with TwiML syntax - drop-in replacement for Twilio.
- * 
+ *
  * Environment Variables:
  * - SIGNALWIRE_PROJECT_ID: Your SignalWire Project ID
  * - SIGNALWIRE_TOKEN: Your SignalWire API Token
@@ -100,7 +100,11 @@ export async function sendSMS(params: SendMessageParams): Promise<SignalWireMess
   const client = getClient();
   const fromNumber = params.from || config.phoneNumber;
 
-  logger.info('Sending SMS via SignalWire', { to: params.to, from: fromNumber, bodyLength: params.body.length });
+  logger.info('Sending SMS via SignalWire', {
+    to: params.to,
+    from: fromNumber,
+    bodyLength: params.body.length,
+  });
 
   const message = await client.messages.create({
     from: fromNumber,
@@ -126,7 +130,11 @@ export async function sendWhatsApp(params: SendMessageParams): Promise<SignalWir
 
   const client = getClient();
 
-  logger.info('Sending WhatsApp via SignalWire', { to: params.to, from: fromNumber, bodyLength: params.body.length });
+  logger.info('Sending WhatsApp via SignalWire', {
+    to: params.to,
+    from: fromNumber,
+    bodyLength: params.body.length,
+  });
 
   const message = await client.messages.create({
     from: fromNumber,
@@ -220,7 +228,7 @@ export async function getCallDetails(callSid: string): Promise<SignalWireCall> {
  */
 export function formatPhoneNumber(phone: string): string {
   const cleaned = phone.replace(/[^\d+]/g, '');
-  
+
   if (!cleaned.startsWith('+')) {
     if (cleaned.length === 10) {
       return `+1${cleaned}`;
@@ -229,14 +237,16 @@ export function formatPhoneNumber(phone: string): string {
       return `+${cleaned}`;
     }
   }
-  
+
   return cleaned;
 }
 
 /**
  * Parse delivery status from SignalWire callback
  */
-export function parseDeliveryStatus(status: string): 'pending' | 'sent' | 'delivered' | 'failed' | 'undelivered' {
+export function parseDeliveryStatus(
+  status: string
+): 'pending' | 'sent' | 'delivered' | 'failed' | 'undelivered' {
   switch (status.toLowerCase()) {
     case 'queued':
     case 'accepted':
@@ -318,9 +328,9 @@ export async function verifyCredentials(): Promise<boolean> {
  */
 export async function releasePhoneNumber(phoneNumberSid: string): Promise<void> {
   const client = getClient();
-  
+
   logger.info('Releasing phone number from SignalWire', { phoneNumberSid });
-  
+
   try {
     await client.incomingPhoneNumbers(phoneNumberSid).remove();
     logger.info('Phone number released successfully', { phoneNumberSid });
@@ -342,9 +352,9 @@ export async function updatePhoneNumberWebhooks(
   }
 ): Promise<void> {
   const client = getClient();
-  
+
   logger.info('Updating phone number webhooks', { phoneNumberSid, webhooks });
-  
+
   try {
     await client.incomingPhoneNumbers(phoneNumberSid).update({
       ...(webhooks.smsUrl && { smsUrl: webhooks.smsUrl }),
@@ -353,7 +363,10 @@ export async function updatePhoneNumberWebhooks(
     });
     logger.info('Phone number webhooks updated successfully', { phoneNumberSid });
   } catch (error: any) {
-    logger.error('Failed to update phone number webhooks', { phoneNumberSid, error: error.message });
+    logger.error('Failed to update phone number webhooks', {
+      phoneNumberSid,
+      error: error.message,
+    });
     throw new Error(`Failed to update phone number: ${error.message}`);
   }
 }

@@ -1,9 +1,9 @@
 /**
  * Twilio Integration Library
- * 
+ *
  * Full-featured Twilio integration with Flex and TaskRouter support.
  * Provides SMS, WhatsApp, Voice, and contact center capabilities.
- * 
+ *
  * Environment Variables:
  * - TWILIO_ACCOUNT_SID: Your Twilio Account SID
  * - TWILIO_AUTH_TOKEN: Your Twilio Auth Token
@@ -76,7 +76,7 @@ async function twilioRequest<T>(
   const url = `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}${endpoint}`;
 
   const headers: HeadersInit = {
-    'Authorization': `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
+    Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
   };
 
   let requestBody: string | undefined;
@@ -117,7 +117,7 @@ async function taskRouterRequest<T>(
   const url = `https://taskrouter.twilio.com/v1/Workspaces/${config.taskRouterWorkspaceSid}${endpoint}`;
 
   const headers: HeadersInit = {
-    'Authorization': `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
+    Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
   };
 
   let requestBody: string | undefined;
@@ -186,7 +186,7 @@ export async function sendSMS(params: SendMessageParams): Promise<TwilioMessage>
   }
 
   logger.info('Sending SMS', { to: params.to, bodyLength: params.body.length });
-  
+
   return twilioRequest<TwilioMessage>('/Messages.json', {
     method: 'POST',
     body,
@@ -218,7 +218,7 @@ export async function sendWhatsApp(params: SendMessageParams): Promise<TwilioMes
   }
 
   logger.info('Sending WhatsApp', { to: params.to, bodyLength: params.body.length });
-  
+
   return twilioRequest<TwilioMessage>('/Messages.json', {
     method: 'POST',
     body,
@@ -287,7 +287,7 @@ export async function makeCall(params: MakeCallParams): Promise<TwilioCall> {
   }
 
   logger.info('Initiating call', { to: params.to });
-  
+
   return twilioRequest<TwilioCall>('/Calls.json', {
     method: 'POST',
     body,
@@ -387,14 +387,14 @@ export async function listTasks(options?: {
 }): Promise<TaskRouterTask[]> {
   let endpoint = '/Tasks';
   const params = new URLSearchParams();
-  
+
   if (options?.assignmentStatus) {
     params.append('AssignmentStatus', options.assignmentStatus);
   }
   if (options?.taskQueueSid) {
     params.append('TaskQueueSid', options.taskQueueSid);
   }
-  
+
   if (params.toString()) {
     endpoint += `?${params.toString()}`;
   }
@@ -434,7 +434,7 @@ export async function createTask(params: {
   }
 
   logger.info('Creating TaskRouter task', { attributes: params.attributes });
-  
+
   return taskRouterRequest<TaskRouterTask>('/Tasks', {
     method: 'POST',
     body,
@@ -444,14 +444,11 @@ export async function createTask(params: {
 /**
  * Complete a task
  */
-export async function completeTask(
-  taskSid: string,
-  reason?: string
-): Promise<TaskRouterTask> {
+export async function completeTask(taskSid: string, reason?: string): Promise<TaskRouterTask> {
   const body: Record<string, string> = {
     AssignmentStatus: 'completed',
   };
-  
+
   if (reason) {
     body.Reason = reason;
   }
@@ -503,7 +500,7 @@ export async function getWorkspaceStats(): Promise<WorkspaceStats> {
 
   const response = await fetch(url, {
     headers: {
-      'Authorization': `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
+      Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
     },
   });
 
@@ -537,7 +534,7 @@ export async function getAccountInfo(): Promise<TwilioAccountInfo> {
     `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}.json`,
     {
       headers: {
-        'Authorization': `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
       },
     }
   );
@@ -571,7 +568,7 @@ export async function verifyCredentials(): Promise<boolean> {
 export function formatPhoneNumber(phone: string): string {
   // Remove all non-digit characters except leading +
   const cleaned = phone.replace(/[^\d+]/g, '');
-  
+
   // If it doesn't start with +, assume US and add +1
   if (!cleaned.startsWith('+')) {
     if (cleaned.length === 10) {
@@ -581,14 +578,16 @@ export function formatPhoneNumber(phone: string): string {
       return `+${cleaned}`;
     }
   }
-  
+
   return cleaned;
 }
 
 /**
  * Parse delivery status from Twilio callback
  */
-export function parseDeliveryStatus(twilioStatus: string): 'pending' | 'sent' | 'delivered' | 'failed' | 'undelivered' {
+export function parseDeliveryStatus(
+  twilioStatus: string
+): 'pending' | 'sent' | 'delivered' | 'failed' | 'undelivered' {
   switch (twilioStatus.toLowerCase()) {
     case 'queued':
     case 'accepted':

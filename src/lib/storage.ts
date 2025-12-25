@@ -15,12 +15,12 @@ export interface UploadResult {
 
 /**
  * Upload a file to Vercel Blob storage
- * 
+ *
  * @param file - The file to upload (File object or Buffer)
  * @param pathname - The path where the file should be stored (e.g., 'workspace-id/knowledge/filename.pdf')
  * @param options - Optional upload options
  * @returns Upload result with URL and metadata
- * 
+ *
  * @example
  * ```typescript
  * const { url } = await uploadFile(file, 'workspace-123/knowledge/doc.pdf');
@@ -37,7 +37,7 @@ export async function uploadFile(
 ): Promise<UploadResult> {
   try {
     const token = process.env.BLOB_READ_WRITE_TOKEN;
-    
+
     if (!token) {
       throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not configured');
     }
@@ -75,16 +75,18 @@ export async function uploadFile(
     };
   } catch (error) {
     logger.error('File upload failed', error, { pathname });
-    throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Delete a file from Vercel Blob storage
- * 
+ *
  * @param url - The URL of the file to delete
  * @returns True if deletion was successful
- * 
+ *
  * @example
  * ```typescript
  * await deleteFile('https://blob.vercel-storage.com/...');
@@ -93,7 +95,7 @@ export async function uploadFile(
 export async function deleteFile(url: string): Promise<boolean> {
   try {
     const token = process.env.BLOB_READ_WRITE_TOKEN;
-    
+
     if (!token) {
       throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not configured');
     }
@@ -111,10 +113,10 @@ export async function deleteFile(url: string): Promise<boolean> {
 
 /**
  * Check if a file exists in Vercel Blob storage
- * 
+ *
  * @param url - The URL of the file to check
  * @returns File metadata if exists, null otherwise
- * 
+ *
  * @example
  * ```typescript
  * const metadata = await fileExists('https://blob.vercel-storage.com/...');
@@ -130,7 +132,7 @@ export async function fileExists(url: string): Promise<{
 } | null> {
   try {
     const token = process.env.BLOB_READ_WRITE_TOKEN;
-    
+
     if (!token) {
       throw new Error('BLOB_READ_WRITE_TOKEN environment variable is not configured');
     }
@@ -151,7 +153,7 @@ export async function fileExists(url: string): Promise<{
 
 /**
  * Check if storage is configured
- * 
+ *
  * @returns True if BLOB_READ_WRITE_TOKEN is set
  */
 export function isStorageConfigured(): boolean {

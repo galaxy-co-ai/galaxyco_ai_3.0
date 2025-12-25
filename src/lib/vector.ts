@@ -65,10 +65,7 @@ function getVectorIndex(): Index {
  * Check if Upstash Vector is configured
  */
 export function isVectorConfigured(): boolean {
-  return !!(
-    process.env.UPSTASH_VECTOR_REST_URL &&
-    process.env.UPSTASH_VECTOR_REST_TOKEN
-  );
+  return !!(process.env.UPSTASH_VECTOR_REST_URL && process.env.UPSTASH_VECTOR_REST_TOKEN);
 }
 
 // ============================================================================
@@ -82,10 +79,10 @@ export function isVectorConfigured(): boolean {
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
     const openai = getOpenAI();
-    
+
     // Truncate text if too long (max ~8000 tokens for embedding model)
     const truncatedText = text.slice(0, 30000);
-    
+
     const response = await openai.embeddings.create({
       model: 'text-embedding-3-small',
       input: truncatedText,
@@ -104,12 +101,10 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   try {
     const openai = getOpenAI();
-    
+
     // Truncate texts and filter empty
-    const truncatedTexts = texts
-      .map((t) => t.slice(0, 30000))
-      .filter((t) => t.trim().length > 0);
-    
+    const truncatedTexts = texts.map((t) => t.slice(0, 30000)).filter((t) => t.trim().length > 0);
+
     if (truncatedTexts.length === 0) {
       return [];
     }
@@ -132,7 +127,7 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 
 /**
  * Upsert vectors into the Upstash Vector database
- * 
+ *
  * @param vectors - Array of vectors to upsert with IDs and metadata
  * @param namespace - Optional namespace for multi-tenant isolation (e.g., workspaceId)
  */
@@ -151,7 +146,7 @@ export async function upsertVectors(
 
   try {
     const index = getVectorIndex();
-    
+
     // Format vectors for Upstash Vector
     const formattedVectors = vectors.map((v) => ({
       id: v.id,
@@ -165,13 +160,13 @@ export async function upsertVectors(
 
     for (let i = 0; i < formattedVectors.length; i += BATCH_SIZE) {
       const batch = formattedVectors.slice(i, i + BATCH_SIZE);
-      
+
       if (namespace) {
         await index.namespace(namespace).upsert(batch);
       } else {
         await index.upsert(batch);
       }
-      
+
       upsertedCount += batch.length;
     }
 
@@ -189,7 +184,7 @@ export async function upsertVectors(
 
 /**
  * Query vectors from the Upstash Vector database using similarity search
- * 
+ *
  * @param queryVector - The query embedding vector
  * @param options - Query options (topK, filter, etc.)
  * @param namespace - Optional namespace for multi-tenant isolation
@@ -214,7 +209,7 @@ export async function queryVectors(
 
   try {
     const index = getVectorIndex();
-    
+
     const queryOptions: {
       topK: number;
       includeMetadata: boolean;
@@ -268,7 +263,7 @@ export async function queryVectors(
 
 /**
  * Query vectors using text (generates embedding automatically)
- * 
+ *
  * @param queryText - The text to search for
  * @param options - Query options
  * @param namespace - Optional namespace
@@ -281,7 +276,7 @@ export async function queryByText(
   try {
     // Generate embedding for the query text
     const queryVector = await generateEmbedding(queryText);
-    
+
     // Query using the generated embedding
     return queryVectors(queryVector, options, namespace);
   } catch (error) {
@@ -292,14 +287,11 @@ export async function queryByText(
 
 /**
  * Delete vectors by IDs
- * 
+ *
  * @param ids - Array of vector IDs to delete
  * @param namespace - Optional namespace
  */
-export async function deleteVectors(
-  ids: string[],
-  namespace?: string
-): Promise<void> {
+export async function deleteVectors(ids: string[], namespace?: string): Promise<void> {
   if (!isVectorConfigured()) {
     logger.warn('[Vector] Upstash Vector not configured - skipping delete');
     return;
@@ -311,7 +303,7 @@ export async function deleteVectors(
 
   try {
     const index = getVectorIndex();
-    
+
     if (namespace) {
       await index.namespace(namespace).delete(ids);
     } else {
@@ -331,7 +323,7 @@ export async function deleteVectors(
 /**
  * Delete all vectors in a namespace
  * Use with caution - this will delete ALL vectors for a workspace
- * 
+ *
  * @param namespace - The namespace to clear
  */
 export async function deleteNamespace(namespace: string): Promise<void> {
@@ -355,7 +347,7 @@ export async function deleteNamespace(namespace: string): Promise<void> {
  * Delete vectors matching a filter pattern
  * Note: Upstash Vector doesn't support filter-based deletion directly,
  * so this fetches matching IDs first then deletes them
- * 
+ *
  * @param filter - Metadata filter string
  * @param namespace - Optional namespace
  */
@@ -382,7 +374,7 @@ export async function deleteVectorsByFilter(
     // Generate a dummy query vector to fetch matching vectors
     // We use a zero vector of the expected dimension (1536 for text-embedding-3-small)
     const dummyVector = new Array(1536).fill(0);
-    
+
     // Query for matching vectors
     const results = await queryVectors(
       dummyVector,
@@ -409,21 +401,18 @@ export async function deleteVectorsByFilter(
 
 /**
  * Fetch a vector by ID
- * 
+ *
  * @param id - The vector ID to fetch
  * @param namespace - Optional namespace
  */
-export async function fetchVector(
-  id: string,
-  namespace?: string
-): Promise<QueryResult | null> {
+export async function fetchVector(id: string, namespace?: string): Promise<QueryResult | null> {
   if (!isVectorConfigured()) {
     return null;
   }
 
   try {
     const index = getVectorIndex();
-    
+
     let result;
     if (namespace) {
       result = await index.namespace(namespace).fetch([id], {
@@ -482,7 +471,7 @@ export async function getIndexStats(): Promise<{
 /**
  * Index a knowledge base document
  * Chunks the content and stores embeddings with metadata
- * 
+ *
  * @param itemId - The knowledge item ID
  * @param workspaceId - The workspace ID (used as namespace)
  * @param title - Document title
@@ -504,14 +493,14 @@ export async function indexKnowledgeDocument(
   try {
     // Chunk the content for better retrieval
     const chunks = chunkText(content, 500);
-    
+
     if (chunks.length === 0) {
       return { chunksIndexed: 0 };
     }
 
     // Limit to 20 chunks per document for cost control
     const limitedChunks = chunks.slice(0, 20);
-    
+
     // Generate embeddings for all chunks in batch
     const embeddings = await generateEmbeddings(limitedChunks);
 
@@ -548,7 +537,7 @@ export async function indexKnowledgeDocument(
 
 /**
  * Search knowledge base using semantic similarity
- * 
+ *
  * @param workspaceId - The workspace to search in
  * @param query - The search query
  * @param options - Search options
@@ -592,11 +581,11 @@ export async function searchKnowledge(
     );
 
     // Deduplicate by itemId (keep highest scoring chunk per document)
-    const seenItems = new Map<string, typeof vectorResults[0]>();
+    const seenItems = new Map<string, (typeof vectorResults)[0]>();
     for (const result of vectorResults) {
       const itemId = result.metadata?.itemId as string;
       if (!itemId) continue;
-      
+
       const existing = seenItems.get(itemId);
       if (!existing || result.score > existing.score) {
         seenItems.set(itemId, result);
@@ -608,10 +597,10 @@ export async function searchKnowledge(
       .slice(0, topK)
       .map((r) => ({
         itemId: r.metadata?.itemId as string,
-        title: r.metadata?.title as string || 'Untitled',
-        chunk: r.metadata?.chunk as string || '',
+        title: (r.metadata?.title as string) || 'Untitled',
+        chunk: (r.metadata?.chunk as string) || '',
         score: r.score,
-        chunkIndex: r.metadata?.chunkIndex as number || 0,
+        chunkIndex: (r.metadata?.chunkIndex as number) || 0,
       }));
 
     logger.info('[Vector] Knowledge search completed', {
@@ -630,10 +619,7 @@ export async function searchKnowledge(
 /**
  * Delete all vectors for a knowledge item
  */
-export async function deleteKnowledgeDocument(
-  itemId: string,
-  workspaceId: string
-): Promise<void> {
+export async function deleteKnowledgeDocument(itemId: string, workspaceId: string): Promise<void> {
   if (!isVectorConfigured()) {
     return;
   }
@@ -660,11 +646,11 @@ export async function deleteKnowledgeDocument(
  * Chunking configuration
  */
 const CHUNK_CONFIG = {
-  TARGET_SIZE: 500,      // Target chunk size in characters
-  MAX_SIZE: 700,         // Maximum chunk size
-  MIN_SIZE: 100,         // Minimum chunk size (smaller ones get merged)
-  OVERLAP_SIZE: 50,      // Overlap between chunks for context continuity
-  OVERLAP_SENTENCES: 1,  // Number of sentences to overlap
+  TARGET_SIZE: 500, // Target chunk size in characters
+  MAX_SIZE: 700, // Maximum chunk size
+  MIN_SIZE: 100, // Minimum chunk size (smaller ones get merged)
+  OVERLAP_SIZE: 50, // Overlap between chunks for context continuity
+  OVERLAP_SENTENCES: 1, // Number of sentences to overlap
 };
 
 /**
@@ -676,7 +662,7 @@ export interface ChunkMetadata {
   startChar: number;
   endChar: number;
   hasOverlap: boolean;
-  section?: string;  // Section header if detected
+  section?: string; // Section header if detected
 }
 
 /**
@@ -699,16 +685,18 @@ export function semanticChunk(
 
   if (!text || text.trim().length < CHUNK_CONFIG.MIN_SIZE) {
     if (text && text.trim().length > 0) {
-      return [{
-        text: text.trim(),
-        metadata: {
-          chunkIndex: 0,
-          totalChunks: 1,
-          startChar: 0,
-          endChar: text.length,
-          hasOverlap: false,
+      return [
+        {
+          text: text.trim(),
+          metadata: {
+            chunkIndex: 0,
+            totalChunks: 1,
+            startChar: 0,
+            endChar: text.length,
+            hasOverlap: false,
+          },
         },
-      }];
+      ];
     }
     return [];
   }
@@ -720,7 +708,7 @@ export function semanticChunk(
 
   // Parse into sentences while preserving structure
   const sentences = parseSentences(text);
-  
+
   const chunks: { text: string; metadata: ChunkMetadata }[] = [];
   let currentChunk = '';
   let currentSection = '';
@@ -731,15 +719,14 @@ export function semanticChunk(
   for (let i = 0; i < sentences.length; i++) {
     const sentence = sentences[i];
     const sentenceLength = sentence.length;
-    
+
     // Check if this sentence starts a new section
     if (sectionPattern.test(sentence)) {
       currentSection = sentence.trim();
     }
 
     // If adding this sentence would exceed max size, finalize current chunk
-    if (currentChunk.length > 0 && 
-        currentChunk.length + sentenceLength > maxSize) {
+    if (currentChunk.length > 0 && currentChunk.length + sentenceLength > maxSize) {
       // Save current chunk
       const chunkText = currentChunk.trim();
       chunks.push({
@@ -755,10 +742,7 @@ export function semanticChunk(
       });
 
       // Start new chunk with overlap from previous
-      lastOverlapSentences = sentences.slice(
-        Math.max(0, i - overlapSentences), 
-        i
-      );
+      lastOverlapSentences = sentences.slice(Math.max(0, i - overlapSentences), i);
       currentChunk = lastOverlapSentences.join(' ') + ' ';
       chunkStartChar = currentCharPos - currentChunk.length;
     }
@@ -769,9 +753,9 @@ export function semanticChunk(
     // If we've reached target size and hit a natural break, consider chunking
     if (currentChunk.length >= targetSize) {
       // Look for natural break points (paragraph, section end)
-      const isNaturalBreak = 
-        sentence.endsWith('.') || 
-        sentence.endsWith('?') || 
+      const isNaturalBreak =
+        sentence.endsWith('.') ||
+        sentence.endsWith('?') ||
         sentence.endsWith('!') ||
         sentence.includes('\n\n');
 
@@ -819,7 +803,7 @@ export function semanticChunk(
 
   // Update total chunk count
   const totalChunks = chunks.length;
-  chunks.forEach(chunk => {
+  chunks.forEach((chunk) => {
     chunk.metadata.totalChunks = totalChunks;
   });
 
@@ -832,23 +816,23 @@ export function semanticChunk(
 function parseSentences(text: string): string[] {
   // Split on sentence boundaries but keep abbreviations intact
   const sentences: string[] = [];
-  
+
   // Regex that handles common abbreviations and decimal numbers
   const sentenceRegex = /[^.!?\n]+(?:[.!?]+|\n\n|$)/g;
   let match;
-  
+
   while ((match = sentenceRegex.exec(text)) !== null) {
     const sentence = match[0].trim();
     if (sentence.length > 0) {
       sentences.push(sentence);
     }
   }
-  
+
   // Handle edge case where regex doesn't match
   if (sentences.length === 0 && text.trim().length > 0) {
     sentences.push(text.trim());
   }
-  
+
   return sentences;
 }
 
@@ -858,5 +842,5 @@ function parseSentences(text: string): string[] {
  */
 function chunkText(text: string, chunkSize: number = 500): string[] {
   const chunks = semanticChunk(text, { targetSize: chunkSize });
-  return chunks.map(c => c.text);
+  return chunks.map((c) => c.text);
 }

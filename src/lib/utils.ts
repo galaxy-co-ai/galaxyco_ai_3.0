@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -13,10 +13,10 @@ export function cn(...inputs: ClassValue[]) {
 export function formatPhoneNumber(value: string): string {
   // Remove all non-numeric characters
   const numbers = value.replace(/\D/g, '');
-  
+
   // Limit to 10 digits (US phone number)
   const limitedNumbers = numbers.slice(0, 10);
-  
+
   // Format based on length
   if (limitedNumbers.length === 0) {
     return '';

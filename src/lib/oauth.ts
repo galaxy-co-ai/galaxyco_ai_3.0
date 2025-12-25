@@ -5,7 +5,14 @@
 
 import crypto from 'crypto';
 
-export type OAuthProvider = 'google' | 'microsoft' | 'quickbooks' | 'shopify' | 'twitter' | 'linkedin' | 'facebook';
+export type OAuthProvider =
+  | 'google'
+  | 'microsoft'
+  | 'quickbooks'
+  | 'shopify'
+  | 'twitter'
+  | 'linkedin'
+  | 'facebook';
 
 export interface OAuthConfig {
   clientId: string;
@@ -120,13 +127,10 @@ export const oauthProviders: Record<OAuthProvider, OAuthConfig> = {
 export function generatePKCE(): { codeVerifier: string; codeChallenge: string } {
   // Generate code verifier (random string)
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
-  
+
   // Generate code challenge (SHA256 hash of verifier)
-  const codeChallenge = crypto
-    .createHash('sha256')
-    .update(codeVerifier)
-    .digest('base64url');
-  
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+
   return { codeVerifier, codeChallenge };
 }
 
@@ -298,18 +302,3 @@ export function isOAuthProviderConfigured(provider: OAuthProvider): boolean {
   const config = oauthProviders[provider];
   return !!(config.clientId && config.clientSecret);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

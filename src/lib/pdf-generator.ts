@@ -1,6 +1,6 @@
 /**
  * PDF Generator Utility
- * 
+ *
  * Generates professional PDFs for invoices, reports, proposals, and contracts
  * using @react-pdf/renderer with server-side rendering.
  */
@@ -23,7 +23,7 @@ export interface PDFContent {
   recipientName?: string;
   recipientCompany?: string;
   recipientAddress?: string;
-  
+
   // Invoice specific
   invoiceNumber?: string;
   dueDate?: string;
@@ -37,7 +37,7 @@ export interface PDFContent {
   tax?: number;
   total?: number;
   paymentTerms?: string;
-  
+
   // Report specific
   sections?: Array<{
     heading: string;
@@ -45,7 +45,7 @@ export interface PDFContent {
   }>;
   summary?: string;
   keyFindings?: string[];
-  
+
   // Proposal specific
   projectDescription?: string;
   scope?: string[];
@@ -56,7 +56,7 @@ export interface PDFContent {
     total: number;
   };
   terms?: string;
-  
+
   // Contract specific
   parties?: Array<{ name: string; role: string }>;
   effectiveDate?: string;
@@ -77,25 +77,25 @@ export interface PDFGenerationResult {
  */
 export async function generatePDF(params: PDFGenerationParams): Promise<PDFGenerationResult> {
   const { type, title, content, workspaceId } = params;
-  
+
   logger.info('Generating PDF document', { type, title, workspaceId });
-  
+
   // Dynamically import react-pdf (server-side only)
   const { renderToBuffer } = await import('@react-pdf/renderer');
   const React = await import('react');
-  
+
   // Create the PDF document based on type
   const DocumentComponent = await getPDFComponent(type);
   const document = React.createElement(DocumentComponent, { title, content, type });
-  
+
   // Render to buffer
   const buffer = await renderToBuffer(document);
-  
+
   // Generate filename
   const timestamp = Date.now();
   const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50);
   const filename = `documents/${type}/${sanitizedTitle}_${timestamp}.pdf`;
-  
+
   if (!isStorageConfigured()) {
     logger.warn('Storage not configured, returning local file reference');
     // In development without storage, return a placeholder
@@ -106,7 +106,7 @@ export async function generatePDF(params: PDFGenerationParams): Promise<PDFGener
       title,
     };
   }
-  
+
   // Upload to blob storage
   // Convert Buffer to Uint8Array for File constructor compatibility
   const uint8Array = new Uint8Array(buffer);
@@ -115,9 +115,9 @@ export async function generatePDF(params: PDFGenerationParams): Promise<PDFGener
     contentType: 'application/pdf',
     access: 'public',
   });
-  
+
   logger.info('PDF uploaded successfully', { url: result.url, type, title });
-  
+
   return {
     url: result.url,
     filename,
@@ -132,7 +132,7 @@ export async function generatePDF(params: PDFGenerationParams): Promise<PDFGener
 async function getPDFComponent(type: string) {
   const { Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer');
   const React = await import('react');
-  
+
   // Create shared styles
   const styles = StyleSheet.create({
     page: {
@@ -229,9 +229,17 @@ async function getPDFComponent(type: string) {
       color: '#9ca3af',
     },
   });
-  
+
   // Generic document component
-  return function PDFDocument({ title, content, type }: { title: string; content: PDFContent; type: string }) {
+  return function PDFDocument({
+    title,
+    content,
+    type,
+  }: {
+    title: string;
+    content: PDFContent;
+    type: string;
+  }) {
     return React.createElement(
       Document,
       { title },
@@ -243,101 +251,124 @@ async function getPDFComponent(type: string) {
           View,
           { style: styles.header },
           React.createElement(Text, { style: styles.title }, title),
-          React.createElement(Text, { style: styles.subtitle }, 
+          React.createElement(
+            Text,
+            { style: styles.subtitle },
             `${type.charAt(0).toUpperCase() + type.slice(1)} • ${content.date || new Date().toLocaleDateString()}`
           )
         ),
         // Company Info
-        content.companyName && React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: { fontWeight: 'bold' } }, content.companyName),
-          content.companyAddress && React.createElement(Text, null, content.companyAddress)
-        ),
-        // Recipient Info
-        content.recipientName && React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'To'),
-          React.createElement(Text, { style: { fontWeight: 'bold' } }, content.recipientName),
-          content.recipientCompany && React.createElement(Text, null, content.recipientCompany),
-          content.recipientAddress && React.createElement(Text, null, content.recipientAddress)
-        ),
-        // Invoice Items
-        type === 'invoice' && content.items && React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'Items'),
+        content.companyName &&
           React.createElement(
             View,
-            { style: styles.tableHeader },
-            React.createElement(Text, { style: styles.col1 }, 'Description'),
-            React.createElement(Text, { style: styles.col2 }, 'Qty'),
-            React.createElement(Text, { style: styles.col3 }, 'Unit Price'),
-            React.createElement(Text, { style: styles.col4 }, 'Total')
+            { style: styles.section },
+            React.createElement(Text, { style: { fontWeight: 'bold' } }, content.companyName),
+            content.companyAddress && React.createElement(Text, null, content.companyAddress)
           ),
-          ...content.items.map((item, idx) =>
+        // Recipient Info
+        content.recipientName &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'To'),
+            React.createElement(Text, { style: { fontWeight: 'bold' } }, content.recipientName),
+            content.recipientCompany && React.createElement(Text, null, content.recipientCompany),
+            content.recipientAddress && React.createElement(Text, null, content.recipientAddress)
+          ),
+        // Invoice Items
+        type === 'invoice' &&
+          content.items &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'Items'),
             React.createElement(
               View,
-              { key: idx, style: styles.tableRow },
-              React.createElement(Text, { style: styles.col1 }, item.description),
-              React.createElement(Text, { style: styles.col2 }, item.quantity.toString()),
-              React.createElement(Text, { style: styles.col3 }, `$${item.unitPrice.toFixed(2)}`),
-              React.createElement(Text, { style: styles.col4 }, `$${item.total.toFixed(2)}`)
+              { style: styles.tableHeader },
+              React.createElement(Text, { style: styles.col1 }, 'Description'),
+              React.createElement(Text, { style: styles.col2 }, 'Qty'),
+              React.createElement(Text, { style: styles.col3 }, 'Unit Price'),
+              React.createElement(Text, { style: styles.col4 }, 'Total')
+            ),
+            ...content.items.map((item, idx) =>
+              React.createElement(
+                View,
+                { key: idx, style: styles.tableRow },
+                React.createElement(Text, { style: styles.col1 }, item.description),
+                React.createElement(Text, { style: styles.col2 }, item.quantity.toString()),
+                React.createElement(Text, { style: styles.col3 }, `$${item.unitPrice.toFixed(2)}`),
+                React.createElement(Text, { style: styles.col4 }, `$${item.total.toFixed(2)}`)
+              )
+            ),
+            content.total &&
+              React.createElement(
+                View,
+                { style: styles.totalRow },
+                React.createElement(Text, { style: styles.totalLabel }, 'Total:'),
+                React.createElement(
+                  Text,
+                  { style: styles.totalValue },
+                  `$${content.total.toFixed(2)}`
+                )
+              )
+          ),
+        // Report Sections
+        type === 'report' &&
+          content.sections &&
+          content.sections.map((section, idx) =>
+            React.createElement(
+              View,
+              { key: idx, style: styles.section },
+              React.createElement(Text, { style: styles.sectionTitle }, section.heading),
+              React.createElement(Text, { style: styles.paragraph }, section.content)
             )
           ),
-          content.total && React.createElement(
-            View,
-            { style: styles.totalRow },
-            React.createElement(Text, { style: styles.totalLabel }, 'Total:'),
-            React.createElement(Text, { style: styles.totalValue }, `$${content.total.toFixed(2)}`)
-          )
-        ),
-        // Report Sections
-        type === 'report' && content.sections && content.sections.map((section, idx) =>
-          React.createElement(
-            View,
-            { key: idx, style: styles.section },
-            React.createElement(Text, { style: styles.sectionTitle }, section.heading),
-            React.createElement(Text, { style: styles.paragraph }, section.content)
-          )
-        ),
         // Key Findings
-        content.keyFindings && React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'Key Findings'),
-          ...content.keyFindings.map((finding, idx) =>
-            React.createElement(Text, { key: idx, style: styles.listItem }, `• ${finding}`)
-          )
-        ),
-        // Proposal Scope
-        type === 'proposal' && content.scope && React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'Scope of Work'),
-          ...content.scope.map((item, idx) =>
-            React.createElement(Text, { key: idx, style: styles.listItem }, `• ${item}`)
-          )
-        ),
-        // Deliverables
-        content.deliverables && React.createElement(
-          View,
-          { style: styles.section },
-          React.createElement(Text, { style: styles.sectionTitle }, 'Deliverables'),
-          ...content.deliverables.map((item, idx) =>
-            React.createElement(Text, { key: idx, style: styles.listItem }, `• ${item}`)
-          )
-        ),
-        // Contract Clauses
-        type === 'contract' && content.clauses && content.clauses.map((clause, idx) =>
+        content.keyFindings &&
           React.createElement(
             View,
-            { key: idx, style: styles.section },
-            React.createElement(Text, { style: styles.sectionTitle }, `${idx + 1}. ${clause.title}`),
-            React.createElement(Text, { style: styles.paragraph }, clause.content)
-          )
-        ),
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'Key Findings'),
+            ...content.keyFindings.map((finding, idx) =>
+              React.createElement(Text, { key: idx, style: styles.listItem }, `• ${finding}`)
+            )
+          ),
+        // Proposal Scope
+        type === 'proposal' &&
+          content.scope &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'Scope of Work'),
+            ...content.scope.map((item, idx) =>
+              React.createElement(Text, { key: idx, style: styles.listItem }, `• ${item}`)
+            )
+          ),
+        // Deliverables
+        content.deliverables &&
+          React.createElement(
+            View,
+            { style: styles.section },
+            React.createElement(Text, { style: styles.sectionTitle }, 'Deliverables'),
+            ...content.deliverables.map((item, idx) =>
+              React.createElement(Text, { key: idx, style: styles.listItem }, `• ${item}`)
+            )
+          ),
+        // Contract Clauses
+        type === 'contract' &&
+          content.clauses &&
+          content.clauses.map((clause, idx) =>
+            React.createElement(
+              View,
+              { key: idx, style: styles.section },
+              React.createElement(
+                Text,
+                { style: styles.sectionTitle },
+                `${idx + 1}. ${clause.title}`
+              ),
+              React.createElement(Text, { style: styles.paragraph }, clause.content)
+            )
+          ),
         // Footer
         React.createElement(
           Text,
@@ -355,4 +386,3 @@ async function getPDFComponent(type: string) {
 export function isPDFConfigured(): boolean {
   return true; // @react-pdf/renderer works without external dependencies
 }
-

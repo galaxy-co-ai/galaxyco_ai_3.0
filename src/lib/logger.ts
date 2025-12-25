@@ -48,7 +48,7 @@ class Logger {
         try {
           const Sentry = await import('@sentry/nextjs');
           const error = metadata?.error;
-          
+
           if (error instanceof Error) {
             Sentry.captureException(error, {
               level: 'error',
@@ -80,7 +80,7 @@ class Logger {
           console.error('[Sentry Error]', sentryError);
         }
       }
-      
+
       // Always log structured JSON for server-side
       console.log(JSON.stringify(logData));
     } else {
@@ -109,24 +109,17 @@ class Logger {
   }
 
   error(message: string, error?: Error | unknown, metadata?: LogMetadata) {
-    const errorData = error instanceof Error
-      ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-        }
-      : error;
+    const errorData =
+      error instanceof Error
+        ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+          }
+        : error;
 
     void this.log('error', message, { ...metadata, error: errorData });
   }
 }
 
 export const logger = new Logger();
-
-
-
-
-
-
-
-

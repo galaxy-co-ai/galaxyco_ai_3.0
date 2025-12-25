@@ -5,12 +5,13 @@ import { Index } from '@upstash/vector';
  * Upstash Redis - Optional for caching and rate limiting
  * If not configured, caching features will be disabled
  */
-const redisClient = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    })
-  : null;
+const redisClient =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
 
 /**
  * Redis health tracking to avoid spamming logs on connection failures
@@ -45,7 +46,7 @@ export function markRedisHealthy(): void {
  */
 export function shouldUseRedis(): boolean {
   if (!redisClient) return false;
-  
+
   // If unhealthy, check if recovery period has passed
   if (!redisHealthy) {
     if (Date.now() - redisLastFailure > REDIS_RECOVERY_MS) {
@@ -55,7 +56,7 @@ export function shouldUseRedis(): boolean {
     }
     return redisHealthy;
   }
-  
+
   return true;
 }
 
@@ -67,12 +68,13 @@ export const redis = redisClient;
 /**
  * Upstash Vector - Optional if using Pinecone instead
  */
-export const vectorIndex = (process.env.UPSTASH_VECTOR_REST_URL && process.env.UPSTASH_VECTOR_REST_TOKEN)
-  ? new Index({
-      url: process.env.UPSTASH_VECTOR_REST_URL,
-      token: process.env.UPSTASH_VECTOR_REST_TOKEN,
-    })
-  : null;
+export const vectorIndex =
+  process.env.UPSTASH_VECTOR_REST_URL && process.env.UPSTASH_VECTOR_REST_TOKEN
+    ? new Index({
+        url: process.env.UPSTASH_VECTOR_REST_URL,
+        token: process.env.UPSTASH_VECTOR_REST_TOKEN,
+      })
+    : null;
 
 /**
  * Check if Upstash Redis is configured
@@ -87,5 +89,3 @@ export function isRedisConfigured(): boolean {
 export function isUpstashVectorConfigured(): boolean {
   return !!vectorIndex;
 }
-
-

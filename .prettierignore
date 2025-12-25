@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Database
+drizzle/
+
+# Testing
+coverage/
+test-screenshots/
+playwright-report/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+.DS_Store
+*.tsbuildinfo

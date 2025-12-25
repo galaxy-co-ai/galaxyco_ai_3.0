@@ -1,12 +1,20 @@
 /**
  * User Activity Detection Helpers
- * 
+ *
  * Functions to determine user state (new vs returning) and workspace health
  * for contextual Neptune greetings and onboarding guidance.
  */
 
 import { db } from '@/lib/db';
-import { users, agents, contacts, knowledgeItems, integrations, agentExecutions, conversationMessages } from '@/db/schema';
+import {
+  users,
+  agents,
+  contacts,
+  knowledgeItems,
+  integrations,
+  agentExecutions,
+  conversationMessages,
+} from '@/db/schema';
 import { eq, and, gte, count } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
@@ -55,10 +63,7 @@ export async function getRecentActivity(
 
     // Fetch recent agents
     const recentAgents = await db.query.agents.findMany({
-      where: and(
-        eq(agents.workspaceId, workspaceId),
-        gte(agents.createdAt, cutoffDate)
-      ),
+      where: and(eq(agents.workspaceId, workspaceId), gte(agents.createdAt, cutoffDate)),
       columns: { id: true, name: true, createdAt: true },
       orderBy: [agents.createdAt],
       limit: 5,
@@ -66,10 +71,7 @@ export async function getRecentActivity(
 
     // Fetch recent contacts
     const recentContacts = await db.query.contacts.findMany({
-      where: and(
-        eq(contacts.workspaceId, workspaceId),
-        gte(contacts.createdAt, cutoffDate)
-      ),
+      where: and(eq(contacts.workspaceId, workspaceId), gte(contacts.createdAt, cutoffDate)),
       columns: { id: true, firstName: true, lastName: true, createdAt: true },
       orderBy: [contacts.createdAt],
       limit: 5,
@@ -79,12 +81,7 @@ export async function getRecentActivity(
     const [leadsCount] = await db
       .select({ count: count() })
       .from(contacts)
-      .where(
-        and(
-          eq(contacts.workspaceId, workspaceId),
-          gte(contacts.createdAt, cutoffDate)
-        )
-      );
+      .where(and(eq(contacts.workspaceId, workspaceId), gte(contacts.createdAt, cutoffDate)));
 
     // Count agent executions
     const [executionsCount] = await db
@@ -114,12 +111,12 @@ export async function getRecentActivity(
       newLeads: leadsCount?.count || 0,
       agentRuns,
       newMessages,
-      recentAgents: recentAgents.map(a => ({
+      recentAgents: recentAgents.map((a) => ({
         id: a.id,
         name: a.name,
         createdAt: a.createdAt,
       })),
-      recentContacts: recentContacts.map(c => ({
+      recentContacts: recentContacts.map((c) => ({
         id: c.id,
         name: [c.firstName, c.lastName].filter(Boolean).join(' ') || 'Unnamed Contact',
         createdAt: c.createdAt,
@@ -149,34 +146,20 @@ export interface WorkspaceHealth {
   missingItems: string[];
 }
 
-export async function getWorkspaceHealth(
-  workspaceId: string
-): Promise<WorkspaceHealth> {
+export async function getWorkspaceHealth(workspaceId: string): Promise<WorkspaceHealth> {
   try {
-    const [agentsCount, contactsCount, knowledgeCount, integrationsCount] =
-      await Promise.all([
-        db
-          .select({ count: count() })
-          .from(agents)
-          .where(eq(agents.workspaceId, workspaceId)),
-        db
-          .select({ count: count() })
-          .from(contacts)
-          .where(eq(contacts.workspaceId, workspaceId)),
-        db
-          .select({ count: count() })
-          .from(knowledgeItems)
-          .where(eq(knowledgeItems.workspaceId, workspaceId)),
-        db
-          .select({ count: count() })
-          .from(integrations)
-          .where(
-            and(
-              eq(integrations.workspaceId, workspaceId),
-              eq(integrations.status, 'active')
-            )
-          ),
-      ]);
+    const [agentsCount, contactsCount, knowledgeCount, integrationsCount] = await Promise.all([
+      db.select({ count: count() }).from(agents).where(eq(agents.workspaceId, workspaceId)),
+      db.select({ count: count() }).from(contacts).where(eq(contacts.workspaceId, workspaceId)),
+      db
+        .select({ count: count() })
+        .from(knowledgeItems)
+        .where(eq(knowledgeItems.workspaceId, workspaceId)),
+      db
+        .select({ count: count() })
+        .from(integrations)
+        .where(and(eq(integrations.workspaceId, workspaceId), eq(integrations.status, 'active'))),
+    ]);
 
     const hasAgents = (agentsCount[0]?.count || 0) > 0;
     const hasContacts = (contactsCount[0]?.count || 0) > 0;

@@ -61,18 +61,27 @@ export const {
 } = createRoomContext<Presence, Storage, UserMeta, RoomEvent>(liveblocksClient);
 
 // Export Liveblocks provider context
-export const {
-  LiveblocksProvider,
-  useInboxNotifications,
-  useUnreadInboxNotificationsCount,
-} = createLiveblocksContext(liveblocksClient);
+export const { LiveblocksProvider, useInboxNotifications, useUnreadInboxNotificationsCount } =
+  createLiveblocksContext(liveblocksClient);
 
 // Generate a random color for user presence
 export function generateUserColor(): string {
   const colors = [
-    '#E57373', '#F06292', '#BA68C8', '#9575CD', '#7986CB',
-    '#64B5F6', '#4FC3F7', '#4DD0E1', '#4DB6AC', '#81C784',
-    '#AED581', '#DCE775', '#FFD54F', '#FFB74D', '#FF8A65',
+    '#E57373',
+    '#F06292',
+    '#BA68C8',
+    '#9575CD',
+    '#7986CB',
+    '#64B5F6',
+    '#4FC3F7',
+    '#4DD0E1',
+    '#4DB6AC',
+    '#81C784',
+    '#AED581',
+    '#DCE775',
+    '#FFD54F',
+    '#FFB74D',
+    '#FF8A65',
   ];
   return colors[Math.floor(Math.random() * colors.length)];
 }

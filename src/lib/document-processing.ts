@@ -1,6 +1,6 @@
 /**
  * Document Text Extraction Library
- * 
+ *
  * Extracts text from PDFs, Word documents, and other file formats
  */
 
@@ -32,7 +32,10 @@ export interface ProcessedDocument {
 /**
  * Extract text from PDF file
  */
-export async function extractTextFromPDF(fileUrl: string, fileName: string): Promise<ProcessedDocument> {
+export async function extractTextFromPDF(
+  fileUrl: string,
+  fileName: string
+): Promise<ProcessedDocument> {
   try {
     logger.debug('Extracting text from PDF', { fileUrl, fileName });
 
@@ -43,7 +46,7 @@ export async function extractTextFromPDF(fileUrl: string, fileName: string): Pro
 
     // Get pdf-parse dynamically
     const parse = await getPdfParse();
-    
+
     // Parse PDF using pdf-parse v1 API (default export, simple function)
     const data = await parse(buffer);
 
@@ -78,7 +81,10 @@ export async function extractTextFromPDF(fileUrl: string, fileName: string): Pro
 /**
  * Extract text from Word document (.docx)
  */
-export async function extractTextFromDocx(fileUrl: string, fileName: string): Promise<ProcessedDocument> {
+export async function extractTextFromDocx(
+  fileUrl: string,
+  fileName: string
+): Promise<ProcessedDocument> {
   try {
     logger.debug('Extracting text from DOCX', { fileUrl, fileName });
 
@@ -105,14 +111,19 @@ export async function extractTextFromDocx(fileUrl: string, fileName: string): Pr
     };
   } catch (error) {
     logger.error('DOCX text extraction failed', { fileName, error });
-    throw new Error(`Failed to extract text from Word document: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to extract text from Word document: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 /**
  * Extract text from plain text file
  */
-export async function extractTextFromPlainFile(fileUrl: string, fileName: string): Promise<ProcessedDocument> {
+export async function extractTextFromPlainFile(
+  fileUrl: string,
+  fileName: string
+): Promise<ProcessedDocument> {
   try {
     logger.debug('Extracting text from plain file', { fileUrl, fileName });
 
@@ -133,7 +144,9 @@ export async function extractTextFromPlainFile(fileUrl: string, fileName: string
     };
   } catch (error) {
     logger.error('Plain text extraction failed', { fileName, error });
-    throw new Error(`Failed to extract text from file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to extract text from file: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -187,14 +200,16 @@ export async function processDocument(attachment: {
 /**
  * Process multiple documents
  */
-export async function processDocuments(attachments: Array<{
-  url: string;
-  name: string;
-  mimeType: string;
-  type: string;
-}>): Promise<string> {
-  const documentAttachments = attachments.filter(att => att.type === 'document');
-  
+export async function processDocuments(
+  attachments: Array<{
+    url: string;
+    name: string;
+    mimeType: string;
+    type: string;
+  }>
+): Promise<string> {
+  const documentAttachments = attachments.filter((att) => att.type === 'document');
+
   if (documentAttachments.length === 0) {
     return '';
   }
