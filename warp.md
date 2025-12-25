@@ -64,6 +64,11 @@ npm run env:check                # Validate environment variables
 npm run update-context           # Regenerate AI_CONTEXT.md
 ```
 
+## Real-time Tools Strategy
+**Pusher** - Notifications, events, activity feeds  
+**Liveblocks** - Collaborative editing, cursor tracking  
+**Why Both:** Different use cases, complementary (not redundant)
+
 ## Session Workflow
 ```bash
 # 1. Start (Gain Clarity)

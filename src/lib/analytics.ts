@@ -1,5 +1,7 @@
 "use client";
 
+import { track } from '@vercel/analytics';
+
 // Generate or get session ID (matching useAnalytics hook)
 function getSessionId(): string {
   if (typeof window === 'undefined') return '';
@@ -57,3 +59,37 @@ export function trackClick(elementId: string, metadata?: Record<string, unknown>
   }
 }
 
+/**
+ * Track custom events in Vercel Analytics
+ * 
+ * @example
+ * trackVercelEvent('Agent Created', { type: 'sales', name: agentName });
+ * trackVercelEvent('Subscription Upgraded', { plan: 'Pro', amount: 29 });
+ */
+export function trackVercelEvent(eventName: string, properties?: Record<string, string | number | boolean>) {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    track(eventName, properties);
+  } catch (error) {
+    console.error('Vercel Analytics tracking error:', error);
+  }
+}
+
+/**
+ * Common event types for Vercel Analytics
+ */
+export const VercelEvents = {
+  // User Onboarding
+  SIGNUP_COMPLETED: 'Signup Completed',
+  ONBOARDING_COMPLETED: 'Onboarding Completed',
+  
+  // AI Features
+  AGENT_CREATED: 'Agent Created',
+  CHAT_STARTED: 'Chat Started',
+  WORKFLOW_CREATED: 'Workflow Created',
+  
+  // Billing
+  SUBSCRIPTION_STARTED: 'Subscription Started',
+  SUBSCRIPTION_UPGRADED: 'Subscription Upgraded',
+} as const;
