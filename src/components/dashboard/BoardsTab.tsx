@@ -30,7 +30,6 @@ import {
 import {
   FolderKanban,
   Plus,
-  Search,
   MoreVertical,
   FileText,
   Link as LinkIcon,
@@ -38,12 +37,11 @@ import {
   Download,
   Trash2,
   Edit,
-  Tag,
   AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useBoardsStorage } from '@/hooks/useBoardsStorage';
-import type { Board, BoardItem, BoardItemType } from '@/types/boards';
+import type { BoardItem, BoardItemType } from '@/types/boards';
 
 interface BoardsTabProps {
   workspaceId: string;

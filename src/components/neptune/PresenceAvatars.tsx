@@ -9,7 +9,6 @@ import {
 } from '@/components/ui/tooltip';
 import { useNeptunePresence } from '@/hooks/useNeptunePresence';
 import { cn } from '@/lib/utils';
-import { Users } from 'lucide-react';
 
 interface PresenceAvatarsProps {
   className?: string;

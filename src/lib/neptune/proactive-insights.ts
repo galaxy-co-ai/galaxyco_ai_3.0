@@ -16,7 +16,6 @@
 import { db } from '@/lib/db';
 import { 
   prospects, 
-  contacts, 
   tasks,
   calendarEvents,
   campaigns,
@@ -24,7 +23,7 @@ import {
   agents,
   agentExecutions,
 } from '@/db/schema';
-import { eq, and, gte, lte, desc, sql, count, sum } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, count, sum } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getCache, setCache } from '@/lib/cache';
 

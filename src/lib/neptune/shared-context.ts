@@ -11,8 +11,8 @@
  */
 
 import { db } from '@/lib/db';
-import { aiConversations, aiMessages, workspaceIntelligence } from '@/db/schema';
-import { eq, and, desc, gte, sql } from 'drizzle-orm';
+import { aiConversations, aiMessages } from '@/db/schema';
+import { eq, and, desc, gte } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';
 import { getCache, setCache } from '@/lib/cache';

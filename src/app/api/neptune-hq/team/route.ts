@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { workspaceMembers, users, neptuneConversations, neptuneMessages, neptuneActivityLog } from '@/db/schema';
+import { workspaceMembers, neptuneConversations, neptuneMessages, neptuneActivityLog } from '@/db/schema';
 import { eq, desc, count, and, gte, sql } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
 

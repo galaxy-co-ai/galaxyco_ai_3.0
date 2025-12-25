@@ -11,8 +11,7 @@
 import { 
   type PageContextData, 
   type AppModule, 
-  type SuggestedAction,
-  MODULE_METADATA 
+  type SuggestedAction 
 } from './page-context';
 
 // ============================================================================

@@ -3,20 +3,17 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@clerk/nextjs';
 import { 
-  Settings, 
   Bell, 
   MessageSquare, 
   Zap, 
   Shield,
   Globe,
-  Palette,
   Save,
   RotateCcw
 } from 'lucide-react';

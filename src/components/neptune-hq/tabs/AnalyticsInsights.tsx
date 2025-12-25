@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '../shared/StatCard';
 import { TrendChart } from '../shared/TrendChart';
 import { useAuth } from '@clerk/nextjs';
-import { MessageSquare, Users, Clock, ThumbsUp, TrendingUp, BarChart3 } from 'lucide-react';
+import { MessageSquare, Users, Clock, TrendingUp, BarChart3 } from 'lucide-react';
 import useSWR from 'swr';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 

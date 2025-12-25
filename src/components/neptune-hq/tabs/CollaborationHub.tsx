@@ -1,13 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { ActivityFeed } from '../shared/ActivityFeed';
 import { UserAvatar } from '../shared/UserAvatar';
-import { StatusBadge } from '../shared/StatusBadge';
 import { useAuth } from '@clerk/nextjs';
-import { Users, MessageSquare, TrendingUp } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import useSWR from 'swr';
 

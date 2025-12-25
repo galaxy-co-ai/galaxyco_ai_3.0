@@ -15,8 +15,6 @@ import { AnalyticsProvider } from "@/providers/AnalyticsProvider";
 import { cn } from "@/lib/utils";
 import {
   createPageContextFromPath,
-  getModuleFromPath,
-  getPageTypeFromPath,
 } from "@/lib/neptune/page-context";
 
 // Component to sync current page with Neptune context

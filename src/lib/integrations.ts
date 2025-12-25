@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { integrations, oauthTokens } from '@/db/schema';
+import { integrations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 

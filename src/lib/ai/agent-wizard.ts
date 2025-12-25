@@ -16,7 +16,6 @@ import type { AIContextData } from './context';
 import { db } from '@/lib/db';
 import { agents } from '@/db/schema';
 import { logger } from '@/lib/logger';
-import { eq } from 'drizzle-orm';
 
 // ============================================================================
 // TYPE DEFINITIONS

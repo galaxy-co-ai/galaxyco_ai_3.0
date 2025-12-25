@@ -6,7 +6,7 @@ export function LunarLabsStars() {
   // Generate stars once on mount with stable positions
   // Using Math.random in useMemo is intentional for star placement variance
   const stars = useMemo(() => {
-    // eslint-disable-next-line react-hooks/purity
+     
     return Array.from({ length: 50 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,

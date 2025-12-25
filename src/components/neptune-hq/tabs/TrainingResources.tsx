@@ -12,7 +12,6 @@ import {
   BookOpen, 
   Lightbulb, 
   CheckCircle2, 
-  Circle, 
   ExternalLink,
   FileText,
   Video,

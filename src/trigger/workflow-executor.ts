@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import OpenAI from "openai";
 import { aiTools, executeTool, type ToolContext } from "@/lib/ai/tools";
-import type { ToolExecutionPart, STREAMS } from "./streams";
+import type { ToolExecutionPart } from "./streams";
 
 // Initialize OpenAI client
 const openai = new OpenAI({

@@ -10,7 +10,6 @@ import { useAuth } from '@clerk/nextjs';
 import { 
   Users2, 
   UserPlus, 
-  Mail, 
   Shield, 
   Clock,
   Search,

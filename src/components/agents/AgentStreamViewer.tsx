@@ -5,7 +5,7 @@ import { useRealtimeRunWithStreams } from "@trigger.dev/react-hooks";
 import { cn } from "@/lib/utils";
 import { Bot, Loader2, CheckCircle2, Wrench, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import type { STREAMS, ToolExecutionPart } from "@/trigger/streams";
+import type { ToolExecutionPart } from "@/trigger/streams";
 
 // ============================================================================
 // TYPES

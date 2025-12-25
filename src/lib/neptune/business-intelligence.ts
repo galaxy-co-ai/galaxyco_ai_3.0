@@ -13,8 +13,7 @@
 import { db } from '@/lib/db';
 import { 
   prospects, 
-  contacts, 
-  customers,
+  contacts,
   tasks,
   calendarEvents,
   campaigns,
@@ -23,7 +22,7 @@ import {
   agents,
   agentExecutions,
 } from '@/db/schema';
-import { eq, and, gte, lte, desc, sql, count, sum, avg } from 'drizzle-orm';
+import { eq, and, gte, lte, sql, count, sum, avg } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 // ============================================================================

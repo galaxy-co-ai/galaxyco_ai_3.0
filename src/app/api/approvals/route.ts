@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { approvalRequests, users } from "@/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 
 /**

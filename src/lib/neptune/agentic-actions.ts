@@ -12,7 +12,7 @@
  */
 
 import { db } from '@/lib/db';
-import { prospects, contacts, tasks, calendarEvents } from '@/db/schema';
+import { prospects, tasks } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getOpenAI } from '@/lib/ai-providers';

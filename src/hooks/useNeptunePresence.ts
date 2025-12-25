@@ -2,8 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { 
   useMyPresence, 
   useOthers, 
-  useSelf,
-  useUpdateMyPresence 
+  useSelf 
 } from '@/lib/liveblocks';
 import { logger } from '@/lib/logger';
 
