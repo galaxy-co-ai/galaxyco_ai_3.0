@@ -43,6 +43,12 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // Explicitly allow .well-known routes (OAuth discovery for ChatGPT MCP)
+  const pathname = request.nextUrl.pathname;
+  if (pathname.startsWith('/.well-known')) {
+    return; // Allow through without auth
+  }
+  
   // Protect all non-public routes
   if (!isPublicRoute(request)) {
     await auth.protect();
