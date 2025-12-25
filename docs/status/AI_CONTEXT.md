@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-25 (b19e511)  
+**Updated Through:** 2025-12-25 (5b5ca68)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-25 5b5ca68 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0 # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
+- 2025-12-25 0afa432 fix(neptune): remove undefined NEPTUNE_PERSONA import
 - 2025-12-25 b19e511 feat(dashboard): transform WorkspacePanel with Compass, Vision, and Boards tabs
 - 2025-12-24 92a855a fix(mcp): explicit bypass for .well-known routes in middleware
 - 2025-12-24 ef03b46 fix(mcp): ensure .well-known path is matched by middleware
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 284e4cf feat(trigger): fully optimize trigger.dev integration
 - 2025-12-23 018a51f feat(trigger): add tags, observability and documentation
 - 2025-12-23 2eb6675 feat(trigger): add wait functions for scheduling and sequences
-- 2025-12-23 d054eee feat(trigger): add human-in-the-loop approval workflows
-- 2025-12-23 a2e0c87 feat(trigger): add idempotency keys to prevent duplicate operations
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
