@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-24 (1ce4f95)  
+**Updated Through:** 2025-12-24 (87b806a)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-24 87b806a feat(mcp): add dynamic client registration for ChatGPT App Store
 - 2025-12-24 1ce4f95 fix(mcp): move OAuth discovery to root .well-known path for ChatGPT
 - 2025-12-24 cd5730f feat(mcp): ChatGPT integration ready - universal search/fetch, CORS, read-only hints
 - 2025-12-24 2fc433e fix(mcp): rename proxy.ts to middleware.ts for Next.js compatibility
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 4350177 feat(trigger): add per-tenant queue configurations
 - 2025-12-23 d66ae6a feat(trigger): refactor bulk operations to use batch APIs
 - 2025-12-23 833b923 feat(trigger): add realtime AI streaming support
-- 2025-12-23 2756205 feat(trigger): add Trigger.dev realtime foundation
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
