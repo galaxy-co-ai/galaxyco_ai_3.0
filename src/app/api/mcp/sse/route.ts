@@ -1,9 +1,13 @@
 /**
- * MCP Server-Sent Events Endpoint
+ * Neptune MCP Server - Unified Endpoint
  * 
- * Main endpoint for ChatGPT MCP integration.
- * Implements the Model Context Protocol over Server-Sent Events (SSE).
+ * Single endpoint for ChatGPT MCP integration supporting both:
+ * - JSON-RPC 2.0 over POST (primary method for ChatGPT)
+ * - Server-Sent Events over GET (for real-time updates)
  * 
+ * ChatGPT Connection URL: https://app.galaxyco.ai/api/mcp/sse
+ * 
+ * Protocol: Model Context Protocol (MCP) 2024-11-05
  * Reference: https://modelcontextprotocol.io/
  */
 
@@ -24,6 +28,25 @@ import {
 import { db } from '@/lib/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+
+// ============================================================================
+// CORS CONFIGURATION FOR CHATGPT
+// ============================================================================
+
+const CHATGPT_ORIGINS = [
+  'https://chatgpt.com',
+  'https://chat.openai.com',
+  'https://www.chatgpt.com',
+  'https://www.chat.openai.com',
+];
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*', // ChatGPT requires wildcard for initial handshake
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, MCP-Protocol-Version',
+  'Access-Control-Allow-Credentials': 'true',
+  'Access-Control-Max-Age': '86400',
+};
 
 // ============================================================================
 // MCP SERVER INFO
@@ -149,7 +172,13 @@ export async function POST(request: NextRequest) {
     if (!token) {
       return new Response(
         JSON.stringify({ error: 'unauthorized', message: 'Access token required' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { 
+            'Content-Type': 'application/json',
+            ...CORS_HEADERS,
+          } 
+        }
       );
     }
 
@@ -158,7 +187,13 @@ export async function POST(request: NextRequest) {
     if (!tokenData) {
       return new Response(
         JSON.stringify({ error: 'unauthorized', message: 'Invalid or expired access token' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
+        { 
+          status: 401, 
+          headers: { 
+            'Content-Type': 'application/json',
+            ...CORS_HEADERS,
+          } 
+        }
       );
     }
 
@@ -196,7 +231,10 @@ export async function POST(request: NextRequest) {
     const response = await handleJsonRpcRequest(rpcRequest, authContext);
 
     return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...CORS_HEADERS,
+      },
     });
   } catch (error) {
     logger.error('[MCP] Request failed', { error });
@@ -212,7 +250,10 @@ export async function POST(request: NextRequest) {
 
     return new Response(JSON.stringify(errorResponse), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...CORS_HEADERS,
+      },
     });
   }
 }
@@ -329,17 +370,12 @@ async function handleToolCall(
 }
 
 // ============================================================================
-// CORS OPTIONS
+// CORS OPTIONS (Required for ChatGPT preflight)
 // ============================================================================
 
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Max-Age': '86400',
-    },
+    headers: CORS_HEADERS,
   });
 }

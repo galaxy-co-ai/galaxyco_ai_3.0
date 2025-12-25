@@ -16,6 +16,49 @@ import type { MCPToolDefinition, MCPToolResult, MCPAuthContext } from './types';
 // ============================================================================
 
 export const mcpTools: MCPToolDefinition[] = [
+  // ============================================================================
+  // REQUIRED TOOLS FOR CHATGPT CONNECTOR MODE
+  // ============================================================================
+  
+  {
+    name: 'search',
+    description: 'Search across your entire GalaxyCo workspace - leads, tasks, notes, and knowledge base. Returns a list of relevant results with IDs that can be fetched for details.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query to find relevant items across all your data',
+        },
+      },
+      required: ['query'],
+    },
+    annotations: {
+      readOnlyHint: true, // Safe read operation - no confirmation needed
+    },
+  },
+  {
+    name: 'fetch',
+    description: 'Fetch the complete details of a specific item by ID. Use this after search to get full information about leads, tasks, or documents.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          description: 'The unique ID of the item to fetch (returned from search results)',
+        },
+      },
+      required: ['id'],
+    },
+    annotations: {
+      readOnlyHint: true, // Safe read operation - no confirmation needed
+    },
+  },
+
+  // ============================================================================
+  // BUSINESS TOOLS
+  // ============================================================================
+  
   // Quick Capture - The killer feature for ChatGPT users
   {
     name: 'quick_capture',
@@ -110,6 +153,9 @@ export const mcpTools: MCPToolDefinition[] = [
         },
       },
     },
+    annotations: {
+      readOnlyHint: true,
+    },
   },
   {
     name: 'update_lead',
@@ -193,6 +239,9 @@ export const mcpTools: MCPToolDefinition[] = [
         },
       },
     },
+    annotations: {
+      readOnlyHint: true,
+    },
   },
 
   // Workspace Summary
@@ -211,6 +260,9 @@ export const mcpTools: MCPToolDefinition[] = [
           description: 'What to include in the summary (default: all)',
         },
       },
+    },
+    annotations: {
+      readOnlyHint: true,
     },
   },
 
@@ -235,6 +287,9 @@ export const mcpTools: MCPToolDefinition[] = [
         },
       },
       required: ['query'],
+    },
+    annotations: {
+      readOnlyHint: true,
     },
   },
 
@@ -266,6 +321,9 @@ export const mcpTools: MCPToolDefinition[] = [
       },
       required: ['to', 'purpose'],
     },
+    annotations: {
+      readOnlyHint: true, // Drafts don't send, just generate text
+    },
   },
 ];
 
@@ -279,6 +337,236 @@ type ToolHandler = (
 ) => Promise<MCPToolResult>;
 
 const toolHandlers: Record<string, ToolHandler> = {
+  // ============================================================================
+  // UNIVERSAL SEARCH & FETCH (Required for ChatGPT)
+  // ============================================================================
+  
+  search: async (args, context) => {
+    try {
+      const query = (args.query as string).toLowerCase();
+      const results: Array<{ id: string; type: string; title: string; snippet: string }> = [];
+
+      // Search leads
+      const leadResults = await db.query.prospects.findMany({
+        where: eq(prospects.workspaceId, context.workspaceId),
+        orderBy: [desc(prospects.createdAt)],
+        limit: 10,
+      });
+      
+      for (const lead of leadResults) {
+        if (
+          lead.name?.toLowerCase().includes(query) ||
+          lead.email?.toLowerCase().includes(query) ||
+          lead.company?.toLowerCase().includes(query) ||
+          lead.notes?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: `lead:${lead.id}`,
+            type: 'lead',
+            title: `${lead.name}${lead.company ? ` (${lead.company})` : ''}`,
+            snippet: `${lead.stage} • ${lead.email || 'No email'}${lead.estimatedValue ? ` • $${lead.estimatedValue}` : ''}`,
+          });
+        }
+      }
+
+      // Search tasks
+      const taskResults = await db.query.tasks.findMany({
+        where: eq(tasks.workspaceId, context.workspaceId),
+        orderBy: [desc(tasks.createdAt)],
+        limit: 10,
+      });
+      
+      for (const task of taskResults) {
+        if (
+          task.title?.toLowerCase().includes(query) ||
+          task.description?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: `task:${task.id}`,
+            type: 'task',
+            title: task.title,
+            snippet: `${task.status} • ${task.priority} priority${task.dueDate ? ` • Due ${new Date(task.dueDate).toLocaleDateString()}` : ''}`,
+          });
+        }
+      }
+
+      // Search knowledge base
+      const knowledgeResults = await db.query.knowledgeItems.findMany({
+        where: eq(knowledgeItems.workspaceId, context.workspaceId),
+        orderBy: [desc(knowledgeItems.createdAt)],
+        limit: 10,
+      });
+      
+      for (const item of knowledgeResults) {
+        if (
+          item.title?.toLowerCase().includes(query) ||
+          item.content?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            id: `knowledge:${item.id}`,
+            type: 'knowledge',
+            title: item.title,
+            snippet: item.content?.substring(0, 150) + (item.content && item.content.length > 150 ? '...' : ''),
+          });
+        }
+      }
+
+      if (results.length === 0) {
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({ results: [] }),
+          }],
+        };
+      }
+
+      // Format results according to MCP spec
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            results: results.slice(0, 25).map(r => ({
+              id: r.id,
+              title: r.title,
+              snippet: r.snippet,
+              type: r.type,
+            })),
+          }),
+        }],
+      };
+    } catch (error) {
+      logger.error('[MCP] Search failed', { error, args });
+      return {
+        content: [{ type: 'text', text: JSON.stringify({ results: [] }) }],
+        isError: true,
+      };
+    }
+  },
+
+  fetch: async (args, context) => {
+    try {
+      const fullId = args.id as string;
+      const [type, id] = fullId.split(':');
+
+      if (!type || !id) {
+        return {
+          content: [{ type: 'text', text: 'Invalid ID format. Expected format: "type:id"' }],
+          isError: true,
+        };
+      }
+
+      if (type === 'lead') {
+        const lead = await db.query.prospects.findFirst({
+          where: and(eq(prospects.id, id), eq(prospects.workspaceId, context.workspaceId)),
+        });
+
+        if (!lead) {
+          return {
+            content: [{ type: 'text', text: 'Lead not found' }],
+            isError: true,
+          };
+        }
+
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              id: fullId,
+              type: 'lead',
+              data: {
+                name: lead.name,
+                email: lead.email,
+                phone: lead.phone,
+                company: lead.company,
+                title: lead.title,
+                stage: lead.stage,
+                estimatedValue: lead.estimatedValue,
+                source: lead.source,
+                notes: lead.notes,
+                createdAt: lead.createdAt?.toISOString(),
+                updatedAt: lead.updatedAt?.toISOString(),
+              },
+            }, null, 2),
+          }],
+        };
+      } else if (type === 'task') {
+        const task = await db.query.tasks.findFirst({
+          where: and(eq(tasks.id, id), eq(tasks.workspaceId, context.workspaceId)),
+        });
+
+        if (!task) {
+          return {
+            content: [{ type: 'text', text: 'Task not found' }],
+            isError: true,
+          };
+        }
+
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              id: fullId,
+              type: 'task',
+              data: {
+                title: task.title,
+                description: task.description,
+                status: task.status,
+                priority: task.priority,
+                dueDate: task.dueDate?.toISOString(),
+                createdAt: task.createdAt?.toISOString(),
+                updatedAt: task.updatedAt?.toISOString(),
+              },
+            }, null, 2),
+          }],
+        };
+      } else if (type === 'knowledge') {
+        const item = await db.query.knowledgeItems.findFirst({
+          where: and(eq(knowledgeItems.id, id), eq(knowledgeItems.workspaceId, context.workspaceId)),
+        });
+
+        if (!item) {
+          return {
+            content: [{ type: 'text', text: 'Knowledge item not found' }],
+            isError: true,
+          };
+        }
+
+        return {
+          content: [{
+            type: 'text',
+            text: JSON.stringify({
+              id: fullId,
+              type: 'knowledge',
+              data: {
+                title: item.title,
+                content: item.content,
+                type: item.type,
+                tags: item.tags,
+                createdAt: item.createdAt?.toISOString(),
+                updatedAt: item.updatedAt?.toISOString(),
+              },
+            }, null, 2),
+          }],
+        };
+      } else {
+        return {
+          content: [{ type: 'text', text: `Unknown item type: ${type}` }],
+          isError: true,
+        };
+      }
+    } catch (error) {
+      logger.error('[MCP] Fetch failed', { error, args });
+      return {
+        content: [{ type: 'text', text: `Failed to fetch item: ${error instanceof Error ? error.message : 'Unknown error'}` }],
+        isError: true,
+      };
+    }
+  },
+
+  // ============================================================================
+  // BUSINESS TOOLS
+  // ============================================================================
+  
   // Quick Capture
   quick_capture: async (args, context) => {
     const content = args.content as string;

@@ -78,6 +78,9 @@ export interface MCPToolDefinition {
     properties: Record<string, MCPPropertySchema>;
     required?: string[];
   };
+  annotations?: {
+    readOnlyHint?: boolean; // Tells ChatGPT to skip confirmation prompts for safe operations
+  };
 }
 
 export interface MCPPropertySchema {
