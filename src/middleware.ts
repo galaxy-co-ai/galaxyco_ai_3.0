@@ -35,7 +35,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/public(.*)',
   
   // OAuth Discovery (REQUIRED for ChatGPT MCP integration)
-  '/.well-known(.*)',
+  // Note: Escape the dot in .well-known for regex matching
+  '/\\.well-known(.*)',
   
   // MCP server routes (authenticated via OAuth tokens, not Clerk sessions)
   '/api/mcp(.*)',
@@ -54,5 +55,7 @@ export const config = {
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
+    // OAuth discovery endpoint (must be explicitly included)
+    '/.well-known/:path*',
   ],
 };
