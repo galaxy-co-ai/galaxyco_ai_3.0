@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-25 (085fdd8)  
+**Updated Through:** 2025-12-25 (99d45e9)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-25 99d45e9 fix(db): use correct prospect stage enum values (won/lost instead of closed-won/closed-lost)
 - 2025-12-25 085fdd8 fix(api): use correct NeptuneContext options in Compass and Vision routes
 - 2025-12-25 5b5ca68 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0 # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
 - 2025-12-25 0afa432 fix(neptune): remove undefined NEPTUNE_PERSONA import
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-24 78a304b feat(neptune): implement contextual intelligence system
 - 2025-12-24 3187153 fix(dashboard): polish WorkspacePanel card to match Neptune styling
 - 2025-12-23 284e4cf feat(trigger): fully optimize trigger.dev integration
-- 2025-12-23 018a51f feat(trigger): add tags, observability and documentation
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
