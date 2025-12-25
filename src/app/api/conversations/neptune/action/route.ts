@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { openai } from '@/lib/openai';
+import { getCachedLLMResponse, cacheLLMResponse } from '@/lib/llm-cache';
 
 const actionSchema = z.object({
   action: z.enum([
@@ -59,10 +60,7 @@ export async function POST(request: Request) {
     });
 
     if (!conversation) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
     // Fetch recent messages for context
@@ -129,7 +127,7 @@ export async function POST(request: Request) {
 function formatMessagesForAI(messages: ConversationMessage[]): string {
   // Reverse to get chronological order
   const chronological = [...messages].reverse();
-  
+
   return chronological
     .map((m) => {
       const sender = m.direction === 'inbound' ? 'Customer' : 'Agent';
@@ -148,41 +146,66 @@ async function handleSuggestReply(
   conversation: ConversationRecord
 ): Promise<string> {
   const lastInboundMessage = messages.find((m) => m.direction === 'inbound');
-  
+
   if (!lastInboundMessage) {
-    return "No customer messages found to reply to. Start the conversation by sending a message.";
+    return 'No customer messages found to reply to. Start the conversation by sending a message.';
   }
 
   const conversationHistory = formatMessagesForAI(messages);
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You are Neptune, an AI assistant helping draft professional responses for a ${conversation.channel} conversation. 
+    // Build prompt for caching
+    const promptMessages = [
+      {
+        role: 'system',
+        content: `You are Neptune, an AI assistant helping draft professional responses for a ${conversation.channel} conversation. 
 Generate a helpful, professional, and friendly reply to the customer's latest message.
 Keep the response concise but thorough. Match the tone of the conversation.
 Do not include greetings like "Dear Customer" - just the body of the response.
 Channel context: ${conversation.channel === 'email' ? 'This is an email, so slightly more formal is appropriate.' : 'This is a chat/message, so keep it conversational.'}`,
-        },
-        {
-          role: 'user',
-          content: `Conversation subject: ${conversation.subject || 'General inquiry'}
+      },
+      {
+        role: 'user',
+        content: `Conversation subject: ${conversation.subject || 'General inquiry'}
 
 Conversation history:
 ${conversationHistory}
 
 Generate a suggested reply to the customer's latest message.`,
-        },
-      ],
-      max_tokens: 500,
-      temperature: 0.7,
+      },
+    ];
+
+    // Try cache first
+    const cached = await getCachedLLMResponse<{
+      choices: Array<{ message?: { content?: string } }>;
+    }>(promptMessages, {
+      model: 'gpt-4o-mini',
+      ttl: 3600, // 1 hour cache for reply suggestions
+      context: { action: 'suggest-reply', conversationId: conversation.id.substring(0, 8) },
     });
 
+    let response;
+    if (cached) {
+      logger.info('[Neptune] Cache hit for suggest-reply');
+      response = cached;
+    } else {
+      response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: promptMessages,
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      // Cache for next time
+      await cacheLLMResponse(promptMessages, response, {
+        model: 'gpt-4o-mini',
+        ttl: 3600,
+        context: { action: 'suggest-reply', conversationId: conversation.id.substring(0, 8) },
+      });
+    }
+
     const suggestion = response.choices[0]?.message?.content || 'Unable to generate suggestion.';
-    
+
     return `**Suggested Reply:**\n\n${suggestion}\n\n---\n_You can copy, edit, or regenerate this suggestion._`;
   } catch (error) {
     logger.error('OpenAI suggest reply error', error);
@@ -198,7 +221,7 @@ async function handleSummarize(
   conversation: ConversationRecord
 ): Promise<string> {
   if (messages.length === 0) {
-    return "No messages to summarize yet.";
+    return 'No messages to summarize yet.';
   }
 
   const conversationHistory = formatMessagesForAI(messages);
@@ -234,7 +257,7 @@ ${conversationHistory}`,
     });
 
     const summary = response.choices[0]?.message?.content || 'Unable to generate summary.';
-    
+
     return `**Conversation Summary**\n\n${summary}`;
   } catch (error) {
     logger.error('OpenAI summarize error', error);
@@ -250,7 +273,7 @@ async function handleSentiment(
   conversation: ConversationRecord
 ): Promise<string> {
   if (messages.length === 0) {
-    return "No messages to analyze yet.";
+    return 'No messages to analyze yet.';
   }
 
   const conversationHistory = formatMessagesForAI(messages);
@@ -283,7 +306,7 @@ ${conversationHistory}`,
     });
 
     const analysis = response.choices[0]?.message?.content || 'Unable to analyze sentiment.';
-    
+
     return `**Sentiment Analysis**\n\n${analysis}`;
   } catch (error) {
     logger.error('OpenAI sentiment error', error);
@@ -304,7 +327,7 @@ async function handleScheduleFollowup(
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(14, 0, 0, 0);
-    
+
     const endTime = new Date(tomorrow);
     endTime.setMinutes(endTime.getMinutes() + 30);
 
@@ -372,7 +395,7 @@ async function handleDraftEmail(
   conversation: ConversationRecord
 ): Promise<string> {
   if (messages.length === 0) {
-    return "No conversation content to draft from.";
+    return 'No conversation content to draft from.';
   }
 
   const conversationHistory = formatMessagesForAI(messages);
@@ -412,7 +435,7 @@ ${conversationHistory}`,
     });
 
     const draft = response.choices[0]?.message?.content || 'Unable to generate draft.';
-    
+
     return `**Email Draft**\n\n${draft}\n\n---\n_Review and edit before sending._`;
   } catch (error) {
     logger.error('OpenAI draft email error', error);
