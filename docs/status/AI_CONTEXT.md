@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-24 (2fc433e)  
+**Updated Through:** 2025-12-24 (cd5730f)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-24 cd5730f feat(mcp): ChatGPT integration ready - universal search/fetch, CORS, read-only hints
 - 2025-12-24 2fc433e fix(mcp): rename proxy.ts to middleware.ts for Next.js compatibility
 - 2025-12-24 34d54b1 chore: trigger redeploy for MCP routes
 - 2025-12-24 e8d8526 fix(mcp): use proxy.ts instead of middleware.ts for Clerk auth
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-23 833b923 feat(trigger): add realtime AI streaming support
 - 2025-12-23 2756205 feat(trigger): add Trigger.dev realtime foundation
 - 2025-12-23 a010832 feat(neptune-hq): complete database integration for all endpoints
-- 2025-12-23 e07be81 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
