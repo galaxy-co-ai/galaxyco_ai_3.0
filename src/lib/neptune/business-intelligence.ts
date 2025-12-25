@@ -202,7 +202,7 @@ async function collectCRMSignals(workspaceId: string): Promise<BusinessSignals['
       .from(prospects)
       .where(and(
         eq(prospects.workspaceId, workspaceId),
-        eq(prospects.stage, 'closed-won'),
+        eq(prospects.stage, 'won'),
         gte(prospects.updatedAt, monthStart)
       ));
     
@@ -210,7 +210,7 @@ async function collectCRMSignals(workspaceId: string): Promise<BusinessSignals['
       .from(prospects)
       .where(and(
         eq(prospects.workspaceId, workspaceId),
-        sql`${prospects.stage} IN ('closed-won', 'closed-lost')`,
+        sql`${prospects.stage} IN ('won', 'lost')`,
         gte(prospects.updatedAt, monthStart)
       ));
     
