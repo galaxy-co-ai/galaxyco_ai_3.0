@@ -48,23 +48,22 @@ export async function POST(request: NextRequest) {
     const context = await generateNeptuneContext({
       workspaceId,
       userId,
-      includeStats: true,
-      includeRecentActivity: true,
+      includeBusinessIntelligence: true,
+      includeProactiveInsights: true,
     });
 
     // Build context summary for Claude
+    const businessSummary = context.businessSummary || 'New workspace';
+    const insightsPrompt = context.insightsPrompt || '';
+    
     const contextSummary = `
 Workspace Context:
-- CRM: ${context.stats.crm.totalLeads} leads, ${context.stats.crm.totalContacts} contacts, ${context.stats.crm.totalDeals} deals
-- Agents: ${context.stats.agents.total} total, ${context.stats.agents.activeCount} active
-- Tasks: ${context.stats.tasks.total} total, ${context.stats.tasks.overdue} overdue, ${context.stats.tasks.dueToday} due today
-- Marketing: ${context.stats.marketing.totalCampaigns} campaigns, ${context.stats.marketing.activeCampaigns} active
-- Knowledge: ${context.stats.knowledge.totalItems} items
+${businessSummary}
 
-Recent Activity:
-${context.recentActivity?.slice(0, 5).map(a => `- ${a.action} (${a.entityType})`).join('\n') || 'No recent activity'}
+${insightsPrompt}
 
-User Goals: ${context.userPreferences?.goals || 'Not set'}
+Business Intelligence: ${context.businessIntelligence ? 'Available' : 'Not available'}
+Shared Context: ${context.sharedContext ? 'Available' : 'Not available'}
     `.trim();
 
     // Call Claude to generate insights

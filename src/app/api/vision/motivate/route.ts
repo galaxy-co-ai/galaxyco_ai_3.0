@@ -40,23 +40,22 @@ export async function POST(request: NextRequest) {
     const context = await generateNeptuneContext({
       workspaceId,
       userId,
-      includeStats: true,
-      includeRecentActivity: true,
+      includeBusinessIntelligence: true,
+      includeProactiveInsights: true,
     });
 
     // Build context for Claude
+    const businessSummary = context.businessSummary || 'Getting started';
+    
     const progressContext = `
 User's Goals:
 ${goals || 'No specific goals set yet'}
 
-Workspace Progress:
-- CRM: ${context.stats.crm.totalLeads} leads, ${context.stats.crm.totalContacts} contacts
-- Active Work: ${context.stats.agents.activeCount} agents running, ${context.stats.tasks.total - context.stats.tasks.completed} tasks in progress
-- Recent Wins: ${context.stats.tasks.completed} tasks completed
-- Growth: ${context.stats.marketing.activeCampaigns} active campaigns
+Workspace Summary:
+${businessSummary}
 
-Recent Activity:
-${context.recentActivity?.slice(0, 3).map(a => `- ${a.action}`).join('\n') || 'Getting started'}
+Recent Progress:
+${context.insightsPrompt || 'Building your workspace'}
     `.trim();
 
     // Get previous motivations to avoid repetition
