@@ -34,6 +34,9 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',
   '/api/public(.*)',
   
+  // OAuth Discovery (REQUIRED for ChatGPT MCP integration)
+  '/.well-known(.*)',
+  
   // MCP server routes (authenticated via OAuth tokens, not Clerk sessions)
   '/api/mcp(.*)',
 ]);

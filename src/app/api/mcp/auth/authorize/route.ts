@@ -3,14 +3,17 @@
  * 
  * Handles the OAuth 2.0 authorization flow for ChatGPT MCP integration.
  * Users are redirected here to authorize Neptune access to their GalaxyCo workspace.
+ * 
+ * Supports both:
+ * - Static clients (via MCP_CLIENT_ID env var)
+ * - Dynamic clients (via RFC 7591 registration)
  */
 
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { logger } from '@/lib/logger';
-import { db } from '@/lib/db';
-import { eq, and } from 'drizzle-orm';
 import crypto from 'crypto';
+import { registeredClients } from '../register/route';
 
 // In-memory store for authorization codes (use Redis in production)
 // This is fine for MVP - codes expire in 10 minutes anyway
@@ -51,12 +54,10 @@ export async function GET(request: Request) {
       );
     }
 
-    // Validate client_id against environment variable
-    const expectedClientId = process.env.MCP_CLIENT_ID;
-    if (!expectedClientId || clientId !== expectedClientId) {
+    if (!clientId) {
       return NextResponse.json(
-        { error: 'invalid_client', error_description: 'Invalid client_id' },
-        { status: 401 }
+        { error: 'invalid_request', error_description: 'client_id is required' },
+        { status: 400 }
       );
     }
 
@@ -65,6 +66,37 @@ export async function GET(request: Request) {
         { error: 'invalid_request', error_description: 'redirect_uri is required' },
         { status: 400 }
       );
+    }
+
+    // Validate client_id - support BOTH static and dynamically registered clients
+    const staticClientId = process.env.MCP_CLIENT_ID;
+    const dynamicClient = registeredClients.get(clientId);
+    const isStaticClient = staticClientId && clientId === staticClientId;
+    const isDynamicClient = !!dynamicClient;
+
+    if (!isStaticClient && !isDynamicClient) {
+      return NextResponse.json(
+        { error: 'invalid_client', error_description: 'Invalid client_id' },
+        { status: 401 }
+      );
+    }
+
+    // For dynamic clients, validate redirect_uri against registered URIs
+    if (isDynamicClient) {
+      const isValidRedirect = dynamicClient.redirectUris.some(uri => 
+        redirectUri === uri || redirectUri.startsWith(uri)
+      );
+      if (!isValidRedirect) {
+        logger.warn('[MCP OAuth] Invalid redirect_uri for dynamic client', {
+          clientId,
+          requestedUri: redirectUri,
+          registeredUris: dynamicClient.redirectUris,
+        });
+        return NextResponse.json(
+          { error: 'invalid_request', error_description: 'redirect_uri not registered for this client' },
+          { status: 400 }
+        );
+      }
     }
 
     // Get current user from Clerk

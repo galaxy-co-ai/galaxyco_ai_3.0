@@ -1,8 +1,8 @@
 /**
- * OAuth 2.0 Authorization Server Metadata
+ * OAuth 2.0 Authorization Server Metadata (Legacy Path)
  * 
- * This endpoint provides OAuth discovery information for ChatGPT MCP integration.
- * ChatGPT fetches this to understand how to authenticate users.
+ * DEPRECATED: Use /.well-known/oauth-authorization-server instead
+ * This endpoint is kept for backwards compatibility.
  * 
  * Reference: RFC 8414 - OAuth 2.0 Authorization Server Metadata
  */
@@ -18,6 +18,9 @@ export async function GET() {
     authorization_endpoint: `${baseUrl}/api/mcp/auth/authorize`,
     token_endpoint: `${baseUrl}/api/mcp/auth/token`,
     
+    // Dynamic Client Registration (REQUIRED for ChatGPT App Store)
+    registration_endpoint: `${baseUrl}/api/mcp/auth/register`,
+    
     // Supported response types
     response_types_supported: ['code'],
     
@@ -30,8 +33,8 @@ export async function GET() {
     // PKCE support
     code_challenge_methods_supported: ['S256', 'plain'],
     
-    // Scopes
-    scopes_supported: ['read', 'write'],
+    // Scopes - includes offline_access for refresh tokens (required by ChatGPT)
+    scopes_supported: ['openid', 'profile', 'read', 'write', 'offline_access'],
     
     // Service documentation
     service_documentation: `${baseUrl}/docs/api`,

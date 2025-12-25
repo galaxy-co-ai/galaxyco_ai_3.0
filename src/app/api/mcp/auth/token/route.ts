@@ -3,6 +3,10 @@
  * 
  * Exchanges authorization codes for access tokens.
  * Supports the OAuth 2.0 authorization code flow with PKCE.
+ * 
+ * Supports both:
+ * - Static clients (via MCP_CLIENT_ID/MCP_CLIENT_SECRET env vars)
+ * - Dynamic clients (via RFC 7591 registration)
  */
 
 import { NextResponse } from 'next/server';
@@ -10,6 +14,14 @@ import { logger } from '@/lib/logger';
 import { SignJWT, jwtVerify } from 'jose';
 import crypto from 'crypto';
 import { authorizationCodes } from '../authorize/route';
+import { registeredClients } from '../register/route';
+
+// CORS headers for ChatGPT compatibility
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 // Get JWT secret from environment
 const getJwtSecret = () => {
@@ -54,23 +66,45 @@ export async function POST(request: Request) {
     const clientId = body.client_id;
     const clientSecret = body.client_secret;
 
-    // Validate client credentials
-    const expectedClientId = process.env.MCP_CLIENT_ID;
-    const expectedClientSecret = process.env.MCP_CLIENT_SECRET;
-
-    if (!expectedClientId || clientId !== expectedClientId) {
+    if (!clientId) {
       return NextResponse.json(
-        { error: 'invalid_client', error_description: 'Invalid client_id' },
-        { status: 401 }
+        { error: 'invalid_request', error_description: 'client_id is required' },
+        { status: 400, headers: CORS_HEADERS }
       );
     }
 
-    // Client secret is optional for public clients, but validate if provided
-    if (clientSecret && expectedClientSecret && clientSecret !== expectedClientSecret) {
+    // Validate client credentials - support BOTH static and dynamically registered clients
+    const staticClientId = process.env.MCP_CLIENT_ID;
+    const staticClientSecret = process.env.MCP_CLIENT_SECRET;
+    const dynamicClient = registeredClients.get(clientId);
+    
+    const isStaticClient = staticClientId && clientId === staticClientId;
+    const isDynamicClient = !!dynamicClient;
+
+    if (!isStaticClient && !isDynamicClient) {
       return NextResponse.json(
-        { error: 'invalid_client', error_description: 'Invalid client_secret' },
-        { status: 401 }
+        { error: 'invalid_client', error_description: 'Invalid client_id' },
+        { status: 401, headers: CORS_HEADERS }
       );
+    }
+
+    // Validate client_secret
+    if (isStaticClient) {
+      // For static clients, validate against env var if secret is provided
+      if (clientSecret && staticClientSecret && clientSecret !== staticClientSecret) {
+        return NextResponse.json(
+          { error: 'invalid_client', error_description: 'Invalid client_secret' },
+          { status: 401, headers: CORS_HEADERS }
+        );
+      }
+    } else if (isDynamicClient) {
+      // For dynamic clients, secret is REQUIRED and must match
+      if (!clientSecret || clientSecret !== dynamicClient.clientSecret) {
+        return NextResponse.json(
+          { error: 'invalid_client', error_description: 'Invalid client_secret' },
+          { status: 401, headers: CORS_HEADERS }
+        );
+      }
     }
 
     if (grantType === 'authorization_code') {
@@ -80,16 +114,23 @@ export async function POST(request: Request) {
     } else {
       return NextResponse.json(
         { error: 'unsupported_grant_type', error_description: 'grant_type must be "authorization_code" or "refresh_token"' },
-        { status: 400 }
+        { status: 400, headers: CORS_HEADERS }
       );
     }
   } catch (error) {
     logger.error('[MCP OAuth] Token exchange failed', { error });
     return NextResponse.json(
       { error: 'server_error', error_description: 'Token exchange failed' },
-      { status: 500 }
+      { status: 500, headers: CORS_HEADERS }
     );
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: CORS_HEADERS,
+  });
 }
 
 async function handleAuthorizationCode(body: Record<string, string>) {
@@ -100,7 +141,7 @@ async function handleAuthorizationCode(body: Record<string, string>) {
   if (!code) {
     return NextResponse.json(
       { error: 'invalid_request', error_description: 'code is required' },
-      { status: 400 }
+      { status: 400, headers: CORS_HEADERS }
     );
   }
 
@@ -110,7 +151,7 @@ async function handleAuthorizationCode(body: Record<string, string>) {
   if (!codeData) {
     return NextResponse.json(
       { error: 'invalid_grant', error_description: 'Invalid or expired authorization code' },
-      { status: 400 }
+      { status: 400, headers: CORS_HEADERS }
     );
   }
 
@@ -119,7 +160,7 @@ async function handleAuthorizationCode(body: Record<string, string>) {
     authorizationCodes.delete(code);
     return NextResponse.json(
       { error: 'invalid_grant', error_description: 'Authorization code has expired' },
-      { status: 400 }
+      { status: 400, headers: CORS_HEADERS }
     );
   }
 
@@ -127,7 +168,7 @@ async function handleAuthorizationCode(body: Record<string, string>) {
   if (redirectUri && redirectUri !== codeData.redirectUri) {
     return NextResponse.json(
       { error: 'invalid_grant', error_description: 'redirect_uri mismatch' },
-      { status: 400 }
+      { status: 400, headers: CORS_HEADERS }
     );
   }
 
@@ -136,7 +177,7 @@ async function handleAuthorizationCode(body: Record<string, string>) {
     if (!codeVerifier) {
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'code_verifier is required' },
-        { status: 400 }
+        { status: 400, headers: CORS_HEADERS }
       );
     }
 
@@ -154,7 +195,7 @@ async function handleAuthorizationCode(body: Record<string, string>) {
     if (computedChallenge !== codeData.codeChallenge) {
       return NextResponse.json(
         { error: 'invalid_grant', error_description: 'Invalid code_verifier' },
-        { status: 400 }
+        { status: 400, headers: CORS_HEADERS }
       );
     }
   }
@@ -178,7 +219,7 @@ async function handleAuthorizationCode(body: Record<string, string>) {
     token_type: 'Bearer',
     expires_in: expiresIn,
     refresh_token: refreshToken,
-  });
+  }, { headers: CORS_HEADERS });
 }
 
 async function handleRefreshToken(body: Record<string, string>) {
@@ -187,7 +228,7 @@ async function handleRefreshToken(body: Record<string, string>) {
   if (!refreshToken) {
     return NextResponse.json(
       { error: 'invalid_request', error_description: 'refresh_token is required' },
-      { status: 400 }
+      { status: 400, headers: CORS_HEADERS }
     );
   }
 
@@ -197,7 +238,7 @@ async function handleRefreshToken(body: Record<string, string>) {
   if (!tokenData) {
     return NextResponse.json(
       { error: 'invalid_grant', error_description: 'Invalid refresh token' },
-      { status: 400 }
+      { status: 400, headers: CORS_HEADERS }
     );
   }
 
@@ -206,7 +247,7 @@ async function handleRefreshToken(body: Record<string, string>) {
     refreshTokens.delete(refreshToken);
     return NextResponse.json(
       { error: 'invalid_grant', error_description: 'Refresh token has expired' },
-      { status: 400 }
+      { status: 400, headers: CORS_HEADERS }
     );
   }
 
@@ -229,7 +270,7 @@ async function handleRefreshToken(body: Record<string, string>) {
     token_type: 'Bearer',
     expires_in: expiresIn,
     refresh_token: newRefreshToken,
-  });
+  }, { headers: CORS_HEADERS });
 }
 
 async function generateTokens(userId: string, workspaceId: string) {
