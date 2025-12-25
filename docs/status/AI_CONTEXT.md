@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-25 (f073adb)  
+**Updated Through:** 2025-12-25 (96f6d90)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-25 96f6d90 fix(neptune): correct database schema field references and type exports
 - 2025-12-25 f073adb fix(marketing): calculate campaign rates from counts instead of nonexistent rate fields
 - 2025-12-25 99d45e9 fix(db): use correct prospect stage enum values (won/lost instead of closed-won/closed-lost)
 - 2025-12-25 085fdd8 fix(api): use correct NeptuneContext options in Compass and Vision routes
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-24 38c457b fix(landing): Use string easing type for Framer Motion compatibility
 - 2025-12-24 72a8488 feat(landing): Add Guided Systems test landing page for A/B comparison
 - 2025-12-24 78a304b feat(neptune): implement contextual intelligence system
-- 2025-12-24 3187153 fix(dashboard): polish WorkspacePanel card to match Neptune styling
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
