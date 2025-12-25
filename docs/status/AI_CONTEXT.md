@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-25 (96f6d90)  
+**Updated Through:** 2025-12-25 (f818fae)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,13 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-25 f818fae fix(dashboard): remove Suspense wrapper causing skeleton loading state
+- 2025-12-25 5333c1d feat(optimization): implement Redis LLM caching
+- 2025-12-25 38c74d0 docs(audit): add progress tracking and update priorities
+- 2025-12-25 987e5ba style: add Prettier and format lib directory
+- 2025-12-25 177b6ac style: auto-fix ESLint issues (unused imports and vars)
+- 2025-12-25 d890611 docs(audit): add FAQ answering tool stack questions
+- 2025-12-25 70e5c7d feat(analytics): integrate Vercel Analytics and clarify real-time tools strategy
 - 2025-12-25 96f6d90 fix(neptune): correct database schema field references and type exports
 - 2025-12-25 f073adb fix(marketing): calculate campaign rates from counts instead of nonexistent rate fields
 - 2025-12-25 99d45e9 fix(db): use correct prospect stage enum values (won/lost instead of closed-won/closed-lost)
@@ -34,13 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-24 1ce4f95 fix(mcp): move OAuth discovery to root .well-known path for ChatGPT
 - 2025-12-24 cd5730f feat(mcp): ChatGPT integration ready - universal search/fetch, CORS, read-only hints
 - 2025-12-24 2fc433e fix(mcp): rename proxy.ts to middleware.ts for Next.js compatibility
-- 2025-12-24 34d54b1 chore: trigger redeploy for MCP routes
-- 2025-12-24 e8d8526 fix(mcp): use proxy.ts instead of middleware.ts for Clerk auth
-- 2025-12-24 c725511 fix(mcp): add middleware and OAuth discovery for ChatGPT integration
-- 2025-12-24 8d39402 feat(mcp): add Neptune MCP server for ChatGPT integration
-- 2025-12-24 38c457b fix(landing): Use string easing type for Framer Motion compatibility
-- 2025-12-24 72a8488 feat(landing): Add Guided Systems test landing page for A/B comparison
-- 2025-12-24 78a304b feat(neptune): implement contextual intelligence system
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
