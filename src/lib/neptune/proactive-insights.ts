@@ -24,7 +24,7 @@ import {
   agents,
   agentExecutions,
 } from '@/db/schema';
-import { eq, and, gte, lte, desc, sql, count } from 'drizzle-orm';
+import { eq, and, gte, lte, desc, sql, count, sum } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { getCache, setCache } from '@/lib/cache';
 
@@ -224,7 +224,7 @@ async function detectFinanceInsights(workspaceId: string): Promise<ProactiveInsi
     // 1. Overdue invoices
     const overdueResult = await db.select({
       count: count(),
-      total: sql<number>`SUM(${invoices.amount})`,
+      total: sum(invoices.total),
     })
       .from(invoices)
       .where(and(
@@ -256,7 +256,7 @@ async function detectFinanceInsights(workspaceId: string): Promise<ProactiveInsi
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
     const upcomingResult = await db.select({
       count: count(),
-      total: sql<number>`SUM(${invoices.amount})`,
+      total: sum(invoices.total),
     })
       .from(invoices)
       .where(and(
@@ -407,7 +407,7 @@ async function detectMarketingInsights(workspaceId: string): Promise<ProactiveIn
   const now = new Date();
   
   try {
-    // 1. Underperforming campaigns
+    // 1. Underperforming campaigns (calculated open rate < 15%)
     const lowPerformersResult = await db.select({
       count: count(),
     })
@@ -415,7 +415,7 @@ async function detectMarketingInsights(workspaceId: string): Promise<ProactiveIn
       .where(and(
         eq(campaigns.workspaceId, workspaceId),
         eq(campaigns.status, 'active'),
-        sql`${campaigns.openRate} < 15`,
+        sql`(${campaigns.openCount}::float / NULLIF(${campaigns.sentCount}, 0)) * 100 < 15`,
         sql`${campaigns.sentCount} > 50`
       ));
     
@@ -438,7 +438,7 @@ async function detectMarketingInsights(workspaceId: string): Promise<ProactiveIn
       });
     }
     
-    // 2. High-performing campaigns to scale
+    // 2. High-performing campaigns to scale (calculated open rate > 30%)
     const highPerformersResult = await db.select({
       count: count(),
     })
@@ -446,7 +446,7 @@ async function detectMarketingInsights(workspaceId: string): Promise<ProactiveIn
       .where(and(
         eq(campaigns.workspaceId, workspaceId),
         eq(campaigns.status, 'active'),
-        sql`${campaigns.openRate} > 30`,
+        sql`(${campaigns.openCount}::float / NULLIF(${campaigns.sentCount}, 0)) * 100 > 30`,
         sql`${campaigns.sentCount} > 20`
       ));
     
@@ -488,7 +488,7 @@ async function detectCrossDomainInsights(workspaceId: string): Promise<Proactive
       .from(agents)
       .where(and(
         eq(agents.workspaceId, workspaceId),
-        eq(agents.isActive, true)
+        sql`${agents.status} IN ('active', 'published')`
       ));
     
     const activeAgents = Number(agentsResult[0]?.count ?? 0);
@@ -747,5 +747,4 @@ export async function getRelevantInsights(
   );
 }
 
-// Export types
-export type { InsightEngineOutput, DetectedPattern };
+// Types are already exported via export interface above

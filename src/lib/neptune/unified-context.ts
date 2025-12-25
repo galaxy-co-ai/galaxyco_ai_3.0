@@ -19,7 +19,7 @@ import {
 import { 
   buildSharedContext, 
   buildSharedContextPrompt,
-  type SharedContext 
+  type ReferenceableContext 
 } from './shared-context';
 import { 
   generateProactiveInsights, 
@@ -54,7 +54,7 @@ export interface NeptuneContext {
   businessSummary: string;
   
   // Shared memory
-  sharedContext: SharedContext | null;
+  sharedContext: ReferenceableContext | null;
   sharedContextPrompt: string;
   
   // Proactive insights
@@ -155,9 +155,9 @@ export async function generateNeptuneContext(
   if (includeBusinessIntelligence) {
     promises.push(
       generateBusinessIntelligence(workspaceId)
-        .then(bi => {
+        .then(async (bi) => {
           context.businessIntelligence = bi;
-          context.businessSummary = getBusinessSummary(bi);
+          context.businessSummary = await getBusinessSummary(workspaceId);
         })
         .catch(error => {
           logger.error('[NeptuneContext] Business intelligence failed', { error });
@@ -166,12 +166,12 @@ export async function generateNeptuneContext(
   }
   
   // Shared memory
-  if (includeSharedMemory && conversationId) {
+  if (includeSharedMemory) {
     promises.push(
-      buildSharedContext(workspaceId, userId, conversationId)
-        .then(sc => {
+      buildSharedContext(workspaceId, userId)
+        .then(async (sc) => {
           context.sharedContext = sc;
-          context.sharedContextPrompt = buildSharedContextPrompt(sc);
+          context.sharedContextPrompt = await buildSharedContextPrompt(workspaceId, userId);
         })
         .catch(error => {
           logger.error('[NeptuneContext] Shared context failed', { error });
@@ -182,11 +182,11 @@ export async function generateNeptuneContext(
   // Proactive insights
   if (includeProactiveInsights) {
     promises.push(
-      generateProactiveInsights(workspaceId, userId)
-        .then(insights => {
+      generateProactiveInsights(workspaceId)
+        .then(async (insights) => {
           context.insights = insights;
-          context.insightsPrompt = buildProactiveInsightsPrompt(insights.insights);
-          context.hasUrgent = hasUrgentInsights(insights.insights);
+          context.insightsPrompt = await buildProactiveInsightsPrompt(workspaceId);
+          context.hasUrgent = await hasUrgentInsights(workspaceId);
         })
         .catch(error => {
           logger.error('[NeptuneContext] Proactive insights failed', { error });
@@ -263,116 +263,11 @@ export function buildNeptuneSystemPromptSections(context: NeptuneContext): strin
   // Page-specific context
   if (context.pageContext) {
     sections.push('## CURRENT PAGE CONTEXT');
-    sections.push(`User is viewing: ${context.pageContext.moduleName} - ${context.pageContext.pageType}`);
-    if (context.pageContext.pageDescription) {
-      sections.push(context.pageContext.pageDescription);
-    }
+    sections.push(`User is viewing: ${context.pageContext.module} - ${context.pageContext.pageType}`);
     sections.push('');
   }
   
   return sections.join('\n');
 }
 
-/**
- * Build a conversational opener based on context
- * 
- * Neptune opens with what matters most right now.
- */
-export function buildContextualOpener(context: NeptuneContext): string | null {
-  // Priority 1: Urgent insights
-  if (context.hasUrgent && context.insights) {
-    const urgent = context.insights.insights.find(i => i.urgency === 'high');
-    if (urgent) {
-      return urgent.suggestion;
-    }
-  }
-  
-  // Priority 2: Significant business state change
-  if (context.businessIntelligence) {
-    const health = context.businessIntelligence.healthScore;
-    
-    // Celebrate wins
-    if (health.overall >= 80) {
-      return "We're in great shape across the board right now.";
-    }
-    
-    // Address concerns
-    if (health.overall < 50) {
-      const weakest = Object.entries(health.dimensions)
-        .sort((a, b) => a[1] - b[1])[0];
-      
-      if (weakest) {
-        const areaNames: Record<string, string> = {
-          revenue: 'revenue',
-          pipeline: 'pipeline',
-          operations: 'operations',
-          marketing: 'marketing',
-          cashFlow: 'cash flow',
-        };
-        return `I noticed ${areaNames[weakest[0]] || weakest[0]} could use some attention. Want to dig in?`;
-      }
-    }
-  }
-  
-  // Priority 3: Available actions to offer
-  if (context.proposedActions.length > 0) {
-    const topAction = context.proposedActions[0];
-    return topAction.confirmationPrompt;
-  }
-  
-  // Priority 4: Reference shared context
-  if (context.sharedContext && context.sharedContext.memories.length > 0) {
-    const recentDecision = context.sharedContext.memories.find(m => m.type === 'decision');
-    if (recentDecision) {
-      return `Picking up from where we left off on "${recentDecision.summary}"...`;
-    }
-  }
-  
-  return null;
-}
 
-/**
- * Get a quick status line for Neptune's greeting
- */
-export function getQuickStatusLine(context: NeptuneContext): string {
-  const parts: string[] = [];
-  
-  if (context.businessIntelligence) {
-    const bi = context.businessIntelligence;
-    
-    // Hot leads
-    if (bi.signals.crm.hotLeadsCount > 0) {
-      parts.push(`${bi.signals.crm.hotLeadsCount} hot lead${bi.signals.crm.hotLeadsCount > 1 ? 's' : ''}`);
-    }
-    
-    // Urgent tasks
-    const urgentTasks = bi.signals.operations.overdueTasksCount;
-    if (urgentTasks > 0) {
-      parts.push(`${urgentTasks} overdue task${urgentTasks > 1 ? 's' : ''}`);
-    }
-    
-    // Cash flow
-    if (bi.signals.finance.overdueInvoicesAmount > 0) {
-      parts.push(`$${Math.round(bi.signals.finance.overdueInvoicesAmount / 1000)}k overdue`);
-    }
-  }
-  
-  if (parts.length === 0) {
-    return 'All systems running smoothly.';
-  }
-  
-  return `Quick pulse: ${parts.join(' • ')}`;
-}
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export {
-  // Re-export key types from sub-modules for convenience
-  type BusinessIntelligence,
-  type SharedContext,
-  type InsightEngineOutput,
-  type ProposedAction,
-  type PageContextData,
-};

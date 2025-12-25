@@ -604,5 +604,4 @@ function getTimeAgo(date: Date): string {
   return `${Math.floor(diffDays / 30)} months ago`;
 }
 
-// Export types
-export type { ReferenceableContext, ConversationSummaryItem };
+// Types are already exported via export interface above

@@ -348,46 +348,56 @@ async function collectFinanceSignals(workspaceId: string): Promise<BusinessSigna
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
     
-    // This month's revenue and expenses
+    // This month's expenses (revenue tracked separately via invoices)
     const thisMonthStats = await db.select({
-      revenue: sql<number>`SUM(CASE WHEN ${expenses.type} = 'income' THEN ${expenses.amount} ELSE 0 END)`,
-      expenses: sql<number>`SUM(CASE WHEN ${expenses.type} = 'expense' THEN ${expenses.amount} ELSE 0 END)`,
+      expenses: sum(expenses.amount),
     })
       .from(expenses)
       .where(and(
         eq(expenses.workspaceId, workspaceId),
-        gte(expenses.date, monthStart)
+        gte(expenses.expenseDate, monthStart)
       ));
     
-    // Last month's revenue for growth calculation
-    const lastMonthStats = await db.select({
-      revenue: sql<number>`SUM(CASE WHEN ${expenses.type} = 'income' THEN ${expenses.amount} ELSE 0 END)`,
+    // Revenue from paid invoices this month and last month
+    const thisMonthRevenue = await db.select({
+      revenue: sum(invoices.total),
     })
-      .from(expenses)
+      .from(invoices)
       .where(and(
-        eq(expenses.workspaceId, workspaceId),
-        gte(expenses.date, lastMonthStart),
-        lte(expenses.date, lastMonthEnd)
+        eq(invoices.workspaceId, workspaceId),
+        eq(invoices.status, 'paid'),
+        gte(invoices.paidAt, monthStart)
       ));
     
-    const thisMonthRevenue = Number(thisMonthStats[0]?.revenue ?? 0);
-    const thisMonthExpenses = Number(thisMonthStats[0]?.expenses ?? 0);
-    const lastMonthRevenue = Number(lastMonthStats[0]?.revenue ?? 0);
-    const profit = thisMonthRevenue - thisMonthExpenses;
-    const profitMargin = thisMonthRevenue > 0 ? (profit / thisMonthRevenue) * 100 : 0;
-    const revenueGrowth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
+    const lastMonthRevenue = await db.select({
+      revenue: sum(invoices.total),
+    })
+      .from(invoices)
+      .where(and(
+        eq(invoices.workspaceId, workspaceId),
+        eq(invoices.status, 'paid'),
+        gte(invoices.paidAt, lastMonthStart),
+        lte(invoices.paidAt, lastMonthEnd)
+      ));
+    
+    const thisRevenue = Number(thisMonthRevenue[0]?.revenue ?? 0);
+    const thisExpenses = Number(thisMonthStats[0]?.expenses ?? 0);
+    const lastRevenue = Number(lastMonthRevenue[0]?.revenue ?? 0);
+    const profit = thisRevenue - thisExpenses;
+    const profitMargin = thisRevenue > 0 ? (profit / thisRevenue) * 100 : 0;
+    const revenueGrowth = lastRevenue > 0 ? ((thisRevenue - lastRevenue) / lastRevenue) * 100 : 0;
     
     // Outstanding and overdue invoices
     const invoiceStats = await db.select({
-      outstanding: sql<number>`SUM(CASE WHEN ${invoices.status} = 'sent' THEN ${invoices.amount} ELSE 0 END)`,
-      overdue: sql<number>`SUM(CASE WHEN ${invoices.status} = 'overdue' THEN ${invoices.amount} ELSE 0 END)`,
+      outstanding: sql<number>`SUM(CASE WHEN ${invoices.status} = 'sent' THEN ${invoices.total} ELSE 0 END)`,
+      overdue: sql<number>`SUM(CASE WHEN ${invoices.status} = 'overdue' THEN ${invoices.total} ELSE 0 END)`,
     })
       .from(invoices)
       .where(eq(invoices.workspaceId, workspaceId));
     
     return {
-      monthlyRevenue: thisMonthRevenue,
-      monthlyExpenses: thisMonthExpenses,
+      monthlyRevenue: thisRevenue,
+      monthlyExpenses: thisExpenses,
       profit,
       profitMargin,
       cashFlow: profit, // Simplified
@@ -446,12 +456,12 @@ async function collectOperationsSignals(workspaceId: string): Promise<BusinessSi
         lte(calendarEvents.startTime, oneWeekAhead)
       ));
     
-    // Agent stats
+    // Agent stats (active = status is 'active' or 'published')
     const agentStats = await db.select({ count: count() })
       .from(agents)
       .where(and(
         eq(agents.workspaceId, workspaceId),
-        eq(agents.isActive, true)
+        sql`${agents.status} IN ('active', 'published')`
       ));
     
     // Agent success rate (executions that succeeded vs total)
@@ -879,5 +889,4 @@ function formatCurrency(amount: number): string {
   return `$${amount.toFixed(0)}`;
 }
 
-// Export types for use in system prompt
-export type { BusinessIntelligence, BusinessCorrelation, BusinessHealthScore };
+// Types are already exported via export interface above
