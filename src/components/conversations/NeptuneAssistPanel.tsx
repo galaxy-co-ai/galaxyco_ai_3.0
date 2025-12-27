@@ -65,6 +65,8 @@ interface NeptuneAssistPanelProps {
   conversation?: Conversation | null;
   variant?: "default" | "fullscreen";
   feature?: string;
+  /** Hide header controls (Chat/History toggle, + button) for cleaner onboarding */
+  minimal?: boolean;
 }
 
 export default function NeptuneAssistPanel({
@@ -72,6 +74,7 @@ export default function NeptuneAssistPanel({
   conversation: legacyConversation,
   variant = "default",
   feature,
+  minimal = false,
 }: NeptuneAssistPanelProps) {
   // Use shared Neptune context
   const {
@@ -463,44 +466,47 @@ export default function NeptuneAssistPanel({
                 titleClassName="text-base md:text-xl"
                 iconClassName="w-6 h-6 md:w-6 md:h-6"
               />
-              <div className="flex items-center gap-2">
-                {/* Chat/History Toggle */}
-                <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
+              {/* Hide controls in minimal mode for cleaner onboarding */}
+              {!minimal && (
+                <div className="flex items-center gap-2">
+                  {/* Chat/History Toggle */}
+                  <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
+                    <Button
+                      variant={viewMode === "chat" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("chat")}
+                      className={`h-7 px-2 md:px-3 ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
+                      aria-label="View chat"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 md:mr-1.5" />
+                      <span className="hidden md:inline">Chat</span>
+                    </Button>
+                    <Button
+                      variant={viewMode === "history" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("history")}
+                      className={`h-7 px-2 md:px-3 ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
+                      aria-label="View history"
+                    >
+                      <Clock className="h-3.5 w-3.5 md:mr-1.5" />
+                      <span className="hidden md:inline">History</span>
+                    </Button>
+                  </div>
+                  {/* New Chat Button */}
                   <Button
-                    variant={viewMode === "chat" ? "secondary" : "ghost"}
+                    variant="ghost"
                     size="sm"
-                    onClick={() => setViewMode("chat")}
-                    className={`h-7 px-2 md:px-3 ${viewMode === "chat" ? "shadow-sm" : "hover:bg-transparent"}`}
-                    aria-label="View chat"
+                    onClick={() => {
+                      clearConversation();
+                      setViewMode("chat");
+                    }}
+                    className="text-muted-foreground hover:text-foreground px-2"
+                    aria-label="Start new conversation"
                   >
-                    <MessageSquare className="h-3.5 w-3.5 md:mr-1.5" />
-                    <span className="hidden md:inline">Chat</span>
-                  </Button>
-                  <Button
-                    variant={viewMode === "history" ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("history")}
-                    className={`h-7 px-2 md:px-3 ${viewMode === "history" ? "shadow-sm" : "hover:bg-transparent"}`}
-                    aria-label="View history"
-                  >
-                    <Clock className="h-3.5 w-3.5 md:mr-1.5" />
-                    <span className="hidden md:inline">History</span>
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                {/* New Chat Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    clearConversation();
-                    setViewMode("chat");
-                  }}
-                  className="text-muted-foreground hover:text-foreground px-2"
-                  aria-label="Start new conversation"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+              )}
             </div>
           </div>
         ) : (

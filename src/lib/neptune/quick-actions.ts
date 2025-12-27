@@ -75,21 +75,30 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     const isNew = ctx.workspaceState?.isNewWorkspace ?? true;
 
     if (isNew) {
+      // Business-type prompts that answer "What do you do and who do you serve?"
       actions.push({
-        id: 'onboard-website',
-        label: 'Analyze my website',
-        prompt: 'Can you analyze my website and help me get started?',
-        icon: ICONS.search,
+        id: 'biz-solar',
+        label: 'I run a solar company',
+        prompt: 'I run a solar installation company. We help homeowners and businesses switch to solar energy.',
+        icon: ICONS.zap,
         priority: 100,
-        reason: 'New workspace - need to understand business',
+        reason: 'Quick business context for onboarding',
       });
       actions.push({
-        id: 'onboard-intro',
-        label: 'Get started',
-        prompt: 'Help me get started with GalaxyCo',
-        icon: ICONS.zap,
+        id: 'biz-roofing',
+        label: "I'm a roofing contractor",
+        prompt: "I'm a roofing contractor. We do residential and commercial roof repairs and installations.",
+        icon: ICONS.user,
         priority: 95,
-        reason: 'New user onboarding',
+        reason: 'Quick business context for onboarding',
+      });
+      actions.push({
+        id: 'biz-home-services',
+        label: 'Home services business',
+        prompt: 'I manage a home services business - things like HVAC, plumbing, and electrical work.',
+        icon: ICONS.users,
+        priority: 90,
+        reason: 'Quick business context for onboarding',
       });
     } else {
       actions.push({
@@ -100,7 +109,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
         priority: 90,
         reason: 'Daily prioritization',
       });
-      
+
       if (ctx.workspaceState?.hasHotLeads) {
         actions.push({
           id: 'hot-leads',
@@ -111,7 +120,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
           reason: 'Hot leads in pipeline',
         });
       }
-      
+
       if (ctx.workspaceState?.hasOverdueItems) {
         actions.push({
           id: 'overdue-items',
@@ -122,15 +131,15 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
           reason: 'Overdue tasks exist',
         });
       }
-    }
 
-    actions.push({
-      id: 'quick-navigate',
-      label: 'Take me to...',
-      prompt: 'Navigate me to ',
-      icon: ICONS.zap,
-      priority: 60,
-    });
+      actions.push({
+        id: 'quick-navigate',
+        label: 'Take me to...',
+        prompt: 'Navigate me to ',
+        icon: ICONS.zap,
+        priority: 60,
+      });
+    }
 
     return actions.sort((a, b) => b.priority - a.priority).slice(0, 4);
   },
