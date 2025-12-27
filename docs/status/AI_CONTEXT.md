@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-27 (1df74bf)  
+**Updated Through:** 2025-12-27 (f3eaf90)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-27 f3eaf90 refactor(dashboard): remove Compass/Vision/Boards panel
 - 2025-12-27 1df74bf test: fix test infrastructure and align with component implementations
 - 2025-12-27 948342c fix: improve type safety and migrate integrations to SignalWire
 - 2025-12-25 9e74752 fix(api): resolve TypeScript error in Neptune action route
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-25 b19e511 feat(dashboard): transform WorkspacePanel with Compass, Vision, and Boards tabs
 - 2025-12-24 92a855a fix(mcp): explicit bypass for .well-known routes in middleware
 - 2025-12-24 ef03b46 fix(mcp): ensure .well-known path is matched by middleware
-- 2025-12-24 87b806a feat(mcp): add dynamic client registration for ChatGPT App Store
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
