@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Header, HeaderProps } from "./header";
 import { Toaster } from "@/components/ui/sonner";
@@ -82,18 +82,20 @@ function PageTracker() {
 
 // Component to handle Neptune navigation events
 function NavigationHandler() {
+  const router = useRouter();
+
   React.useEffect(() => {
     const handleNavigation = (event: CustomEvent<{ url: string }>) => {
       const url = event.detail.url;
-      if (url && typeof window !== 'undefined') {
-        // Use Next.js router for client-side navigation
-        window.location.href = url;
+      if (url) {
+        // Use Next.js router for client-side navigation (no full page reload)
+        router.push(url);
       }
     };
 
     window.addEventListener('neptune-navigate', handleNavigation as EventListener);
     return () => window.removeEventListener('neptune-navigate', handleNavigation as EventListener);
-  }, []);
+  }, [router]);
 
   return null;
 }
