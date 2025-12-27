@@ -23,10 +23,28 @@ vi.mock('@/lib/db', () => ({
       contacts: { findMany: vi.fn(() => Promise.resolve([])) },
       campaigns: { findMany: vi.fn(() => Promise.resolve([])) },
       knowledgeDocuments: { findMany: vi.fn(() => Promise.resolve([])) },
+      knowledgeItems: { findMany: vi.fn(() => Promise.resolve([])) },
+      knowledgeCollections: {
+        findFirst: vi.fn(() => Promise.resolve(null)),
+        findMany: vi.fn(() => Promise.resolve([])),
+      },
     },
     insert: vi.fn(() => ({
       values: vi.fn(() => ({
-        returning: vi.fn(() => Promise.resolve([{ id: 'test-id' }])),
+        returning: vi.fn(() => Promise.resolve([{
+          id: 'test-id',
+          title: 'Test Document',
+          type: 'document',
+          sourceUrl: 'https://example.com/test.pdf',
+          summary: 'Test summary',
+          fileSize: 1024,
+          createdAt: new Date(),
+        }])),
+      })),
+    })),
+    update: vi.fn(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(() => Promise.resolve()),
       })),
     })),
   },
@@ -50,7 +68,40 @@ vi.mock('@/lib/knowledge/processor', () => ({
   })),
 }));
 
-// Mock blob storage
+// Mock storage
+vi.mock('@/lib/storage', () => ({
+  uploadFile: vi.fn(() => Promise.resolve({
+    url: 'https://blob.example.com/test.pdf',
+  })),
+}));
+
+// Mock AI providers
+vi.mock('@/lib/ai-providers', () => ({
+  getOpenAI: vi.fn(() => ({
+    chat: {
+      completions: {
+        create: vi.fn(() => Promise.resolve({
+          choices: [{
+            message: { content: 'Test summary' },
+          }],
+        })),
+      },
+    },
+  })),
+}));
+
+// Mock vector database
+vi.mock('@/lib/vector', () => ({
+  indexKnowledgeDocument: vi.fn(() => Promise.resolve({ chunksIndexed: 1 })),
+  isVectorConfigured: vi.fn(() => false),
+}));
+
+// Mock rate limiter
+vi.mock('@/lib/rate-limit', () => ({
+  rateLimit: vi.fn(() => Promise.resolve({ success: true })),
+}));
+
+// Mock blob storage (in case it's used directly)
 vi.mock('@vercel/blob', () => ({
   put: vi.fn(() => Promise.resolve({
     url: 'https://blob.example.com/test.pdf',
