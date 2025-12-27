@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { prospects } from '@/db/schema';
+import { prospects, prospectStageEnum } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+
+// Type for prospect stage values
+type ProspectStage = (typeof prospectStageEnum.enumValues)[number];
 
 const updateDealSchema = z.object({
   name: z.string().min(1).optional(),
@@ -92,7 +95,7 @@ export async function PUT(
     const data = validationResult.data;
 
     // Map API stage to database stage if provided
-    const stageMap: Record<string, string> = {
+    const stageMap: Record<string, ProspectStage> = {
       'lead': 'new',
       'qualified': 'qualified',
       'proposal': 'proposal',
@@ -100,7 +103,7 @@ export async function PUT(
       'closed_won': 'won',
       'closed_lost': 'lost',
     };
-    const dbStage = data.stage ? (stageMap[data.stage] || data.stage) : undefined;
+    const dbStage: ProspectStage | undefined = data.stage ? (stageMap[data.stage] || data.stage as ProspectStage) : undefined;
 
     // Update deal
     const [updated] = await db
@@ -109,7 +112,7 @@ export async function PUT(
         name: data.name,
         company: data.company ?? undefined,
         estimatedValue: data.estimatedValue ?? undefined,
-        stage: dbStage as any,
+        stage: dbStage,
         score: data.score ?? undefined,
         nextFollowUpAt: data.nextFollowUpAt ? new Date(data.nextFollowUpAt) : undefined,
         notes: data.notes ?? undefined,
@@ -226,11 +229,11 @@ export async function PATCH(
         );
       }
 
-      // Update stage only
+      // Update stage only (validated by Zod to be a valid ProspectStage)
       const [updated] = await db
         .update(prospects)
         .set({
-          stage: validationResult.data.stage as any,
+          stage: validationResult.data.stage,
           updatedAt: new Date(),
         })
         .where(and(

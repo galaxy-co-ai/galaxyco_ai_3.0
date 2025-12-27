@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { prospects } from '@/db/schema';
+import { prospects, prospectStageEnum } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+
+// Type for prospect stage values
+type ProspectStage = (typeof prospectStageEnum.enumValues)[number];
 
 const dealSchema = z.object({
   name: z.string().min(1, 'Deal name is required'),
@@ -59,8 +62,8 @@ export async function POST(request: Request) {
 
     const data = validationResult.data;
 
-    // Map API stage to database stage
-    const stageMap: Record<string, string> = {
+    // Map API stage to database stage (stage is already validated by Zod)
+    const stageMap: Record<string, ProspectStage> = {
       'lead': 'new',
       'qualified': 'qualified',
       'proposal': 'proposal',
@@ -68,7 +71,7 @@ export async function POST(request: Request) {
       'closed_won': 'won',
       'closed_lost': 'lost',
     };
-    const dbStage = stageMap[data.stage] || data.stage || 'new';
+    const dbStage: ProspectStage = stageMap[data.stage] || data.stage;
 
     const [deal] = await db
       .insert(prospects)
@@ -77,7 +80,7 @@ export async function POST(request: Request) {
         name: data.name,
         company: data.company || null,
         estimatedValue: data.estimatedValue || null,
-        stage: dbStage as any,
+        stage: dbStage,
         score: data.score || 0,
         nextFollowUpAt: data.nextFollowUpAt ? new Date(data.nextFollowUpAt) : null,
         notes: data.notes || null,

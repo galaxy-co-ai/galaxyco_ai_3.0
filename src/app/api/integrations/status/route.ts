@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { integrations } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
-import { isTwilioConfigured, isFlexConfigured, verifyCredentials } from '@/lib/twilio';
+import { isSignalWireConfigured, getSignalWireConfig } from '@/lib/signalwire';
 
 export async function GET() {
   try {
@@ -14,15 +14,9 @@ export async function GET() {
       where: eq(integrations.workspaceId, workspaceId),
     });
 
-    // Check Twilio configuration status
-    const twilioConfigured = isTwilioConfigured();
-    const twilioFlexConfigured = isFlexConfigured();
-    let twilioVerified = false;
-    
-    if (twilioConfigured) {
-      // Verify credentials are valid
-      twilioVerified = await verifyCredentials();
-    }
+    // Check SignalWire configuration status
+    const signalWireConfigured = isSignalWireConfigured();
+    const signalWireConfig = getSignalWireConfig();
 
     // Map to show connection status
     const integrationStatus = {
@@ -32,7 +26,7 @@ export async function GET() {
       salesforce: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'salesforce' && i.status === 'active'),
       hubspot: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'hubspot' && i.status === 'active'),
       twitter: workspaceIntegrations.some((i: typeof workspaceIntegrations[0]) => i.provider === 'twitter' && i.status === 'active'),
-      twilio: twilioConfigured && twilioVerified,
+      signalwire: signalWireConfigured,
     };
 
     return NextResponse.json({
@@ -40,15 +34,14 @@ export async function GET() {
         id: i.id,
         provider: i.provider,
         status: i.status,
-        connectedAt: i.createdAt, // Using createdAt as connectedAt
+        connectedAt: i.createdAt,
         lastSyncAt: i.lastSyncAt,
       })),
       status: integrationStatus,
-      twilio: {
-        configured: twilioConfigured,
-        verified: twilioVerified,
-        flexEnabled: twilioFlexConfigured,
-        phoneNumber: twilioConfigured ? process.env.TWILIO_PHONE_NUMBER : null,
+      signalwire: {
+        configured: signalWireConfigured,
+        phoneNumber: signalWireConfig?.phoneNumber ?? null,
+        whatsappNumber: signalWireConfig?.whatsappNumber ?? null,
       },
     });
   } catch (error) {

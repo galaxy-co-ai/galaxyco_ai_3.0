@@ -1,7 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { useUser, OrganizationProfile, useSessionList } from "@clerk/nextjs";
+import { useUser, OrganizationProfile, useSessionList, useSession } from "@clerk/nextjs";
+import type { SessionResource } from "@clerk/types";
+
+// Extended session type with optional activity data
+interface SessionWithActivity extends SessionResource {
+  latestActivity?: {
+    userAgent?: string;
+    city?: string;
+    country?: string;
+  };
+  userAgent?: string;
+}
 import useSWR from "swr";
 import { 
   User, 
@@ -120,6 +131,7 @@ function formatLastActive(ts?: Date | number): string {
 
 export default function SettingsPage() {
 const { user, isLoaded } = useUser();
+  const { session: currentSession } = useSession();
   const { sessions, isLoaded: sessionsLoaded } = useSessionList();
   const [activeSection, setActiveSection] = React.useState<SettingsSection>("profile");
   const [showApiKey, setShowApiKey] = React.useState<string | null>(null);
@@ -731,19 +743,19 @@ const { user, isLoaded } = useUser();
         const twoFactorEnabled = user?.twoFactorEnabled ?? false;
 
         // Build active sessions list from Clerk
-        const activeSessions = (sessions || [])
-          .filter((s) => (s as any).status === 'active')
+        const activeSessions = ((sessions || []) as SessionWithActivity[])
+          .filter((s) => s.status === 'active')
           .map((s) => {
-            const ua = ((s as any).latestActivity?.userAgent as string) || ((s as any).userAgent as string) || '';
-            const city = (s as any).latestActivity?.city as string | undefined;
-            const country = (s as any).latestActivity?.country as string | undefined;
-            const lastActiveAt = (s as any).lastActiveAt as Date | undefined;
+            const ua = s.latestActivity?.userAgent || s.userAgent || '';
+            const city = s.latestActivity?.city;
+            const country = s.latestActivity?.country;
+            const lastActiveAt = s.lastActiveAt;
             return {
-              id: (s as any).id as string,
+              id: s.id,
               device: getDeviceInfo(ua),
               location: city && country ? `${city}, ${country}` : 'Unknown Location',
               lastActive: formatLastActive(lastActiveAt),
-              current: (s as any).id === (user as any)?.lastActiveSessionId,
+              current: s.id === currentSession?.id,
             };
           });
         

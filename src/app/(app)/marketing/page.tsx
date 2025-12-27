@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import MarketingDashboard from '@/components/marketing/MarketingDashboard';
 import { getCurrentWorkspace } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { campaigns } from "@/db/schema";
+import { campaigns, marketingChannels } from "@/db/schema";
 import { eq, desc, and, count, sum } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -44,6 +44,12 @@ export default async function MarketingPage() {
         .where(eq(campaigns.workspaceId, workspaceId)),
     ]);
 
+    // Fetch marketing channels
+    const channelsList = await db.query.marketingChannels.findMany({
+      where: eq(marketingChannels.workspaceId, workspaceId),
+      orderBy: [desc(marketingChannels.createdAt)],
+    });
+
     // Map campaigns to component format
     const mappedCampaigns = campaignsList.map((campaign) => ({
       id: campaign.id,
@@ -62,9 +68,35 @@ export default async function MarketingPage() {
       channels: campaign.type ? [campaign.type] : [],
     }));
 
-    // Content and channels - TODO: Add schemas for these
-    const content: any[] = [];
-    const channels: any[] = [];
+    // Map channels to component format
+    const mappedChannels = channelsList.map((channel) => {
+      const clicks = channel.clicks || 0;
+      const impressions = channel.impressions || 0;
+      // Calculate performance as click-through rate (CTR) percentage
+      const performance = impressions > 0 ? Math.round((clicks / impressions) * 100) : 0;
+
+      return {
+        id: channel.id,
+        name: channel.name,
+        type: channel.type,
+        status: channel.status,
+        budget: channel.budget || 0,
+        performance,
+        reach: impressions, // Using impressions as reach
+      };
+    });
+
+    // Content - placeholder for future content management feature
+    const content: {
+      id: string;
+      title: string;
+      type: string;
+      status: string;
+      views: number;
+      engagement: number;
+      publishedAt: Date | null;
+      author: string;
+    }[] = [];
 
     const stats = {
       activeCampaigns: activeCampaignsCount[0]?.count || 0,
@@ -80,7 +112,7 @@ export default async function MarketingPage() {
         <MarketingDashboard
           initialCampaigns={mappedCampaigns}
           initialContent={content}
-          initialChannels={channels}
+          initialChannels={mappedChannels}
           stats={stats}
         />
       </ErrorBoundary>
