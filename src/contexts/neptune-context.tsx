@@ -186,7 +186,6 @@ const STORAGE_KEY = "neptune_conversation_id";
 
 export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<NeptuneMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<ConversationHistoryItem[]>([]);
@@ -197,8 +196,19 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [suggestedActions, setSuggestedActions] = useState<SuggestedAction[]>([]);
   const initRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Initialize messages with welcome message immediately (no useEffect delay)
+  const [messages, setMessages] = useState<NeptuneMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content:
+        "Hey! I'm Neptune. I see you're just getting started - perfect timing. Tell me about your business in a sentence or two. What do you do and who do you serve? I'll build you a personalized setup roadmap from there.",
+      timestamp: new Date(),
+    },
+  ]);
 
-  // Initialize Neptune - always start fresh, past conversations available in history
+  // Run one-time initialization (clear storage, mark as initialized)
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
@@ -207,17 +217,6 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
     }
-
-    // Show welcome message immediately
-    setMessages([
-      {
-        id: "welcome",
-        role: "assistant",
-        content:
-          "Hey! I'm Neptune. I see you're just getting started - perfect timing. Tell me about your business in a sentence or two. What do you do and who do you serve? I'll build you a personalized setup roadmap from there.",
-        timestamp: new Date(),
-      },
-    ]);
 
     logger.debug("[Neptune] Initialized with fresh conversation");
   }, []);
@@ -777,7 +776,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         conversationId,
         messages,
         isLoading,
-        isInitialized: initRef.current, // Derive from ref to avoid state sync issues
+        isInitialized: messages.length > 0, // Initialized when we have messages (including welcome message)
         isStreaming,
         conversationHistory,
         isLoadingHistory,
