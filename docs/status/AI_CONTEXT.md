@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-27 (b08af31)  
+**Updated Through:** 2025-12-28 (8b3b60f)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-28 8b3b60f fix(neptune): resolve skeleton loading state stuck in React Strict Mode
 - 2025-12-27 b08af31 fix(navigation): use client-side routing instead of full page reload
 - 2025-12-27 4dd62e4 refactor(dashboard): streamline onboarding to Neptune-first experience
 - 2025-12-27 f3eaf90 refactor(dashboard): remove Compass/Vision/Boards panel
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-25 085fdd8 fix(api): use correct NeptuneContext options in Compass and Vision routes
 - 2025-12-25 5b5ca68 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0 # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
 - 2025-12-25 0afa432 fix(neptune): remove undefined NEPTUNE_PERSONA import
-- 2025-12-25 b19e511 feat(dashboard): transform WorkspacePanel with Compass, Vision, and Boards tabs
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
