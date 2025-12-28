@@ -189,7 +189,6 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<NeptuneMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<ConversationHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
@@ -220,7 +219,6 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
       },
     ]);
 
-    setIsInitialized(true);
     logger.debug("[Neptune] Initialized with fresh conversation");
   }, []);
 
@@ -779,7 +777,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         conversationId,
         messages,
         isLoading,
-        isInitialized,
+        isInitialized: initRef.current, // Derive from ref to avoid state sync issues
         isStreaming,
         conversationHistory,
         isLoadingHistory,
