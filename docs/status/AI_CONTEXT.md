@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-29 (f35e546)  
+**Updated Through:** 2025-12-29 (d36ab19)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-29 d36ab19 feat(invitations): add confirmation email to inviter when invitation is sent
 - 2025-12-29 f35e546 fix(build): update react-markdown code component props handling
 - 2025-12-29 9f84ab2 fix(build): make route params async for Next.js 15 compatibility
 - 2025-12-29 15c7782 fix(build): remove duplicate code causing build failures
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-25 177b6ac style: auto-fix ESLint issues (unused imports and vars)
 - 2025-12-25 d890611 docs(audit): add FAQ answering tool stack questions
 - 2025-12-25 70e5c7d feat(analytics): integrate Vercel Analytics and clarify real-time tools strategy
-- 2025-12-25 96f6d90 fix(neptune): correct database schema field references and type exports
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
