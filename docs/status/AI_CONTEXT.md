@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-29 (d36ab19)  
+**Updated Through:** 2025-12-29 (31778a5)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,11 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-29 31778a5 chore: untrack Claude local settings file
+- 2025-12-29 134924b chore: remove outdated screenshots
+- 2025-12-29 35ee245 feat: add landing page v2 and update project configuration
+- 2025-12-29 1891fb3 docs: archive old documentation and reorganize structure
+- 2025-12-29 12150fa chore(security): enhance gitignore and complete env.example
 - 2025-12-29 d36ab19 feat(invitations): add confirmation email to inviter when invitation is sent
 - 2025-12-29 f35e546 fix(build): update react-markdown code component props handling
 - 2025-12-29 9f84ab2 fix(build): make route params async for Next.js 15 compatibility
@@ -36,11 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-25 9e74752 fix(api): resolve TypeScript error in Neptune action route
 - 2025-12-25 f818fae fix(dashboard): remove Suspense wrapper causing skeleton loading state
 - 2025-12-25 5333c1d feat(optimization): implement Redis LLM caching
-- 2025-12-25 38c74d0 docs(audit): add progress tracking and update priorities
-- 2025-12-25 987e5ba style: add Prettier and format lib directory
-- 2025-12-25 177b6ac style: auto-fix ESLint issues (unused imports and vars)
-- 2025-12-25 d890611 docs(audit): add FAQ answering tool stack questions
-- 2025-12-25 70e5c7d feat(analytics): integrate Vercel Analytics and clarify real-time tools strategy
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
