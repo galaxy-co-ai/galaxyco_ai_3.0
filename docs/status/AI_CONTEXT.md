@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-29 (15c7782)  
+**Updated Through:** 2025-12-29 (9f84ab2)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-29 9f84ab2 fix(build): make route params async for Next.js 15 compatibility
 - 2025-12-29 15c7782 fix(build): remove duplicate code causing build failures
 - 2025-12-29 407ac19 feat(team): implement workspace invitations and team channel improvements
 - 2025-12-28 dac1fbd fix(neptune): initialize messages in useState to prevent empty render
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-25 70e5c7d feat(analytics): integrate Vercel Analytics and clarify real-time tools strategy
 - 2025-12-25 96f6d90 fix(neptune): correct database schema field references and type exports
 - 2025-12-25 f073adb fix(marketing): calculate campaign rates from counts instead of nonexistent rate fields
-- 2025-12-25 99d45e9 fix(db): use correct prospect stage enum values (won/lost instead of closed-won/closed-lost)
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
