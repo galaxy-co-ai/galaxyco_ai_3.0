@@ -6,7 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
-import { sendEmail, getWorkspaceInviteTemplate } from '@/lib/email';
+import { sendEmail, getWorkspaceInviteTemplate, getInvitationConfirmationTemplate } from '@/lib/email';
 import crypto from 'crypto';
 
 // ============================================================================
@@ -216,8 +216,27 @@ export async function POST(request: Request) {
 
     if (!emailResult.success) {
       logger.error('Failed to send invitation email', { email, error: emailResult.error });
-      // Continue anyway - invitation is stored
+      return NextResponse.json(
+        { error: 'Failed to send invitation email' },
+        { status: 500 }
+      );
     }
+
+    // Send confirmation email to inviter
+    const confirmationTemplate = getInvitationConfirmationTemplate(
+      inviterName,
+      email,
+      workspace.name || 'your workspace',
+      role
+    );
+
+    await sendEmail({
+      to: currentUser.email,
+      subject: confirmationTemplate.subject,
+      html: confirmationTemplate.html,
+      text: confirmationTemplate.text,
+    });
+    // Note: Don't fail if confirmation email fails - it's not critical
 
     logger.info('Workspace invitation sent', { 
       workspaceId, 
