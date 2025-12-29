@@ -2,7 +2,7 @@
 
 **Last Updated:** 2025-12-17  
 **Last Verified By:** Claude (Warp AI Session)  
-**Production:** app.galaxyco.ai | Status: Active Development
+**Production:** galaxyco.ai | Status: Active Development
 
 ---
 
@@ -12,7 +12,7 @@
 TypeScript:  ✅ 0 errors (npm run typecheck)
 Build:       ✅ Production build successful
 Tests:       ✅ 140 passing / 81 failing (63% pass rate, up from 41%)
-Deployment:  ✅ Production live at app.galaxyco.ai
+Deployment:  ✅ Production live at galaxyco.ai
 Database:    ✅ Schema current, migrations up to date
 ```
 
