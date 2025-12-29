@@ -14,12 +14,12 @@ const markReadSchema = z.object({
 // POST - Mark channel as read
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
-    const channelId = params.id;
+    const { id: channelId } = await params;
     const body = await request.json();
 
     const validationResult = markReadSchema.safeParse(body);
