@@ -1,7 +1,7 @@
 # Warp Drive — GalaxyCo.ai 3.0
 
 > AI-native business platform. Next.js 15 + TypeScript strict + Neon Postgres.
-> Production: app.galaxyco.ai | Status: Active development
+> Production: galaxyco.ai | Status: Active development
 
 ## Verify System Health (30 seconds)
 ```bash

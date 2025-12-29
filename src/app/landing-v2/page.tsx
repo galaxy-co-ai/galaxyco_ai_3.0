@@ -1,5 +1,5 @@
 import { TrustFirstLanding } from "@/components/landing-v2";
 
-export default function Home() {
+export default function LandingV2Page() {
   return <TrustFirstLanding />;
 }

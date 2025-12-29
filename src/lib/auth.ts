@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { workspaces, workspaceMembers, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createDefaultTeamChannels } from '@/lib/team-channels';
 
 /**
  * System admin email whitelist
@@ -236,6 +237,9 @@ export const getCurrentWorkspace = cache(async () => {
         isActive: true,
       });
 
+      // Create default team channels
+      await createDefaultTeamChannels(workspace.id, user.id);
+
       logger.info('User workspace created on first access', {
         userId: user.id,
         workspaceId: workspace.id,
@@ -351,6 +355,9 @@ export const getCurrentWorkspace = cache(async () => {
         isActive: true,
       })
       .returning();
+
+    // Create default team channels for new workspace
+    await createDefaultTeamChannels(workspace.id, user.id);
 
     // Reload with workspace relation
     membership = await db.query.workspaceMembers.findFirst({
@@ -513,6 +520,9 @@ export async function getCurrentUser() {
         role: 'owner',
         isActive: true,
       });
+
+      // Create default team channels
+      await createDefaultTeamChannels(workspace.id, newUser.id);
 
       logger.info('User auto-created successfully', {
         userId: newUser.id,
