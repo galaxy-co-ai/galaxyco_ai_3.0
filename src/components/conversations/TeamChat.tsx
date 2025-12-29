@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from "react-markdown";
 import {
   Hash,
   Plus,
@@ -105,7 +106,7 @@ export default function TeamChat() {
   const { data: messagesData, mutate: mutateMessages } = useSWR<{ messages: TeamMessage[] }>(
     selectedChannel ? `/api/team/channels/${selectedChannel}/messages` : null,
     fetcher,
-    { refreshInterval: 5000 } // Poll every 5 seconds for new messages
+    { refreshInterval: 2000 } // Poll every 2 seconds for better real-time feel
   );
 
   const channels = channelsData?.channels || [];
@@ -115,6 +116,31 @@ export default function TeamChat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Mark messages as read when viewing a channel
+  useEffect(() => {
+    if (!selectedChannel || messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) return;
+
+    // Mark as read after a short delay (user has seen the messages)
+    const markAsReadTimer = setTimeout(async () => {
+      try {
+        await fetch(`/api/team/channels/${selectedChannel}/read`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lastMessageId: lastMessage.id }),
+        });
+        // Refresh channels to update unread counts
+        await mutateChannels();
+      } catch (error) {
+        // Silent fail - not critical
+      }
+    }, 1000); // 1 second delay
+
+    return () => clearTimeout(markAsReadTimer);
+  }, [selectedChannel, messages, mutateChannels]);
 
   // Filter channels by search
   const filteredChannels = channels.filter((ch) =>
@@ -461,24 +487,42 @@ export default function TeamChat() {
                               )}
                             </div>
                           )}
-                          {/* Message Content with Link Detection */}
+                          {/* Message Content with Markdown Support */}
                           {msg.content.trim() && (
-                            <p className="text-sm text-foreground whitespace-pre-wrap break-words">
-                              {msg.content.split(/(https?:\/\/[^\s]+)/g).map((part, i) => 
-                                part.match(/^https?:\/\//) ? (
-                                  <a
-                                    key={i}
-                                    href={part}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-indigo-600 hover:underline inline-flex items-center gap-1"
-                                  >
-                                    {part}
-                                    <ExternalLink className="h-3 w-3 inline" />
-                                  </a>
-                                ) : part
-                              )}
-                            </p>
+                            <div className="text-sm text-foreground prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2">
+                              <ReactMarkdown
+                                components={{
+                                  // Inline code
+                                  code: ({ node, inline, ...props }) =>
+                                    inline ? (
+                                      <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono" {...props} />
+                                    ) : (
+                                      <code className="block bg-muted p-2 rounded overflow-x-auto text-xs font-mono" {...props} />
+                                    ),
+                                  // Links
+                                  a: ({ node, ...props }) => (
+                                    <a
+                                      {...props}
+                                      className="text-indigo-600 hover:underline inline-flex items-center gap-1"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      {props.children}
+                                      <ExternalLink className="h-3 w-3 inline" />
+                                    </a>
+                                  ),
+                                  // Lists
+                                  ul: ({ node, ...props }) => <ul className="list-disc list-inside my-1" {...props} />,
+                                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside my-1" {...props} />,
+                                  // Blockquotes
+                                  blockquote: ({ node, ...props }) => (
+                                    <blockquote className="border-l-4 border-muted pl-3 italic text-muted-foreground my-1" {...props} />
+                                  ),
+                                }}
+                              >
+                                {msg.content}
+                              </ReactMarkdown>
+                            </div>
                           )}
                           {/* Attachments */}
                           {msg.attachments && msg.attachments.length > 0 && (

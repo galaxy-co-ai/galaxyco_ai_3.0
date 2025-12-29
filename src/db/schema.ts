@@ -751,6 +751,51 @@ export const workspaceMembers = pgTable(
 );
 
 // ============================================================================
+// WORKSPACE INVITATIONS
+// ============================================================================
+
+export const invitationStatusEnum = pgEnum('invitation_status', [
+  'pending',
+  'accepted',
+  'expired',
+  'cancelled',
+]);
+
+export const workspaceInvitations = pgTable(
+  'workspace_invitations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+
+    // Multi-tenant key
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+
+    // Invitation details
+    email: text('email').notNull(),
+    role: userRoleEnum('role').notNull().default('member'),
+    token: text('token').notNull().unique(),
+
+    // Status tracking
+    status: invitationStatusEnum('status').notNull().default('pending'),
+
+    // Who sent the invite
+    invitedBy: uuid('invited_by').references(() => users.id),
+
+    // Timestamps
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    expiresAt: timestamp('expires_at').notNull(),
+    acceptedAt: timestamp('accepted_at'),
+  },
+  (table) => ({
+    tenantIdx: index('workspace_invitation_tenant_idx').on(table.workspaceId),
+    emailIdx: index('workspace_invitation_email_idx').on(table.email),
+    tokenIdx: uniqueIndex('workspace_invitation_token_idx').on(table.token),
+    statusIdx: index('workspace_invitation_status_idx').on(table.status),
+  }),
+);
+
+// ============================================================================
 // AGENTS
 // ============================================================================
 
@@ -1962,6 +2007,17 @@ export const workspaceMembersRelations = relations(workspaceMembers, ({ one }) =
   }),
   user: one(users, {
     fields: [workspaceMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const workspaceInvitationsRelations = relations(workspaceInvitations, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [workspaceInvitations.workspaceId],
+    references: [workspaces.id],
+  }),
+  inviter: one(users, {
+    fields: [workspaceInvitations.invitedBy],
     references: [users.id],
   }),
 }));

@@ -6,6 +6,8 @@ import { users, workspaces, workspaceMembers, workspacePhoneNumbers } from '@/db
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { autoProvisionForWorkspace } from '@/lib/phone-numbers';
+import { createDefaultTeamChannels } from '@/lib/team-channels';
+import { createDefaultTeamChannels } from '@/lib/team-channels';
 
 /**
  * Clerk Webhook Handler
@@ -161,6 +163,9 @@ export async function POST(request: NextRequest) {
             role: 'owner',
             isActive: true,
           });
+
+          // Create default team channels
+          await createDefaultTeamChannels(newWorkspace.id, upsertedUser.id);
 
           // Auto-provision phone number for Pro/Enterprise tiers
           // Starter plan uses platform's shared number
