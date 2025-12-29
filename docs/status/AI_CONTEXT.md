@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-29 (407ac19)  
+**Updated Through:** 2025-12-29 (15c7782)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-29 15c7782 fix(build): remove duplicate code causing build failures
 - 2025-12-29 407ac19 feat(team): implement workspace invitations and team channel improvements
 - 2025-12-28 dac1fbd fix(neptune): initialize messages in useState to prevent empty render
 - 2025-12-28 8b3b60f fix(neptune): resolve skeleton loading state stuck in React Strict Mode
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-25 96f6d90 fix(neptune): correct database schema field references and type exports
 - 2025-12-25 f073adb fix(marketing): calculate campaign rates from counts instead of nonexistent rate fields
 - 2025-12-25 99d45e9 fix(db): use correct prospect stage enum values (won/lost instead of closed-won/closed-lost)
-- 2025-12-25 085fdd8 fix(api): use correct NeptuneContext options in Compass and Vision routes
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
