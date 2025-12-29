@@ -493,12 +493,21 @@ export default function TeamChat() {
                               <ReactMarkdown
                                 components={{
                                   // Inline code
-                                  code: ({ node, inline, ...props }) =>
-                                    inline ? (
-                                      <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono" {...props} />
+                                  code: (props) => {
+                                    const { node, className, children, ...rest } = props;
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    const isInline = !match;
+                                    
+                                    return isInline ? (
+                                      <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono" {...rest}>
+                                        {children}
+                                      </code>
                                     ) : (
-                                      <code className="block bg-muted p-2 rounded overflow-x-auto text-xs font-mono" {...props} />
-                                    ),
+                                      <code className="block bg-muted p-2 rounded overflow-x-auto text-xs font-mono" {...rest}>
+                                        {children}
+                                      </code>
+                                    );
+                                  },
                                   // Links
                                   a: ({ node, ...props }) => (
                                     <a
