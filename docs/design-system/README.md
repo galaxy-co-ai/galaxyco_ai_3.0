@@ -181,26 +181,36 @@ Production-grade performance:
 | [Switch](./components/inputs/switch.md) | Toggle on/off control | ✅ Complete |
 | [Textarea](./components/inputs/textarea.md) | Multi-line text input | ✅ Complete |
 
-### Navigation (3)
+### Navigation (7)
 
 | Component | Description | Status |
 |-----------|-------------|--------|
+| [Breadcrumb](./components/navigation/breadcrumb.md) | Hierarchical navigation trail | ✅ Complete |
+| [Command](./components/navigation/command.md) | Command palette for quick actions | ✅ Complete |
 | [Context Menu](./components/navigation/context-menu.md) | Right-click contextual actions | ✅ Complete |
 | [Dropdown Menu](./components/navigation/dropdown-menu.md) | Click-triggered action menus | ✅ Complete |
+| [Menubar](./components/navigation/menubar.md) | Application menu bar | ✅ Complete |
+| [Pagination](./components/navigation/pagination.md) | Page navigation controls | ✅ Complete |
 | [Tabs](./components/navigation/tabs.md) | Content organization in tabbed views | ✅ Complete |
 
-### Coming in Phase 3
+### Overlays (1)
 
 | Component | Description | Status |
 |-----------|-------------|--------|
-| Accordion | Collapsible content sections | 🔄 Planned |
-| Breadcrumbs | Hierarchical navigation trail | 🔄 Planned |
-| Command Menu | Command palette / search | 🔄 Planned |
-| Hover Card | Rich hover preview card | 🔄 Planned |
-| Menubar | Application menu bar | 🔄 Planned |
-| Pagination | Page navigation controls | 🔄 Planned |
-| Progress | Progress indicator bar | 🔄 Planned |
-| Skeleton | Loading placeholder | 🔄 Planned |
+| [Hover Card](./components/overlays/hover-card.md) | Rich hover preview card | ✅ Complete |
+
+### Loading (2)
+
+| Component | Description | Status |
+|-----------|-------------|--------|
+| [Progress](./components/loading/progress.md) | Progress indicator bar | ✅ Complete |
+| [Skeleton](./components/loading/skeleton.md) | Loading placeholder | ✅ Complete |
+
+### Disclosure (1)
+
+| Component | Description | Status |
+|-----------|-------------|--------|
+| [Accordion](./components/disclosure/accordion.md) | Collapsible content sections | ✅ Complete |
 
 ---
 
@@ -361,9 +371,9 @@ Co-Authored-By: Warp <agent@warp.dev>"
 
 ## Component Statistics
 
-- **Total Components**: 19 documented
-- **Documentation Lines**: ~18,500+ lines
-- **Examples**: 150+ production-ready code samples
+- **Total Components**: 27 documented
+- **Documentation Lines**: ~23,500+ lines
+- **Examples**: 210+ production-ready code samples
 - **Accessibility**: 100% WCAG 2.1 AA compliant
 - **TypeScript Coverage**: 100% (zero `any` types in components)
 
@@ -372,6 +382,16 @@ Co-Authored-By: Warp <agent@warp.dev>"
 ## Changelog
 
 ### Version 1.0.0 (2025-12-30)
+
+**Phase 3 Complete** - Navigation & Data Display Components
+- Added Breadcrumb component documentation
+- Added Command component documentation
+- Added Menubar component documentation
+- Added Pagination component documentation
+- Added Accordion component documentation
+- Added Hover Card component documentation
+- Added Progress component documentation
+- Added Skeleton component documentation
 
 **Phase 2C Complete** - Feedback & Overlay Components
 - Added Context Menu component documentation
