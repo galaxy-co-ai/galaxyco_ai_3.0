@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { trackClick } from "@/lib/analytics";
 import { useFeedback } from "@/contexts/feedback-context";
+import { useConversationsUnread } from "@/hooks/useConversationsUnread";
 import {
   Tooltip,
   TooltipContent,
@@ -73,6 +74,7 @@ export function Sidebar({ className }: SidebarProps) {
   const [isManuallyControlled, setIsManuallyControlled] = React.useState(false);
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set());
   const { openFeedback } = useFeedback();
+  const unreadCount = useConversationsUnread();
 
   // Auto-expand Orchestration section if on orchestration page
   React.useEffect(() => {
@@ -252,7 +254,7 @@ export function Sidebar({ className }: SidebarProps) {
                 variant="ghost"
                 className={cn(
                   "w-full h-9 rounded-lg transition-all duration-200",
-                  "flex items-center gap-2.5",
+                  "flex items-center gap-2.5 relative",
                   isCollapsed ? "justify-center px-0" : "justify-start px-2.5",
                   active
                     ? "shadow-[0_1px_3px_rgba(0,0,0,0.08)] text-sidebar-accent-foreground"
@@ -262,9 +264,23 @@ export function Sidebar({ className }: SidebarProps) {
                 aria-label={isCollapsed ? item.label : undefined}
                 aria-current={active ? "page" : undefined}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                <div className="relative">
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {/* Notification Badge for Conversations */}
+                  {item.id === "conversations" && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+                  )}
+                </div>
                 {!isCollapsed && (
-                  <span className="text-xs font-normal whitespace-nowrap">{item.label}</span>
+                  <>
+                    <span className="text-xs font-normal whitespace-nowrap flex-1">{item.label}</span>
+                    {/* Unread Count Badge for Conversations (expanded state) */}
+                    {item.id === "conversations" && unreadCount > 0 && (
+                      <span className="ml-auto h-5 min-w-[20px] px-1.5 flex items-center justify-center bg-red-500 text-white text-[10px] font-medium rounded-full">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </>
                 )}
               </Button>
             );

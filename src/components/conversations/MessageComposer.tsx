@@ -37,6 +37,7 @@ export default function MessageComposer({
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -112,6 +113,10 @@ export default function MessageComposer({
       setMessage("");
       setPendingAttachments([]);
       onCancelReply?.();
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '80px';
+      }
       toast.success("Message sent");
       window.dispatchEvent(new Event("conversation-updated"));
     } catch (error) {
@@ -127,6 +132,7 @@ export default function MessageComposer({
       e.preventDefault();
       handleSend();
     }
+    // Shift+Enter allows new line (default textarea behavior)
   };
 
   const formatFileSize = (bytes: number) => {
@@ -187,6 +193,7 @@ export default function MessageComposer({
 
       <div className="flex items-end gap-2">
         <Textarea
+          ref={textareaRef}
           placeholder={
             channel === 'email'
               ? "Type your email..."
@@ -195,9 +202,16 @@ export default function MessageComposer({
               : "Type your message..."
           }
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            // Auto-resize textarea
+            if (textareaRef.current) {
+              textareaRef.current.style.height = '80px';
+              textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 240)}px`;
+            }
+          }}
           onKeyDown={handleKeyDown}
-          className="min-h-[80px] resize-none"
+          className="min-h-[80px] max-h-[240px] resize-none"
           disabled={isSending}
         />
         <div className="flex flex-col gap-2">

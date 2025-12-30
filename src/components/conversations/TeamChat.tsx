@@ -24,11 +24,22 @@ import {
   Download,
   ExternalLink,
   Loader2,
+  Trash2,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import useSWR from "swr";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { TeamChannelSettings } from "./TeamChannelSettings";
+import { useUser } from "@clerk/nextjs";
 
 interface TeamChannel {
   id: string;
@@ -85,6 +96,7 @@ const fetcher = async (url: string) => {
 };
 
 export default function TeamChat() {
+  const { user: clerkUser } = useUser();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,6 +105,7 @@ export default function TeamChat() {
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [pendingAttachments, setPendingAttachments] = useState<Attachment[]>([]);
+  const [settingsChannelId, setSettingsChannelId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -286,6 +299,34 @@ export default function TeamChat() {
     }
   };
 
+  const handleDeleteChannel = async (channelId: string, channelName: string) => {
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete #${channelName}? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/team/channels/${channelId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete channel");
+      }
+
+      // If we were viewing the deleted channel, clear selection
+      if (selectedChannel === channelId) {
+        setSelectedChannel(null);
+      }
+
+      await mutateChannels();
+      toast.success(`#${channelName} deleted`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete channel");
+    }
+  };
+
   const getInitials = (firstName: string | null, lastName: string | null, email: string) => {
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase();
@@ -307,6 +348,40 @@ export default function TeamChat() {
     }
     return date.toLocaleDateString([], { month: "short", day: "numeric" });
   };
+
+  // Get bubble color for a user in a channel
+  const getBubbleColor = (userId: string, channelId: string) => {
+    const savedColors = localStorage.getItem(`channel-${channelId}-colors`);
+    if (savedColors) {
+      const colors = JSON.parse(savedColors);
+      return colors[userId] || "blue";
+    }
+    return "blue";
+  };
+
+  // Get bubble background class
+  const getBubbleClass = (color: string, isCurrentUser: boolean) => {
+    if (isCurrentUser) {
+      return "bg-blue-500 text-white"; // Always blue for current user (iOS style)
+    }
+    
+    const colorMap: Record<string, string> = {
+      blue: "bg-blue-500 text-white",
+      green: "bg-green-500 text-white",
+      purple: "bg-purple-500 text-white",
+      pink: "bg-pink-500 text-white",
+      orange: "bg-orange-500 text-white",
+      red: "bg-red-500 text-white",
+      yellow: "bg-yellow-600 text-white",
+      teal: "bg-teal-500 text-white",
+      indigo: "bg-indigo-500 text-white",
+      gray: "bg-gray-400 text-white",
+    };
+    
+    return colorMap[color] || "bg-gray-200 text-gray-900";
+  };
+
+  const settingsChannel = channels.find(ch => ch.id === settingsChannelId);
 
   return (
     <div className="flex h-full">
@@ -379,30 +454,63 @@ export default function TeamChat() {
               </div>
             ) : (
               filteredChannels.map((channel) => (
-                <button
+                <div
                   key={channel.id}
-                  onClick={() => setSelectedChannel(channel.id)}
                   className={cn(
-                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors",
+                    "group flex items-center gap-2 pr-2 rounded-lg transition-colors",
                     selectedChannel === channel.id
-                      ? "bg-indigo-100 text-indigo-700"
-                      : "hover:bg-muted text-foreground"
+                      ? "bg-indigo-100"
+                      : "hover:bg-muted"
                   )}
                 >
-                  {channel.type === "direct" ? (
-                    <Users className="h-4 w-4 flex-shrink-0" />
-                  ) : channel.isPrivate ? (
-                    <Lock className="h-4 w-4 flex-shrink-0" />
-                  ) : (
-                    <Hash className="h-4 w-4 flex-shrink-0" />
-                  )}
-                  <span className="flex-1 truncate text-sm font-medium">{channel.name}</span>
-                  {typeof channel.unreadCount === 'number' && channel.unreadCount > 0 && (
-                    <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full bg-indigo-500 text-white text-[9px] font-medium leading-none">
-                      {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
-                    </span>
-                  )}
-                </button>
+                  <button
+                    onClick={() => setSelectedChannel(channel.id)}
+                    className="flex-1 flex items-center gap-2 px-3 py-2 text-left min-w-0"
+                  >
+                    {channel.type === "direct" ? (
+                      <Users className="h-4 w-4 flex-shrink-0" />
+                    ) : channel.isPrivate ? (
+                      <Lock className="h-4 w-4 flex-shrink-0" />
+                    ) : (
+                      <Hash className="h-4 w-4 flex-shrink-0" />
+                    )}
+                    <span className="flex-1 truncate text-sm font-medium">{channel.name}</span>
+                    {typeof channel.unreadCount === 'number' && channel.unreadCount > 0 && (
+                      <span className="min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full bg-indigo-500 text-white text-[9px] font-medium leading-none">
+                        {channel.unreadCount > 99 ? '99+' : channel.unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreHorizontal className="h-3.5 w-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => setSettingsChannelId(channel.id)}
+                        className="cursor-pointer"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive cursor-pointer"
+                        onClick={() => handleDeleteChannel(channel.id, channel.name)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete channel
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               ))
             )}
           </div>
@@ -440,15 +548,28 @@ export default function TeamChat() {
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Search className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive cursor-pointer"
+                      onClick={() => handleDeleteChannel(selectedChannelData.id, selectedChannelData.name)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete channel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {messages.length === 0 ? (
                   <div className="text-center py-12">
                     <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
@@ -459,80 +580,55 @@ export default function TeamChat() {
                   </div>
                 ) : (
                   messages.map((msg, idx) => {
-                    const showAvatar =
-                      idx === 0 || messages[idx - 1].sender.id !== msg.sender.id;
+                    const isCurrentUser = clerkUser?.id === msg.sender.id;
+                    const showAvatar = idx === 0 || messages[idx - 1].sender.id !== msg.sender.id;
+                    const bubbleColor = getBubbleColor(msg.sender.id, selectedChannel || "");
+                    const bubbleClass = getBubbleClass(bubbleColor, isCurrentUser);
+                    
                     return (
-                      <div key={msg.id} className={cn("flex gap-3", !showAvatar && "ml-11")}>
-                        {showAvatar && (
-                          <Avatar className="h-8 w-8 shrink-0">
+                      <div 
+                        key={msg.id} 
+                        className={cn(
+                          "flex gap-2 items-end",
+                          isCurrentUser ? "justify-end" : "justify-start"
+                        )}
+                      >
+                        {!isCurrentUser && showAvatar && (
+                          <Avatar className="h-7 w-7 shrink-0 mb-0.5">
                             <AvatarImage src={msg.sender.avatarUrl || undefined} />
-                            <AvatarFallback className="bg-indigo-100 text-indigo-700 text-xs">
+                            <AvatarFallback className="text-xs">
                               {getInitials(msg.sender.firstName, msg.sender.lastName, msg.sender.email)}
                             </AvatarFallback>
                           </Avatar>
                         )}
-                        <div className="flex-1 min-w-0">
-                          {showAvatar && (
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <span className="font-medium text-sm">
-                                {msg.sender.firstName && msg.sender.lastName
-                                  ? `${msg.sender.firstName} ${msg.sender.lastName}`
-                                  : msg.sender.email}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatTime(msg.createdAt)}
-                              </span>
-                              {msg.isEdited && (
-                                <span className="text-xs text-muted-foreground">(edited)</span>
-                              )}
-                            </div>
+                        {!isCurrentUser && !showAvatar && <div className="w-7 shrink-0" />}
+                        
+                        <div 
+                          className={cn(
+                            "max-w-[70%] rounded-2xl px-3 py-2 shadow-sm",
+                            bubbleClass,
+                            isCurrentUser && "rounded-br-md",
+                            !isCurrentUser && "rounded-bl-md"
                           )}
-                          {/* Message Content with Markdown Support */}
+                        >
+                          {!isCurrentUser && showAvatar && (
+                            <p className={cn(
+                              "text-xs font-medium mb-0.5",
+                              isCurrentUser ? "text-white/90" : "text-current opacity-80"
+                            )}>
+                              {msg.sender.firstName && msg.sender.lastName
+                                ? `${msg.sender.firstName} ${msg.sender.lastName}`
+                                : msg.sender.email}
+                            </p>
+                          )}
+                          
+                          {/* Message Content */}
                           {msg.content.trim() && (
-                            <div className="text-sm text-foreground prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2">
-                              <ReactMarkdown
-                                components={{
-                                  // Inline code
-                                  code: (props) => {
-                                    const { node, className, children, ...rest } = props;
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    const isInline = !match;
-                                    
-                                    return isInline ? (
-                                      <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono" {...rest}>
-                                        {children}
-                                      </code>
-                                    ) : (
-                                      <code className="block bg-muted p-2 rounded overflow-x-auto text-xs font-mono" {...rest}>
-                                        {children}
-                                      </code>
-                                    );
-                                  },
-                                  // Links
-                                  a: ({ node, ...props }) => (
-                                    <a
-                                      {...props}
-                                      className="text-indigo-600 hover:underline inline-flex items-center gap-1"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                    >
-                                      {props.children}
-                                      <ExternalLink className="h-3 w-3 inline" />
-                                    </a>
-                                  ),
-                                  // Lists
-                                  ul: ({ node, ...props }) => <ul className="list-disc list-inside my-1" {...props} />,
-                                  ol: ({ node, ...props }) => <ol className="list-decimal list-inside my-1" {...props} />,
-                                  // Blockquotes
-                                  blockquote: ({ node, ...props }) => (
-                                    <blockquote className="border-l-4 border-muted pl-3 italic text-muted-foreground my-1" {...props} />
-                                  ),
-                                }}
-                              >
-                                {msg.content}
-                              </ReactMarkdown>
-                            </div>
+                            <p className="text-sm leading-snug break-words whitespace-pre-wrap">
+                              {msg.content}
+                            </p>
                           )}
+                          
                           {/* Attachments */}
                           {msg.attachments && msg.attachments.length > 0 && (
                             <div className="mt-2 space-y-2">
@@ -543,12 +639,12 @@ export default function TeamChat() {
                                       href={att.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="block max-w-md"
+                                      className="block"
                                     >
                                       <img
                                         src={att.url}
                                         alt={att.name || "Shared image"}
-                                        className="rounded-lg border max-h-64 object-cover hover:opacity-90 transition-opacity"
+                                        className="rounded-lg max-h-48 object-cover hover:opacity-90 transition-opacity"
                                       />
                                     </a>
                                   ) : att.type === "file" ? (
@@ -556,43 +652,43 @@ export default function TeamChat() {
                                       href={att.url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors max-w-sm"
+                                      className={cn(
+                                        "flex items-center gap-2 p-2 rounded-lg transition-opacity hover:opacity-80",
+                                        isCurrentUser ? "bg-white/20" : "bg-black/10"
+                                      )}
                                     >
-                                      <div className="p-2 rounded-lg bg-indigo-100">
-                                        <FileText className="h-5 w-5 text-indigo-600" />
-                                      </div>
+                                      <FileText className="h-4 w-4 shrink-0" />
                                       <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{att.name || "File"}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {formatFileSize(att.size)}
-                                        </p>
+                                        <p className="text-xs font-medium truncate">{att.name || "File"}</p>
+                                        {att.size && <p className="text-[10px] opacity-75">{formatFileSize(att.size)}</p>}
                                       </div>
-                                      <Download className="h-4 w-4 text-muted-foreground shrink-0" />
-                                    </a>
-                                  ) : att.type === "link" ? (
-                                    <a
-                                      href={att.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors max-w-sm"
-                                    >
-                                      <div className="p-2 rounded-lg bg-blue-100">
-                                        <LinkIcon className="h-5 w-5 text-blue-600" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate">{att.title || att.url}</p>
-                                        {att.description && (
-                                          <p className="text-xs text-muted-foreground truncate">{att.description}</p>
-                                        )}
-                                      </div>
-                                      <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                                      <Download className="h-3 w-3 shrink-0" />
                                     </a>
                                   ) : null}
                                 </div>
                               ))}
                             </div>
                           )}
+                          
+                          {/* Timestamp */}
+                          <p className={cn(
+                            "text-[10px] mt-1",
+                            isCurrentUser ? "text-white/70" : "text-current opacity-60"
+                          )}>
+                            {formatTime(msg.createdAt)}
+                            {msg.isEdited && " (edited)"}
+                          </p>
                         </div>
+                        
+                        {isCurrentUser && showAvatar && (
+                          <Avatar className="h-7 w-7 shrink-0 mb-0.5">
+                            <AvatarImage src={msg.sender.avatarUrl || undefined} />
+                            <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
+                              {getInitials(msg.sender.firstName, msg.sender.lastName, msg.sender.email)}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        {isCurrentUser && !showAvatar && <div className="w-7 shrink-0" />}
                       </div>
                     );
                   })
@@ -736,6 +832,24 @@ export default function TeamChat() {
           </div>
         )}
       </div>
+      
+      {/* Channel Settings Modal */}
+      {settingsChannel && (
+        <TeamChannelSettings
+          channelId={settingsChannel.id}
+          channelName={settingsChannel.name}
+          channelDescription={settingsChannel.description}
+          members={settingsChannel.members || []}
+          isOpen={settingsChannelId !== null}
+          onClose={() => setSettingsChannelId(null)}
+          onUpdate={() => {
+            mutateChannels();
+            if (selectedChannel === settingsChannelId) {
+              mutateMessages();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
