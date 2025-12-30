@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-30 (4714e41)  
+**Updated Through:** 2025-12-30 (b6e7a89)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-30 b6e7a89 docs(design-system): add Select and Checkbox component documentation (Phase 2B progress)
 - 2025-12-30 4714e41 docs(design-system): add comprehensive docs for Input, Card, Badge, and Dialog components
 - 2025-12-30 c0e97c6 refactor(ai): extract Calendar tools into module
 - 2025-12-30 1fec4a6 refactor(ai): extract CRM tools into module
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-27 b08af31 fix(navigation): use client-side routing instead of full page reload
 - 2025-12-27 4dd62e4 refactor(dashboard): streamline onboarding to Neptune-first experience
 - 2025-12-27 f3eaf90 refactor(dashboard): remove Compass/Vision/Boards panel
-- 2025-12-27 1df74bf test: fix test infrastructure and align with component implementations
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
