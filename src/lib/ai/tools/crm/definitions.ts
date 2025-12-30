@@ -1,9 +1,6 @@
 /**
  * CRM Tool Definitions
- * 
- * Tool schemas for CRM operations like creating leads, searching contacts, etc.
  */
-
 import type { ToolDefinitions } from '../types';
 
 export const crmToolDefinitions: ToolDefinitions = [

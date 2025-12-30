@@ -10,18 +10,20 @@ import { logger } from '@/lib/logger';
 
 // Import all categories
 import { crmToolDefinitions, crmToolImplementations } from './crm';
-// import { calendarToolDefinitions, calendarToolImplementations } from './calendar';
-// ... etc
+import { calendarToolDefinitions, calendarToolImplementations } from './calendar';
+// ... more categories
 
 // Aggregate all tools
 export const aiTools: ToolDefinitions = [
   ...crmToolDefinitions,
+  ...calendarToolDefinitions,
   // More categories will be added here
 ];
 
 // Aggregate all implementations
 const toolImplementations = {
   ...crmToolImplementations,
+  ...calendarToolImplementations,
   // More implementations will be added here
 };
 
@@ -65,6 +67,7 @@ export async function executeTool(
 
 export const toolsByCategory = {
   crm: Object.keys(crmToolImplementations),
+  calendar: Object.keys(calendarToolImplementations),
   // More categories will be added here
 };
 

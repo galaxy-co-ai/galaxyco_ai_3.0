@@ -1,9 +1,6 @@
 /**
  * CRM Tool Implementations
- * 
- * Business logic for CRM operations
  */
-
 import type { ToolImplementations } from '../types';
 import { db } from '@/lib/db';
 import { prospects, contacts } from '@/db/schema';
