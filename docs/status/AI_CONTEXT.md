@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-30 (b4b0851)  
+**Updated Through:** 2025-12-30 (db96134)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-30 db96134 docs(design-system): add Dropdown Menu component documentation
 - 2025-12-30 b4b0851 docs(design-system): add Tooltip component documentation
 - 2025-12-30 7a9717c docs(design-system): add Popover component documentation
 - 2025-12-30 8f28e75 docs(design-system): add Toast component documentation
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-29 35ee245 feat: add landing page v2 and update project configuration
 - 2025-12-29 1891fb3 docs: archive old documentation and reorganize structure
 - 2025-12-29 12150fa chore(security): enhance gitignore and complete env.example
-- 2025-12-29 d36ab19 feat(invitations): add confirmation email to inviter when invitation is sent
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
