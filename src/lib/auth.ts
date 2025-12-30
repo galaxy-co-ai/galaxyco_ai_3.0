@@ -17,6 +17,7 @@ import { createDefaultTeamChannels } from '@/lib/team-channels';
 const SYSTEM_ADMIN_EMAILS: string[] = [
   'dev@galaxyco.ai',
   'dalton@galaxyco.ai',
+  'taylor@galaxyco.ai',
   'aryan@heizen.work', // Heizen demo access
 ];
 
