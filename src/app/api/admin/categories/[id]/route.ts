@@ -5,6 +5,7 @@ import { isSystemAdmin } from '@/lib/auth';
 import { eq, and, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema
 const updateCategorySchema = z.object({
@@ -31,7 +32,7 @@ export async function GET(
 
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'Fetch category');
     }
 
     const category = await db.query.blogCategories.findFirst({
@@ -39,13 +40,12 @@ export async function GET(
     });
 
     if (!category) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+      return createErrorResponse(new Error('Category not found'), 'Fetch category');
     }
 
     return NextResponse.json(category);
   } catch (error) {
-    logger.error('Failed to fetch category', { error });
-    return NextResponse.json({ error: 'Failed to fetch category' }, { status: 500 });
+    return createErrorResponse(error, 'Fetch category');
   }
 }
 
@@ -59,7 +59,7 @@ export async function PUT(
 
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'Update category');
     }
 
     const existing = await db.query.blogCategories.findFirst({
@@ -67,17 +67,14 @@ export async function PUT(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+      return createErrorResponse(new Error('Category not found'), 'Update category');
     }
 
     const body = await request.json();
     const validationResult = updateCategorySchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request body'), 'Update category');
     }
 
     const data = validationResult.data;
@@ -92,10 +89,7 @@ export async function PUT(
       });
 
       if (slugExists) {
-        return NextResponse.json(
-          { error: 'A category with this slug already exists' },
-          { status: 409 }
-        );
+        return createErrorResponse(new Error('A category with this slug already exists'), 'Update category');
       }
     }
 
@@ -122,8 +116,7 @@ export async function PUT(
 
     return NextResponse.json(updatedCategory);
   } catch (error) {
-    logger.error('Failed to update category', { error });
-    return NextResponse.json({ error: 'Failed to update category' }, { status: 500 });
+    return createErrorResponse(error, 'Update category');
   }
 }
 
@@ -137,7 +130,7 @@ export async function DELETE(
 
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'Delete category');
     }
 
     const existing = await db.query.blogCategories.findFirst({
@@ -145,7 +138,7 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+      return createErrorResponse(new Error('Category not found'), 'Delete category');
     }
 
     await db.delete(blogCategories).where(eq(blogCategories.id, id));
@@ -154,7 +147,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('Failed to delete category', { error });
-    return NextResponse.json({ error: 'Failed to delete category' }, { status: 500 });
+    return createErrorResponse(error, 'Delete category');
   }
 }

@@ -31,4 +31,54 @@ export const analyticsToolDefinitions: ToolDefinitions = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_conversion_metrics',
+      description: 'Get pipeline conversion rates and metrics between stages.',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: {
+            type: 'string',
+            enum: ['week', 'month', 'quarter', 'year'],
+            description: 'Time period for metrics',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'forecast_revenue',
+      description: 'Get revenue forecast based on pipeline and historical data.',
+      parameters: {
+        type: 'object',
+        properties: {
+          months: {
+            type: 'number',
+            description: 'Number of months to forecast (default: 3)',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_team_performance',
+      description: 'Get team performance metrics (leads handled, deals closed, etc.).',
+      parameters: {
+        type: 'object',
+        properties: {
+          period: {
+            type: 'string',
+            enum: ['week', 'month', 'quarter'],
+            description: 'Time period for metrics',
+          },
+        },
+      },
+    },
+  },
 ];

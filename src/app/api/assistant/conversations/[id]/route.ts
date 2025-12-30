@@ -4,15 +4,29 @@ import { db } from '@/lib/db';
 import { aiConversations, aiMessages } from '@/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
     const { id: conversationId } = await params;
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`conversation-detail:${clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Get conversation with all messages
     const conversation = await db.query.aiConversations.findFirst({
@@ -59,9 +73,22 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
     const { id: conversationId } = await params;
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`conversation-delete:${clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Verify ownership
     const conversation = await db.query.aiConversations.findFirst({

@@ -5,6 +5,7 @@ import { conversations, teamChannelMembers } from '@/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { auth } from '@clerk/nextjs/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 // GET - Get total unread count across all conversations and team channels
 export async function GET() {
@@ -13,7 +14,19 @@ export async function GET() {
     const { userId } = await auth();
 
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Get unread count - authentication');
+    }
+
+    const rateLimitResult = await rateLimit(`conversations:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Get unread conversations count

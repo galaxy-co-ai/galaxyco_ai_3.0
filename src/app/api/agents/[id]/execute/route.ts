@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { agents, agentExecutions } from '@/db/schema';
+import { agents, agentExecutions, workspaces } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { broadcastActivity, broadcastAgentStatus } from '@/lib/pusher-server';
 import { logger } from '@/lib/logger';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
+import { checkConcurrentRunLimit, startConcurrentRun, type WorkspaceTier } from '@/lib/cost-protection';
 
 type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 
@@ -21,6 +23,45 @@ export async function POST(
   try {
     const { workspaceId, userId, user } = await getCurrentWorkspace();
     const { id: agentId } = await params;
+
+    // Rate limit for agent executions (10 per minute)
+    const rateLimitResult = await expensiveOperationLimit(`agent:execute:${userId}`);
+    if (!rateLimitResult.success) {
+      logger.warn('Agent execution rate limit exceeded', { userId, agentId });
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait before running more agents.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(rateLimitResult.reset),
+            'Retry-After': String(Math.ceil((rateLimitResult.reset - Date.now()) / 1000)),
+          },
+        }
+      );
+    }
+
+    // Get workspace tier for concurrent run limits
+    const workspace = await db.query.workspaces.findFirst({
+      where: eq(workspaces.id, workspaceId),
+      columns: { subscriptionTier: true },
+    });
+    const workspaceTier = (workspace?.subscriptionTier || 'free') as WorkspaceTier;
+
+    // Check concurrent runs limit
+    const concurrentCheck = await checkConcurrentRunLimit(workspaceId, workspaceTier);
+    if (!concurrentCheck.allowed) {
+      logger.warn('Concurrent agent runs limit exceeded', {
+        workspaceId,
+        tier: workspaceTier,
+        currentRuns: concurrentCheck.currentRuns,
+      });
+      return NextResponse.json(
+        { error: concurrentCheck.reason || 'Too many concurrent agent runs. Please wait for current runs to complete.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate input

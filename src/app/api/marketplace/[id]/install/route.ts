@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { marketplaceListings, marketplaceInstalls, agents, agentWorkflows } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // POST /api/marketplace/[id]/install - Install from marketplace
 export async function POST(
@@ -23,7 +24,7 @@ export async function POST(
     });
 
     if (!listing) {
-      return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+      return createErrorResponse(new Error('Listing not found'), 'Install from marketplace');
     }
 
     // Check if already installed
@@ -36,7 +37,7 @@ export async function POST(
     });
 
     if (existingInstall) {
-      return NextResponse.json({ error: 'Already installed' }, { status: 400 });
+      return createErrorResponse(new Error('Already installed - invalid request'), 'Install from marketplace');
     }
 
     // Create the resource from template
@@ -117,7 +118,6 @@ export async function POST(
       },
     }, { status: 201 });
   } catch (error) {
-    console.error('Error installing from marketplace:', error);
-    return NextResponse.json({ error: 'Failed to install' }, { status: 500 });
+    return createErrorResponse(error, 'Install from marketplace');
   }
 }

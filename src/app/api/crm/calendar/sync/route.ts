@@ -9,13 +9,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { syncCalendarEvents, getConnectedCalendars } from '@/lib/integrations/calendar-sync';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // GET: Check sync status/connected providers
 export async function GET() {
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Calendar Sync API GET');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const providers = await getConnectedCalendars(orgId);
@@ -26,11 +40,7 @@ export async function GET() {
       providers,
     });
   } catch (error) {
-    logger.error('[Calendar Sync API] GET error', error);
-    return NextResponse.json(
-      { error: 'Failed to check sync status' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Calendar Sync API GET');
   }
 }
 
@@ -39,11 +49,23 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Calendar Sync API POST');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const body = await request.json().catch(() => ({}));
-    const { 
+    const {
       provider,
       startDate,
       endDate,
@@ -74,10 +96,6 @@ export async function POST(request: NextRequest) {
       errors: allErrors.length > 0 ? allErrors : undefined,
     });
   } catch (error) {
-    logger.error('[Calendar Sync API] POST error', error);
-    return NextResponse.json(
-      { error: 'Failed to sync calendar' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Calendar Sync API POST');
   }
 }

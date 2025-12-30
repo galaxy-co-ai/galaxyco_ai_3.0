@@ -1,6 +1,6 @@
 /**
  * Action Approval API
- * 
+ *
  * Allows users to approve or reject Neptune actions for learning
  */
 
@@ -10,6 +10,7 @@ import { recordActionExecution } from '@/lib/ai/autonomy-learning';
 import { executeTool, type ToolContext } from '@/lib/ai/tools';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
 
 const approvalSchema = z.object({
   toolName: z.string(),
@@ -21,6 +22,19 @@ export async function POST(request: Request) {
   try {
     const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     const currentUser = await getCurrentUser();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`action-approval:${clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
     const validationResult = approvalSchema.safeParse(body);

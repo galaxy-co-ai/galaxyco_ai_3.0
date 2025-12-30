@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { withTimeout, API_TIMEOUTS } from '@/lib/utils';
 
 export type AIProvider = 'openai' | 'anthropic' | 'google';
 
@@ -11,7 +12,10 @@ export function getOpenAI() {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OPENAI_API_KEY not configured');
   }
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+    timeout: API_TIMEOUTS.AI_PROVIDER, // 60 second timeout for AI calls
+  });
 }
 
 /**
@@ -21,7 +25,10 @@ export function getAnthropic() {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error('ANTHROPIC_API_KEY not configured');
   }
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    timeout: API_TIMEOUTS.AI_PROVIDER, // 60 second timeout for AI calls
+  });
 }
 
 /**
@@ -106,8 +113,13 @@ export async function generateCompletion(
       const model = googleAI.getGenerativeModel({
         model: options?.model || 'gemini-pro',
       });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
+      // Google AI SDK doesn't support native timeout, so we wrap with withTimeout
+      const result = await withTimeout(
+        model.generateContent(prompt),
+        API_TIMEOUTS.AI_PROVIDER,
+        'Google AI generateContent'
+      );
+      const response = result.response;
       return response.text();
     }
 

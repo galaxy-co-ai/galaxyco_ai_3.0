@@ -6,11 +6,24 @@ import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 // GET - List campaigns
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`marketing:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const campaignList = await db.query.campaigns.findMany({
       where: eq(campaigns.workspaceId, workspaceId),
@@ -54,6 +67,18 @@ export async function POST(request: Request) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+
+    const rateLimitResult = await rateLimit(`marketing:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
     const validationResult = createCampaignSchema.safeParse(body);

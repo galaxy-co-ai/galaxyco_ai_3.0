@@ -7,6 +7,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { db } from "@/lib/db";
 import { contentSources, topicIdeas } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * POST /api/admin/ai/sources/discover
@@ -206,30 +207,10 @@ IMPORTANT: Only suggest real, well-known websites that actually exist. Return ON
       count: sources.length,
     });
   } catch (error) {
-    logger.error("Failed to discover sources", error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request body"), "Discover sources");
     }
-
-    if (error instanceof Error && error.message.includes("API key")) {
-      return NextResponse.json(
-        { error: "AI service not configured. Please add your OpenAI API key." },
-        { status: 503 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to discover sources. Please try again." },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Discover sources");
   }
 }
 

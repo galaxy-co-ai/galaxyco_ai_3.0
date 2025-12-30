@@ -4,6 +4,13 @@ import { z } from 'zod';
 import { getOpenAI } from '@/lib/ai-providers';
 import { uploadFile, isStorageConfigured } from '@/lib/storage';
 import { logger } from '@/lib/logger';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
+import { getCurrentWorkspace } from '@/lib/auth';
+import { db } from '@/lib/db';
+import { workspaces } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import { checkConcurrentRunLimit, type WorkspaceTier } from '@/lib/cost-protection';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Request schemas
 const generateImageSchema = z.object({
@@ -32,34 +39,74 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'AI image auth');
+    }
+
+    // Get workspace context for cost protection
+    let workspaceId: string;
+    let workspaceTier: WorkspaceTier = 'free';
+    try {
+      const workspaceResult = await getCurrentWorkspace();
+      workspaceId = workspaceResult.workspaceId;
+      const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.id, workspaceId),
+        columns: { subscriptionTier: true },
+      });
+      workspaceTier = (workspace?.subscriptionTier || 'free') as WorkspaceTier;
+    } catch {
+      // If workspace lookup fails, use conservative limits
+      workspaceId = userId;
     }
 
     const body = await request.json();
     const validation = requestSchema.safeParse(body);
-    
+
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: validation failed'), 'AI image validation');
     }
 
     const data = validation.data;
 
-    // Handle prompt suggestion
+    // Handle prompt suggestion (less expensive, lighter rate limit)
     if (data.action === 'suggest') {
       return handleSuggestPrompt(data.context);
+    }
+
+    // Rate limit for expensive image generation (10 per minute)
+    const rateLimitResult = await expensiveOperationLimit(`dalle:${userId}`);
+    if (!rateLimitResult.success) {
+      logger.warn('DALL-E rate limit exceeded', { userId });
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait before generating more images.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(rateLimitResult.reset),
+            'Retry-After': String(Math.ceil((rateLimitResult.reset - Date.now()) / 1000)),
+          },
+        }
+      );
+    }
+
+    // Check concurrent runs limit
+    const concurrentCheck = await checkConcurrentRunLimit(workspaceId, workspaceTier);
+    if (!concurrentCheck.allowed) {
+      logger.warn('Concurrent runs limit exceeded for image generation', {
+        workspaceId,
+        tier: workspaceTier,
+        currentRuns: concurrentCheck.currentRuns,
+      });
+      return createErrorResponse(
+        new Error(concurrentCheck.reason || 'Too many requests: concurrent limit exceeded'),
+        'AI image concurrent limit'
+      );
     }
 
     // Handle image generation
     return handleGenerateImage(data);
   } catch (error) {
-    logger.error('AI image API error', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to process request' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'AI image error');
   }
 }
 

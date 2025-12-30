@@ -5,6 +5,7 @@ import { articleAnalytics, blogPosts } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, sql, gte, lte } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 const querySchema = z.object({
   period: z.enum(["daily", "weekly", "monthly"]).optional().default("daily"),
@@ -194,23 +195,10 @@ export async function GET(request: NextRequest) {
       data: formattedTrends,
     });
   } catch (error) {
-    logger.error("Failed to fetch analytics trends", error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid query parameters", details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid query parameters"), "Fetch analytics trends");
     }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch analytics trends" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch analytics trends");
   }
 }
 

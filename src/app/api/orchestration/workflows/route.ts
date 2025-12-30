@@ -12,6 +12,7 @@ import { agentWorkflows, agentTeams } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Workflow step schema - value in conditions is required by the database schema
 const workflowStepSchema = z.object({
@@ -61,7 +62,20 @@ const createWorkflowSchema = z.object({
  */
 export async function GET(request: NextRequest) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Get query parameters
     const { searchParams } = new URL(request.url);
@@ -140,6 +154,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Parse and validate body
     const body = await request.json();

@@ -6,6 +6,7 @@ import { eq, and, asc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const attachmentSchema = z.object({
   type: z.enum(['file', 'image', 'link']),
@@ -34,6 +35,18 @@ export async function GET(
     const user = await getCurrentUser();
     const { id: channelId } = await params;
 
+    const rateLimitResult = await rateLimit(`team:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     // Verify channel exists and user has access
     const channel = await db.query.teamChannels.findFirst({
       where: and(
@@ -43,7 +56,7 @@ export async function GET(
     });
 
     if (!channel) {
-      return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+      return createErrorResponse(new Error('Channel not found'), 'Get team messages channel');
     }
 
     // Get messages with sender info
@@ -104,6 +117,19 @@ export async function POST(
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
     const { id: channelId } = await params;
+
+    const rateLimitResult = await rateLimit(`team:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
 
     const validationResult = sendMessageSchema.safeParse(body);
@@ -118,10 +144,7 @@ export async function POST(
 
     // Require either content or attachments
     if (!content?.trim() && (!attachments || attachments.length === 0)) {
-      return NextResponse.json(
-        { error: 'Message must have content or attachments' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Message must have content or attachments - invalid'), 'Send message validation');
     }
 
     // Verify channel exists and user has access
@@ -133,7 +156,7 @@ export async function POST(
     });
 
     if (!channel) {
-      return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
+      return createErrorResponse(new Error('Channel not found'), 'Send team message channel');
     }
 
     // Ensure user is a member of the channel (or auto-join for public channels)
@@ -158,10 +181,7 @@ export async function POST(
     }
 
     if (!membership) {
-      return NextResponse.json(
-        { error: 'You are not a member of this channel' },
-        { status: 403 }
-      );
+      return createErrorResponse(new Error('Not authorized - not a member of this channel'), 'Send team message membership');
     }
 
     // Create message

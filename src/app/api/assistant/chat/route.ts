@@ -1,11 +1,17 @@
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { aiConversations, aiMessages } from '@/db/schema';
+import { aiConversations, aiMessages, workspaces } from '@/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import {
+  checkTokenLimit,
+  trackTokenUsage,
+  estimateTokens,
+  type WorkspaceTier,
+} from '@/lib/cost-protection';
 
 // AI Module imports
 import { aiTools, executeTool, getToolsForCapability, type ToolContext, type ToolResult } from '@/lib/ai/tools';
@@ -406,6 +412,13 @@ export async function POST(request: Request) {
         return;
       }
 
+      // Get workspace tier for cost protection
+      const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.id, workspaceId),
+        columns: { subscriptionTier: true },
+      });
+      const workspaceTier = (workspace?.subscriptionTier || 'free') as WorkspaceTier;
+
       // Parse and validate request body
       const body = await request.json();
       const validationResult = chatSchema.safeParse(body);
@@ -776,6 +789,37 @@ export async function POST(request: Request) {
       const wasResponseCached = false; // Track if response came from cache
       const ragResultsCount = 0; // Track RAG results count
 
+      // Cost protection: Estimate tokens and check limits
+      const estimatedInputTokens = messages.reduce((sum, msg) => {
+        const content = typeof msg.content === 'string'
+          ? msg.content
+          : Array.isArray(msg.content)
+            ? msg.content.map(c => 'text' in c ? c.text : '').join(' ')
+            : '';
+        return sum + estimateTokens(content);
+      }, 0);
+
+      // Add buffer for response tokens (estimate ~1500 max)
+      const estimatedTotalTokens = estimatedInputTokens + 1500;
+
+      const tokenLimitResult = await checkTokenLimit(workspaceId, workspaceTier, estimatedTotalTokens);
+      if (!tokenLimitResult.allowed) {
+        logger.warn('[AI Chat Stream] Token limit exceeded', {
+          workspaceId,
+          tier: workspaceTier,
+          estimated: estimatedTotalTokens,
+          reason: tokenLimitResult.reason,
+        });
+        sse.sendError(tokenLimitResult.reason || 'Daily usage limit exceeded. Please try again tomorrow or upgrade your plan.');
+        sse.send({
+          tokenLimitExceeded: true,
+          currentUsage: tokenLimitResult.currentUsage,
+          limit: tokenLimitResult.limit,
+        });
+        sse.sendDone();
+        return;
+      }
+
       // Streaming with tool call loop
       let continueLoop = true;
       while (continueLoop && iterations < maxIterations) {
@@ -1105,6 +1149,13 @@ Show your reasoning process naturally in your response.`;
         tokensUsed: totalTokensUsed,
         ragResultsCount,
       });
+
+      // Track token usage for cost protection (async, non-blocking)
+      if (totalTokensUsed > 0) {
+        trackTokenUsage(workspaceId, totalTokensUsed).catch(err =>
+          logger.warn('[AI Chat Stream] Failed to track token usage', { err })
+        );
+      }
 
       // Cache the response for similar future queries (async, non-blocking)
       if (!attachments || attachments.length === 0) {

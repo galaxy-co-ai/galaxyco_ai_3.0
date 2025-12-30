@@ -5,6 +5,7 @@ import { expenses } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { eq, desc, asc, and, ilike, sql, gte, lte } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const createExpenseSchema = z.object({
   description: z.string().min(1, 'Description is required'),
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     const { workspaceId, userId } = await getCurrentWorkspace();
     
     if (!workspaceId || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Fetch expenses authentication');
     }
 
     const { searchParams } = new URL(request.url);
@@ -132,8 +133,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error('Error fetching expenses', error);
-    return NextResponse.json({ error: 'Failed to fetch expenses' }, { status: 500 });
+    return createErrorResponse(error, 'Error fetching expenses');
   }
 }
 
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     const { workspaceId, userId } = await getCurrentWorkspace();
     
     if (!workspaceId || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Create expense authentication');
     }
 
     const body = await request.json();
@@ -183,12 +183,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ expense: newExpense }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation error: invalid expense data'), 'Create expense validation');
     }
-    logger.error('Error creating expense', error);
-    return NextResponse.json({ error: 'Failed to create expense' }, { status: 500 });
+    return createErrorResponse(error, 'Error creating expense');
   }
 }

@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { openai } from '@/lib/openai';
 import { getCachedLLMResponse, cacheLLMResponse } from '@/lib/llm-cache';
+import { rateLimit } from '@/lib/rate-limit';
 
 const actionSchema = z.object({
   action: z.enum([
@@ -45,7 +46,19 @@ export async function POST(request: Request) {
     const user = await currentUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Neptune action - authentication');
+    }
+
+    const rateLimitResult = await rateLimit(`conversations:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const body = await request.json();
@@ -60,7 +73,7 @@ export async function POST(request: Request) {
     });
 
     if (!conversation) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      return createErrorResponse(new Error('Conversation not found'), 'Neptune action - not found');
     }
 
     // Fetch recent messages for context
@@ -111,10 +124,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ result });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation error: invalid request data'), 'Neptune action - validation');
     }
     logger.error('Neptune action error', error);
     return createErrorResponse(error, 'Neptune action error');

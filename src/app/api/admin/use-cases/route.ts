@@ -5,6 +5,7 @@ import { useCases, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, desc, sql, ilike, or } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * GET /api/admin/use-cases
@@ -117,16 +118,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    logger.error("Failed to fetch use cases", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch use cases" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch use cases error");
   }
 }
 
@@ -219,23 +211,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ useCase: newUseCase }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to create use case", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to create use case" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Create use case error");
   }
 }
 

@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { articleSources, blogPosts } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Create source schema
 const createSourceSchema = z.object({
@@ -30,14 +31,14 @@ export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Get sources auth');
     }
 
     const { searchParams } = new URL(request.url);
     const postId = searchParams.get('postId');
 
     if (!postId) {
-      return NextResponse.json({ error: 'postId required' }, { status: 400 });
+      return createErrorResponse(new Error('Invalid request: postId required'), 'Get sources validation');
     }
 
     // Verify user has access to this post
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      return createErrorResponse(new Error('Post not found'), 'Get sources post');
     }
 
     // Fetch sources
@@ -57,11 +58,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ sources });
   } catch (error) {
-    logger.error('Error fetching sources', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch sources' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get sources error');
   }
 }
 
@@ -73,17 +70,14 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Create source auth');
     }
 
     const body = await request.json();
     const validation = createSourceSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: validation failed'), 'Create source validation');
     }
 
     const data = validation.data;
@@ -94,7 +88,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+      return createErrorResponse(new Error('Post not found'), 'Create source post');
     }
 
     // Create source
@@ -118,11 +112,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(source, { status: 201 });
   } catch (error) {
-    logger.error('Error creating source', error);
-    return NextResponse.json(
-      { error: 'Failed to create source' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create source error');
   }
 }
 

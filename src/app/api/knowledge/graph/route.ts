@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { knowledgeItems, knowledgeCollections } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // TYPES
@@ -243,7 +244,21 @@ function getDocumentColor(type: string): string {
 
 export async function GET(request: Request) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limit - expensive operation (10 requests per minute)
+    const rateLimitResult = await expensiveOperationLimit(`knowledge-graph:${userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const collectionId = searchParams.get('collectionId');
     const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500);

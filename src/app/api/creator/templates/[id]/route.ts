@@ -23,7 +23,7 @@ export async function GET(
     });
 
     if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      return createErrorResponse(new Error('Template not found'), 'Creator Template GET');
     }
 
     return NextResponse.json({

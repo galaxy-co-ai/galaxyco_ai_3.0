@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { creatorItems } from '@/db/schema';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 import type { FinanceDocument } from '@/components/finance-hq/document-creator/types';
 
 /**
@@ -13,17 +14,14 @@ export async function POST(req: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Finance documents authentication');
     }
 
     const body = await req.json();
     const { document, asDraft, workspaceId } = body;
 
     if (!document || !workspaceId) {
-      return NextResponse.json(
-        { error: 'Missing required fields: document, workspaceId' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Missing required fields: document, workspaceId'), 'Finance documents validation');
     }
 
     const financeDoc = document as Partial<FinanceDocument>;
@@ -70,11 +68,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    logger.error('Failed to save finance document', error);
-    return NextResponse.json(
-      { error: 'Failed to save document' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Failed to save finance document');
   }
 }
 

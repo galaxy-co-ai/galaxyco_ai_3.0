@@ -4,6 +4,7 @@ import { contacts } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { eq, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 /**
  * GET /api/crm/contacts/export
@@ -12,8 +13,20 @@ import { logger } from '@/lib/logger';
  */
 export async function GET(request: NextRequest) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
-    
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     // Fetch all contacts
     const allContacts = await db.query.contacts.findMany({
       where: eq(contacts.workspaceId, workspaceId),

@@ -5,6 +5,7 @@ import { contentSources, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, desc, sql, ilike, or } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * GET /api/admin/content-sources
@@ -130,16 +131,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    logger.error("Failed to fetch content sources", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch content sources" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch content sources");
   }
 }
 
@@ -181,10 +173,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (existingSource.length > 0) {
-      return NextResponse.json(
-        { error: "A source with this URL already exists" },
-        { status: 409 }
-      );
+      return createErrorResponse(new Error("A source with this URL already exists"), "Create content source");
     }
 
     const [newSource] = await db
@@ -212,23 +201,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ source: newSource }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to create content source", error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request body"), "Create content source");
     }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to create content source" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Create content source");
   }
 }
 

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getCurrentWorkspace, getAdminContext } from '@/lib/auth';
+import { getCurrentWorkspace, getAdminContext, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { conversations } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const updateSchema = z.object({
   status: z.enum(['active', 'archived', 'closed', 'spam']).optional(),
@@ -23,7 +24,20 @@ export async function GET(
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
+    const user = await getCurrentUser();
     const { id } = await params;
+
+    const rateLimitResult = await rateLimit(`conversations:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const conversation = await db.query.conversations.findFirst({
       where: and(
@@ -52,7 +66,20 @@ export async function PATCH(
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
+    const user = await getCurrentUser();
     const { id } = await params;
+
+    const rateLimitResult = await rateLimit(`conversations:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
     const validated = updateSchema.parse(body);
@@ -126,7 +153,20 @@ export async function DELETE(
       );
     }
     const { workspaceId } = await getCurrentWorkspace();
+    const user = await getCurrentUser();
     const { id } = await params;
+
+    const rateLimitResult = await rateLimit(`conversations:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Verify conversation belongs to workspace
     const existing = await db.query.conversations.findFirst({

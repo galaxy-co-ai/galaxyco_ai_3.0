@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // SCHEMA VALIDATION
@@ -28,16 +29,27 @@ export async function PATCH(
 ) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
-    
+
     // Validate input
     const validationResult = updateWebhookSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid input'), 'Update webhook error');
     }
 
     const updates = validationResult.data;
@@ -51,7 +63,7 @@ export async function PATCH(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Webhook not found' }, { status: 404 });
+      return createErrorResponse(new Error('Webhook not found'), 'Update webhook error');
     }
 
     // Update webhook
@@ -97,6 +109,20 @@ export async function DELETE(
 ) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await params;
 
     // Verify webhook belongs to workspace
@@ -108,7 +134,7 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Webhook not found' }, { status: 404 });
+      return createErrorResponse(new Error('Webhook not found'), 'Delete webhook error');
     }
 
     // Delete webhook

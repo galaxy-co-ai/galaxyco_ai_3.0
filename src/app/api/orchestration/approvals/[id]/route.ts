@@ -10,6 +10,7 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { AutonomyService } from '@/lib/orchestration/autonomy';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Validation schema for approval decision
 const approvalDecisionSchema = z.object({
@@ -30,7 +31,21 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await params;
 
     if (!id) {
@@ -70,6 +85,20 @@ export async function POST(
 ) {
   try {
     const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await params;
 
     if (!id) {

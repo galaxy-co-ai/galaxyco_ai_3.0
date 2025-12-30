@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const conditionSchema = z.object({
   field: z.string().min(1),
@@ -35,9 +36,22 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, context: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await context.params;
-    
+
     const rule = await db.query.leadRoutingRules.findFirst({
       where: and(
         eq(leadRoutingRules.id, id),
@@ -46,9 +60,9 @@ export async function GET(request: NextRequest, context: RouteParams) {
     });
     
     if (!rule) {
-      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+      return createErrorResponse(new Error('Routing rule not found'), 'Get routing rule');
     }
-    
+
     return NextResponse.json({ rule });
   } catch (error) {
     return createErrorResponse(error, 'Get routing rule error');
@@ -60,17 +74,27 @@ export async function GET(request: NextRequest, context: RouteParams) {
  */
 export async function PUT(request: NextRequest, context: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await context.params;
-    
+
     const body = await request.json();
     const validation = updateRuleSchema.safeParse(body);
     
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid routing rule data'), 'Update routing rule');
     }
     
     const data = validation.data;
@@ -98,9 +122,9 @@ export async function PUT(request: NextRequest, context: RouteParams) {
       .returning();
     
     if (!rule) {
-      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+      return createErrorResponse(new Error('Routing rule not found'), 'Update routing rule');
     }
-    
+
     logger.info('Updated lead routing rule', { workspaceId, ruleId: id });
     
     return NextResponse.json({ rule });
@@ -114,9 +138,22 @@ export async function PUT(request: NextRequest, context: RouteParams) {
  */
 export async function DELETE(request: NextRequest, context: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await context.params;
-    
+
     const [deleted] = await db
       .delete(leadRoutingRules)
       .where(
@@ -128,9 +165,9 @@ export async function DELETE(request: NextRequest, context: RouteParams) {
       .returning({ id: leadRoutingRules.id });
     
     if (!deleted) {
-      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+      return createErrorResponse(new Error('Routing rule not found'), 'Delete routing rule');
     }
-    
+
     logger.info('Deleted lead routing rule', { workspaceId, ruleId: id });
     
     return NextResponse.json({ success: true });

@@ -58,7 +58,7 @@ export async function GET(
     });
 
     if (!item) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      return createErrorResponse(new Error('Item not found'), 'Creator Item GET');
     }
 
     // Get collection IDs
@@ -111,17 +111,14 @@ export async function PUT(
     });
 
     if (!existingItem) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      return createErrorResponse(new Error('Item not found'), 'Creator Item PUT');
     }
 
     const body = await request.json();
     const validationResult = UpdateItemSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors[0]?.message || 'Validation failed' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(validationResult.error.errors[0]?.message || 'Validation failed - invalid input'), 'Creator Item PUT');
     }
 
     const { title, content, metadata, starred, gammaUrl, gammaEditUrl, collectionIds } = validationResult.data;
@@ -213,7 +210,7 @@ export async function DELETE(
     });
 
     if (!existingItem) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      return createErrorResponse(new Error('Item not found'), 'Creator Item DELETE');
     }
 
     // Delete the item (cascade will handle creatorItemCollections)

@@ -3,6 +3,9 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { workspacePhoneNumbers, workspaces, workspaceMembers } from '@/db/schema';
 import { eq, and, desc, asc } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 // Note: autoProvisionForWorkspace is lazily imported in POST to avoid loading SignalWire SDK on GET
 
 /**
@@ -16,7 +19,20 @@ export async function GET(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Get phone numbers error');
+    }
+
+    // Rate limiting (keep manual for custom headers)
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Await params (Next.js 15+ requirement)
@@ -26,18 +42,18 @@ export async function GET(
     // If ID is a Clerk org ID, look up the workspace
     // Clerk has already verified the user is a member of this org
     const isClerkOrg = workspaceId.startsWith('org_');
-    console.log('[GET /phone-numbers] Workspace ID:', workspaceId, 'Is Clerk Org:', isClerkOrg);
-    
+    logger.debug('Phone numbers GET request', { workspaceId, isClerkOrg });
+
     if (isClerkOrg) {
       const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.clerkOrganizationId, workspaceId),
       });
-      console.log('[GET /phone-numbers] Workspace lookup result:', workspace ? 'Found' : 'Not found');
+      logger.debug('Workspace lookup result', { found: !!workspace });
       if (!workspace) {
-        console.error('[GET /phone-numbers] No workspace found for Clerk org:', workspaceId);
-        return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+        logger.warn('No workspace found for Clerk org', { clerkOrgId: workspaceId });
+        return createErrorResponse(new Error('Workspace not found'), 'Get phone numbers error');
       }
-      console.log('[GET /phone-numbers] Mapped to workspace UUID:', workspace.id);
+      logger.debug('Mapped Clerk org to workspace UUID', { clerkOrgId: workspaceId, workspaceUuid: workspace.id });
       workspaceId = workspace.id;
     } else {
       // For non-Clerk workspaces, verify database membership
@@ -49,33 +65,25 @@ export async function GET(
       });
 
       if (!membership) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        return createErrorResponse(new Error('Forbidden: access denied'), 'Get phone numbers error');
       }
     }
 
     // Get all phone numbers for this workspace
-    console.log('[GET /phone-numbers] Fetching numbers for workspace:', workspaceId);
+    logger.debug('Fetching phone numbers for workspace', { workspaceId });
     const phoneNumbers = await db.query.workspacePhoneNumbers.findMany({
       where: eq(workspacePhoneNumbers.workspaceId, workspaceId),
       orderBy: [
-        // Primary numbers first  
+        // Primary numbers first
         desc(workspacePhoneNumbers.numberType),
         asc(workspacePhoneNumbers.provisionedAt),
       ],
     });
-    console.log('[GET /phone-numbers] Found', phoneNumbers.length, 'phone numbers');
+    logger.debug('Phone numbers retrieved', { workspaceId, count: phoneNumbers.length });
 
     return NextResponse.json({ phoneNumbers });
   } catch (error) {
-    console.error('[GET /phone-numbers] Error:', error);
-    console.error('[GET /phone-numbers] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch phone numbers',
-        details: error instanceof Error ? error.message : String(error)
-      },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get phone numbers error');
   }
 }
 
@@ -96,7 +104,20 @@ export async function POST(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Provision phone number error');
+    }
+
+    // Rate limiting (keep manual for custom headers)
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Await params (Next.js 15+ requirement)
@@ -107,13 +128,13 @@ export async function POST(
     // Clerk has already verified the user is a member of this org
     const isClerkOrg = workspaceId.startsWith('org_');
     let workspace;
-    
+
     if (isClerkOrg) {
       const ws = await db.query.workspaces.findFirst({
         where: eq(workspaces.clerkOrganizationId, workspaceId),
       });
       if (!ws) {
-        return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+        return createErrorResponse(new Error('Workspace not found'), 'Provision phone number error');
       }
       workspace = ws;
       workspaceId = ws.id;
@@ -130,18 +151,15 @@ export async function POST(
       });
 
       if (!membership) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        return createErrorResponse(new Error('Forbidden: access denied'), 'Provision phone number error');
       }
-      
+
       workspace = membership.workspace;
     }
 
     // Check subscription tier
     if (workspace.subscriptionTier === 'starter') {
-      return NextResponse.json(
-        { error: 'Phone numbers are only available on Pro and Enterprise plans' },
-        { status: 403 }
-      );
+      return createErrorResponse(new Error('Forbidden: Phone numbers are only available on Pro and Enterprise plans'), 'Provision phone number error');
     }
 
     // Parse request body
@@ -158,18 +176,12 @@ export async function POST(
 
     // Pro tier: only 1 number allowed
     if (workspace.subscriptionTier === 'professional' && existingNumbers.length >= 1) {
-      return NextResponse.json(
-        { error: 'Pro plan allows only 1 phone number. Upgrade to Enterprise for multiple numbers.' },
-        { status: 403 }
-      );
+      return createErrorResponse(new Error('Forbidden: Pro plan allows only 1 phone number. Upgrade to Enterprise for multiple numbers.'), 'Provision phone number error');
     }
 
     // Enterprise tier: unlimited numbers (within reason)
     if (workspace.subscriptionTier === 'enterprise' && existingNumbers.length >= 10) {
-      return NextResponse.json(
-        { error: 'Maximum of 10 phone numbers per workspace' },
-        { status: 403 }
-      );
+      return createErrorResponse(new Error('Forbidden: Maximum of 10 phone numbers per workspace'), 'Provision phone number error');
     }
 
     // Provision the phone number (lazy import to avoid loading SignalWire on GET requests)
@@ -181,10 +193,7 @@ export async function POST(
     });
 
     if (!result) {
-      return NextResponse.json(
-        { error: 'Failed to provision phone number. No numbers available in this area code.' },
-        { status: 500 }
-      );
+      return createErrorResponse(new Error('Failed to provision phone number. No numbers available in this area code.'), 'Provision phone number error');
     }
 
     // Store phone number in database
@@ -206,10 +215,6 @@ export async function POST(
 
     return NextResponse.json({ phoneNumber }, { status: 201 });
   } catch (error) {
-    console.error('Error provisioning phone number:', error);
-    return NextResponse.json(
-      { error: 'Failed to provision phone number' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Provision phone number error');
   }
 }

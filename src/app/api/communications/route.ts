@@ -202,13 +202,9 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation error'), 'List communications');
     }
-    logger.error('List communications error', error);
-    return createErrorResponse(error, 'List communications error');
+    return createErrorResponse(error, 'List communications');
   }
 }
 
@@ -222,7 +218,7 @@ export async function POST(request: Request) {
     const user = await currentUser();
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Create communication');
     }
 
     const body = await request.json();
@@ -324,13 +320,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation error'), 'Create communication');
     }
-    logger.error('Create communication error', error);
-    return createErrorResponse(error, 'Create communication error');
+    return createErrorResponse(error, 'Create communication');
   }
 }
 

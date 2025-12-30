@@ -31,10 +31,7 @@ export async function POST(
     // Validate input
     const validationResult = runAgentSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid input'), 'Run agent validation error');
     }
 
     const { task, message, inputs, testMode } = validationResult.data;
@@ -45,14 +42,11 @@ export async function POST(
     });
 
     if (!agent) {
-      return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+      return createErrorResponse(new Error('Agent not found'), 'Run agent error');
     }
 
     if (!testMode && agent.status !== 'active') {
-      return NextResponse.json(
-        { error: `Agent is not active (status: ${agent.status})` },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(`Agent is invalid: not active (status: ${agent.status})`), 'Run agent error');
     }
 
     // Create execution record in pending state
@@ -80,10 +74,7 @@ export async function POST(
 
     if (!process.env.TRIGGER_SECRET_KEY) {
       logger.error('TRIGGER_SECRET_KEY is not configured');
-      return NextResponse.json(
-        { success: false, executionId: execution.id, error: 'Background runner not configured' },
-        { status: 500 }
-      );
+      return createErrorResponse(new Error('Background runner not configured'), 'Run agent error');
     }
 
     let triggerRunId: string | undefined;
@@ -120,10 +111,7 @@ export async function POST(
         })
         .where(eq(agentExecutions.id, execution.id));
 
-      return NextResponse.json(
-        { success: false, executionId: execution.id, error: 'Failed to enqueue agent run' },
-        { status: 500 }
-      );
+      return createErrorResponse(new Error('Failed to enqueue agent run'), 'Run agent error');
     }
 
     return NextResponse.json(

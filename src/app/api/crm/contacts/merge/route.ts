@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { invalidateCRMCache } from '@/actions/crm';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 const mergeContactsSchema = z.object({
   // The contact that will remain (target/survivor)
@@ -45,6 +46,19 @@ const mergeContactsSchema = z.object({
 export async function POST(request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
 
     // Validate input
@@ -212,7 +226,20 @@ export async function POST(request: Request) {
  */
 export async function GET(request: Request) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     
     const targetId = searchParams.get('targetId');

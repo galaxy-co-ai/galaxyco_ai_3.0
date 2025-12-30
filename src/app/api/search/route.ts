@@ -15,16 +15,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
-import { 
-  contacts, 
-  campaigns, 
-  knowledgeItems, 
-  creatorItems, 
-  agents, 
-  blogPosts 
+import {
+  contacts,
+  campaigns,
+  knowledgeItems,
+  creatorItems,
+  agents,
+  blogPosts
 } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 import { and, eq, ilike, or, sql, desc } from 'drizzle-orm';
 import { withRateLimit } from '@/lib/rate-limit';
 
@@ -83,10 +84,7 @@ async function searchHandler(request: NextRequest) {
     });
     
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(validation.error.errors[0].message), 'Search');
     }
     
     const { q: query, types: typesString, limit } = validation.data;
@@ -336,15 +334,7 @@ async function searchHandler(request: NextRequest) {
     return NextResponse.json(response);
     
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    logger.error('Search API error', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Search');
   }
 }
 

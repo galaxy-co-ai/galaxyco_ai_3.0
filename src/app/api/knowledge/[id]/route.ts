@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { deleteKnowledgeDocument } from '@/lib/vector';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function DELETE(
   request: Request,
@@ -14,6 +15,19 @@ export async function DELETE(
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
     const { id: itemId } = await params;
+
+    // Rate limit - 100 requests per hour
+    const rateLimitResult = await rateLimit(`knowledge-delete:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     logger.info('Deleting knowledge item', { itemId, workspaceId, userId });
 

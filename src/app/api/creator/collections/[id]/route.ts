@@ -37,7 +37,7 @@ export async function GET(
     });
 
     if (!collection) {
-      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+      return createErrorResponse(new Error('Collection not found'), 'Creator Collection GET');
     }
 
     // Get items in this collection
@@ -100,17 +100,14 @@ export async function PUT(
     });
 
     if (!existingCollection) {
-      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+      return createErrorResponse(new Error('Collection not found'), 'Creator Collection PUT');
     }
 
     const body = await request.json();
     const validationResult = UpdateCollectionSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors[0]?.message || 'Validation failed' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(validationResult.error.errors[0]?.message || 'Validation failed - invalid input'), 'Creator Collection PUT');
     }
 
     const { name, description, color } = validationResult.data;
@@ -125,10 +122,7 @@ export async function PUT(
       });
 
       if (duplicate) {
-        return NextResponse.json(
-          { error: 'A collection with this name already exists' },
-          { status: 409 }
-        );
+        return createErrorResponse(new Error('A collection with this name already exists'), 'Creator Collection PUT');
       }
     }
 
@@ -188,7 +182,7 @@ export async function DELETE(
     });
 
     if (!existingCollection) {
-      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+      return createErrorResponse(new Error('Collection not found'), 'Creator Collection DELETE');
     }
 
     // Delete the collection (cascade will handle creatorItemCollections)

@@ -5,6 +5,7 @@ import { workspaceApiKeys } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // DELETE - Delete API Key
@@ -15,7 +16,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: apiKeyId } = await params;
 
     // Get the API key

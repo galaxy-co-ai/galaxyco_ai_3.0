@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { broadcastActivity } from '@/lib/pusher-server';
+import { rateLimit } from '@/lib/rate-limit';
 
 const updateContactSchema = z.object({
   firstName: z.string().min(1).optional(),
@@ -26,7 +27,20 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: contactId } = await params;
 
     const contact = await db.query.contacts.findFirst({
@@ -55,6 +69,19 @@ export async function PUT(
 ) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: contactId } = await params;
     const body = await request.json();
 
@@ -126,6 +153,19 @@ export async function DELETE(
 ) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: contactId } = await params;
 
     // Check if contact exists

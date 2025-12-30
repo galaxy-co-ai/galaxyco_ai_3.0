@@ -5,6 +5,7 @@ import { projects } from '@/db/schema';
 import { invalidateCRMCache } from '@/actions/crm';
 import { z } from 'zod';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const projectSchema = z.object({
   name: z.string().min(1, 'Project name is required'),
@@ -20,6 +21,19 @@ const projectSchema = z.object({
 export async function POST(request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
 
     const validationResult = projectSchema.safeParse(body);

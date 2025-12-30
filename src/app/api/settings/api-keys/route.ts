@@ -6,6 +6,7 @@ import { eq, and, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 import { encryptApiKey } from '@/lib/encryption';
 
 // ============================================================================
@@ -24,7 +25,20 @@ const createApiKeySchema = z.object({
 
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Get all API keys for workspace
     const apiKeys = await db.query.workspaceApiKeys.findMany({
@@ -77,17 +91,28 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
     const currentUser = await getCurrentUser();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
-    
+
     // Validate input
     const validationResult = createApiKeySchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid input'), 'Create API key error');
     }
 
     const { name, key, provider } = validationResult.data;
@@ -98,7 +123,7 @@ export async function POST(request: Request) {
     });
 
     if (!userRecord) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return createErrorResponse(new Error('User not found'), 'Create API key error');
     }
 
     // Check if API key already exists for this provider
@@ -110,10 +135,7 @@ export async function POST(request: Request) {
     });
 
     if (existingKey) {
-      return NextResponse.json(
-        { error: `API key for ${provider} already exists. Delete the existing one first.` },
-        { status: 409 }
-      );
+      return createErrorResponse(new Error(`API key for ${provider} already exists. Delete the existing one first.`), 'Create API key error');
     }
 
     // Encrypt the API key

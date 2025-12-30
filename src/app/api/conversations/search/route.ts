@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getCurrentWorkspace } from '@/lib/auth';
+import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { conversations, conversationMessages, conversationParticipants } from '@/db/schema';
 import { eq, and, ilike, desc, sql, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const searchSchema = z.object({
   q: z.string().min(1).max(500),
@@ -21,6 +22,20 @@ const searchSchema = z.object({
 export async function GET(request: Request) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
+    const user = await getCurrentUser();
+
+    const rateLimitResult = await rateLimit(`conversations:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const url = new URL(request.url);
     
     // Parse query params

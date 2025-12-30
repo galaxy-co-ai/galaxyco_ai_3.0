@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { getOpenAI } from '@/lib/ai-providers';
 import { searchWeb, isSearchConfigured } from '@/lib/search';
 import { logger } from '@/lib/logger';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Request schema
 const findSourceSchema = z.object({
@@ -31,17 +33,27 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Find source auth');
+    }
+
+    // Rate limiting for expensive AI operation
+    const rateLimitResult = await expensiveOperationLimit(`ai-source:${userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const body = await request.json();
     const validation = findSourceSchema.safeParse(body);
     
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: validation failed'), 'Find source validation');
     }
 
     const { claim, context } = validation.data;
@@ -233,11 +245,7 @@ Snippet: ${result.snippet}
     });
 
   } catch (error) {
-    logger.error('Source finding error', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to find sources' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Find source error');
   }
 }
 

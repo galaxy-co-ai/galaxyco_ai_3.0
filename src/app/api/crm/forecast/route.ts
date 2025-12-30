@@ -9,13 +9,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { generateForecast, getQuickForecast } from '@/lib/crm/forecasting';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // GET: Generate forecast
 export async function GET(request: NextRequest) {
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Forecast generation');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const { searchParams } = new URL(request.url);
@@ -46,10 +60,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(forecast);
   } catch (error) {
-    logger.error('[Forecast API] GET error', error);
-    return NextResponse.json(
-      { error: 'Failed to generate forecast' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Forecast generation error');
   }
 }

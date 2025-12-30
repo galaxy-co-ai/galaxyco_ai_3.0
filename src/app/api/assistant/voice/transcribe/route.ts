@@ -8,10 +8,32 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { transcribeAudio } from '@/lib/ai/voice';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
+import { checkFileSizeLimit, type WorkspaceTier } from '@/lib/cost-protection';
+import { db } from '@/lib/db';
+import { workspaces } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(request: Request) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limit for transcription (10 per minute)
+    const rateLimitResult = await expensiveOperationLimit(`transcribe:${userId}`);
+    if (!rateLimitResult.success) {
+      logger.warn('Voice transcription rate limit exceeded', { userId });
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please wait before transcribing more audio.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(rateLimitResult.reset),
+            'Retry-After': String(Math.ceil((rateLimitResult.reset - Date.now()) / 1000)),
+          },
+        }
+      );
+    }
 
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
@@ -20,6 +42,27 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Audio file is required' },
         { status: 400 }
+      );
+    }
+
+    // Get workspace tier for file size limits
+    const workspace = await db.query.workspaces.findFirst({
+      where: eq(workspaces.id, workspaceId),
+      columns: { subscriptionTier: true },
+    });
+    const workspaceTier = (workspace?.subscriptionTier || 'free') as WorkspaceTier;
+
+    // Check file size limit (audio files can be large)
+    const fileSizeCheck = checkFileSizeLimit(audioFile.size, workspaceTier);
+    if (!fileSizeCheck.allowed) {
+      logger.warn('Voice transcription file size exceeded', {
+        workspaceId,
+        fileSize: audioFile.size,
+        limit: fileSizeCheck.limit,
+      });
+      return NextResponse.json(
+        { error: fileSizeCheck.reason },
+        { status: 413 }
       );
     }
 

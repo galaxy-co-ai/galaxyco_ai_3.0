@@ -5,6 +5,7 @@ import { expenses } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const updateExpenseSchema = z.object({
   description: z.string().min(1).optional(),
@@ -45,7 +46,7 @@ export async function GET(
     const { workspaceId, userId } = await getCurrentWorkspace();
     
     if (!workspaceId || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Get expense authentication');
     }
 
     const { id } = await params;
@@ -72,13 +73,12 @@ export async function GET(
     });
 
     if (!expense) {
-      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+      return createErrorResponse(new Error('Expense not found'), 'Get expense');
     }
 
     return NextResponse.json({ expense });
   } catch (error) {
-    logger.error('Error fetching expense', error);
-    return NextResponse.json({ error: 'Failed to fetch expense' }, { status: 500 });
+    return createErrorResponse(error, 'Error fetching expense');
   }
 }
 
@@ -94,7 +94,7 @@ export async function PATCH(
     const { workspaceId, userId } = await getCurrentWorkspace();
     
     if (!workspaceId || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Update expense authentication');
     }
 
     const { id } = await params;
@@ -107,7 +107,7 @@ export async function PATCH(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+      return createErrorResponse(new Error('Expense not found'), 'Update expense');
     }
 
     // Build update object
@@ -160,13 +160,9 @@ export async function PATCH(
     return NextResponse.json({ expense: updatedExpense });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation error: invalid expense data'), 'Update expense validation');
     }
-    logger.error('Error updating expense', error);
-    return NextResponse.json({ error: 'Failed to update expense' }, { status: 500 });
+    return createErrorResponse(error, 'Error updating expense');
   }
 }
 
@@ -182,7 +178,7 @@ export async function DELETE(
     const { workspaceId, userId } = await getCurrentWorkspace();
     
     if (!workspaceId || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Delete expense authentication');
     }
 
     const { id } = await params;
@@ -193,15 +189,12 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
+      return createErrorResponse(new Error('Expense not found'), 'Delete expense');
     }
 
     // Only allow deletion of pending expenses
     if (existing.status !== 'pending') {
-      return NextResponse.json(
-        { error: 'Only pending expenses can be deleted' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid operation: only pending expenses can be deleted'), 'Delete expense validation');
     }
 
     await db
@@ -212,7 +205,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('Error deleting expense', error);
-    return NextResponse.json({ error: 'Failed to delete expense' }, { status: 500 });
+    return createErrorResponse(error, 'Error deleting expense');
   }
 }

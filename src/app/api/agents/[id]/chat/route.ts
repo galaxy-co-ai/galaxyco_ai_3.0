@@ -294,7 +294,7 @@ export async function GET(
     });
 
     if (!agent) {
-      return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+      return createErrorResponse(new Error('Agent not found'), 'Get agent chat error');
     }
 
     // Find agent conversation
@@ -364,17 +364,14 @@ export async function POST(
     });
 
     if (!agent) {
-      return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+      return createErrorResponse(new Error('Agent not found'), 'Agent chat error');
     }
 
     const body = await request.json();
     const validationResult = chatSchema.safeParse(body);
     
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid message' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid message'), 'Agent chat validation error');
     }
 
     const { message, conversationId } = validationResult.data;
@@ -537,7 +534,7 @@ export async function DELETE(
     });
 
     if (!agent) {
-      return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+      return createErrorResponse(new Error('Agent not found'), 'Delete agent chat error');
     }
 
     const conversations = await db.query.aiConversations.findMany({

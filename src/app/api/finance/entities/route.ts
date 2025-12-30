@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { legalEntities } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const createEntitySchema = z.object({
   name: z.string().min(1).max(100),
@@ -47,8 +48,7 @@ export async function GET() {
 
     return NextResponse.json({ entities });
   } catch (error) {
-    console.error('Error fetching legal entities:', error);
-    return NextResponse.json({ error: 'Failed to fetch entities' }, { status: 500 });
+    return createErrorResponse(error, 'Error fetching legal entities');
   }
 }
 
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = createEntitySchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      return createErrorResponse(new Error('Invalid request: entity validation failed'), 'Create entity validation');
     }
 
     const data = parsed.data;
@@ -90,7 +90,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ entity }, { status: 201 });
   } catch (error) {
-    console.error('Error creating legal entity:', error);
-    return NextResponse.json({ error: 'Failed to create entity' }, { status: 500 });
+    return createErrorResponse(error, 'Error creating legal entity');
   }
 }

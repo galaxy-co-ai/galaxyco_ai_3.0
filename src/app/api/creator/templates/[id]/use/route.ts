@@ -22,7 +22,7 @@ export async function POST(
     });
 
     if (!template) {
-      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      return createErrorResponse(new Error('Template not found'), 'Use Template');
     }
 
     // Increment usage count

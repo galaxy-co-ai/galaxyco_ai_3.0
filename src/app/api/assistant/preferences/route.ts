@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // SCHEMA VALIDATION
@@ -25,8 +26,21 @@ const updatePreferencesSchema = z.object({
 
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`preferences:${clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Get user's database record
     const userRecord = await db.query.users.findFirst({
@@ -34,7 +48,7 @@ export async function GET() {
     });
 
     if (!userRecord) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return createErrorResponse(new Error('User not found'), 'Preferences get user');
     }
 
     // Get or create preferences
@@ -84,8 +98,21 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`preferences-update:${clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
     
@@ -106,7 +133,7 @@ export async function PUT(request: Request) {
     });
 
     if (!userRecord) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return createErrorResponse(new Error('User not found'), 'Preferences update user');
     }
 
     // Update preferences
@@ -125,10 +152,7 @@ export async function PUT(request: Request) {
       .returning();
 
     if (!updatedPrefs) {
-      return NextResponse.json(
-        { error: 'Preferences not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Preferences not found'), 'Preferences update');
     }
 
     logger.info('AI preferences updated', { userId: userRecord.id });

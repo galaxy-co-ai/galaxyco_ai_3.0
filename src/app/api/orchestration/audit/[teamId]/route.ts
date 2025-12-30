@@ -12,6 +12,7 @@ import { AutonomyService } from '@/lib/orchestration/autonomy';
 import { db } from '@/lib/db';
 import { agentTeams } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Validation schema for audit log filters
 const auditFiltersSchema = z.object({
@@ -38,7 +39,21 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { teamId } = await params;
 
     if (!teamId) {

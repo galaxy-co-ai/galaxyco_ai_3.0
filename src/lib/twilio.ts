@@ -14,6 +14,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { API_TIMEOUTS } from '@/lib/utils';
 
 // ============================================================================
 // Configuration
@@ -89,6 +90,7 @@ async function twilioRequest<T>(
     method,
     headers,
     body: requestBody,
+    signal: AbortSignal.timeout(API_TIMEOUTS.TELEPHONY), // 10 second timeout
   });
 
   if (!response.ok) {
@@ -130,6 +132,7 @@ async function taskRouterRequest<T>(
     method,
     headers,
     body: requestBody,
+    signal: AbortSignal.timeout(API_TIMEOUTS.TELEPHONY), // 10 second timeout
   });
 
   if (!response.ok) {
@@ -502,6 +505,7 @@ export async function getWorkspaceStats(): Promise<WorkspaceStats> {
     headers: {
       Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
     },
+    signal: AbortSignal.timeout(API_TIMEOUTS.TELEPHONY), // 10 second timeout
   });
 
   if (!response.ok) {
@@ -536,6 +540,7 @@ export async function getAccountInfo(): Promise<TwilioAccountInfo> {
       headers: {
         Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64')}`,
       },
+      signal: AbortSignal.timeout(API_TIMEOUTS.TELEPHONY), // 10 second timeout
     }
   );
 

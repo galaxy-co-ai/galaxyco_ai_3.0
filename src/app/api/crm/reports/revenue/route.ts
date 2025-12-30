@@ -5,6 +5,7 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { eq, and, gte, lte, sql, sum, count, desc } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 /**
  * GET /api/crm/reports/revenue
@@ -13,8 +14,20 @@ import { logger } from '@/lib/logger';
  */
 export async function GET(request: NextRequest) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
-    
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || '30';
     const groupBy = searchParams.get('groupBy') || 'day'; // day, week, month

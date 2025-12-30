@@ -146,4 +146,148 @@ export const crmToolDefinitions: ToolDefinitions = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'create_deal',
+      description: 'Create a new deal/opportunity in the pipeline.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Deal name/title',
+          },
+          value: {
+            type: 'number',
+            description: 'Deal value in dollars',
+          },
+          stage: {
+            type: 'string',
+            enum: ['qualification', 'proposal', 'negotiation', 'closing', 'won', 'lost'],
+            description: 'Current deal stage',
+          },
+          leadId: {
+            type: 'string',
+            description: 'Associated lead ID',
+          },
+          expectedCloseDate: {
+            type: 'string',
+            description: 'Expected close date in ISO format',
+          },
+          notes: {
+            type: 'string',
+            description: 'Deal notes or description',
+          },
+        },
+        required: ['name', 'value'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_deal',
+      description: 'Update an existing deal (value, stage, close date, etc.).',
+      parameters: {
+        type: 'object',
+        properties: {
+          dealId: {
+            type: 'string',
+            description: 'The deal ID to update',
+          },
+          value: {
+            type: 'number',
+            description: 'New deal value',
+          },
+          stage: {
+            type: 'string',
+            enum: ['qualification', 'proposal', 'negotiation', 'closing', 'won', 'lost'],
+            description: 'New deal stage',
+          },
+          expectedCloseDate: {
+            type: 'string',
+            description: 'New expected close date',
+          },
+          notes: {
+            type: 'string',
+            description: 'Additional notes',
+          },
+        },
+        required: ['dealId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_deals_closing_soon',
+      description: 'Get deals that are expected to close soon.',
+      parameters: {
+        type: 'object',
+        properties: {
+          days: {
+            type: 'number',
+            description: 'Number of days to look ahead (default: 30)',
+          },
+          minValue: {
+            type: 'number',
+            description: 'Minimum deal value filter',
+          },
+        },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'add_note',
+      description: 'Add a note to a lead, contact, or deal.',
+      parameters: {
+        type: 'object',
+        properties: {
+          entityType: {
+            type: 'string',
+            enum: ['lead', 'contact', 'deal'],
+            description: 'Type of entity to add note to',
+          },
+          entityId: {
+            type: 'string',
+            description: 'ID of the lead, contact, or deal',
+          },
+          content: {
+            type: 'string',
+            description: 'The note content',
+          },
+        },
+        required: ['entityType', 'entityId', 'content'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_activity_timeline',
+      description: 'Get recent activity/history for a lead, contact, or deal.',
+      parameters: {
+        type: 'object',
+        properties: {
+          entityType: {
+            type: 'string',
+            enum: ['lead', 'contact', 'deal'],
+            description: 'Type of entity',
+          },
+          entityId: {
+            type: 'string',
+            description: 'ID of the entity',
+          },
+          limit: {
+            type: 'number',
+            description: 'Max activities to return (default: 10)',
+          },
+        },
+        required: ['entityType', 'entityId'],
+      },
+    },
+  },
 ];

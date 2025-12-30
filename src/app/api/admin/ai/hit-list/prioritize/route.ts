@@ -4,12 +4,14 @@ import { db } from "@/lib/db";
 import { topicIdeas } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { expensiveOperationLimit } from "@/lib/rate-limit";
 import { eq, and, isNotNull, desc, ne } from "drizzle-orm";
 import {
   calculatePriorityScores,
   type TopicForScoring,
   type ScoringContext,
 } from "@/lib/ai/hit-list-prioritizer";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * POST /api/admin/ai/hit-list/prioritize
@@ -26,7 +28,20 @@ const prioritizeSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting for expensive AI operation
+    const rateLimitResult = await expensiveOperationLimit(`hit-list-prioritize:${userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
     const validatedData = prioritizeSchema.parse(body);
@@ -155,21 +170,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("Failed to prioritize hit list", error);
 
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to prioritize hit list" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Hit list prioritization error");
   }
 }
 

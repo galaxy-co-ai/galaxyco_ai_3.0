@@ -13,6 +13,8 @@ import { agentTeams, agentTeamMembers, agents } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema for adding a member
 const addMemberSchema = z.object({
@@ -41,7 +43,21 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: teamId } = await params;
 
     // Verify team exists and belongs to workspace
@@ -53,7 +69,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!team) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      return createErrorResponse(new Error('Team not found'), '[Team Members API] List members');
     }
 
     // Get members with agent details
@@ -100,11 +116,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       total: membersWithAgents.length,
     });
   } catch (error) {
-    logger.error('[Team Members API] Failed to list members', error);
-    return NextResponse.json(
-      { error: 'Failed to list team members' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Team Members API] Failed to list members');
   }
 }
 
@@ -114,7 +126,21 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: teamId } = await params;
 
     // Verify team exists and belongs to workspace
@@ -126,7 +152,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!team) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      return createErrorResponse(new Error('Team not found'), '[Team Members API] Add member');
     }
 
     // Parse and validate body
@@ -134,10 +160,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const validation = addMemberSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Team Members API] Add member');
     }
 
     const { agentId, role, priority, config } = validation.data;
@@ -151,10 +174,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!agent) {
-      return NextResponse.json(
-        { error: 'Agent not found or does not belong to workspace' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Agent not found or does not belong to workspace'), '[Team Members API] Add member');
     }
 
     // Check if agent is already a member
@@ -166,10 +186,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (existingMember) {
-      return NextResponse.json(
-        { error: 'Agent is already a member of this team' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Agent is already a member of this team - duplicate not allowed'), '[Team Members API] Add member');
     }
 
     // If adding as coordinator, update team's coordinatorAgentId
@@ -224,11 +241,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       },
     }, { status: 201 });
   } catch (error) {
-    logger.error('[Team Members API] Failed to add member', error);
-    return NextResponse.json(
-      { error: 'Failed to add team member' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Team Members API] Failed to add member');
   }
 }
 
@@ -238,7 +251,21 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: teamId } = await params;
 
     // Verify team exists and belongs to workspace
@@ -250,7 +277,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!team) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      return createErrorResponse(new Error('Team not found'), '[Team Members API] Remove member');
     }
 
     // Parse and validate body
@@ -258,10 +285,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const validation = removeMemberSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Team Members API] Remove member');
     }
 
     const { agentId } = validation.data;
@@ -275,10 +299,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!member) {
-      return NextResponse.json(
-        { error: 'Agent is not a member of this team' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Agent is not a member of this team - not found'), '[Team Members API] Remove member');
     }
 
     // If removing coordinator, clear team's coordinatorAgentId
@@ -301,10 +322,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('[Team Members API] Failed to remove member', error);
-    return NextResponse.json(
-      { error: 'Failed to remove team member' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Team Members API] Failed to remove member');
   }
 }

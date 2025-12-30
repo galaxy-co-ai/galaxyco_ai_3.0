@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { marketplaceListings, agents, agentWorkflows } from '@/db/schema';
 import { eq, and, desc, sql, ilike, or } from 'drizzle-orm';
 import { z } from 'zod';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const createListingSchema = z.object({
   type: z.enum(['agent', 'workflow']),
@@ -89,8 +90,7 @@ export async function GET(request: NextRequest) {
       categories: categoriesResult.map((c: { category: string }) => c.category),
     });
   } catch (error) {
-    console.error('Error fetching marketplace:', error);
-    return NextResponse.json({ error: 'Failed to fetch marketplace' }, { status: 500 });
+    return createErrorResponse(error, 'Fetch marketplace');
   }
 }
 
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const parsed = createListingSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      return createErrorResponse(new Error('Invalid request data'), 'Publish to marketplace');
     }
 
     const { type, sourceId, name, description, shortDescription, category, tags, icon, version, changelog } = parsed.data;
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
         where: and(eq(agents.id, sourceId), eq(agents.workspaceId, workspaceId)),
       });
       if (!agent) {
-        return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+        return createErrorResponse(new Error('Agent not found'), 'Publish to marketplace');
       }
       templateData = {
         type: agent.type,
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         where: and(eq(agentWorkflows.id, sourceId), eq(agentWorkflows.workspaceId, workspaceId)),
       });
       if (!workflow) {
-        return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+        return createErrorResponse(new Error('Workflow not found'), 'Publish to marketplace');
       }
       templateData = {
         description: workflow.description,
@@ -172,7 +172,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ listing }, { status: 201 });
   } catch (error) {
-    console.error('Error publishing to marketplace:', error);
-    return NextResponse.json({ error: 'Failed to publish' }, { status: 500 });
+    return createErrorResponse(error, 'Publish to marketplace');
   }
 }

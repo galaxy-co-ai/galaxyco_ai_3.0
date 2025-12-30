@@ -5,6 +5,7 @@ import { alertBadges } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, inArray } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * POST /api/admin/alert-badges/bulk-dismiss
@@ -58,29 +59,16 @@ export async function POST(request: NextRequest) {
       action: validatedData.action 
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       updatedCount: updatedAlerts.length,
       alerts: updatedAlerts,
     });
   } catch (error) {
-    logger.error("Failed to bulk update alert badges", error);
-    
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request body"), "Bulk update alert badges");
     }
-    
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    
-    return NextResponse.json(
-      { error: "Failed to bulk update alert badges" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Bulk update alert badges");
   }
 }
 

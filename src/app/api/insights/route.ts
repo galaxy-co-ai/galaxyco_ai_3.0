@@ -10,18 +10,19 @@ import { db } from '@/lib/db';
 import { proactiveInsights } from '@/db/schema';
 import { and, eq, gte, sql, or, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(request: NextRequest) {
   try {
     const { userId, sessionClaims } = await auth();
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Fetch insights');
     }
 
     const workspaceId = (sessionClaims?.metadata as { workspaceId?: string })?.workspaceId;
     if (!workspaceId) {
-      return NextResponse.json({ error: 'No workspace found' }, { status: 403 });
+      return createErrorResponse(new Error('Workspace access forbidden'), 'Fetch insights');
     }
 
     // Parse query parameters
@@ -70,10 +71,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    logger.error('[API] Failed to fetch insights', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch insights' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Fetch insights');
   }
 }

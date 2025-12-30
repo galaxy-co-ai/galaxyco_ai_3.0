@@ -10,6 +10,7 @@ import { db } from '@/lib/db';
 import { proactiveInsights } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function POST(
   request: NextRequest,
@@ -19,12 +20,12 @@ export async function POST(
     const { userId, sessionClaims } = await auth();
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Dismiss insight');
     }
 
     const workspaceId = (sessionClaims?.metadata as { workspaceId?: string })?.workspaceId;
     if (!workspaceId) {
-      return NextResponse.json({ error: 'No workspace found' }, { status: 403 });
+      return createErrorResponse(new Error('Workspace access forbidden'), 'Dismiss insight');
     }
 
     const { id: insightId } = await params;
@@ -38,7 +39,7 @@ export async function POST(
     });
 
     if (!insight) {
-      return NextResponse.json({ error: 'Insight not found' }, { status: 404 });
+      return createErrorResponse(new Error('Insight not found'), 'Dismiss insight');
     }
 
     // Mark as dismissed
@@ -55,10 +56,6 @@ export async function POST(
     });
 
   } catch (error) {
-    logger.error('[API] Failed to dismiss insight', error);
-    return NextResponse.json(
-      { error: 'Failed to dismiss insight' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Dismiss insight');
   }
 }

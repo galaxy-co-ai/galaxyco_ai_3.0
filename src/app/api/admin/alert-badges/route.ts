@@ -5,6 +5,7 @@ import { alertBadges } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, desc } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * GET /api/admin/alert-badges
@@ -56,16 +57,7 @@ export async function GET(request: NextRequest) {
       total: alerts.length,
     });
   } catch (error) {
-    logger.error("Failed to fetch alert badges", error);
-    
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    
-    return NextResponse.json(
-      { error: "Failed to fetch alert badges" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch alert badges");
   }
 }
 
@@ -115,23 +107,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ alert: newAlert }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to create alert badge", error);
-    
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request body"), "Create alert badge");
     }
-    
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    
-    return NextResponse.json(
-      { error: "Failed to create alert badge" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Create alert badge");
   }
 }
 

@@ -12,7 +12,9 @@ import { db } from '@/lib/db';
 import { marketingChannels } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 import { eq, and } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema for updating a channel
 const updateChannelSchema = z.object({
@@ -42,8 +44,20 @@ export async function GET(
   { params }: RouteParams
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
     const { id } = await params;
+
+    const rateLimitResult = await rateLimit(`marketing:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const [channel] = await db
       .select()
@@ -57,10 +71,7 @@ export async function GET(
       .limit(1);
 
     if (!channel) {
-      return NextResponse.json(
-        { error: 'Channel not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Channel not found'), 'Get marketing channel error');
     }
 
     // Calculate performance
@@ -78,15 +89,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    logger.error('Failed to get marketing channel', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get marketing channel error');
   }
 }
 
@@ -100,17 +103,26 @@ export async function PATCH(
   { params }: RouteParams
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
     const { id } = await params;
+
+    const rateLimitResult = await rateLimit(`marketing:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
     const validation = updateChannelSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(`Invalid: ${validation.error.errors[0].message}`), 'Update marketing channel validation error');
     }
 
     // Check if channel exists and belongs to workspace
@@ -126,10 +138,7 @@ export async function PATCH(
       .limit(1);
 
     if (!existingChannel) {
-      return NextResponse.json(
-        { error: 'Channel not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Channel not found'), 'Update marketing channel error');
     }
 
     const { name, type, status, description, budget, config } = validation.data;
@@ -165,15 +174,7 @@ export async function PATCH(
 
     return NextResponse.json({ channel: updatedChannel });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    logger.error('Failed to update marketing channel', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Update marketing channel error');
   }
 }
 
@@ -187,8 +188,20 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
     const { id } = await params;
+
+    const rateLimitResult = await rateLimit(`marketing:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Check if channel exists and belongs to workspace
     const [existingChannel] = await db
@@ -203,10 +216,7 @@ export async function DELETE(
       .limit(1);
 
     if (!existingChannel) {
-      return NextResponse.json(
-        { error: 'Channel not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Channel not found'), 'Delete marketing channel error');
     }
 
     await db
@@ -226,15 +236,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    logger.error('Failed to delete marketing channel', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete marketing channel error');
   }
 }
 

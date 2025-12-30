@@ -6,6 +6,7 @@ import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Must match agentTypeEnum in schema.ts
 const workflowSchema = z.object({
@@ -24,7 +25,20 @@ const workflowSchema = z.object({
 
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`workflows:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Query agents from database (agents are the underlying model for workflows)
     const workspaceAgents = await db.query.agents.findMany({
@@ -54,6 +68,20 @@ export async function POST(request: Request) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`workflows:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
 
     const validationResult = workflowSchema.safeParse(body);

@@ -15,6 +15,7 @@
 // @ts-expect-error - SignalWire compatibility API types are missing/incorrect; remove once upstream types are fixed
 import { RestClient } from '@signalwire/compatibility-api';
 import { logger } from '@/lib/logger';
+import { withTimeout, API_TIMEOUTS } from '@/lib/utils';
 
 // ============================================================================
 // Configuration
@@ -106,13 +107,17 @@ export async function sendSMS(params: SendMessageParams): Promise<SignalWireMess
     bodyLength: params.body.length,
   });
 
-  const message = await client.messages.create({
-    from: fromNumber,
-    to: params.to,
-    body: params.body,
-    ...(params.mediaUrl && { mediaUrl: [params.mediaUrl] }),
-    ...(params.statusCallback && { statusCallback: params.statusCallback }),
-  });
+  const message = await withTimeout(
+    client.messages.create({
+      from: fromNumber,
+      to: params.to,
+      body: params.body,
+      ...(params.mediaUrl && { mediaUrl: [params.mediaUrl] }),
+      ...(params.statusCallback && { statusCallback: params.statusCallback }),
+    }),
+    API_TIMEOUTS.TELEPHONY,
+    'SignalWire sendSMS'
+  );
 
   return message as SignalWireMessage;
 }
@@ -136,13 +141,17 @@ export async function sendWhatsApp(params: SendMessageParams): Promise<SignalWir
     bodyLength: params.body.length,
   });
 
-  const message = await client.messages.create({
-    from: fromNumber,
-    to: toNumber,
-    body: params.body,
-    ...(params.mediaUrl && { mediaUrl: [params.mediaUrl] }),
-    ...(params.statusCallback && { statusCallback: params.statusCallback }),
-  });
+  const message = await withTimeout(
+    client.messages.create({
+      from: fromNumber,
+      to: toNumber,
+      body: params.body,
+      ...(params.mediaUrl && { mediaUrl: [params.mediaUrl] }),
+      ...(params.statusCallback && { statusCallback: params.statusCallback }),
+    }),
+    API_TIMEOUTS.TELEPHONY,
+    'SignalWire sendWhatsApp'
+  );
 
   return message as SignalWireMessage;
 }
@@ -152,7 +161,11 @@ export async function sendWhatsApp(params: SendMessageParams): Promise<SignalWir
  */
 export async function getMessageStatus(messageSid: string): Promise<SignalWireMessage> {
   const client = getClient();
-  const message = await client.messages(messageSid).fetch();
+  const message = await withTimeout(
+    client.messages(messageSid).fetch(),
+    API_TIMEOUTS.TELEPHONY,
+    'SignalWire getMessageStatus'
+  );
   return message as SignalWireMessage;
 }
 
@@ -193,15 +206,19 @@ export async function makeCall(params: MakeCallParams): Promise<SignalWireCall> 
 
   logger.info('Initiating call via SignalWire', { to: params.to, from: fromNumber });
 
-  const call = await client.calls.create({
-    from: fromNumber,
-    to: params.to,
-    ...(params.twiml && { twiml: params.twiml }),
-    ...(params.url && { url: params.url }),
-    ...(params.statusCallback && { statusCallback: params.statusCallback }),
-    ...(params.record && { record: true }),
-    ...(params.machineDetection && { machineDetection: params.machineDetection }),
-  });
+  const call = await withTimeout(
+    client.calls.create({
+      from: fromNumber,
+      to: params.to,
+      ...(params.twiml && { twiml: params.twiml }),
+      ...(params.url && { url: params.url }),
+      ...(params.statusCallback && { statusCallback: params.statusCallback }),
+      ...(params.record && { record: true }),
+      ...(params.machineDetection && { machineDetection: params.machineDetection }),
+    }),
+    API_TIMEOUTS.TELEPHONY,
+    'SignalWire makeCall'
+  );
 
   return call as SignalWireCall;
 }
@@ -209,13 +226,13 @@ export async function makeCall(params: MakeCallParams): Promise<SignalWireCall> 
 /**
  * Get call details
  */
-
-/**
- * Get call details
- */
 export async function getCallDetails(callSid: string): Promise<SignalWireCall> {
   const client = getClient();
-  const call = await client.calls(callSid).fetch();
+  const call = await withTimeout(
+    client.calls(callSid).fetch(),
+    API_TIMEOUTS.TELEPHONY,
+    'SignalWire getCallDetails'
+  );
   return call as SignalWireCall;
 }
 
@@ -312,7 +329,11 @@ export async function verifyCredentials(): Promise<boolean> {
   try {
     const client = getClient();
     // Test with a simple API call
-    await client.incomingPhoneNumbers.list({ limit: 1 });
+    await withTimeout(
+      client.incomingPhoneNumbers.list({ limit: 1 }),
+      API_TIMEOUTS.TELEPHONY,
+      'SignalWire verifyCredentials'
+    );
     return true;
   } catch {
     return false;
@@ -332,7 +353,11 @@ export async function releasePhoneNumber(phoneNumberSid: string): Promise<void> 
   logger.info('Releasing phone number from SignalWire', { phoneNumberSid });
 
   try {
-    await client.incomingPhoneNumbers(phoneNumberSid).remove();
+    await withTimeout(
+      client.incomingPhoneNumbers(phoneNumberSid).remove(),
+      API_TIMEOUTS.TELEPHONY,
+      'SignalWire releasePhoneNumber'
+    );
     logger.info('Phone number released successfully', { phoneNumberSid });
   } catch (error: any) {
     logger.error('Failed to release phone number', { phoneNumberSid, error: error.message });
@@ -356,11 +381,15 @@ export async function updatePhoneNumberWebhooks(
   logger.info('Updating phone number webhooks', { phoneNumberSid, webhooks });
 
   try {
-    await client.incomingPhoneNumbers(phoneNumberSid).update({
-      ...(webhooks.smsUrl && { smsUrl: webhooks.smsUrl }),
-      ...(webhooks.voiceUrl && { voiceUrl: webhooks.voiceUrl }),
-      ...(webhooks.statusCallback && { statusCallbackUrl: webhooks.statusCallback }),
-    });
+    await withTimeout(
+      client.incomingPhoneNumbers(phoneNumberSid).update({
+        ...(webhooks.smsUrl && { smsUrl: webhooks.smsUrl }),
+        ...(webhooks.voiceUrl && { voiceUrl: webhooks.voiceUrl }),
+        ...(webhooks.statusCallback && { statusCallbackUrl: webhooks.statusCallback }),
+      }),
+      API_TIMEOUTS.TELEPHONY,
+      'SignalWire updatePhoneNumberWebhooks'
+    );
     logger.info('Phone number webhooks updated successfully', { phoneNumberSid });
   } catch (error: any) {
     logger.error('Failed to update phone number webhooks', {

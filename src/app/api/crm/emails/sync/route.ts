@@ -9,13 +9,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { syncEmails, isEmailSyncAvailable } from '@/lib/integrations/email-sync';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // GET: Check sync status/availability
 export async function GET() {
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Email sync status check');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const status = await isEmailSyncAvailable(orgId);
@@ -34,11 +48,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    logger.error('[Email Sync API] GET error', error);
-    return NextResponse.json(
-      { error: 'Failed to check sync status' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Email sync status check error');
   }
 }
 
@@ -47,7 +57,19 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Email sync');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const body = await request.json().catch(() => ({}));
@@ -85,10 +107,6 @@ export async function POST(request: NextRequest) {
       errors: allErrors.length > 0 ? allErrors : undefined,
     });
   } catch (error) {
-    logger.error('[Email Sync API] POST error', error);
-    return NextResponse.json(
-      { error: 'Failed to sync emails' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Email sync error');
   }
 }

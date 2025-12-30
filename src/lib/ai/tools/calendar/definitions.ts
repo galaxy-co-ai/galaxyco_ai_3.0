@@ -1,6 +1,6 @@
 /**
  * Calendar Tool Definitions
- * 
+ *
  * Tool schemas for calendar and scheduling operations
  */
 
@@ -104,6 +104,54 @@ export const calendarToolDefinitions: ToolDefinitions = [
             description: 'Exclude Saturday and Sunday (default: true)',
           },
         },
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'schedule_demo',
+      description: 'Find available calendar slots and send calendar invites for a product demo. Creates calendar event and sends invite to lead.',
+      parameters: {
+        type: 'object',
+        properties: {
+          leadId: {
+            type: 'string',
+            description: 'ID of the lead to schedule demo for',
+          },
+          duration: {
+            type: 'number',
+            description: 'Duration in minutes (default: 30)',
+          },
+          preferredTimes: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Preferred time slots (optional)',
+          },
+        },
+        required: ['leadId'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'book_meeting_rooms',
+      description: 'Reserve meeting rooms or resources for scheduled meetings. Finds available rooms and books them.',
+      parameters: {
+        type: 'object',
+        properties: {
+          eventId: {
+            type: 'string',
+            description: 'ID of the calendar event to book room for',
+          },
+          roomRequirements: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Room requirements (e.g., ["projector", "whiteboard"])',
+          },
+        },
+        required: ['eventId'],
       },
     },
   },

@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { segments, contacts } from '@/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Schema for segment criteria
 const segmentRuleSchema = z.object({
@@ -26,7 +28,19 @@ const createSegmentSchema = z.object({
 // GET /api/crm/segments - List all segments
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const allSegments = await db.query.segments.findMany({
       where: eq(segments.workspaceId, workspaceId),
@@ -35,21 +49,32 @@ export async function GET() {
 
     return NextResponse.json({ segments: allSegments });
   } catch (error) {
-    console.error('Error fetching segments:', error);
-    return NextResponse.json({ error: 'Failed to fetch segments' }, { status: 500 });
+    return createErrorResponse(error, 'Fetch segments error');
   }
 }
 
 // POST /api/crm/segments - Create a new segment
 export async function POST(request: NextRequest) {
   try {
-    const { workspaceId, user } = await getCurrentWorkspace();
+    const { workspaceId, user, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
     const parsed = createSegmentSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request body', details: parsed.error.issues }, { status: 400 });
+      return createErrorResponse(new Error('Validation failed: invalid segment data'), 'Create segment');
     }
 
     const { name, description, criteria } = parsed.data;
@@ -79,8 +104,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ segment: newSegment }, { status: 201 });
   } catch (error) {
-    console.error('Error creating segment:', error);
-    return NextResponse.json({ error: 'Failed to create segment' }, { status: 500 });
+    return createErrorResponse(error, 'Create segment error');
   }
 }
 

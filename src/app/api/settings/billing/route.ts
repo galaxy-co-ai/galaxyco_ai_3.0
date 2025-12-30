@@ -5,6 +5,8 @@ import { db } from '@/lib/db';
 import { workspaces } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -22,10 +24,23 @@ const PLANS = {
  */
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
-    
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     if (!workspaceId) {
-      return NextResponse.json({ error: 'No workspace found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Get billing info error');
     }
 
     // Get workspace subscription data
@@ -34,7 +49,7 @@ export async function GET() {
     });
 
     if (!workspace) {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Get billing info error');
     }
 
     const tier = workspace.subscriptionTier as keyof typeof PLANS;
@@ -90,7 +105,6 @@ export async function GET() {
       hasStripeCustomer: !!workspace.stripeCustomerId,
     });
   } catch (error) {
-    logger.error('Billing fetch error', error);
-    return NextResponse.json({ error: 'Failed to fetch billing info' }, { status: 500 });
+    return createErrorResponse(error, 'Get billing info error');
   }
 }

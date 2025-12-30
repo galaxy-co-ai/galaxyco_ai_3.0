@@ -4,6 +4,7 @@ import { articleAnalytics, blogPosts } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * GET /api/admin/analytics/overview
@@ -167,16 +168,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error("Failed to fetch analytics overview", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch analytics overview" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch analytics overview");
   }
 }
 

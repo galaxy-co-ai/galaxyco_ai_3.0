@@ -1,17 +1,18 @@
 import { NextResponse } from 'next/server';
 import { auth, clerkClient } from '@clerk/nextjs/server';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Revoke session');
     }
 
     const body = await req.json().catch(() => ({}));
     const sessionId = body.sessionId as string | undefined;
     if (!sessionId) {
-      return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
+      return createErrorResponse(new Error('sessionId is required'), 'Revoke session');
     }
 
     // Revoke the session via Clerk server SDK
@@ -19,8 +20,7 @@ export async function POST(req: Request) {
     await client.sessions.revokeSession(sessionId);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    const message = error?.errors?.[0]?.message || error?.message || 'Failed to revoke session';
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (error: unknown) {
+    return createErrorResponse(error, 'Revoke session');
   }
 }

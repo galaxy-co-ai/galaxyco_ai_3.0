@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { uploadFile, isStorageConfigured } from '@/lib/storage';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Allowed image types
 const ALLOWED_TYPES = [
@@ -23,18 +24,15 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Image upload auth');
     }
 
     // Check if storage is configured
     if (!isStorageConfigured()) {
       logger.warn('Image upload attempted but Blob storage not configured');
-      return NextResponse.json(
-        { 
-          error: 'File storage not configured',
-          details: 'Please configure BLOB_READ_WRITE_TOKEN to enable image uploads.',
-        },
-        { status: 503 }
+      return createErrorResponse(
+        new Error('Service unavailable: file storage not configured'),
+        'Image upload storage'
       );
     }
 
@@ -43,24 +41,18 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file');
 
     if (!file || !(file instanceof File)) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: no file provided'), 'Image upload file');
     }
 
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      logger.warn('Invalid file type uploaded', { 
+      logger.warn('Invalid file type uploaded', {
         type: file.type,
         allowed: ALLOWED_TYPES,
       });
-      return NextResponse.json(
-        { 
-          error: 'Invalid file type',
-          details: `Allowed types: ${ALLOWED_TYPES.map(t => t.replace('image/', '')).join(', ')}`,
-        },
-        { status: 400 }
+      return createErrorResponse(
+        new Error(`Invalid file type: allowed types are ${ALLOWED_TYPES.map(t => t.replace('image/', '')).join(', ')}`),
+        'Image upload type'
       );
     }
 
@@ -70,12 +62,9 @@ export async function POST(request: NextRequest) {
         size: file.size,
         maxSize: MAX_FILE_SIZE,
       });
-      return NextResponse.json(
-        { 
-          error: 'File too large',
-          details: `Maximum file size is ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-        },
-        { status: 400 }
+      return createErrorResponse(
+        new Error(`Invalid file size: maximum is ${MAX_FILE_SIZE / 1024 / 1024}MB`),
+        'Image upload size'
       );
     }
 
@@ -115,11 +104,7 @@ export async function POST(request: NextRequest) {
       contentType: file.type,
     });
   } catch (error) {
-    logger.error('Image upload failed', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to upload image' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Image upload error');
   }
 }
 

@@ -4,6 +4,7 @@ import { contacts } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Contact validation schema for import
 const importContactSchema = z.object({
@@ -29,8 +30,20 @@ type ImportContact = z.infer<typeof importContactSchema>;
  */
 export async function POST(request: NextRequest) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
-    
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const contentType = request.headers.get('content-type') || '';
     
     let contactsToImport: ImportContact[] = [];

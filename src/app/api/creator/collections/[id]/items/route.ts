@@ -34,17 +34,14 @@ export async function POST(
     });
 
     if (!collection) {
-      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+      return createErrorResponse(new Error('Collection not found'), 'Add Item to Collection');
     }
 
     const body = await request.json();
     const validationResult = ItemActionSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors[0]?.message || 'Validation failed' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(validationResult.error.errors[0]?.message || 'Validation failed - invalid input'), 'Add Item to Collection');
     }
 
     const { itemId } = validationResult.data;
@@ -58,7 +55,7 @@ export async function POST(
     });
 
     if (!item) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      return createErrorResponse(new Error('Item not found'), 'Add Item to Collection');
     }
 
     // Check if already in collection
@@ -70,7 +67,7 @@ export async function POST(
     });
 
     if (existing) {
-      return NextResponse.json({ error: 'Item already in collection' }, { status: 409 });
+      return createErrorResponse(new Error('Item already in collection'), 'Add Item to Collection');
     }
 
     // Add item to collection
@@ -96,7 +93,7 @@ export async function DELETE(
     const itemId = searchParams.get('itemId');
 
     if (!itemId) {
-      return NextResponse.json({ error: 'Item ID is required' }, { status: 400 });
+      return createErrorResponse(new Error('Item ID is required'), 'Remove Item from Collection');
     }
 
     // Verify collection exists and belongs to workspace
@@ -108,7 +105,7 @@ export async function DELETE(
     });
 
     if (!collection) {
-      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+      return createErrorResponse(new Error('Collection not found'), 'Remove Item from Collection');
     }
 
     // Remove item from collection

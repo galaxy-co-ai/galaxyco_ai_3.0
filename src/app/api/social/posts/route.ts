@@ -11,6 +11,7 @@ import { db } from '@/lib/db';
 import { socialMediaPosts } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 import { z } from 'zod';
 import { postTweet, getTwitterIntegration } from '@/lib/social/twitter';
 
@@ -33,12 +34,12 @@ export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Create social post');
     }
 
     const workspace = await getCurrentWorkspace();
     if (!workspace) {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Create social post');
     }
 
     const body = await request.json().catch(() => ({}));
@@ -48,20 +49,14 @@ export async function POST(request: Request) {
     if (validated.platform === 'twitter') {
       const twitterIntegration = await getTwitterIntegration(workspace.workspaceId);
       if (!twitterIntegration) {
-        return NextResponse.json(
-          { error: 'Twitter account not connected. Please connect in Connected Apps.' },
-          { status: 400 }
-        );
+        return createErrorResponse(new Error('Twitter account not connected - invalid request'), 'Create social post');
       }
 
       // If scheduled, save to database
       if (validated.scheduleFor) {
         const scheduledDate = new Date(validated.scheduleFor);
         if (scheduledDate <= new Date()) {
-          return NextResponse.json(
-            { error: 'Scheduled time must be in the future' },
-            { status: 400 }
-          );
+          return createErrorResponse(new Error('Scheduled time must be in the future - invalid request'), 'Create social post');
         }
 
         const [post] = await db
@@ -94,10 +89,7 @@ export async function POST(request: Request) {
       const result = await postTweet(twitterIntegration.id, validated.content);
 
       if (!result.success) {
-        return NextResponse.json(
-          { error: result.error || 'Failed to post to Twitter' },
-          { status: 500 }
-        );
+        return createErrorResponse(new Error(result.error || 'Failed to post to Twitter'), 'Create social post');
       }
 
       // Save to database
@@ -129,23 +121,13 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json(
-      { error: 'Unsupported platform' },
-      { status: 400 }
-    );
+    return createErrorResponse(new Error('Unsupported platform - invalid request'), 'Create social post');
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: `Validation error: ${error.errors.map(e => e.message).join(', ')}` },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(`Validation error: ${error.errors.map(e => e.message).join(', ')}`), 'Create social post');
     }
 
-    logger.error('Failed to create social media post', error);
-    return NextResponse.json(
-      { error: 'Failed to create post' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create social post');
   }
 }
 
@@ -157,12 +139,12 @@ export async function GET(request: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'List social posts');
     }
 
     const workspace = await getCurrentWorkspace();
     if (!workspace) {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'List social posts');
     }
 
     const { searchParams } = new URL(request.url);
@@ -196,10 +178,6 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    logger.error('Failed to list social media posts', error);
-    return NextResponse.json(
-      { error: 'Failed to list posts' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'List social posts');
   }
 }

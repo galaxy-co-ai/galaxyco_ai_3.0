@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { getLayout, type LayoutTemplate } from '@/lib/ai/article-layouts';
 import { getWorkspaceVoiceProfile, getVoicePromptSection } from '@/lib/ai/voice-profile';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema for outline generation request
 const outlineRequestSchema = z.object({
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Check admin access
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'Generate outline');
     }
 
     // Get workspace context
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     try {
       context = await getCurrentWorkspace();
     } catch {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Generate outline');
     }
 
     // Rate limit
@@ -59,10 +60,7 @@ export async function POST(request: NextRequest) {
     const validationResult = outlineRequestSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request body'), 'Generate outline');
     }
 
     const { title, description, layoutId, topicId, targetAudience, keywords } = validationResult.data;
@@ -149,11 +147,7 @@ export async function POST(request: NextRequest) {
       topicId,
     });
   } catch (error) {
-    logger.error('Failed to generate outline', error);
-    return NextResponse.json(
-      { error: 'Failed to generate outline. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Generate outline');
   }
 }
 

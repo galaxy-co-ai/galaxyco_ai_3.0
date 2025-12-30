@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { platformFeedback } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const statusSchema = z.object({
   status: z.enum(['new', 'in_review', 'planned', 'in_progress', 'done', 'closed', 'wont_fix']),
@@ -17,7 +18,7 @@ export async function PATCH(
     // Verify admin access
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'Update feedback status');
     }
 
     const { id } = await params;
@@ -26,10 +27,7 @@ export async function PATCH(
     // Validate the status
     const validated = statusSchema.safeParse(body);
     if (!validated.success) {
-      return NextResponse.json(
-        { error: 'Invalid status', details: validated.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid status value'), 'Update feedback status');
     }
 
     // Update the feedback status
@@ -43,7 +41,7 @@ export async function PATCH(
       .returning();
 
     if (!updated) {
-      return NextResponse.json({ error: 'Feedback not found' }, { status: 404 });
+      return createErrorResponse(new Error('Feedback not found'), 'Update feedback status');
     }
 
     return NextResponse.json({ 
@@ -54,11 +52,7 @@ export async function PATCH(
       }
     });
   } catch (error) {
-    console.error('Error updating feedback status:', error);
-    return NextResponse.json(
-      { error: 'Failed to update feedback status' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Update feedback status');
   }
 }
 

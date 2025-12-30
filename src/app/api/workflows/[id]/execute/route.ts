@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getOpenAI } from '@/lib/ai-providers';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
 
 const executeSchema = z.object({
   input: z.record(z.any()).optional(),
@@ -18,10 +19,24 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now();
-  
+
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await expensiveOperationLimit(`workflows:execute:${userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
 

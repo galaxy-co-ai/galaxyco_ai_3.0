@@ -4,6 +4,7 @@ import { contentSources } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * GET /api/admin/content-sources/suggestions
@@ -56,16 +57,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    logger.error("Failed to fetch source suggestions", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch source suggestions" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch source suggestions");
   }
 }
 

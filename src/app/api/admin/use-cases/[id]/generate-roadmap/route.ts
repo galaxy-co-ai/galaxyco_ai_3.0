@@ -6,6 +6,7 @@ import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
 import { generateUseCaseRoadmap } from "@/lib/ai/use-case-roadmap-generator";
 import { rateLimit } from "@/lib/rate-limit";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 // UUID validation regex
 const UUID_REGEX =
@@ -26,10 +27,7 @@ export async function POST(
 
     // Validate UUID format
     if (!id || !UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid use case ID format" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid use case ID format"), "Generate roadmap validation");
     }
 
     // Rate limit
@@ -39,10 +37,7 @@ export async function POST(
       60
     );
     if (!rateLimitResult.success) {
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please wait a moment." },
-        { status: 429 }
-      );
+      return createErrorResponse(new Error("Too many requests: rate limit exceeded"), "Generate roadmap rate limit");
     }
 
     // Get the use case
@@ -55,18 +50,12 @@ export async function POST(
       .limit(1);
 
     if (!useCase) {
-      return NextResponse.json(
-        { error: "Use case not found" },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error("Use case not found"), "Generate roadmap");
     }
 
     // Check that we have enough data to generate a roadmap
     if (!useCase.personas || useCase.personas.length === 0) {
-      return NextResponse.json(
-        { error: "Please add at least one persona before generating a roadmap" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request: please add at least one persona before generating a roadmap"), "Generate roadmap validation");
     }
 
     // Generate the roadmap
@@ -104,16 +93,7 @@ export async function POST(
       roadmap,
     });
   } catch (error) {
-    logger.error("Failed to generate use case roadmap", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to generate roadmap. Please try again." },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Generate roadmap error");
   }
 }
 

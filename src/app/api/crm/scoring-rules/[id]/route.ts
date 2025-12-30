@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 const updateRuleSchema = z.object({
   name: z.string().min(1).optional(),
@@ -34,9 +35,22 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, context: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await context.params;
-    
+
     const rule = await db.query.leadScoringRules.findFirst({
       where: and(
         eq(leadScoringRules.id, id),
@@ -45,9 +59,9 @@ export async function GET(request: NextRequest, context: RouteParams) {
     });
     
     if (!rule) {
-      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+      return createErrorResponse(new Error('Scoring rule not found'), 'Get scoring rule');
     }
-    
+
     return NextResponse.json({ rule });
   } catch (error) {
     return createErrorResponse(error, 'Get scoring rule error');
@@ -61,17 +75,27 @@ export async function GET(request: NextRequest, context: RouteParams) {
  */
 export async function PUT(request: NextRequest, context: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await context.params;
-    
+
     const body = await request.json();
     const validation = updateRuleSchema.safeParse(body);
     
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid scoring rule data'), 'Update scoring rule');
     }
     
     const data = validation.data;
@@ -102,9 +126,9 @@ export async function PUT(request: NextRequest, context: RouteParams) {
       .returning();
     
     if (!rule) {
-      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+      return createErrorResponse(new Error('Scoring rule not found'), 'Update scoring rule');
     }
-    
+
     logger.info('Updated lead scoring rule', { workspaceId, ruleId: id });
     
     return NextResponse.json({ rule });
@@ -120,9 +144,22 @@ export async function PUT(request: NextRequest, context: RouteParams) {
  */
 export async function DELETE(request: NextRequest, context: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await context.params;
-    
+
     const [deleted] = await db
       .delete(leadScoringRules)
       .where(
@@ -134,9 +171,9 @@ export async function DELETE(request: NextRequest, context: RouteParams) {
       .returning({ id: leadScoringRules.id });
     
     if (!deleted) {
-      return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
+      return createErrorResponse(new Error('Scoring rule not found'), 'Delete scoring rule');
     }
-    
+
     logger.info('Deleted lead scoring rule', { workspaceId, ruleId: id });
     
     return NextResponse.json({ success: true });

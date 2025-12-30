@@ -13,6 +13,7 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { eq, and, sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 interface RouteParams {
   params: Promise<{ token: string }>;
@@ -43,18 +44,12 @@ export async function GET(
       .limit(1);
 
     if (!share) {
-      return NextResponse.json(
-        { error: 'Share not found or has been revoked' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Share not found or has been revoked'), 'Shared Document GET');
     }
 
     // Check if expired
     if (share.expiresAt && new Date(share.expiresAt) < new Date()) {
-      return NextResponse.json(
-        { error: 'This share link has expired' },
-        { status: 410 }
-      );
+      return createErrorResponse(new Error('This share link has expired'), 'Shared Document GET');
     }
 
     // Check if password protected
@@ -80,10 +75,7 @@ export async function GET(
       .limit(1);
 
     if (!document) {
-      return NextResponse.json(
-        { error: 'Document no longer exists' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Document not found'), 'Shared Document GET');
     }
 
     // Increment access count
@@ -111,10 +103,7 @@ export async function GET(
     });
   } catch (error) {
     logger.error('Failed to get shared document', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Shared Document GET');
   }
 }
 
@@ -134,10 +123,7 @@ export async function POST(
     const password = body.password;
 
     if (!password) {
-      return NextResponse.json(
-        { error: 'Password is required' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Password is required'), 'Share Password Verification');
     }
 
     // Find the share by token
@@ -148,26 +134,17 @@ export async function POST(
       .limit(1);
 
     if (!share) {
-      return NextResponse.json(
-        { error: 'Share not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Share not found'), 'Share Password Verification');
     }
 
     // Check if expired
     if (share.expiresAt && new Date(share.expiresAt) < new Date()) {
-      return NextResponse.json(
-        { error: 'This share link has expired' },
-        { status: 410 }
-      );
+      return createErrorResponse(new Error('This share link has expired'), 'Share Password Verification');
     }
 
     // Verify password
     if (!share.password || hashPassword(password) !== share.password) {
-      return NextResponse.json(
-        { error: 'Incorrect password' },
-        { status: 401 }
-      );
+      return createErrorResponse(new Error('Unauthorized - Incorrect password'), 'Share Password Verification');
     }
 
     // Get the document
@@ -185,10 +162,7 @@ export async function POST(
       .limit(1);
 
     if (!document) {
-      return NextResponse.json(
-        { error: 'Document no longer exists' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Document not found'), 'Share Password Verification');
     }
 
     // Increment access count
@@ -216,10 +190,7 @@ export async function POST(
     });
   } catch (error) {
     logger.error('Failed to verify share password', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Share Password Verification');
   }
 }
 
@@ -249,10 +220,7 @@ export async function DELETE(
       .limit(1);
 
     if (!share) {
-      return NextResponse.json(
-        { error: 'Share not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Share not found'), 'Revoke Share');
     }
 
     // Delete the share
@@ -268,15 +236,8 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     logger.error('Failed to revoke share', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Revoke Share');
   }
 }
 

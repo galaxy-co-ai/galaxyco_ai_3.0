@@ -4,11 +4,25 @@ import { db } from '@/lib/db';
 import { aiConversations, aiMessages } from '@/db/schema';
 import { eq, and, desc, asc } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`conversations:${clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Get all conversations for this user with their messages
     const conversations = await db.query.aiConversations.findMany({

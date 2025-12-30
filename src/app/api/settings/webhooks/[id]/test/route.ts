@@ -5,6 +5,7 @@ import { webhooks } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
 // ============================================================================
@@ -17,6 +18,20 @@ export async function POST(
 ) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id } = await params;
 
     // Verify webhook belongs to workspace
@@ -28,7 +43,7 @@ export async function POST(
     });
 
     if (!webhook) {
-      return NextResponse.json({ error: 'Webhook not found' }, { status: 404 });
+      return createErrorResponse(new Error('Webhook not found'), 'Test webhook error');
     }
 
     // Prepare test payload

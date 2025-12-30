@@ -9,6 +9,7 @@ import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { sendMessage, type Channel } from '@/lib/communications/channels';
 import { triggerWorkspaceEvent } from '@/lib/pusher-server';
+import { rateLimit } from '@/lib/rate-limit';
 
 const messageSchema = z.object({
   body: z.string().min(1, 'Message body is required'),
@@ -25,7 +26,24 @@ export async function GET(
 ) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
+    const user = await currentUser();
     const { id: conversationId } = await params;
+
+    if (!user) {
+      return createErrorResponse(new Error('Unauthorized'), 'Get messages - authentication');
+    }
+
+    const rateLimitResult = await rateLimit(`conversations:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Verify conversation belongs to workspace
     const conversation = await db.query.conversations.findFirst({
@@ -36,10 +54,7 @@ export async function GET(
     });
 
     if (!conversation) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Conversation not found'), 'Get messages - not found');
     }
 
     // Fetch messages
@@ -87,7 +102,19 @@ export async function POST(
     const { id: conversationId } = await params;
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Create message - authentication');
+    }
+
+    const rateLimitResult = await rateLimit(`conversations:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Verify conversation belongs to workspace
@@ -99,10 +126,7 @@ export async function POST(
     });
 
     if (!conversation) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Conversation not found'), 'Create message - not found');
     }
 
     const body = await request.json();
@@ -234,10 +258,7 @@ export async function POST(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation error: invalid request data'), 'Create message - validation');
     }
     logger.error('Create message error', error);
     return createErrorResponse(error, 'Create message error');

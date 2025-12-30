@@ -6,6 +6,8 @@ import { eq, and, desc } from 'drizzle-orm';
 import OpenAI from 'openai';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { rateLimit, expensiveOperationLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -34,6 +36,19 @@ export async function GET() {
   try {
     const { workspaceId, user } = await getCurrentWorkspace();
 
+    // Rate limit - 100 requests per hour
+    const rateLimitResult = await rateLimit(`learning-paths-list:${user!.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const paths = await db.query.learningPaths.findMany({
       where: and(
         eq(learningPaths.workspaceId, workspaceId),
@@ -44,8 +59,7 @@ export async function GET() {
 
     return NextResponse.json({ paths });
   } catch (error) {
-    console.error('Error fetching learning paths:', error);
-    return NextResponse.json({ error: 'Failed to fetch learning paths' }, { status: 500 });
+    return createErrorResponse(error, 'Fetch learning paths error');
   }
 }
 
@@ -54,10 +68,23 @@ export async function POST(request: NextRequest) {
   try {
     const { workspaceId, user } = await getCurrentWorkspace();
 
+    // Rate limit - expensive operation (10 requests per minute)
+    const rateLimitResult = await expensiveOperationLimit(`learning-paths-generate:${user!.id}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
     const parsed = createPathSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      return createErrorResponse(new Error('Validation error: invalid request data'), 'Generate learning path - validation');
     }
 
     const { goal, role, skillLevel } = parsed.data;
@@ -135,7 +162,7 @@ ${JSON.stringify(knowledgeContext, null, 2)}`
 
     const responseText = completion.choices[0]?.message?.content;
     if (!responseText) {
-      return NextResponse.json({ error: 'AI response empty' }, { status: 500 });
+      return createErrorResponse(new Error('AI response empty'), 'Generate learning path - AI response');
     }
 
     const aiResponse = JSON.parse(responseText);
@@ -181,7 +208,6 @@ ${JSON.stringify(knowledgeContext, null, 2)}`
 
     return NextResponse.json({ path: newPath }, { status: 201 });
   } catch (error) {
-    console.error('Error generating learning path:', error);
-    return NextResponse.json({ error: 'Failed to generate learning path' }, { status: 500 });
+    return createErrorResponse(error, 'Generate learning path error');
   }
 }

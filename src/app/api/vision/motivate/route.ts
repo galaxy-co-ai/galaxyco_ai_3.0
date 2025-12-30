@@ -10,6 +10,7 @@ import { auth } from '@clerk/nextjs/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateNeptuneContext } from '@/lib/neptune/unified-context';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 import type { VisionResponse, MotivationalContent } from '@/types/vision';
 
 const anthropic = new Anthropic({
@@ -24,14 +25,14 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Vision motivate');
     }
 
     const body = await request.json();
     const { workspaceId, goals } = body;
 
     if (!workspaceId) {
-      return NextResponse.json({ error: 'Workspace ID required' }, { status: 400 });
+      return createErrorResponse(new Error('Workspace ID is required'), 'Vision motivate');
     }
 
     logger.info('[Vision] Generating motivational content', { workspaceId, hasGoals: !!goals });
@@ -176,10 +177,6 @@ Output JSON format:
 
     return NextResponse.json(result);
   } catch (error) {
-    logger.error('[Vision] Failed to generate motivational content', error);
-    return NextResponse.json(
-      { error: 'Failed to generate vision content' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Vision motivate');
   }
 }

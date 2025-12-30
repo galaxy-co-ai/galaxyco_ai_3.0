@@ -4,6 +4,7 @@ import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { getOpenAI } from "@/lib/ai-providers";
 import { rateLimit } from "@/lib/rate-limit";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * POST /api/admin/ai/sources/review
@@ -201,30 +202,10 @@ Return ONLY valid JSON.`;
       isRecommended: result.score >= 70,
     });
   } catch (error) {
-    logger.error("Failed to review source", error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request body"), "Review source");
     }
-
-    if (error instanceof Error && error.message.includes("API key")) {
-      return NextResponse.json(
-        { error: "AI service not configured. Please add your OpenAI API key." },
-        { status: 503 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to review source. Please try again." },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Review source");
   }
 }
 

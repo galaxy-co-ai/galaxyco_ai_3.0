@@ -12,6 +12,8 @@ import { agentWorkflows, agentWorkflowVersions, users } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -23,7 +25,21 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: workflowId } = await params;
 
     // Verify workflow exists and belongs to workspace
@@ -35,7 +51,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!workflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workflow not found'), '[Workflow Versions API] Get versions');
     }
 
     // Get all versions with user info
@@ -88,11 +104,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       currentVersion: workflow.steps ? versions.length + 1 : 1,
     });
   } catch (error) {
-    logger.error('[Workflow Versions API] Failed to get versions', error);
-    return NextResponse.json(
-      { error: 'Failed to get workflow versions' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Workflow Versions API] Failed to get versions');
   }
 }
 
@@ -109,6 +121,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: workflowId } = await params;
 
     // Parse body
@@ -116,10 +142,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const validation = restoreVersionSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Workflow Versions API] Restore version');
     }
 
     const { versionId } = validation.data;
@@ -133,7 +156,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!workflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workflow not found'), '[Workflow Versions API] Restore version');
     }
 
     // Get the version to restore
@@ -146,7 +169,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!versionToRestore) {
-      return NextResponse.json({ error: 'Version not found' }, { status: 404 });
+      return createErrorResponse(new Error('Version not found'), '[Workflow Versions API] Restore version');
     }
 
     // Get the latest version number
@@ -211,10 +234,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       newVersion: newVersionNumber,
     });
   } catch (error) {
-    logger.error('[Workflow Versions API] Failed to restore version', error);
-    return NextResponse.json(
-      { error: 'Failed to restore workflow version' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Workflow Versions API] Failed to restore version');
   }
 }

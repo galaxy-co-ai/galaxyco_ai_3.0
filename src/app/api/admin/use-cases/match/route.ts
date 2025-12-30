@@ -5,6 +5,7 @@ import { useCases } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * POST /api/admin/use-cases/match
@@ -40,10 +41,7 @@ export async function POST(request: NextRequest) {
       );
 
     if (publishedUseCases.length === 0) {
-      return NextResponse.json(
-        { error: "No published use cases available for matching" },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error("No published use cases not found for matching"), "Match use case");
     }
 
     // Calculate match scores for each use case
@@ -130,23 +128,7 @@ export async function POST(request: NextRequest) {
       })),
     });
   } catch (error) {
-    logger.error("Failed to match use case", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to match use case" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Match use case error");
   }
 }
 

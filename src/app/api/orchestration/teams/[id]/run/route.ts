@@ -12,6 +12,8 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { AgentOrchestrator } from '@/lib/orchestration';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema
 const runTeamSchema = z.object({
@@ -30,7 +32,21 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await expensiveOperationLimit(`orchestration:run:${userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: teamId } = await params;
 
     // Verify team exists and belongs to workspace
@@ -42,14 +58,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!team) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      return createErrorResponse(new Error('Team not found'), '[Teams API] Run team');
     }
 
     if (team.status !== 'active') {
-      return NextResponse.json(
-        { error: `Team is not active (status: ${team.status})` },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(`Team is not active - invalid status: ${team.status}`), '[Teams API] Run team');
     }
 
     // Parse and validate body
@@ -57,10 +70,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const validation = runTeamSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Teams API] Run team');
     }
 
     const { objective, priority } = validation.data;
@@ -77,10 +87,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const result = await orchestrator.runTeam(teamId, objective);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to run team' },
-        { status: 500 }
-      );
+      return createErrorResponse(new Error(result.error || 'Failed to run team'), '[Teams API] Run team');
     }
 
     return NextResponse.json({
@@ -93,10 +100,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       durationMs: result.durationMs,
     });
   } catch (error) {
-    logger.error('[Teams API] Failed to run team', error);
-    return NextResponse.json(
-      { error: 'Failed to run team' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Teams API] Failed to run team');
   }
 }

@@ -12,6 +12,8 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { AgentOrchestrator } from '@/lib/orchestration';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema
 const executeWorkflowSchema = z.object({
@@ -30,6 +32,20 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await expensiveOperationLimit(`orchestration:execute:${userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: workflowId } = await params;
 
     // Verify workflow exists and is active
@@ -41,14 +57,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!workflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workflow not found'), '[Workflows API] Execute workflow');
     }
 
     if (workflow.status !== 'active') {
-      return NextResponse.json(
-        { error: `Workflow is not active (status: ${workflow.status})` },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(`Workflow is not active - invalid status: ${workflow.status}`), '[Workflows API] Execute workflow');
     }
 
     // Parse and validate body
@@ -56,10 +69,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const validation = executeWorkflowSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Workflows API] Execute workflow');
     }
 
     const { context, triggerData } = validation.data;
@@ -82,13 +92,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: result.error?.message || 'Failed to execute workflow',
-          executionId: result.executionId,
-        },
-        { status: 500 }
-      );
+      return createErrorResponse(new Error(result.error?.message || 'Failed to execute workflow'), '[Workflows API] Execute workflow');
     }
 
     return NextResponse.json({
@@ -100,10 +104,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       totalSteps: result.totalSteps,
     });
   } catch (error) {
-    logger.error('[Workflows API] Failed to execute workflow', error);
-    return NextResponse.json(
-      { error: 'Failed to execute workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Workflows API] Failed to execute workflow');
   }
 }

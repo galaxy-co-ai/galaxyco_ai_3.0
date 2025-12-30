@@ -11,7 +11,9 @@ import { db } from '@/lib/db';
 import { marketingChannels } from '@/db/schema';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
 import { eq, desc } from 'drizzle-orm';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema for creating a channel
 const createChannelSchema = z.object({
@@ -34,7 +36,19 @@ const createChannelSchema = z.object({
  */
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`marketing:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const channels = await db
       .select({
@@ -78,10 +92,6 @@ export async function GET() {
       total: channels.length,
     });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Handle case where table doesn't exist yet (migration not run)
     if (error instanceof Error && error.message.includes('relation') && error.message.includes('does not exist')) {
       logger.warn('Marketing channels table does not exist yet');
@@ -91,11 +101,7 @@ export async function GET() {
       });
     }
 
-    logger.error('Failed to list marketing channels', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'List marketing channels error');
   }
 }
 
@@ -109,14 +115,23 @@ export async function POST(request: NextRequest) {
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
 
+    const rateLimitResult = await rateLimit(`marketing:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
     const validation = createChannelSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(`Invalid: ${validation.error.errors[0].message}`), 'Create marketing channel validation error');
     }
 
     const { name, type, status, description, budget, config } = validation.data;
@@ -143,15 +158,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ channel }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    logger.error('Failed to create marketing channel', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create marketing channel error');
   }
 }
 

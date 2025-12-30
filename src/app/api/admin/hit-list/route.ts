@@ -5,6 +5,7 @@ import { topicIdeas, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, desc, asc, sql, ilike, isNotNull } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * GET /api/admin/hit-list
@@ -179,16 +180,7 @@ export async function GET(request: NextRequest) {
       offset,
     });
   } catch (error) {
-    logger.error("Failed to fetch hit list items", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch hit list items" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch hit list error");
   }
 }
 
@@ -248,10 +240,7 @@ export async function POST(request: NextRequest) {
         .limit(1);
 
       if (!existingTopic) {
-        return NextResponse.json(
-          { error: "Topic not found" },
-          { status: 404 }
-        );
+        return createErrorResponse(new Error("Topic not found"), "Add to hit list");
       }
 
       // Get max position for ordering
@@ -293,10 +282,7 @@ export async function POST(request: NextRequest) {
 
     // Create new topic and add to hit list
     if (!validatedData.title) {
-      return NextResponse.json(
-        { error: "Title is required for new topics" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request: title is required for new topics"), "Add to hit list validation");
     }
 
     // Get max position for ordering
@@ -341,23 +327,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ item: newTopic }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to add to hit list", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to add to hit list" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Add to hit list error");
   }
 }
 

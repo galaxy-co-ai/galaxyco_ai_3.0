@@ -14,6 +14,8 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { WorkflowEngine } from '@/lib/orchestration/workflow-engine';
 import type { WorkflowStep } from '@/lib/orchestration/types';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 interface RouteParams {
   params: Promise<{ executionId: string }>;
@@ -25,7 +27,21 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { executionId } = await params;
 
     // Get execution
@@ -37,7 +53,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!execution) {
-      return NextResponse.json({ error: 'Execution not found' }, { status: 404 });
+      return createErrorResponse(new Error('Execution not found'), '[Executions API] Get execution');
     }
 
     // Get workflow
@@ -46,7 +62,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!workflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workflow not found'), '[Executions API] Get execution');
     }
 
     // Get agent IDs from steps
@@ -78,11 +94,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    logger.error('[Executions API] Failed to get execution', error);
-    return NextResponse.json(
-      { error: 'Failed to get execution' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Executions API] Failed to get execution');
   }
 }
 
@@ -98,7 +110,21 @@ const updateExecutionSchema = z.object({
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { executionId } = await params;
 
     // Parse and validate body
@@ -106,10 +132,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const validation = updateExecutionSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Executions API] Update execution');
     }
 
     const { action, stepId } = validation.data;
@@ -123,7 +146,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!execution) {
-      return NextResponse.json({ error: 'Execution not found' }, { status: 404 });
+      return createErrorResponse(new Error('Execution not found'), '[Executions API] Update execution');
     }
 
     const engine = new WorkflowEngine(workspaceId);
@@ -141,10 +164,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         break;
       case 'retry_step':
         if (!stepId) {
-          return NextResponse.json(
-            { error: 'stepId is required for retry_step action' },
-            { status: 400 }
-          );
+          return createErrorResponse(new Error('stepId is required for retry_step action'), '[Executions API] Update execution');
         }
         const stepResult = await engine.retryStep(executionId, stepId);
         result = {
@@ -155,14 +175,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         };
         break;
       default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+        return createErrorResponse(new Error('Invalid action'), '[Executions API] Update execution');
     }
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error?.message || 'Action failed' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(result.error?.message || 'Action failed - invalid request'), '[Executions API] Update execution');
     }
 
     logger.info('[Executions API] Execution updated', {
@@ -176,11 +193,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       execution: result,
     });
   } catch (error) {
-    logger.error('[Executions API] Failed to update execution', error);
-    return NextResponse.json(
-      { error: 'Failed to update execution' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Executions API] Failed to update execution');
   }
 }
 

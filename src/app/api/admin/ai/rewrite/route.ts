@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { getWorkspaceVoiceProfile, getVoicePromptSection } from '@/lib/ai/voice-profile';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Rewrite modes
 const rewriteModeEnum = z.enum(['improve', 'simplify', 'expand', 'shorten', 'rephrase', 'formal', 'casual']);
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Check admin access
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'AI rewrite');
     }
 
     // Get workspace and user context
@@ -48,23 +49,20 @@ export async function POST(request: NextRequest) {
       workspaceContext = await getCurrentWorkspace();
       user = await getCurrentUser();
     } catch {
-      return NextResponse.json({ error: 'Workspace or user not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace or user not found'), 'AI rewrite');
     }
 
     // Rate limit
     const rateLimitResult = await rateLimit(`ai-rewrite:${user.id}`, 40, 60);
     if (!rateLimitResult.success) {
-      return NextResponse.json({ error: 'Rate limit exceeded. Please wait a moment.' }, { status: 429 });
+      return createErrorResponse(new Error('Rate limit exceeded. Please wait a moment.'), 'AI rewrite');
     }
 
     const body = await request.json();
     const validationResult = rewriteSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed: ' + validationResult.error.errors[0]?.message },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: ' + validationResult.error.errors[0]?.message), 'AI rewrite');
     }
 
     const { text, mode, context } = validationResult.data;
@@ -122,7 +120,7 @@ GUIDELINES:
     const rewrittenText = response.choices[0]?.message?.content?.trim() || '';
 
     if (!rewrittenText) {
-      return NextResponse.json({ error: 'Failed to generate rewritten text' }, { status: 500 });
+      return createErrorResponse(new Error('Failed to generate rewritten text'), 'AI rewrite');
     }
 
     logger.info('AI rewrite completed', {
@@ -140,8 +138,7 @@ GUIDELINES:
       rewrittenLength: rewrittenText.length,
     });
   } catch (error) {
-    logger.error('AI rewrite API error', error);
-    return NextResponse.json({ error: 'Failed to process rewrite request' }, { status: 500 });
+    return createErrorResponse(error, 'AI rewrite');
   }
 }
 

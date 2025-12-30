@@ -6,6 +6,7 @@ import { getOpenAI } from '@/lib/ai-providers';
 import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Interface for analysis result
 interface VoiceAnalysisResult {
@@ -29,7 +30,7 @@ export async function POST() {
     // Check admin access
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'Analyze blog voice');
     }
 
     // Get workspace context
@@ -37,7 +38,7 @@ export async function POST() {
     try {
       context = await getCurrentWorkspace();
     } catch {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Analyze blog voice');
     }
 
     // Rate limit - analysis is expensive
@@ -62,10 +63,7 @@ export async function POST() {
       .limit(20); // Limit to most recent 20 posts to manage context size
 
     if (posts.length === 0) {
-      return NextResponse.json(
-        { error: 'No published posts found to analyze. Publish some articles first.' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('No published posts found to analyze. Publish some articles first - invalid request'), 'Analyze blog voice');
     }
 
     // Get the current voice profile for comparison
@@ -253,19 +251,7 @@ Based on these posts, identify the consistent voice, tone, and style patterns.`;
         : 'Voice profile created from blog analysis',
     });
   } catch (error) {
-    logger.error('Voice profile analysis failed', error);
-    
-    if (error instanceof Error && error.message.includes('API key')) {
-      return NextResponse.json(
-        { error: 'AI service not configured. Please add your OpenAI API key.' },
-        { status: 503 }
-      );
-    }
-    
-    return NextResponse.json(
-      { error: 'Failed to analyze blog voice. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Analyze blog voice');
   }
 }
 

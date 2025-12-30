@@ -3,6 +3,7 @@ import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { uploadFile, isStorageConfigured } from '@/lib/storage';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Allowed file types for team chat
 const ALLOWED_TYPES = {
@@ -43,6 +44,18 @@ export async function POST(request: Request) {
 
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+
+    const rateLimitResult = await rateLimit(`team:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;

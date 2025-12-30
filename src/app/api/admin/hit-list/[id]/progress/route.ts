@@ -5,6 +5,7 @@ import { topicIdeas } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * Progress stages for the Article Studio wizard flow
@@ -59,7 +60,7 @@ export async function PATCH(
       .limit(1);
 
     if (!existingItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      return createErrorResponse(new Error("Item not found"), "Update progress");
     }
 
     let newProgress: typeof topicIdeas.$inferSelect.wizardProgress;
@@ -128,23 +129,7 @@ export async function PATCH(
 
     return NextResponse.json({ item: updatedItem });
   } catch (error) {
-    logger.error("Failed to update progress", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to update progress" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Update progress error");
   }
 }
 

@@ -5,6 +5,7 @@ import { topicIdeas } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * POST /api/admin/hit-list/reorder
@@ -35,13 +36,7 @@ export async function POST(request: NextRequest) {
     const invalidIds = itemIds.filter((id) => !existingIds.has(id));
 
     if (invalidIds.length > 0) {
-      return NextResponse.json(
-        {
-          error: "Invalid item IDs",
-          invalidIds,
-        },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid item IDs"), "Reorder hit list validation");
     }
 
     // Update positions in a transaction-like manner
@@ -73,23 +68,7 @@ export async function POST(request: NextRequest) {
       reorderedCount: itemIds.length,
     });
   } catch (error) {
-    logger.error("Failed to reorder hit list", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to reorder hit list" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Reorder hit list error");
   }
 }
 

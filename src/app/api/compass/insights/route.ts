@@ -11,6 +11,7 @@ import { auth } from '@clerk/nextjs/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateNeptuneContext } from '@/lib/neptune/unified-context';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 import type { CompassResponse, CompassInsight, CompassItem } from '@/types/compass';
 
 const anthropic = new Anthropic({
@@ -25,14 +26,14 @@ export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Compass insights');
     }
 
     const body = await request.json();
     const { workspaceId } = body;
 
     if (!workspaceId) {
-      return NextResponse.json({ error: 'Workspace ID required' }, { status: 400 });
+      return createErrorResponse(new Error('Workspace ID is required'), 'Compass insights');
     }
 
     // Check cache first
@@ -184,10 +185,6 @@ Output JSON format:
 
     return NextResponse.json(result);
   } catch (error) {
-    logger.error('[Compass] Failed to generate insights', error);
-    return NextResponse.json(
-      { error: 'Failed to generate compass insights' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Compass insights');
   }
 }

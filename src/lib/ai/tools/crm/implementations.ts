@@ -1,7 +1,7 @@
 /**
  * CRM Tool Implementations
  */
-import type { ToolImplementations } from '../types';
+import type { ToolImplementations, ToolResult } from '../types';
 import { db } from '@/lib/db';
 import { prospects, contacts } from '@/db/schema';
 import { eq, and, desc, like, or } from 'drizzle-orm';
@@ -225,6 +225,277 @@ export const crmToolImplementations: ToolImplementations = {
       return {
         success: false,
         message: 'Failed to create contact',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // CRM: Create Deal
+  async create_deal(args, context): Promise<ToolResult> {
+    try {
+      // For now, we'll create this as a prospect with deal metadata
+      // In a full implementation, you'd have a separate deals table
+      const stage = args.stage as string;
+      const validStage = stage === 'qualification' ? 'qualified' : (stage as 'qualified' | 'proposal' | 'negotiation') || 'proposal';
+
+      const [prospect] = await db
+        .insert(prospects)
+        .values({
+          workspaceId: context.workspaceId,
+          name: args.name as string,
+          stage: validStage,
+          estimatedValue: args.value ? Math.round((args.value as number) * 100) : null,
+          notes: (args.notes as string) || `Deal created by Neptune`,
+          source: 'ai_deal',
+        })
+        .returning();
+
+      logger.info('AI created deal', { dealId: prospect.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Created deal "${prospect.name}" worth $${(args.value as number)?.toLocaleString() || 0}`,
+        data: {
+          id: prospect.id,
+          name: prospect.name,
+          value: args.value,
+          stage: prospect.stage,
+        },
+      };
+    } catch (error) {
+      logger.error('AI create_deal failed', error);
+      return {
+        success: false,
+        message: 'Failed to create deal',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // CRM: Update Deal
+  async update_deal(args, context): Promise<ToolResult> {
+    try {
+      const dealId = args.dealId as string;
+
+      const deal = await db.query.prospects.findFirst({
+        where: and(
+          eq(prospects.id, dealId),
+          eq(prospects.workspaceId, context.workspaceId)
+        ),
+      });
+
+      if (!deal) {
+        return {
+          success: false,
+          message: 'Deal not found or access denied',
+        };
+      }
+
+      const previousStage = deal.stage;
+
+      const updateData: Record<string, unknown> = { updatedAt: new Date() };
+      if (args.value) updateData.estimatedValue = Math.round((args.value as number) * 100);
+      if (args.stage) updateData.stage = args.stage;
+      if (args.notes) updateData.notes = deal.notes ? `${deal.notes}\n\n${args.notes}` : args.notes;
+
+      await db.update(prospects).set(updateData).where(eq(prospects.id, dealId));
+
+      // Fire event if stage changed to negotiation
+      if (args.stage && previousStage !== args.stage && args.stage === 'negotiation') {
+        const { fireEvent } = await import('@/lib/ai/event-hooks');
+        fireEvent({
+          type: 'deal_stage_changed',
+          workspaceId: context.workspaceId,
+          userId: context.userId,
+          dealId,
+          newStage: args.stage as string,
+        }).catch(err => {
+          logger.error('Failed to fire deal stage change event (non-critical):', err);
+        });
+      }
+
+      return {
+        success: true,
+        message: `Updated deal "${deal.name}"`,
+        data: {
+          id: deal.id,
+          name: deal.name,
+          updates: Object.keys(updateData).filter(k => k !== 'updatedAt'),
+        },
+      };
+    } catch (error) {
+      logger.error('AI update_deal failed', error);
+      return {
+        success: false,
+        message: 'Failed to update deal',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // CRM: Get Deals Closing Soon
+  async get_deals_closing_soon(args, context): Promise<ToolResult> {
+    try {
+      const days = (args.days as number) || 30;
+      const minValue = args.minValue as number | undefined;
+
+      // Get deals in closing stages
+      const deals = await db.query.prospects.findMany({
+        where: and(
+          eq(prospects.workspaceId, context.workspaceId),
+          or(
+            eq(prospects.stage, 'proposal'),
+            eq(prospects.stage, 'negotiation')
+          )
+        ),
+        orderBy: [desc(prospects.estimatedValue)],
+        limit: 20,
+      });
+
+      let filteredDeals = deals;
+      if (minValue) {
+        filteredDeals = deals.filter(d => (d.estimatedValue || 0) >= minValue * 100);
+      }
+
+      const totalValue = filteredDeals.reduce((sum, d) => sum + (d.estimatedValue || 0), 0) / 100;
+
+      return {
+        success: true,
+        message: `Found ${filteredDeals.length} deals in closing stages worth $${totalValue.toLocaleString()}`,
+        data: {
+          deals: filteredDeals.map(d => ({
+            id: d.id,
+            name: d.name,
+            company: d.company,
+            stage: d.stage,
+            value: d.estimatedValue ? d.estimatedValue / 100 : 0,
+          })),
+          totalValue,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_deals_closing_soon failed', error);
+      return {
+        success: false,
+        message: 'Failed to get closing deals',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // CRM: Add Note
+  async add_note(args, context): Promise<ToolResult> {
+    try {
+      const entityType = args.entityType as 'lead' | 'contact' | 'deal';
+      const entityId = args.entityId as string;
+      const content = args.content as string;
+
+      const timestamp = new Date().toISOString();
+      const noteEntry = `[${timestamp}] ${context.userName}: ${content}`;
+
+      if (entityType === 'lead' || entityType === 'deal') {
+        const lead = await db.query.prospects.findFirst({
+          where: and(
+            eq(prospects.id, entityId),
+            eq(prospects.workspaceId, context.workspaceId)
+          ),
+        });
+
+        if (!lead) {
+          return { success: false, message: `${entityType} not found` };
+        }
+
+        await db
+          .update(prospects)
+          .set({
+            notes: lead.notes ? `${lead.notes}\n\n${noteEntry}` : noteEntry,
+            updatedAt: new Date(),
+          })
+          .where(eq(prospects.id, entityId));
+
+        return {
+          success: true,
+          message: `Added note to ${entityType} "${lead.name}"`,
+          data: { entityType, entityId, entityName: lead.name },
+        };
+      } else if (entityType === 'contact') {
+        const contact = await db.query.contacts.findFirst({
+          where: and(
+            eq(contacts.id, entityId),
+            eq(contacts.workspaceId, context.workspaceId)
+          ),
+        });
+
+        if (!contact) {
+          return { success: false, message: 'Contact not found' };
+        }
+
+        await db
+          .update(contacts)
+          .set({
+            notes: contact.notes ? `${contact.notes}\n\n${noteEntry}` : noteEntry,
+            updatedAt: new Date(),
+          })
+          .where(eq(contacts.id, entityId));
+
+        const name = [contact.firstName, contact.lastName].filter(Boolean).join(' ') || contact.email;
+        return {
+          success: true,
+          message: `Added note to contact "${name}"`,
+          data: { entityType, entityId, entityName: name },
+        };
+      }
+
+      return { success: false, message: 'Invalid entity type' };
+    } catch (error) {
+      logger.error('AI add_note failed', error);
+      return {
+        success: false,
+        message: 'Failed to add note',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // CRM: Get Activity Timeline
+  async get_activity_timeline(args, context): Promise<ToolResult> {
+    try {
+      const entityType = args.entityType as 'lead' | 'contact' | 'deal';
+      const entityId = args.entityId as string;
+
+      // For now, return the notes as activity timeline
+      // In a full implementation, you'd have an activity log table
+      if (entityType === 'lead' || entityType === 'deal') {
+        const lead = await db.query.prospects.findFirst({
+          where: and(
+            eq(prospects.id, entityId),
+            eq(prospects.workspaceId, context.workspaceId)
+          ),
+        });
+
+        if (!lead) {
+          return { success: false, message: `${entityType} not found` };
+        }
+
+        return {
+          success: true,
+          message: `Activity timeline for "${lead.name}"`,
+          data: {
+            name: lead.name,
+            stage: lead.stage,
+            createdAt: lead.createdAt,
+            lastContactedAt: lead.lastContactedAt,
+            notes: lead.notes,
+          },
+        };
+      }
+
+      return { success: false, message: 'Invalid entity type' };
+    } catch (error) {
+      logger.error('AI get_activity_timeline failed', error);
+      return {
+        success: false,
+        message: 'Failed to get activity timeline',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }

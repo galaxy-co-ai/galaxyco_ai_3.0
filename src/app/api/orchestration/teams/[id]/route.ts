@@ -13,6 +13,8 @@ import { agentTeams, agentTeamMembers, agents } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema for updating a team
 const updateTeamSchema = z.object({
@@ -48,7 +50,21 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: teamId } = await params;
 
     // Get team
@@ -60,7 +76,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!team) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      return createErrorResponse(new Error('Team not found'), '[Teams API] Get team');
     }
 
     // Get team members with agent details
@@ -112,11 +128,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    logger.error('[Teams API] Failed to get team', error);
-    return NextResponse.json(
-      { error: 'Failed to get team' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Teams API] Failed to get team');
   }
 }
 
@@ -126,7 +138,21 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: teamId } = await params;
 
     // Get existing team
@@ -138,7 +164,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!existingTeam) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      return createErrorResponse(new Error('Team not found'), '[Teams API] Update team');
     }
 
     // Parse and validate body
@@ -146,10 +172,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const validation = updateTeamSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Teams API] Update team');
     }
 
     const { name, description, coordinatorAgentId, status, config } = validation.data;
@@ -164,10 +187,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       });
 
       if (!coordinator) {
-        return NextResponse.json(
-          { error: 'Coordinator agent not found' },
-          { status: 400 }
-        );
+        return createErrorResponse(new Error('Coordinator agent not found'), '[Teams API] Update team');
       }
     }
 
@@ -242,11 +262,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ team: updatedTeam });
   } catch (error) {
-    logger.error('[Teams API] Failed to update team', error);
-    return NextResponse.json(
-      { error: 'Failed to update team' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Teams API] Failed to update team');
   }
 }
 
@@ -256,7 +272,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: teamId } = await params;
 
     // Verify team exists and belongs to workspace
@@ -268,7 +298,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!team) {
-      return NextResponse.json({ error: 'Team not found' }, { status: 404 });
+      return createErrorResponse(new Error('Team not found'), '[Teams API] Delete team');
     }
 
     // Delete team (cascade will delete members)
@@ -281,10 +311,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('[Teams API] Failed to delete team', error);
-    return NextResponse.json(
-      { error: 'Failed to delete team' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Teams API] Failed to delete team');
   }
 }

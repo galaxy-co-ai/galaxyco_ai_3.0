@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 import { workspacePhoneNumbers, workspaceMembers, workspaces } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { releasePhoneNumber } from '@/lib/signalwire';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * PATCH /api/workspaces/[id]/phone-numbers/[numberId]
@@ -21,7 +23,20 @@ export async function PATCH(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Update phone number error');
+    }
+
+    // Rate limiting (keep manual for custom headers)
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Await params (Next.js 15+ requirement)
@@ -37,7 +52,7 @@ export async function PATCH(
         where: eq(workspaces.clerkOrganizationId, workspaceId),
       });
       if (!workspace) {
-        return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+        return createErrorResponse(new Error('Workspace not found'), 'Update phone number error');
       }
       workspaceId = workspace.id;
     } else {
@@ -50,7 +65,7 @@ export async function PATCH(
       });
 
       if (!membership) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        return createErrorResponse(new Error('Forbidden: access denied'), 'Update phone number error');
       }
     }
 
@@ -63,7 +78,7 @@ export async function PATCH(
     });
 
     if (!phoneNumber) {
-      return NextResponse.json({ error: 'Phone number not found' }, { status: 404 });
+      return createErrorResponse(new Error('Phone number not found'), 'Update phone number error');
     }
 
     // Parse request body
@@ -87,11 +102,7 @@ export async function PATCH(
 
     return NextResponse.json({ phoneNumber: updated });
   } catch (error) {
-    console.error('Error updating phone number:', error);
-    return NextResponse.json(
-      { error: 'Failed to update phone number' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Update phone number error');
   }
 }
 
@@ -106,7 +117,20 @@ export async function DELETE(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Delete phone number error');
+    }
+
+    // Rate limiting (keep manual for custom headers)
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Await params (Next.js 15+ requirement)
@@ -122,7 +146,7 @@ export async function DELETE(
         where: eq(workspaces.clerkOrganizationId, workspaceId),
       });
       if (!workspace) {
-        return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+        return createErrorResponse(new Error('Workspace not found'), 'Delete phone number error');
       }
       workspaceId = workspace.id;
     } else {
@@ -135,7 +159,7 @@ export async function DELETE(
       });
 
       if (!membership) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        return createErrorResponse(new Error('Forbidden: access denied'), 'Delete phone number error');
       }
     }
 
@@ -148,7 +172,7 @@ export async function DELETE(
     });
 
     if (!phoneNumber) {
-      return NextResponse.json({ error: 'Phone number not found' }, { status: 404 });
+      return createErrorResponse(new Error('Phone number not found'), 'Delete phone number error');
     }
 
     // Prevent deleting the last/primary number if workspace has active conversations
@@ -161,10 +185,7 @@ export async function DELETE(
       });
 
       if (otherNumbers.length === 1) {
-        return NextResponse.json(
-          { error: 'Cannot release the last phone number. You must keep at least one active number.' },
-          { status: 400 }
-        );
+        return createErrorResponse(new Error('Invalid: Cannot release the last phone number. You must keep at least one active number.'), 'Delete phone number error');
       }
     }
 
@@ -183,10 +204,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Phone number released successfully' });
   } catch (error) {
-    console.error('Error releasing phone number:', error);
-    return NextResponse.json(
-      { error: 'Failed to release phone number' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete phone number error');
   }
 }

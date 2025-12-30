@@ -1,6 +1,6 @@
 /**
  * Website Analysis API Endpoint
- * 
+ *
  * POST: Start website analysis job
  * GET: Check analysis status
  */
@@ -14,6 +14,7 @@ import { analyzeWebsiteTask } from '@/trigger/website-analysis';
 import { db } from '@/lib/db';
 import { workspaceIntelligence } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { expensiveOperationLimit, rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // SCHEMA VALIDATION
@@ -35,12 +36,25 @@ export async function POST(request: Request) {
     // Get authenticated user and workspace
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Website analysis auth');
     }
 
     const workspace = await getCurrentWorkspace();
     if (!workspace) {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Website analysis workspace');
+    }
+
+    // Rate limiting for expensive AI operation
+    const rateLimitResult = await expensiveOperationLimit(`analyze-website:${user.id}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Parse and validate request body
@@ -101,12 +115,25 @@ export async function GET(request: Request) {
     // Get authenticated user and workspace
     const user = await getCurrentUser();
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Website analysis auth');
     }
 
     const workspace = await getCurrentWorkspace();
     if (!workspace) {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Website analysis workspace');
+    }
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`analyze-website-status:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     // Get job ID from query params

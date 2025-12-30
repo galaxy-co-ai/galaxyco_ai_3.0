@@ -12,6 +12,8 @@ import { contacts } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getContactEmails, syncEmails, isEmailSyncAvailable } from '@/lib/integrations/email-sync';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // GET: List emails for a contact
 export async function GET(
@@ -21,7 +23,19 @@ export async function GET(
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Contact Emails API GET');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const { id: contactId } = await params;
@@ -38,7 +52,7 @@ export async function GET(
     });
 
     if (!contact) {
-      return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
+      return createErrorResponse(new Error('Contact not found'), 'Contact Emails API GET');
     }
 
     // Get emails
@@ -53,11 +67,7 @@ export async function GET(
       contactEmail: contact.email,
     });
   } catch (error) {
-    logger.error('[Contact Emails API] GET error', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch emails' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Contact Emails API GET');
   }
 }
 
@@ -69,7 +79,19 @@ export async function POST(
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Contact Emails API POST');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const { id: contactId } = await params;
@@ -85,7 +107,7 @@ export async function POST(
     });
 
     if (!contact) {
-      return NextResponse.json({ error: 'Contact not found' }, { status: 404 });
+      return createErrorResponse(new Error('Contact not found'), 'Contact Emails API POST');
     }
 
     // Sync emails for this contact
@@ -113,10 +135,6 @@ export async function POST(
       errors: allErrors.length > 0 ? allErrors : undefined,
     });
   } catch (error) {
-    logger.error('[Contact Emails API] POST error', error);
-    return NextResponse.json(
-      { error: 'Failed to sync emails' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Contact Emails API POST');
   }
 }

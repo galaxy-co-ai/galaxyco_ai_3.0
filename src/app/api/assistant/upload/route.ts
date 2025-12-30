@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { uploadFile, isStorageConfigured } from '@/lib/storage';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -22,34 +24,44 @@ const ALLOWED_TYPES = {
 export async function POST(request: NextRequest) {
   try {
     if (!isStorageConfigured()) {
-      return NextResponse.json(
-        { error: 'File storage is not configured' },
-        { status: 503 }
-      );
+      return createErrorResponse(new Error('File storage is not configured'), 'Upload storage check');
     }
 
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId: clerkUserId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`upload:${clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return createErrorResponse(new Error('No file provided - required'), 'Upload file validation');
     }
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` },
-        { status: 400 }
+      return createErrorResponse(
+        new Error(`File too large - invalid. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`),
+        'Upload file size validation'
       );
     }
 
     // Validate file type
     const allAllowedTypes = [...ALLOWED_TYPES.images, ...ALLOWED_TYPES.documents, ...ALLOWED_TYPES.archives];
     if (!allAllowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'File type not supported' }, { status: 400 });
+      return createErrorResponse(new Error('File type not supported - invalid'), 'Upload file type validation');
     }
 
     // Generate unique pathname
@@ -89,10 +101,6 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error('Neptune file upload error', error);
-    return NextResponse.json(
-      { error: 'Failed to upload file' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Neptune file upload error');
   }
 }

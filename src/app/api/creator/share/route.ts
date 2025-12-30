@@ -13,6 +13,7 @@ import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { eq, and, desc } from 'drizzle-orm';
 import { randomBytes, createHash } from 'crypto';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema for creating a share
 const createShareSchema = z.object({
@@ -65,10 +66,7 @@ export async function POST(request: NextRequest) {
     const validation = createShareSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error.errors[0].message },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(validation.error.errors[0].message || 'Validation failed - invalid input'), 'Create Share');
     }
 
     const { creatorItemId, permission, password, expiresIn } = validation.data;
@@ -86,10 +84,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!document) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Document not found'), 'Create Share');
     }
 
     // Generate unique token
@@ -133,15 +128,8 @@ export async function POST(request: NextRequest) {
       },
     }, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     logger.error('Failed to create share', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Create Share');
   }
 }
 
@@ -156,10 +144,7 @@ export async function GET(request: NextRequest) {
 
     const documentId = request.nextUrl.searchParams.get('documentId');
     if (!documentId) {
-      return NextResponse.json(
-        { error: 'documentId is required' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('documentId is required'), 'List Shares');
     }
 
     // Verify document exists and belongs to workspace
@@ -175,10 +160,7 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (!document) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Document not found'), 'List Shares');
     }
 
     // Get all shares for this document
@@ -212,15 +194,8 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     logger.error('Failed to list shares', { error });
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'List Shares');
   }
 }
 

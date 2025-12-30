@@ -4,10 +4,24 @@ import { db } from '@/lib/db';
 import { knowledgeItems, knowledgeCollections } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: Request) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limit - 100 requests per hour
+    const rateLimitResult = await rateLimit(`knowledge-list:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
     const { searchParams } = new URL(request.url);
     const collectionId = searchParams.get('collectionId');
 

@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { articleSources } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Update source schema
 const updateSourceSchema = z.object({
@@ -32,7 +33,7 @@ export async function GET(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Get source auth');
     }
 
     const { id } = await params;
@@ -42,16 +43,12 @@ export async function GET(
     });
 
     if (!source) {
-      return NextResponse.json({ error: 'Source not found' }, { status: 404 });
+      return createErrorResponse(new Error('Source not found'), 'Get source');
     }
 
     return NextResponse.json(source);
   } catch (error) {
-    logger.error('Error fetching source', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch source' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get source error');
   }
 }
 
@@ -66,7 +63,7 @@ export async function PATCH(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Update source auth');
     }
 
     const { id } = await params;
@@ -74,10 +71,7 @@ export async function PATCH(
     const validation = updateSourceSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: validation failed'), 'Update source validation');
     }
 
     // Check source exists
@@ -86,7 +80,7 @@ export async function PATCH(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Source not found' }, { status: 404 });
+      return createErrorResponse(new Error('Source not found'), 'Update source');
     }
 
     const data = validation.data;
@@ -122,11 +116,7 @@ export async function PATCH(
 
     return NextResponse.json(source);
   } catch (error) {
-    logger.error('Error updating source', error);
-    return NextResponse.json(
-      { error: 'Failed to update source' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Update source error');
   }
 }
 
@@ -141,7 +131,7 @@ export async function DELETE(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Delete source auth');
     }
 
     const { id } = await params;
@@ -152,7 +142,7 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json({ error: 'Source not found' }, { status: 404 });
+      return createErrorResponse(new Error('Source not found'), 'Delete source');
     }
 
     // Delete
@@ -162,11 +152,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('Error deleting source', error);
-    return NextResponse.json(
-      { error: 'Failed to delete source' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete source error');
   }
 }
 

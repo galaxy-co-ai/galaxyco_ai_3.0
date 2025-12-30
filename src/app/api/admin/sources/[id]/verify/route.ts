@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { articleSources } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 /**
  * POST /api/admin/sources/[id]/verify
@@ -16,7 +17,7 @@ export async function POST(
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Verify source auth');
     }
 
     const { id } = await params;
@@ -27,14 +28,11 @@ export async function POST(
     });
 
     if (!source) {
-      return NextResponse.json({ error: 'Source not found' }, { status: 404 });
+      return createErrorResponse(new Error('Source not found'), 'Verify source');
     }
 
     if (!source.url) {
-      return NextResponse.json(
-        { error: 'Source has no URL to verify' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: source has no URL to verify'), 'Verify source URL');
     }
 
     logger.info('Verifying source', { sourceId: id, url: source.url });
@@ -122,11 +120,7 @@ export async function POST(
 
     return NextResponse.json(updatedSource);
   } catch (error) {
-    logger.error('Error verifying source', error);
-    return NextResponse.json(
-      { error: 'Failed to verify source' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Verify source error');
   }
 }
 

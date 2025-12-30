@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // SCHEMA VALIDATION
@@ -33,14 +34,27 @@ interface UserPreferences {
 export async function GET() {
   try {
     const user = await getCurrentUser();
-    
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${user.clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     // Get user's database record
     const userRecord = await db.query.users.findFirst({
       where: eq(users.clerkUserId, user.clerkUserId),
     });
 
     if (!userRecord) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return createErrorResponse(new Error('User not found'), 'Get appearance preferences error');
     }
 
     const preferences = (userRecord.preferences as UserPreferences | null) || {};
@@ -62,15 +76,26 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const user = await getCurrentUser();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${user.clerkUserId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
-    
+
     // Validate input
     const validationResult = appearanceSchema.safeParse(body);
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid input'), 'Update appearance preferences error');
     }
 
     const updates = validationResult.data;
@@ -81,7 +106,7 @@ export async function PUT(request: Request) {
     });
 
     if (!userRecord) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return createErrorResponse(new Error('User not found'), 'Update appearance preferences error');
     }
 
     // Merge preferences at top level

@@ -1,15 +1,15 @@
 /**
  * Agents Tool Implementations
  */
-import type { ToolImplementations } from '../types';
+import type { ToolImplementations, ToolResult } from '../types';
 import { db } from '@/lib/db';
 import { agents } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, like } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 
 export const agentsToolImplementations: ToolImplementations = {
   // Agents: List Agents
-  async list_agents(args, context) {
+  async list_agents(args, context): Promise<ToolResult> {
     try {
       const status = args.status as typeof agents.status.enumValues[number] | undefined;
 
@@ -49,12 +49,12 @@ export const agentsToolImplementations: ToolImplementations = {
   },
 
   // Agents: Create Agent
-  async create_agent(args, context) {
+  async create_agent(args, context): Promise<ToolResult> {
     try {
       const name = args.name as string;
       const type = args.type as typeof agents.type.enumValues[number];
       const description = args.description as string | undefined;
-      const config = args.config as Record<string, any> | undefined;
+      const config = args.config as Record<string, unknown> | undefined;
       const status = (args.status as typeof agents.status.enumValues[number]) || 'active';
 
       // Validate agent type
@@ -101,19 +101,19 @@ export const agentsToolImplementations: ToolImplementations = {
   },
 
   // Agents: Quick Create Agent (One-Shot Mode)
-  async create_agent_quick(args, context) {
+  async create_agent_quick(args, context): Promise<ToolResult> {
     try {
       const { quickCreateAgent } = await import('../../agent-wizard');
       const { gatherAIContext } = await import('../../context');
-      
+
       const description = args.description as string;
       const templateId = args.templateId as string | undefined;
       const name = args.name as string | undefined;
       const customizations = args.customizations as Record<string, unknown> | undefined;
-      
+
       // Get full AI context for template matching
       const aiContext = await gatherAIContext(context.workspaceId, context.userId);
-      
+
       if (!aiContext) {
         return {
           success: false,
@@ -121,7 +121,7 @@ export const agentsToolImplementations: ToolImplementations = {
           error: 'Context gathering failed'
         };
       }
-      
+
       // Create the agent
       const result = await quickCreateAgent(
         description,
@@ -138,7 +138,7 @@ export const agentsToolImplementations: ToolImplementations = {
           }
         }
       );
-      
+
       if (!result.success) {
         if (result.needsClarification) {
           return {
@@ -153,26 +153,26 @@ export const agentsToolImplementations: ToolImplementations = {
           error: result.error
         };
       }
-      
+
       const agent = result.agent!;
-      
-      logger.info('AI created agent via quick create', { 
-        agentId: agent.agentId, 
+
+      logger.info('AI created agent via quick create', {
+        agentId: agent.agentId,
         name: agent.name,
         template: agent.template,
-        workspaceId: context.workspaceId 
+        workspaceId: context.workspaceId
       });
-      
-      let message = `✅ Created **${agent.name}**!\n\n`;
+
+      let message = `Created **${agent.name}**!\n\n`;
       message += `**Type:** ${agent.type}\n`;
       message += `**Capabilities:** ${agent.capabilities.join(', ')}\n`;
-      
+
       if (agent.template) {
         message += `**Template:** ${agent.template}\n`;
       }
-      
+
       message += `\nYour agent is active and ready to use. Try saying "run ${agent.name}" to test it!`;
-      
+
       return {
         success: true,
         message,
@@ -202,10 +202,10 @@ export const agentsToolImplementations: ToolImplementations = {
   },
 
   // Automation: Create Automation from Natural Language
-  async create_automation(args, context) {
+  async create_automation(args, context): Promise<ToolResult> {
     try {
       const { createAutomationFromChat } = await import('../../workflow-builder');
-      
+
       const description = args.description as string;
       const result = await createAutomationFromChat(context.workspaceId, description);
 
@@ -235,10 +235,10 @@ export const agentsToolImplementations: ToolImplementations = {
   },
 
   // Team: Assign Task to Team Member
-  async assign_to_team_member(args, context) {
+  async assign_to_team_member(args, context): Promise<ToolResult> {
     try {
       const { delegateTask } = await import('../../collaboration');
-      
+
       // Parse due date
       let dueDate: Date | undefined;
       if (args.due_date) {
@@ -279,10 +279,10 @@ export const agentsToolImplementations: ToolImplementations = {
   },
 
   // Team: List Team Members
-  async list_team_members(args, context) {
+  async list_team_members(args, context): Promise<ToolResult> {
     try {
       const { getTeamMembers } = await import('../../collaboration');
-      
+
       const members = await getTeamMembers(context.workspaceId);
 
       if (members.length === 0) {
@@ -314,6 +314,116 @@ export const agentsToolImplementations: ToolImplementations = {
       return {
         success: false,
         message: 'Failed to list team members',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Agents: Run Agent
+  async run_agent(args, context): Promise<ToolResult> {
+    try {
+      const agentId = args.agentId as string | undefined;
+      const agentName = args.agentName as string | undefined;
+
+      let agent;
+      if (agentId) {
+        agent = await db.query.agents.findFirst({
+          where: and(
+            eq(agents.id, agentId),
+            eq(agents.workspaceId, context.workspaceId)
+          ),
+        });
+      } else if (agentName) {
+        agent = await db.query.agents.findFirst({
+          where: and(
+            like(agents.name, `%${agentName}%`),
+            eq(agents.workspaceId, context.workspaceId)
+          ),
+        });
+      }
+
+      if (!agent) {
+        return {
+          success: false,
+          message: 'Agent not found. Use list_agents to see available agents.',
+        };
+      }
+
+      if (agent.status !== 'active') {
+        return {
+          success: false,
+          message: `Agent "${agent.name}" is not active (status: ${agent.status})`,
+        };
+      }
+
+      // Update execution count
+      await db
+        .update(agents)
+        .set({
+          executionCount: (agent.executionCount || 0) + 1,
+          lastExecutedAt: new Date(),
+        })
+        .where(eq(agents.id, agent.id));
+
+      logger.info('AI triggered agent', { agentId: agent.id, workspaceId: context.workspaceId });
+
+      return {
+        success: true,
+        message: `Started agent "${agent.name}"`,
+        data: {
+          id: agent.id,
+          name: agent.name,
+          type: agent.type,
+          status: 'running',
+        },
+      };
+    } catch (error) {
+      logger.error('AI run_agent failed', error);
+      return {
+        success: false,
+        message: 'Failed to run agent',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Agents: Get Agent Status
+  async get_agent_status(args, context): Promise<ToolResult> {
+    try {
+      const agentId = args.agentId as string;
+
+      const agent = await db.query.agents.findFirst({
+        where: and(
+          eq(agents.id, agentId),
+          eq(agents.workspaceId, context.workspaceId)
+        ),
+      });
+
+      if (!agent) {
+        return {
+          success: false,
+          message: 'Agent not found',
+        };
+      }
+
+      return {
+        success: true,
+        message: `Agent "${agent.name}" status retrieved`,
+        data: {
+          id: agent.id,
+          name: agent.name,
+          status: agent.status,
+          type: agent.type,
+          executionCount: agent.executionCount,
+          lastExecutedAt: agent.lastExecutedAt,
+          createdAt: agent.createdAt,
+        },
+      };
+    } catch (error) {
+      logger.error('AI get_agent_status failed', error);
+      return {
+        success: false,
+        message: 'Failed to get agent status',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }

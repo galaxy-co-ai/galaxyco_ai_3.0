@@ -5,6 +5,7 @@ import { knowledgeItems, knowledgeItemVersions } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // GET - List all versions of a document
@@ -15,8 +16,21 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
     const { id: itemId } = await params;
+
+    // Rate limit - 100 requests per hour
+    const rateLimitResult = await rateLimit(`knowledge-versions-list:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Verify item exists and belongs to workspace
     const item = await db.query.knowledgeItems.findFirst({
@@ -103,6 +117,19 @@ export async function POST(
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
     const { id: itemId } = await params;
+
+    // Rate limit - 100 requests per hour
+    const rateLimitResult = await rateLimit(`knowledge-versions-create:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const body = await request.json();
 

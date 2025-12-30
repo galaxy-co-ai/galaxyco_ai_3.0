@@ -13,6 +13,8 @@ import { agentWorkflows, agentWorkflowExecutions, agentWorkflowVersions, agentTe
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Workflow step schema for updates
 const workflowStepSchema = z.object({
@@ -66,7 +68,21 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: workflowId } = await params;
 
     // Get workflow
@@ -78,7 +94,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!workflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workflow not found'), '[Workflows API] Get workflow');
     }
 
     // Get team info if associated
@@ -142,11 +158,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    logger.error('[Workflows API] Failed to get workflow', error);
-    return NextResponse.json(
-      { error: 'Failed to get workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Workflows API] Failed to get workflow');
   }
 }
 
@@ -156,7 +168,21 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: workflowId } = await params;
 
     // Get existing workflow
@@ -168,7 +194,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!existingWorkflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workflow not found'), '[Workflows API] Update workflow');
     }
 
     // Parse and validate body
@@ -176,10 +202,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const validation = updateWorkflowSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.error.flatten() },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation failed: invalid request data'), '[Workflows API] Update workflow');
     }
 
     const { name, description, category, teamId, triggerType, triggerConfig, steps, status } = validation.data;
@@ -194,10 +217,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       });
 
       if (!team) {
-        return NextResponse.json(
-          { error: 'Team not found' },
-          { status: 400 }
-        );
+        return createErrorResponse(new Error('Team not found'), '[Workflows API] Update workflow');
       }
     }
 
@@ -261,11 +281,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ workflow: updatedWorkflow });
   } catch (error) {
-    logger.error('[Workflows API] Failed to update workflow', error);
-    return NextResponse.json(
-      { error: 'Failed to update workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Workflows API] Failed to update workflow');
   }
 }
 
@@ -275,7 +291,21 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, user } = await getCurrentWorkspace();
+    const userId = user?.id || 'anonymous';
+
+    const rateLimitResult = await rateLimit(`orchestration:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const { id: workflowId } = await params;
 
     // Verify workflow exists
@@ -287,7 +317,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!workflow) {
-      return NextResponse.json({ error: 'Workflow not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workflow not found'), '[Workflows API] Delete workflow');
     }
 
     // Delete workflow (cascade will delete executions)
@@ -300,10 +330,6 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('[Workflows API] Failed to delete workflow', error);
-    return NextResponse.json(
-      { error: 'Failed to delete workflow' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, '[Workflows API] Failed to delete workflow');
   }
 }

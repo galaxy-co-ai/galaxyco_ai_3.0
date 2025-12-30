@@ -161,17 +161,14 @@ export async function POST(request: NextRequest) {
     const { workspaceId, user } = await getCurrentWorkspace();
     
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized - User not found'), 'Creator Items POST');
     }
 
     const body = await request.json();
     const validationResult = CreateItemSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: validationResult.error.errors[0]?.message || 'Validation failed' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(validationResult.error.errors[0]?.message || 'Validation failed - invalid input'), 'Creator Items POST');
     }
 
     const { title, type, content, metadata, starred, gammaUrl, gammaEditUrl, collectionIds } = validationResult.data;

@@ -5,6 +5,7 @@ import { contentSources, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,10 +25,7 @@ export async function GET(
 
     // Validate UUID format
     if (!id || !UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid source ID format" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid source ID format"), "Fetch content source");
     }
 
     const [source] = await db
@@ -66,21 +64,12 @@ export async function GET(
       .limit(1);
 
     if (!source) {
-      return NextResponse.json({ error: "Source not found" }, { status: 404 });
+      return createErrorResponse(new Error("Source not found"), "Fetch content source");
     }
 
     return NextResponse.json({ source });
   } catch (error) {
-    logger.error("Failed to fetch content source", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch content source" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch content source");
   }
 }
 
@@ -112,10 +101,7 @@ export async function PATCH(
 
     // Validate UUID format
     if (!id || !UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid source ID format" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid source ID format"), "Update content source");
     }
 
     const body = await request.json();
@@ -155,10 +141,7 @@ export async function PATCH(
         .limit(1);
 
       if (existingSource.length > 0 && existingSource[0].id !== id) {
-        return NextResponse.json(
-          { error: "A source with this URL already exists" },
-          { status: 409 }
-        );
+        return createErrorResponse(new Error("A source with this URL already exists"), "Update content source");
       }
     }
 
@@ -174,7 +157,7 @@ export async function PATCH(
       .returning();
 
     if (!updatedSource) {
-      return NextResponse.json({ error: "Source not found" }, { status: 404 });
+      return createErrorResponse(new Error("Source not found"), "Update content source");
     }
 
     logger.info("Content source updated", {
@@ -184,23 +167,10 @@ export async function PATCH(
 
     return NextResponse.json({ source: updatedSource });
   } catch (error) {
-    logger.error("Failed to update content source", error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid request body"), "Update content source");
     }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to update content source" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Update content source");
   }
 }
 
@@ -219,10 +189,7 @@ export async function DELETE(
 
     // Validate UUID format
     if (!id || !UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid source ID format" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid source ID format"), "Delete content source");
     }
 
     const [deletedSource] = await db
@@ -236,23 +203,14 @@ export async function DELETE(
       .returning({ id: contentSources.id });
 
     if (!deletedSource) {
-      return NextResponse.json({ error: "Source not found" }, { status: 404 });
+      return createErrorResponse(new Error("Source not found"), "Delete content source");
     }
 
     logger.info("Content source deleted", { sourceId: id });
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
-    logger.error("Failed to delete content source", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to delete content source" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Delete content source");
   }
 }
 

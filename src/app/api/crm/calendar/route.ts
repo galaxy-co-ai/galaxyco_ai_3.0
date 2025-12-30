@@ -7,13 +7,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { 
-  getLocalCalendarEvents, 
+import {
+  getLocalCalendarEvents,
   createCalendarEvent,
   getConnectedCalendars,
 } from '@/lib/integrations/calendar-sync';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const createEventSchema = z.object({
   summary: z.string().min(1),
@@ -32,11 +34,23 @@ export async function GET(request: NextRequest) {
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Calendar API GET');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get('startDate') 
+    const startDate = searchParams.get('startDate')
       ? new Date(searchParams.get('startDate')!)
       : new Date();
     const endDate = searchParams.get('endDate')
@@ -65,11 +79,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    logger.error('[Calendar API] GET error', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch calendar events' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Calendar API GET');
   }
 }
 
@@ -78,17 +88,26 @@ export async function POST(request: NextRequest) {
   try {
     const { userId, orgId } = await auth();
     if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Calendar API POST');
+    }
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const body = await request.json();
     const validation = createEventSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.issues },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request data'), 'Calendar API POST');
     }
 
     const { start, end, ...rest } = validation.data;
@@ -100,10 +119,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to create event' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error(result.error || 'Invalid event data'), 'Calendar API POST');
     }
 
     logger.info('[Calendar API] Event created', {
@@ -119,10 +135,6 @@ export async function POST(request: NextRequest) {
       provider: result.provider,
     });
   } catch (error) {
-    logger.error('[Calendar API] POST error', error);
-    return NextResponse.json(
-      { error: 'Failed to create calendar event' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Calendar API POST');
   }
 }

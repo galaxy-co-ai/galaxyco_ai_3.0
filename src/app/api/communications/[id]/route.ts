@@ -44,10 +44,7 @@ export async function GET(
     });
 
     if (!conversation) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Conversation not found'), 'Get conversation');
     }
 
     // Fetch messages and participants
@@ -119,8 +116,7 @@ export async function GET(
       })),
     });
   } catch (error) {
-    logger.error('Get conversation error', error);
-    return createErrorResponse(error, 'Get conversation error');
+    return createErrorResponse(error, 'Get conversation');
   }
 }
 
@@ -138,7 +134,7 @@ export async function PATCH(
     const { id: conversationId } = await params;
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Update conversation');
     }
 
     // Verify conversation exists and belongs to workspace
@@ -150,10 +146,7 @@ export async function PATCH(
     });
 
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Conversation not found'), 'Update conversation');
     }
 
     const body = await request.json();
@@ -221,13 +214,9 @@ export async function PATCH(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Validation error'), 'Update conversation');
     }
-    logger.error('Update conversation error', error);
-    return createErrorResponse(error, 'Update conversation error');
+    return createErrorResponse(error, 'Update conversation');
   }
 }
 
@@ -245,7 +234,7 @@ export async function DELETE(
     const { id: conversationId } = await params;
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Delete conversation');
     }
 
     // Verify conversation exists and belongs to workspace
@@ -257,10 +246,7 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json(
-        { error: 'Conversation not found' },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error('Conversation not found'), 'Delete conversation');
     }
 
     // Soft delete by archiving (or hard delete based on preference)
@@ -287,8 +273,7 @@ export async function DELETE(
       },
     });
   } catch (error) {
-    logger.error('Delete conversation error', error);
-    return createErrorResponse(error, 'Delete conversation error');
+    return createErrorResponse(error, 'Delete conversation');
   }
 }
 

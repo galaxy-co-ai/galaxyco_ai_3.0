@@ -5,6 +5,7 @@ import { articleAnalytics, blogPosts, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and, desc, sql, gte, lte } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .limit(1);
 
     if (!article) {
-      return NextResponse.json({ error: "Article not found" }, { status: 404 });
+      return createErrorResponse(new Error("Article not found"), "Fetch article analytics detail");
     }
 
     // Calculate date range based on period
@@ -188,23 +189,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error("Failed to fetch article analytics detail", error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid article ID" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid article ID"), "Fetch article analytics detail");
     }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch article analytics" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Fetch article analytics detail");
   }
 }
 
@@ -231,7 +219,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .limit(1);
 
     if (!article) {
-      return NextResponse.json({ error: "Article not found" }, { status: 404 });
+      return createErrorResponse(new Error("Article not found"), "Update article analytics settings");
     }
 
     // For now, just acknowledge the request
@@ -242,23 +230,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       articleId: validatedId,
     });
   } catch (error) {
-    logger.error("Failed to update article analytics settings", error);
-
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid article ID" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid article ID"), "Update article analytics settings");
     }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to update analytics settings" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Update article analytics settings");
   }
 }
 

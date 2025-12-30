@@ -11,10 +11,24 @@ import { proactiveInsights } from '@/db/schema';
 import { eq, and, gte, sql, desc } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getOpenAI } from '@/lib/ai-providers';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
 
 export async function GET(request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting for expensive AI operation
+    const rateLimitResult = await expensiveOperationLimit(`briefing:${userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Get today's date range
     const now = new Date();

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
-import { 
-  blogReadingProgress, 
-  blogBookmarks, 
+import {
+  blogReadingProgress,
+  blogBookmarks,
   blogReactions,
-  blogPosts 
+  blogPosts
 } from '@/db/schema';
 import { logger } from '@/lib/logger';
+import { createErrorResponse } from '@/lib/api-error-handler';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
     const { userId } = await auth();
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Get blog engagement');
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -103,13 +104,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ inProgress });
     }
 
-    return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
+    return createErrorResponse(new Error('Invalid type parameter'), 'Get blog engagement');
   } catch (error) {
-    logger.error('Failed to get engagement data', error);
-    return NextResponse.json(
-      { error: 'Failed to get engagement data' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Get blog engagement');
   }
 }
 
@@ -119,9 +116,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Update blog engagement');
     }
 
     const body = await request.json();
@@ -131,10 +128,7 @@ export async function POST(request: NextRequest) {
     if (action === 'progress') {
       const validation = progressSchema.safeParse(body);
       if (!validation.success) {
-        return NextResponse.json(
-          { error: 'Invalid data', details: validation.error.errors },
-          { status: 400 }
-        );
+        return createErrorResponse(new Error('Invalid progress data'), 'Update blog engagement');
       }
 
       const { postId, progressPercent } = validation.data;
@@ -173,10 +167,7 @@ export async function POST(request: NextRequest) {
     if (action === 'bookmark') {
       const validation = bookmarkSchema.safeParse(body);
       if (!validation.success) {
-        return NextResponse.json(
-          { error: 'Invalid data', details: validation.error.errors },
-          { status: 400 }
-        );
+        return createErrorResponse(new Error('Invalid bookmark data'), 'Update blog engagement');
       }
 
       const { postId } = validation.data;
@@ -207,10 +198,7 @@ export async function POST(request: NextRequest) {
     if (action === 'reaction') {
       const validation = reactionSchema.safeParse(body);
       if (!validation.success) {
-        return NextResponse.json(
-          { error: 'Invalid data', details: validation.error.errors },
-          { status: 400 }
-        );
+        return createErrorResponse(new Error('Invalid reaction data'), 'Update blog engagement');
       }
 
       const { postId, type } = validation.data;
@@ -240,13 +228,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ reacted: true, type });
     }
 
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    return createErrorResponse(new Error('Invalid action'), 'Update blog engagement');
   } catch (error) {
-    logger.error('Failed to update engagement', error);
-    return NextResponse.json(
-      { error: 'Failed to update engagement' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Update blog engagement');
   }
 }
 
@@ -256,16 +240,16 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return createErrorResponse(new Error('Unauthorized'), 'Delete blog bookmark');
     }
 
     const searchParams = request.nextUrl.searchParams;
     const postId = searchParams.get('postId');
 
     if (!postId) {
-      return NextResponse.json({ error: 'postId required' }, { status: 400 });
+      return createErrorResponse(new Error('postId is required'), 'Delete blog bookmark');
     }
 
     await db.delete(blogBookmarks).where(
@@ -277,10 +261,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('Failed to delete bookmark', error);
-    return NextResponse.json(
-      { error: 'Failed to delete bookmark' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Delete blog bookmark');
   }
 }

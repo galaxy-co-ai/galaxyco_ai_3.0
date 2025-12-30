@@ -126,7 +126,6 @@ export function lazyLoadWithRetry<T extends React.ComponentType<any>>(
     } catch (error) {
       if (retries < maxRetries) {
         retries++;
-        console.log(`Retry ${retries}/${maxRetries} for lazy load`);
         // Exponential backoff
         await new Promise((resolve) => setTimeout(resolve, Math.pow(2, retries) * 1000));
         return retryLoader();

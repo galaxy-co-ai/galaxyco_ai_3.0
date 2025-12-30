@@ -3,6 +3,7 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import { gatherAIContext } from '@/lib/ai/context';
 import { generateGreeting } from '@/lib/ai/system-prompt';
+import { rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // GET - Get Personalized Greeting
@@ -17,6 +18,19 @@ import { generateGreeting } from '@/lib/ai/system-prompt';
 export async function GET() {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`greeting:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Gather context for personalized greeting
     const aiContext = await gatherAIContext(workspaceId, userId);

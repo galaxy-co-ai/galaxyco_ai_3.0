@@ -6,6 +6,8 @@ import { getOpenAI } from '@/lib/ai-providers';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { expensiveOperationLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema
 const outlineFromConversationSchema = z.object({
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Check admin access
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: admin access required'), 'Outline from conversation auth');
     }
 
     // Get workspace context
@@ -36,17 +38,27 @@ export async function POST(request: NextRequest) {
     try {
       context = await getCurrentWorkspace();
     } catch {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Outline from conversation workspace');
+    }
+
+    // Rate limiting for expensive AI operation
+    const rateLimitResult = await expensiveOperationLimit(`outline-from-conversation:${context.userId}`);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
     }
 
     const body = await request.json();
     const validationResult = outlineFromConversationSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: validation failed'), 'Outline from conversation validation');
     }
 
     const { sessionId, layout = 'standard' } = validationResult.data;
@@ -60,7 +72,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!session) {
-      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      return createErrorResponse(new Error('Session not found'), 'Outline from conversation session');
     }
 
     const messages = (session.messages || []) as Array<{
@@ -69,10 +81,7 @@ export async function POST(request: NextRequest) {
     }>;
 
     if (messages.length === 0) {
-      return NextResponse.json(
-        { error: 'No conversation to generate outline from' },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request: no conversation to generate outline from'), 'Outline from conversation messages');
     }
 
     // Build conversation summary for the AI
@@ -200,11 +209,7 @@ Return ONLY valid JSON, no other text.`;
       sessionId,
     });
   } catch (error) {
-    logger.error('Failed to generate outline from conversation', error);
-    return NextResponse.json(
-      { error: 'Failed to generate outline. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Outline from conversation error');
   }
 }
 

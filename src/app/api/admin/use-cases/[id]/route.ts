@@ -5,6 +5,7 @@ import { useCases, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 // UUID validation regex
 const UUID_REGEX =
@@ -25,10 +26,7 @@ export async function GET(
 
     // Validate UUID format
     if (!id || !UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid use case ID format" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid use case ID format"), "Get use case validation");
     }
 
     const [useCase] = await db
@@ -64,24 +62,12 @@ export async function GET(
       .limit(1);
 
     if (!useCase) {
-      return NextResponse.json(
-        { error: "Use case not found" },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error("Use case not found"), "Get use case");
     }
 
     return NextResponse.json({ useCase });
   } catch (error) {
-    logger.error("Failed to fetch use case", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch use case" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Get use case error");
   }
 }
 
@@ -161,10 +147,7 @@ export async function PATCH(
 
     // Validate UUID format
     if (!id || !UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid use case ID format" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid use case ID format"), "Update use case validation");
     }
 
     const body = await request.json();
@@ -209,10 +192,7 @@ export async function PATCH(
       .returning();
 
     if (!updatedUseCase) {
-      return NextResponse.json(
-        { error: "Use case not found" },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error("Use case not found"), "Update use case");
     }
 
     logger.info("Use case updated", {
@@ -222,23 +202,7 @@ export async function PATCH(
 
     return NextResponse.json({ useCase: updatedUseCase });
   } catch (error) {
-    logger.error("Failed to update use case", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to update use case" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Update use case error");
   }
 }
 
@@ -257,10 +221,7 @@ export async function DELETE(
 
     // Validate UUID format
     if (!id || !UUID_REGEX.test(id)) {
-      return NextResponse.json(
-        { error: "Invalid use case ID format" },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error("Invalid use case ID format"), "Delete use case validation");
     }
 
     const [deletedUseCase] = await db
@@ -271,26 +232,14 @@ export async function DELETE(
       .returning({ id: useCases.id });
 
     if (!deletedUseCase) {
-      return NextResponse.json(
-        { error: "Use case not found" },
-        { status: 404 }
-      );
+      return createErrorResponse(new Error("Use case not found"), "Delete use case");
     }
 
     logger.info("Use case deleted", { useCaseId: id });
 
     return NextResponse.json({ success: true, deletedId: id });
   } catch (error) {
-    logger.error("Failed to delete use case", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to delete use case" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Delete use case error");
   }
 }
 

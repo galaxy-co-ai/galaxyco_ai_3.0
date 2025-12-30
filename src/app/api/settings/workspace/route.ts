@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { rateLimit } from '@/lib/rate-limit';
 
 // ============================================================================
 // SCHEMA VALIDATION
@@ -22,7 +23,20 @@ const updateWorkspaceSchema = z.object({
 
 export async function GET() {
   try {
-    const { workspaceId, workspace } = await getCurrentWorkspace();
+    const { workspaceId, workspace, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     // Get member count
     const members = await db.query.workspaceMembers.findMany({
@@ -49,9 +63,23 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   try {
-    const { workspaceId, workspace } = await getCurrentWorkspace();
+    const { workspaceId, workspace, userId } = await getCurrentWorkspace();
+
+    // Rate limiting
+    const rateLimitResult = await rateLimit(`settings:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
-    
+
     // Validate input
     const validationResult = updateWorkspaceSchema.safeParse(body);
     if (!validationResult.success) {

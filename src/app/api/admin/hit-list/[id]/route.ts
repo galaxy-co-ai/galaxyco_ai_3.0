@@ -5,6 +5,7 @@ import { topicIdeas, users } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { eq, and } from "drizzle-orm";
+import { createErrorResponse } from "@/lib/api-error-handler";
 
 /**
  * GET /api/admin/hit-list/[id]
@@ -60,21 +61,12 @@ export async function GET(
       .limit(1);
 
     if (!item) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      return createErrorResponse(new Error("Item not found"), "Get hit list item");
     }
 
     return NextResponse.json({ item });
   } catch (error) {
-    logger.error("Failed to fetch hit list item", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to fetch hit list item" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Get hit list item error");
   }
 }
 
@@ -120,7 +112,7 @@ export async function PATCH(
       .limit(1);
 
     if (!existingItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      return createErrorResponse(new Error("Item not found"), "Update hit list item");
     }
 
     // Build update object
@@ -175,23 +167,7 @@ export async function PATCH(
 
     return NextResponse.json({ item: updatedItem });
   } catch (error) {
-    logger.error("Failed to update hit list item", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to update hit list item" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Update hit list item error");
   }
 }
 
@@ -218,7 +194,7 @@ export async function DELETE(
       .limit(1);
 
     if (!existingItem) {
-      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      return createErrorResponse(new Error("Item not found"), "Delete hit list item");
     }
 
     // Remove from hit list by clearing hit list fields
@@ -240,16 +216,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Failed to remove from hit list", error);
-
-    if (error instanceof Error && error.message === "Unauthorized") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    return NextResponse.json(
-      { error: "Failed to remove from hit list" },
-      { status: 500 }
-    );
+    return createErrorResponse(error, "Delete hit list item error");
   }
 }
 

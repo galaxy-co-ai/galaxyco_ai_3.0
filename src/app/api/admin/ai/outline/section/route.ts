@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { getLayout, type LayoutTemplate, type SectionType } from '@/lib/ai/article-layouts';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 // Validation schema for section regeneration
 const sectionRequestSchema = z.object({
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     // Check admin access
     const isAdmin = await isSystemAdmin();
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return createErrorResponse(new Error('Forbidden: Admin access required'), 'Generate section');
     }
 
     // Get workspace context
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     try {
       context = await getCurrentWorkspace();
     } catch {
-      return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+      return createErrorResponse(new Error('Workspace not found'), 'Generate section');
     }
 
     // Rate limit (higher limit for section operations)
@@ -47,10 +48,7 @@ export async function POST(request: NextRequest) {
     const validationResult = sectionRequestSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return createErrorResponse(new Error('Invalid request body'), 'Generate section');
     }
 
     const { 
@@ -109,11 +107,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(sectionContent);
   } catch (error) {
-    logger.error('Failed to process section request', error);
-    return NextResponse.json(
-      { error: 'Failed to process request. Please try again.' },
-      { status: 500 }
-    );
+    return createErrorResponse(error, 'Generate section');
   }
 }
 

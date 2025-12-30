@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
 
 const markReadSchema = z.object({
   lastMessageId: z.string().uuid(),
@@ -20,6 +21,19 @@ export async function POST(
     const { workspaceId } = await getCurrentWorkspace();
     const user = await getCurrentUser();
     const { id: channelId } = await params;
+
+    const rateLimitResult = await rateLimit(`team:${user.id}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
+
     const body = await request.json();
 
     const validationResult = markReadSchema.safeParse(body);

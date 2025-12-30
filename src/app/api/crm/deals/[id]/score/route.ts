@@ -5,6 +5,8 @@ import { deals, contacts, customers, crmInteractions } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import OpenAI from 'openai';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limit';
+import { createErrorResponse } from '@/lib/api-error-handler';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -28,7 +30,19 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId, userId } = await getCurrentWorkspace();
+
+    const rateLimitResult = await rateLimit(`crm:${userId}`, 100, 3600);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': String(rateLimitResult.reset),
+        }}
+      );
+    }
 
     const { id: dealId } = await params;
 
@@ -38,7 +52,7 @@ export async function POST(
     });
 
     if (!deal) {
-      return NextResponse.json({ error: 'Deal not found' }, { status: 404 });
+      return createErrorResponse(new Error('Deal not found'), 'Deal Score API POST');
     }
 
     // Fetch contact info
@@ -139,14 +153,13 @@ Consider factors like:
 
     const responseText = completion.choices[0]?.message?.content;
     if (!responseText) {
-      return NextResponse.json({ error: 'AI response empty' }, { status: 500 });
+      return createErrorResponse(new Error('AI response empty'), 'Deal Score API POST');
     }
 
     // Parse and validate response
     const parsed = scoringResponseSchema.safeParse(JSON.parse(responseText));
     if (!parsed.success) {
-      console.error('Invalid AI response:', parsed.error);
-      return NextResponse.json({ error: 'Invalid AI response format' }, { status: 500 });
+      return createErrorResponse(new Error('Invalid AI response format'), 'Deal Score API POST');
     }
 
     const { winProbability, riskScore, riskFactors, nextBestAction, reasoning } = parsed.data;
@@ -175,7 +188,6 @@ Consider factors like:
       },
     });
   } catch (error) {
-    console.error('Error scoring deal:', error);
-    return NextResponse.json({ error: 'Failed to score deal' }, { status: 500 });
+    return createErrorResponse(error, 'Deal Score API POST');
   }
 }
