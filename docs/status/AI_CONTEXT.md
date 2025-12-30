@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-29 (31778a5)  
+**Updated Through:** 2025-12-30 (1fec4a6)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-30 1fec4a6 refactor(ai): extract CRM tools into module
+- 2025-12-30 da16ca1 chore(ai): create tools module structure
 - 2025-12-29 31778a5 chore: untrack Claude local settings file
 - 2025-12-29 134924b chore: remove outdated screenshots
 - 2025-12-29 35ee245 feat: add landing page v2 and update project configuration
@@ -39,8 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-27 1df74bf test: fix test infrastructure and align with component implementations
 - 2025-12-27 948342c fix: improve type safety and migrate integrations to SignalWire
 - 2025-12-25 9e74752 fix(api): resolve TypeScript error in Neptune action route
-- 2025-12-25 f818fae fix(dashboard): remove Suspense wrapper causing skeleton loading state
-- 2025-12-25 5333c1d feat(optimization): implement Redis LLM caching
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
