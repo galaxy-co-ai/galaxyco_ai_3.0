@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-30 (3a327f3)  
+**Updated Through:** 2025-12-30 (0530aee)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-30 0530aee feat(auth): add taylor@galaxyco.ai to mission control admin access
 - 2025-12-30 3a327f3 fix(ai): correct import paths after tools modularization and remove implicit any
 - 2025-12-30 b682877 docs: update session status 2025-12-30
 - 2025-12-30 6d17a81 docs(design-system): add Context Menu component documentation
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-30 1fec4a6 refactor(ai): extract CRM tools into module
 - 2025-12-30 da16ca1 chore(ai): create tools module structure
 - 2025-12-29 31778a5 chore: untrack Claude local settings file
-- 2025-12-29 134924b chore: remove outdated screenshots
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
