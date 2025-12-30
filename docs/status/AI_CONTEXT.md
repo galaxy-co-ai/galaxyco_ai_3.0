@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-30 (8f28e75)  
+**Updated Through:** 2025-12-30 (7a9717c)  
 **Branch:** main
 
 ## Quick Start
@@ -21,6 +21,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-30 7a9717c docs(design-system): add Popover component documentation
 - 2025-12-30 8f28e75 docs(design-system): add Toast component documentation
 - 2025-12-30 c4c0f44 docs(design-system): add Alert Dialog component documentation
 - 2025-12-30 35d9370 refactor(ai): complete tools.ts modularization - split 10k line monolith into modular structure
@@ -40,7 +41,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-29 12150fa chore(security): enhance gitignore and complete env.example
 - 2025-12-29 d36ab19 feat(invitations): add confirmation email to inviter when invitation is sent
 - 2025-12-29 f35e546 fix(build): update react-markdown code component props handling
-- 2025-12-29 9f84ab2 fix(build): make route params async for Next.js 15 compatibility
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
