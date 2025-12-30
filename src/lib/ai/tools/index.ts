@@ -8,19 +8,21 @@
 import type { ToolContext, ToolResult, ToolDefinitions } from './types';
 import { logger } from '@/lib/logger';
 
-// Import all categories (will be added incrementally)
-// import { crmToolDefinitions, crmToolImplementations } from './crm';
+// Import all categories
+import { crmToolDefinitions, crmToolImplementations } from './crm';
 // import { calendarToolDefinitions, calendarToolImplementations } from './calendar';
 // ... etc
 
 // Aggregate all tools
 export const aiTools: ToolDefinitions = [
-  // Categories will be added here incrementally
+  ...crmToolDefinitions,
+  // More categories will be added here
 ];
 
 // Aggregate all implementations
 const toolImplementations = {
-  // Implementations will be added here incrementally
+  ...crmToolImplementations,
+  // More implementations will be added here
 };
 
 // ============================================================================
@@ -62,7 +64,8 @@ export async function executeTool(
 // ============================================================================
 
 export const toolsByCategory = {
-  // Will be populated as we add categories
+  crm: Object.keys(crmToolImplementations),
+  // More categories will be added here
 };
 
 // Export types
