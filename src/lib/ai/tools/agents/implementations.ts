@@ -103,8 +103,8 @@ export const agentsToolImplementations: ToolImplementations = {
   // Agents: Quick Create Agent (One-Shot Mode)
   async create_agent_quick(args, context) {
     try {
-      const { quickCreateAgent } = await import('../agent-wizard');
-      const { gatherAIContext } = await import('../context');
+      const { quickCreateAgent } = await import('../../agent-wizard');
+      const { gatherAIContext } = await import('../../context');
       
       const description = args.description as string;
       const templateId = args.templateId as string | undefined;
@@ -204,7 +204,7 @@ export const agentsToolImplementations: ToolImplementations = {
   // Automation: Create Automation from Natural Language
   async create_automation(args, context) {
     try {
-      const { createAutomationFromChat } = await import('../workflow-builder');
+      const { createAutomationFromChat } = await import('../../workflow-builder');
       
       const description = args.description as string;
       const result = await createAutomationFromChat(context.workspaceId, description);
@@ -237,7 +237,7 @@ export const agentsToolImplementations: ToolImplementations = {
   // Team: Assign Task to Team Member
   async assign_to_team_member(args, context) {
     try {
-      const { delegateTask } = await import('../collaboration');
+      const { delegateTask } = await import('../../collaboration');
       
       // Parse due date
       let dueDate: Date | undefined;
@@ -281,7 +281,7 @@ export const agentsToolImplementations: ToolImplementations = {
   // Team: List Team Members
   async list_team_members(args, context) {
     try {
-      const { getTeamMembers } = await import('../collaboration');
+      const { getTeamMembers } = await import('../../collaboration');
       
       const members = await getTeamMembers(context.workspaceId);
 
@@ -293,11 +293,15 @@ export const agentsToolImplementations: ToolImplementations = {
         };
       }
 
+      // Ensure members have a concrete type
+      type TeamMember = { id: string; name: string; email: string; role: string };
+      const typedMembers = members as TeamMember[];
+
       return {
         success: true,
-        message: `Found ${members.length} team member(s)`,
+        message: `Found ${typedMembers.length} team member(s)` ,
         data: {
-          members: members.map(m => ({
+          members: typedMembers.map((m: TeamMember) => ({
             id: m.id,
             name: m.name,
             email: m.email,
