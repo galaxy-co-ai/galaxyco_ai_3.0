@@ -1231,4 +1231,47 @@ A: [Detailed answer]`,
       };
     }
   },
+
+  // navigate_to_page
+  async navigate_to_page(args): Promise<ToolResult> {
+    const page = args.page as string;
+    const tab = args.tab as string | undefined;
+
+    // Map page names to URLs
+    const pageUrls: Record<string, string> = {
+      'dashboard': '/',
+      'crm': '/crm',
+      'library': '/library',
+      'campaigns': '/campaigns',
+      'creator': '/creator',
+      'activity': '/activity',
+      'settings': '/settings',
+      'connected-apps': '/connected-apps',
+      'launchpad': '/launchpad',
+    };
+
+    const baseUrl = pageUrls[page];
+    if (!baseUrl) {
+      return {
+        success: false,
+        message: `Unknown page: ${page}. Available pages: ${Object.keys(pageUrls).join(', ')}`,
+        error: 'invalid_page',
+      };
+    }
+
+    const url = tab ? `${baseUrl}?tab=${tab}` : baseUrl;
+
+    // Return navigation action for client to handle
+    return {
+      success: true,
+      message: `Navigating to ${page}${tab ? ` (${tab} tab)` : ''}...`,
+      data: {
+        action: 'navigate',
+        url,
+        page,
+        tab,
+        dispatchEvent: 'neptune-navigate',
+      },
+    };
+  },
 };

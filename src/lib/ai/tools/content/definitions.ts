@@ -535,4 +535,28 @@ export const contentToolDefinitions: ToolDefinitions = [
       },
     },
   },
+
+  // navigate_to_page
+  {
+    type: 'function',
+    function: {
+      name: 'navigate_to_page',
+      description: 'Navigate the user to a different page in the platform. Use this when the user asks to "go to", "show me", "open", "take me to" a specific section of the application.',
+      parameters: {
+        type: 'object',
+        properties: {
+          page: {
+            type: 'string',
+            enum: ['dashboard', 'crm', 'library', 'campaigns', 'creator', 'activity', 'settings', 'connected-apps', 'launchpad'],
+            description: 'The page to navigate to. dashboard = main home, crm = customer relationship management, library = knowledge base/documents, campaigns = marketing campaigns, creator = content creator, activity = agents & automation, settings = user settings, connected-apps = integrations, launchpad = public portal',
+          },
+          tab: {
+            type: 'string',
+            description: 'Optional tab within the page (e.g., "leads" for CRM, "laboratory" for Activity)',
+          },
+        },
+        required: ['page'],
+      },
+    },
+  },
 ];
