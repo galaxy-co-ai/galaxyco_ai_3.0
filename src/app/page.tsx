@@ -1,5 +1,5 @@
-import { TrustFirstLanding } from "@/components/landing-v2";
+import { ComingSoonPage } from "@/components/coming-soon";
 
 export default function Home() {
-  return <TrustFirstLanding />;
+  return <ComingSoonPage />;
 }

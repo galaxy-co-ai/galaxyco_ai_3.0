@@ -6542,6 +6542,36 @@ export const newsletterSubscribers = pgTable(
 );
 
 // ============================================================================
+// WAITLIST - PRE-LAUNCH SIGNUPS
+// ============================================================================
+
+export const waitlistSignups = pgTable(
+  'waitlist_signups',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull().unique(),
+    source: text('source').default('landing'), // landing, referral, etc.
+    referredBy: text('referred_by'), // Email of referrer for referral tracking
+    position: integer('position'), // Queue position
+    isNotified: boolean('is_notified').default(false), // Have we notified them?
+    metadata: jsonb('metadata').$type<{
+      userAgent?: string;
+      referrer?: string;
+      utmSource?: string;
+      utmMedium?: string;
+      utmCampaign?: string;
+    }>(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    notifiedAt: timestamp('notified_at'),
+  },
+  (table) => [
+    index('waitlist_signups_email_idx').on(table.email),
+    index('waitlist_signups_position_idx').on(table.position),
+    index('waitlist_signups_created_at_idx').on(table.createdAt),
+  ]
+);
+
+// ============================================================================
 // DEVELOPER - WEBHOOKS
 // ============================================================================
 
@@ -8068,6 +8098,9 @@ export type NewAnalyticsEvent = typeof analyticsEvents.$inferInsert;
 
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
 export type NewNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
+
+export type WaitlistSignup = typeof waitlistSignups.$inferSelect;
+export type NewWaitlistSignup = typeof waitlistSignups.$inferInsert;
 
 // Mission Control Enum Types
 export type FeedbackType = (typeof feedbackTypeEnum.enumValues)[number];
