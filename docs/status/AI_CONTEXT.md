@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-31 (e4a1810)  
+**Updated Through:** 2025-12-31 (bf5c59f)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-31 bf5c59f fix(tools): add missing 'sales' capability handler
 - 2025-12-31 e4a1810 refactor(tools): migrate from monolithic tools.ts to modular structure
 - 2025-12-31 92f62ec refactor(api): consolidate Neptune conversation endpoints
 - 2025-12-30 82fdbeb fix(platform): F1 cleanup - blog access, remove dead code, fix navigation
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-30 6d17a81 docs(design-system): add Context Menu component documentation
 - 2025-12-30 db96134 docs(design-system): add Dropdown Menu component documentation
 - 2025-12-30 b4b0851 docs(design-system): add Tooltip component documentation
-- 2025-12-30 7a9717c docs(design-system): add Popover component documentation
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
