@@ -371,7 +371,7 @@ export function ComingSoonPage() {
           className="flex items-center gap-3"
         >
           <Image
-            src="/assets/brand/logos/galaxy-logo.png"
+            src="/assets/brand/logos/neptune_ai_assistant_logo_no_text.png"
             alt="Galaxy"
             width={40}
             height={40}
