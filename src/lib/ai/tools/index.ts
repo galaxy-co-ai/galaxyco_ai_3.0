@@ -168,6 +168,9 @@ export function getToolsForCapability(capability: string): ChatCompletionTool[] 
     case 'leads':
       toolNames.push(...toolsByCategory.crm, ...toolsByCategory.analytics);
       break;
+    case 'sales':
+      toolNames.push(...toolsByCategory.crm, ...toolsByCategory.calendar, ...toolsByCategory.analytics, ...toolsByCategory.marketing);
+      break;
     case 'research':
       toolNames.push(...toolsByCategory.crm);
       break;
