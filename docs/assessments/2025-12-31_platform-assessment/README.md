@@ -1,6 +1,8 @@
-# GalaxyCo.ai 3.0 — Platform Assessment (Read-only Discovery)
-Date: 2025-12-31
+# GalaxyCo.ai 3.0 — Platform Assessment (Verified)
+Date: 2025-12-31 (Updated with code verification)
 Repo: `galaxyco-ai-3.0` (Next.js App Router)
+
+> **Status**: P0 claims verified by code review. F1 analysis complete.
 
 ## Scope
 This assessment prioritizes:
@@ -21,27 +23,36 @@ Important: the codebase currently mixes “Launchpad” naming in UI + links whi
 
 ## Executive Summary (Top Findings)
 
-### P0 (Blockers)
-1) **Blog is not actually public today**
-- `src/middleware.ts` allowlists `/launchpad(.*)` but **does not** allow `/blog(.*)`.
-- Result: `/blog` (implemented under `src/app/blog/*`) is protected by Clerk middleware, which blocks anonymous users.
+### P0 (Blockers) - VERIFIED BY CODE REVIEW
+
+1) **Blog is not actually public today** - CONFIRMED
+- **Evidence**: `src/middleware.ts:21` - Public allowlist includes `/launchpad(.*)` but NOT `/blog(.*)`
+- Result: `/blog` (implemented under `src/app/blog/*`) is protected by Clerk middleware, blocking anonymous users.
+- **Fix**: Add `/blog(.*)` to the allowlist array (1 line change)
 
 2) **Route/link inconsistencies cause broken navigation**
 - Multiple UI links and breadcrumbs reference `/launchpad`, but there is no `src/app/launchpad` route folder.
 - Blog UI references `/blog/all` and `/blog/search`, but those routes do not exist under `src/app/blog/*`.
 
-3) **Floating assistant likely breaks due to API mismatch**
-- `src/components/shared/FloatingAIAssistant.tsx` calls `/api/assistant/chat` and parses JSON.
-- `/api/assistant/chat` is implemented as **SSE streaming** (not JSON), so this surface is inconsistent and likely unreliable.
+3) **Floating assistant is BROKEN (not "likely")** - CONFIRMED
+- **Evidence**: `src/components/shared/FloatingAIAssistant.tsx:125,195` uses `response.json()`
+- **Evidence**: `src/app/api/assistant/chat/route.ts:1198` returns `text/event-stream` (SSE)
+- This is a fundamental incompatibility - the component CANNOT work as written.
+- **Recommendation**: Delete `FloatingAIAssistant.tsx` (702 lines of broken code)
 
-### P1 (High Impact)
-4) **Neptune has the right core system, but too many competing surfaces**
-- Best foundation: `NeptuneAssistPanel` + `NeptuneContext`.
-- Competing/duplicated surfaces: `/assistant` page + Floating assistant + Neptune HQ.
+### P1 (High Impact) - THE "TANK" PROBLEM
+
+4) **Neptune has 4 competing surfaces totaling ~17,000 lines** - VERIFIED
+- Best foundation: `NeptuneAssistPanel` (1,380 lines) + `NeptuneContext` (855 lines) = **KEEP**
+- `/assistant` page (1,387 lines): Complete reimplementation with own state management = **DUPLICATE**
+- `FloatingAIAssistant` (702 lines): Broken JSON/SSE mismatch = **DELETE**
+- `tools.ts` (10,399 lines / 344KB): Massive monolith with 100+ tools = **DECOMPOSE**
 
 5) **Dashboard should be the single primary surface; Neptune should be a persistent side panel (IDE-style)**
 - Current Dashboard is Neptune-first but uses a fullscreen assistant UI.
-- Recommended: “Dashboard command center” + right-side Neptune panel (resizable) + optional fullscreen.
+- Recommended: "Dashboard command center" + right-side Neptune panel (resizable) + optional fullscreen.
+
+**See `F1-ANALYSIS.md` for detailed "lean and powerful" recommendations.**
 
 ### P2 (Medium Impact)
 6) **Agents/Orchestration is strong but UX is duplicated across two ‘homes’**
@@ -236,5 +247,7 @@ Missing glue:
 ---
 
 ## Related Documents
+- `F1-ANALYSIS.md` — **NEW** - "Lean & Powerful" analysis with specific cut/keep recommendations
 - `DIAGRAMS.md` — architecture diagrams (Mermaid)
 - `INVENTORY.md` — key paths, endpoints, mismatches, missing routes
+- `PLAN.md` — milestone execution plan

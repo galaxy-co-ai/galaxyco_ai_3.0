@@ -19,6 +19,7 @@ const isPublicRoute = createRouteMatcher([
   '/contact',
   '/docs(.*)',
   '/launchpad(.*)',
+  '/blog(.*)',
   
   // Legal
   '/terms',

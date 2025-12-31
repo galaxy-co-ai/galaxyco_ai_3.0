@@ -65,7 +65,7 @@ const orchestrationSubitems: SubItem[] = [
 // Secondary items
 const secondaryNavItems: NavItem[] = [
   { icon: Rocket, label: "Launchpad", href: "/blog", id: "launchpad" },
-  { icon: Sparkles, label: "Neptune", href: "/assistant", id: "assistant" },
+  { icon: Sparkles, label: "Neptune", href: "/dashboard", id: "neptune" },
 ];
 
 // Settings items

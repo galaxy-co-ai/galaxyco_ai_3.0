@@ -1,5 +1,5 @@
 # GalaxyCo.ai 3.0 — Inventory / Appendix
-Date: 2025-12-31
+Date: 2025-12-31 (Updated with line counts and bloat analysis)
 
 ## Key Frontend Files (High Signal)
 
@@ -13,9 +13,9 @@ Date: 2025-12-31
 - `src/components/neptune/DynamicQuickActions.tsx`
 
 ### Neptune secondary surfaces (audit for removal/refactor)
-- `src/app/(app)/assistant/page.tsx`
-- `src/components/shared/FloatingAIAssistant.tsx`
-- `src/app/(app)/neptune-hq/page.tsx`
+- `src/app/(app)/assistant/page.tsx` — **1,387 lines** (DUPLICATE - has own SSE parsing)
+- `src/components/shared/FloatingAIAssistant.tsx` — **702 lines** (BROKEN - expects JSON, gets SSE)
+- `src/app/(app)/neptune-hq/page.tsx` — 120 lines (analytics view, may be useful)
 
 ### Agents / Orchestration
 - `src/app/(app)/activity/page.tsx`
@@ -114,3 +114,60 @@ Existing strong foundation:
 Missing glue:
 - canonical public route + public-safe APIs (search/newsletter)
 - unified editorial pipeline view tying Topic → Draft → Publish → Analyze
+
+---
+
+## Code Bloat Analysis ("Tank" Evidence)
+
+### lib/ai/ Directory — 40+ files
+Most significant:
+- `src/lib/ai/tools.ts` — **10,399 lines / 344KB** — Contains 96+ tool definitions + implementations in ONE file
+- `src/lib/ai/system-prompt.ts` — Large prompt construction
+- `src/lib/ai/context.ts` — Context gathering
+
+**Note**: A proper `src/lib/ai/tools/` subdirectory already exists with domain-organized structure (crm/, calendar/, agents/, etc.) but tools.ts hasn't been migrated to use it.
+
+### lib/neptune/ Directory — 8 files, 4 unused
+Per `src/lib/neptune/index.ts`, only 3 modules are actually exported:
+- `agentic-actions.ts` — USED
+- `page-context.ts` — USED
+- `quick-actions.ts` — USED (types only)
+
+Marked as "pending schema compatibility work" (effectively dead code):
+- `business-intelligence.ts` — NOT EXPORTED
+- `proactive-insights.ts` — NOT EXPORTED
+- `shared-context.ts` — NOT EXPORTED
+- `unified-context.ts` — NOT EXPORTED
+
+### Duplicate Systems Pattern
+Multiple implementations of the same concept:
+
+**Context systems:**
+- `src/lib/ai/context.ts`
+- `src/lib/ai/context-pruning.ts`
+- `src/lib/neptune/unified-context.ts` (unused)
+- `src/lib/neptune/shared-context.ts` (unused)
+
+**Memory systems:**
+- `src/lib/ai/memory.ts`
+- `src/lib/ai/session-memory.ts`
+
+**Intelligence systems:**
+- `src/lib/ai/workspace-intelligence.ts`
+- `src/lib/ai/website-intelligence.ts`
+- `src/lib/neptune/business-intelligence.ts` (unused)
+
+**Proactive systems:**
+- `src/lib/ai/proactive-engine.ts`
+- `src/lib/ai/proactive-triggers.ts`
+- `src/lib/neptune/proactive-insights.ts` (unused)
+
+### Summary by Category
+
+| Category | Current Lines | Removable |
+|----------|---------------|-----------|
+| FloatingAIAssistant | 702 | 702 (broken) |
+| /assistant page | 1,387 | 1,387 (duplicate) |
+| tools.ts | 10,399 | ~9,000 (migrate to subdirectory) |
+| Unused lib/neptune | ~1,000 | ~1,000 (dead code) |
+| **Total removable** | | **~12,000 lines** |
