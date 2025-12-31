@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/react";
+import { ApolloTracking } from "@/components/analytics/ApolloTracking";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -101,6 +102,7 @@ export default function RootLayout({
             {children}
             <Toaster />
             <Analytics />
+            <ApolloTracking />
           </ThemeProvider>
         </body>
       </html>
