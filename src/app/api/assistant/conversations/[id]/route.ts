@@ -51,6 +51,7 @@ export async function GET(
 
     return NextResponse.json({
       id: conversation.id,
+      conversationId: conversation.id, // Alias for neptune-context compatibility
       title: conversation.title,
       createdAt: conversation.createdAt,
       lastMessageAt: conversation.lastMessageAt,
@@ -61,6 +62,8 @@ export async function GET(
         role: msg.role,
         content: msg.content,
         createdAt: msg.createdAt,
+        attachments: msg.attachments,
+        metadata: msg.metadata,
       })),
     });
   } catch (error) {

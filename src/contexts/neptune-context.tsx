@@ -603,7 +603,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
 
     try {
       const response = await fetch(
-        `/api/neptune/conversation?conversationId=${conversationId}`
+        `/api/assistant/conversations/${conversationId}`
       );
 
       if (!response.ok) {
@@ -644,7 +644,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
 
       const response = await fetch(
-        `/api/neptune/conversation?conversationId=${targetConversationId}`
+        `/api/assistant/conversations/${targetConversationId}`
       );
 
       if (!response.ok) {
