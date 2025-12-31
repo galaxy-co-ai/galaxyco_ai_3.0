@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-31 (4671123)  
+**Updated Through:** 2025-12-31 (16cbaa9)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2025-12-31 16cbaa9 feat(landing): enhance coming soon page with logo and position display
 - 2025-12-31 4671123 feat(landing): add coming soon page with waitlist signup
 - 2025-12-31 be7f9c3 feat(crm): add Apollo.io integration for visitor tracking and enrichment
 - 2025-12-31 ceaa28a docs(neptune): clarify module export comments
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-30 60b03b9 fix(auth): sync taylor@galaxyco.ai to client-side admin list
 - 2025-12-30 0530aee feat(auth): add taylor@galaxyco.ai to mission control admin access
 - 2025-12-30 3a327f3 fix(ai): correct import paths after tools modularization and remove implicit any
-- 2025-12-30 b682877 docs: update session status 2025-12-30
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
