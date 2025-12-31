@@ -7,6 +7,7 @@ import { ArrowRight, Zap, Brain, Shield, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { GlassCard, GlassAccentCard } from '@/design-system/primitives/glass';
 
 // ============================================================================
 // ANIMATED BACKGROUND
@@ -111,44 +112,6 @@ function AnimatedBackground() {
 }
 
 // ============================================================================
-// GLASS CARD COMPONENTS
-// ============================================================================
-
-interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  intensity?: 'subtle' | 'medium' | 'heavy';
-  glow?: boolean;
-}
-
-function GlassCard({
-  className,
-  intensity = 'medium',
-  glow = false,
-  children,
-  ...props
-}: GlassCardProps) {
-  const intensityStyles = {
-    subtle: 'bg-white/[0.03] backdrop-blur-sm',
-    medium: 'bg-white/[0.05] backdrop-blur-md',
-    heavy: 'bg-white/[0.08] backdrop-blur-lg',
-  };
-
-  return (
-    <div
-      className={cn(
-        intensityStyles[intensity],
-        'border border-white/[0.08] rounded-2xl',
-        'shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
-        glow && 'shadow-[0_0_60px_rgba(91,138,138,0.15)]',
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
-
-// ============================================================================
 // FEATURE PREVIEW CARDS
 // ============================================================================
 
@@ -182,7 +145,7 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
     >
-      <GlassCard className="p-6 h-full hover:bg-white/[0.07] transition-colors duration-300 group">
+      <GlassCard intensity="subtle" hoverable className="h-full group">
         <div className={cn(
           'w-12 h-12 rounded-xl flex items-center justify-center mb-4',
           'bg-gradient-to-br',
@@ -191,10 +154,10 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
         )}>
           <Icon className="w-6 h-6 text-white" />
         </div>
-        <h3 className="font-semibold text-lg text-nebula-frost mb-2">
+        <h3 className="font-semibold text-lg text-foreground mb-2">
           {feature.title}
         </h3>
-        <p className="text-sm text-gray-400 leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           {feature.description}
         </p>
       </GlassCard>
@@ -257,7 +220,7 @@ function WaitlistForm() {
             exit={{ opacity: 0, scale: 0.95 }}
             className="text-center"
           >
-            <GlassCard className="p-6" glow>
+            <GlassAccentCard hoverable>
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -266,7 +229,7 @@ function WaitlistForm() {
               >
                 <Check className="w-8 h-8 text-white" />
               </motion.div>
-              <h3 className="text-xl font-semibold text-nebula-frost mb-2">
+              <h3 className="text-xl font-semibold text-foreground mb-2">
                 You&apos;re on the list!
               </h3>
               {position && (
@@ -274,10 +237,10 @@ function WaitlistForm() {
                   #{position}
                 </p>
               )}
-              <p className="text-gray-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 We&apos;ll notify you when Galaxy is ready for launch.
               </p>
-            </GlassCard>
+            </GlassAccentCard>
           </motion.div>
         ) : (
           <motion.form
@@ -298,7 +261,7 @@ function WaitlistForm() {
                 className={cn(
                   'flex-1 h-12 px-4',
                   'bg-white/[0.05] border-white/[0.1]',
-                  'text-nebula-frost placeholder:text-gray-500',
+                  'text-foreground placeholder:text-muted-foreground',
                   'focus-visible:border-nebula-teal-700 focus-visible:ring-nebula-teal-700/30',
                   'rounded-xl'
                 )}
@@ -337,13 +300,13 @@ function WaitlistForm() {
               <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-red-400 text-sm text-center"
+                className="text-destructive text-sm text-center"
               >
                 {errorMessage}
               </motion.p>
             )}
 
-            <p className="text-center text-gray-500 text-xs">
+            <p className="text-center text-muted-foreground text-xs">
               Be among the first to experience the future of CRM
             </p>
           </motion.form>
@@ -377,7 +340,7 @@ export function ComingSoonPage() {
             height={40}
             className="w-10 h-10"
           />
-          <span className="text-xl font-bold text-nebula-frost tracking-tight">
+          <span className="text-xl font-bold text-foreground tracking-tight">
             Galaxy
           </span>
         </motion.div>
@@ -387,7 +350,7 @@ export function ComingSoonPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-muted-foreground">
             Launching 2025
           </span>
         </motion.div>
@@ -420,7 +383,7 @@ export function ComingSoonPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-nebula-frost leading-tight"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight"
           >
             The AI-Native CRM
             <br />
@@ -434,7 +397,7 @@ export function ComingSoonPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed"
+            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
             Stop managing your CRM. Let Neptune AI handle the busywork while
             autonomous agents research, engage, and nurture your pipeline 24/7.
@@ -456,7 +419,7 @@ export function ComingSoonPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-center text-sm font-medium text-gray-500 uppercase tracking-widest mb-8"
+            className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-8"
           >
             What&apos;s Coming
           </motion.h2>
@@ -470,19 +433,19 @@ export function ComingSoonPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 px-6 border-t border-white/[0.05]">
+      <footer className="relative z-10 py-8 px-6 border-t border-border">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} GalaxyCo. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <a href="/privacy" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+            <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Privacy
             </a>
-            <a href="/terms" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+            <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Terms
             </a>
-            <a href="/contact" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
+            <a href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Contact
             </a>
           </div>
