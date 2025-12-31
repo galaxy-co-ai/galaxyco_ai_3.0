@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, Brain, Shield, Check } from 'lucide-react';
+import { ArrowRight, Zap, Brain, Shield, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -209,6 +210,7 @@ function WaitlistForm() {
   const [email, setEmail] = React.useState('');
   const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = React.useState('');
+  const [position, setPosition] = React.useState<number | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,11 +231,13 @@ function WaitlistForm() {
         body: JSON.stringify({ email }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || 'Failed to join waitlist');
       }
 
+      setPosition(data.position);
       setStatus('success');
       setEmail('');
     } catch (error) {
@@ -265,6 +269,11 @@ function WaitlistForm() {
               <h3 className="text-xl font-semibold text-nebula-frost mb-2">
                 You&apos;re on the list!
               </h3>
+              {position && (
+                <p className="text-2xl font-bold text-nebula-teal-400 mb-2">
+                  #{position}
+                </p>
+              )}
               <p className="text-gray-400 text-sm">
                 We&apos;ll notify you when Galaxy is ready for launch.
               </p>
@@ -335,7 +344,7 @@ function WaitlistForm() {
             )}
 
             <p className="text-center text-gray-500 text-xs">
-              Join 500+ forward-thinking teams already on the waitlist
+              Be among the first to experience the future of CRM
             </p>
           </motion.form>
         )}
@@ -359,11 +368,15 @@ export function ComingSoonPage() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-2"
+          className="flex items-center gap-3"
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-nebula-teal-700 to-nebula-violet-700 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
+          <Image
+            src="/assets/brand/logos/galaxy-logo.png"
+            alt="Galaxy"
+            width={40}
+            height={40}
+            className="w-10 h-10"
+          />
           <span className="text-xl font-bold text-nebula-frost tracking-tight">
             Galaxy
           </span>
@@ -375,7 +388,7 @@ export function ComingSoonPage() {
           transition={{ duration: 0.5 }}
         >
           <span className="text-sm text-gray-500">
-            Coming Q1 2025
+            Launching 2025
           </span>
         </motion.div>
       </nav>
