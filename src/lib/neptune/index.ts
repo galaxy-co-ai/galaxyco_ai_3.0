@@ -40,10 +40,8 @@ export {
   type QuickActionContext,
 } from './quick-actions';
 
-// Note: Business Intelligence, Shared Context, Proactive Insights, and Unified Context
-// modules are available but have pending schema compatibility work.
-// Import them directly when needed:
-// - ./business-intelligence
-// - ./shared-context  
-// - ./proactive-insights
-// - ./unified-context
+// Additional modules - import directly as needed:
+// - ./business-intelligence - Business metrics and KPIs
+// - ./shared-context - Cross-session memory and user context
+// - ./proactive-insights - AI-generated insights engine
+// - ./unified-context - Aggregates all context for AI prompts
