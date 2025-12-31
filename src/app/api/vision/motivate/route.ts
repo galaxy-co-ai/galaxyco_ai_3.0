@@ -12,6 +12,7 @@ import { generateNeptuneContext } from '@/lib/neptune/unified-context';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import type { VisionResponse, MotivationalContent } from '@/types/vision';
+import { VisionMotivateSchema } from '@/lib/validation/schemas';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -29,11 +30,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { workspaceId, goals } = body;
-
-    if (!workspaceId) {
-      return createErrorResponse(new Error('Workspace ID is required'), 'Vision motivate');
+    const validation = VisionMotivateSchema.safeParse(body);
+    if (!validation.success) {
+      return createErrorResponse(new Error(validation.error.errors[0]?.message || 'Validation failed'), 'Vision motivate');
     }
+    const { workspaceId, goals } = validation.data;
 
     logger.info('[Vision] Generating motivational content', { workspaceId, hasGoals: !!goals });
 

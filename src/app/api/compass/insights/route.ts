@@ -13,6 +13,12 @@ import { generateNeptuneContext } from '@/lib/neptune/unified-context';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import type { CompassResponse, CompassInsight, CompassItem } from '@/types/compass';
+import { z } from 'zod';
+
+// Validation schema for compass insights
+const CompassInsightsSchema = z.object({
+  workspaceId: z.string().min(1, 'Workspace ID is required'),
+});
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -30,11 +36,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { workspaceId } = body;
-
-    if (!workspaceId) {
-      return createErrorResponse(new Error('Workspace ID is required'), 'Compass insights');
+    const validation = CompassInsightsSchema.safeParse(body);
+    if (!validation.success) {
+      return createErrorResponse(new Error(validation.error.errors[0]?.message || 'Validation failed'), 'Compass insights');
     }
+    const { workspaceId } = validation.data;
 
     // Check cache first
     const cacheKey = `${workspaceId}:${userId}`;

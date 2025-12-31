@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 import { auth as clerkAuth } from "@clerk/nextjs/server";
 import { auth } from "@trigger.dev/sdk/v3";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+// Validation schema for token request
+const TriggerTokenSchema = z.object({
+  runId: z.string().optional(),
+  runIds: z.array(z.string()).optional(),
+  taskIds: z.array(z.string()).optional(),
+  tags: z.array(z.string()).optional(),
+}).refine(
+  (data) => data.runId || data.runIds || data.taskIds || data.tags,
+  { message: "Must provide runId, runIds, taskIds, or tags" }
+);
 
 /**
  * POST: Generate a public access token for Trigger.dev Realtime
@@ -21,7 +33,14 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { runId, runIds, taskIds, tags } = body;
+    const validation = TriggerTokenSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: validation.error.errors[0]?.message || "Validation failed" },
+        { status: 400 }
+      );
+    }
+    const { runId, runIds, taskIds, tags } = validation.data;
 
     // Build scopes based on what was requested
     const scopes: {
@@ -37,20 +56,14 @@ export async function POST(request: Request) {
     // Scope to specific run(s)
     if (runId) {
       scopes.read.runs = [runId];
-    } else if (runIds && Array.isArray(runIds)) {
+    } else if (runIds) {
       scopes.read.runs = runIds;
-    } else if (taskIds && Array.isArray(taskIds)) {
+    } else if (taskIds) {
       // Scope to specific tasks
       scopes.read.tasks = taskIds;
-    } else if (tags && Array.isArray(tags)) {
+    } else if (tags) {
       // Scope to specific tags
       scopes.read.tags = tags;
-    } else {
-      // Default: no specific scopes (least privilege)
-      return NextResponse.json(
-        { error: "Must provide runId, runIds, taskIds, or tags" },
-        { status: 400 }
-      );
     }
 
     // Generate a public access token with the specified scopes

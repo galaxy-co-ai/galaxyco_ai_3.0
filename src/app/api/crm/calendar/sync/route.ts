@@ -11,6 +11,15 @@ import { syncCalendarEvents, getConnectedCalendars } from '@/lib/integrations/ca
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { z } from 'zod';
+
+// Validation schema for calendar sync request
+const CalendarSyncRequestSchema = z.object({
+  provider: z.enum(['google', 'microsoft']).optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  maxResults: z.number().int().min(1).max(500).optional().default(100),
+});
 
 // GET: Check sync status/connected providers
 export async function GET() {
@@ -65,12 +74,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const {
-      provider,
-      startDate,
-      endDate,
-      maxResults = 100,
-    } = body;
+    const validation = CalendarSyncRequestSchema.safeParse(body);
+    if (!validation.success) {
+      return createErrorResponse(new Error(validation.error.errors[0]?.message || 'Validation failed'), 'Calendar Sync API POST');
+    }
+    const { provider, startDate, endDate, maxResults } = validation.data;
 
     const results = await syncCalendarEvents(orgId, {
       provider,

@@ -5,6 +5,7 @@ import { approvalRequests } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { completeApproval, type ApprovalResult } from "@/trigger/approvals";
 import { logger } from "@/lib/logger";
+import { ApprovalRequestSchema } from "@/lib/validation/schemas";
 
 /**
  * POST: Reject a pending approval request
@@ -19,7 +20,14 @@ export async function POST(
     const { id } = await params;
 
     const body = await request.json().catch(() => ({}));
-    const { reason, metadata } = body;
+    const validation = ApprovalRequestSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: validation.error.errors },
+        { status: 400 }
+      );
+    }
+    const { reason, metadata } = validation.data;
 
     // Get the approval request
     const approval = await db.query.approvalRequests.findFirst({

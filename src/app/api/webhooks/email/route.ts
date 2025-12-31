@@ -3,6 +3,31 @@ import { db } from '@/lib/db';
 import { conversations, conversationMessages, conversationParticipants, contacts } from '@/db/schema';
 import { eq, and, ilike } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
+
+// Validation schema for webhook query parameters
+const WebhookQuerySchema = z.object({
+  provider: z.enum(['sendgrid', 'postmark', 'resend', 'generic']).optional().default('sendgrid'),
+  workspace: z.string().min(1, 'Missing workspace ID in webhook URL'),
+});
+
+// Base validation schema for parsed email (used internally after provider-specific parsing)
+const ParsedEmailSchema = z.object({
+  from: z.string(),
+  fromName: z.string(),
+  to: z.string(),
+  subject: z.string(),
+  text: z.string(),
+  html: z.string(),
+  messageId: z.string(),
+  attachments: z.array(z.object({
+    filename: z.string(),
+    type: z.string(),
+    content: z.string(),
+  })),
+  headers: z.record(z.string()),
+  inReplyTo: z.string().optional(),
+});
 
 /**
  * Email Webhook Receiver (Inbound Parse)
@@ -51,16 +76,22 @@ interface ParsedEmail {
 export async function POST(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const provider = searchParams.get('provider') || 'sendgrid';
-    const workspaceId = searchParams.get('workspace');
 
-    if (!workspaceId) {
-      logger.error('Email webhook: Missing workspace ID');
+    // Validate query parameters
+    const queryValidation = WebhookQuerySchema.safeParse({
+      provider: searchParams.get('provider') || 'sendgrid',
+      workspace: searchParams.get('workspace'),
+    });
+
+    if (!queryValidation.success) {
+      logger.error('Email webhook: Validation failed', { errors: queryValidation.error.errors });
       return NextResponse.json(
-        { error: 'Missing workspace ID in webhook URL' },
+        { error: queryValidation.error.errors[0]?.message || 'Validation failed' },
         { status: 400 }
       );
     }
+
+    const { provider, workspace: workspaceId } = queryValidation.data;
 
     let email: ParsedEmail;
 

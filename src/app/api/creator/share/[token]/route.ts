@@ -14,6 +14,7 @@ import { logger } from '@/lib/logger';
 import { eq, and, sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { CreatorShareAccessSchema } from '@/lib/validation/schemas';
 
 interface RouteParams {
   params: Promise<{ token: string }>;
@@ -120,11 +121,11 @@ export async function POST(
     const { token } = await params;
 
     const body = await request.json();
-    const password = body.password;
-
-    if (!password) {
+    const validation = CreatorShareAccessSchema.safeParse(body);
+    if (!validation.success || !validation.data.password) {
       return createErrorResponse(new Error('Password is required'), 'Share Password Verification');
     }
+    const { password } = validation.data;
 
     // Find the share by token
     const [share] = await db

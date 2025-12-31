@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { Liveblocks } from '@liveblocks/node';
 import { logger } from '@/lib/logger';
+import { LiveblocksAuthSchema } from '@/lib/validation/schemas';
 
 // Initialize Liveblocks server
 const liveblocks = new Liveblocks({
@@ -40,15 +41,17 @@ export async function POST(request: NextRequest) {
 
     // Extract room from request body
     const body = await request.json();
-    const { room } = body;
+    const validation = LiveblocksAuthSchema.safeParse(body);
 
-    if (!room || typeof room !== 'string') {
-      logger.warn('[Liveblocks] Invalid room ID', { room });
+    if (!validation.success) {
+      logger.warn('[Liveblocks] Invalid room ID', { errors: validation.error.errors });
       return NextResponse.json(
-        { error: 'Invalid room ID' },
+        { error: validation.error.errors[0]?.message || 'Invalid room ID' },
         { status: 400 }
       );
     }
+
+    const { room } = validation.data;
 
     // Validate room format (should be neptune:workspace:{workspaceId}:conversation:{conversationId})
     const roomParts = room.split(':');

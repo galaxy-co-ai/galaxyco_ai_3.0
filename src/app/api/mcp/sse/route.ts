@@ -28,6 +28,15 @@ import {
 import { db } from '@/lib/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
+
+// Validation schema for JSON-RPC request
+const JsonRpcRequestSchema = z.object({
+  jsonrpc: z.literal('2.0'),
+  method: z.string().min(1),
+  params: z.record(z.unknown()).optional(),
+  id: z.union([z.string(), z.number()]).optional(),
+});
 
 // ============================================================================
 // CORS CONFIGURATION FOR CHATGPT
@@ -219,8 +228,27 @@ export async function POST(request: NextRequest) {
       userName,
     };
 
-    // Parse JSON-RPC request
-    const rpcRequest: JsonRpcRequest = await request.json();
+    // Parse and validate JSON-RPC request
+    const body = await request.json();
+    const validation = JsonRpcRequestSchema.safeParse(body);
+    if (!validation.success) {
+      const errorResponse: JsonRpcResponse = {
+        jsonrpc: '2.0',
+        id: body.id || 0,
+        error: {
+          code: JSON_RPC_ERRORS.INVALID_REQUEST,
+          message: validation.error.errors[0]?.message || 'Invalid JSON-RPC request',
+        },
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          ...CORS_HEADERS,
+        },
+      });
+    }
+    const rpcRequest = validation.data as JsonRpcRequest;
 
     logger.debug('[MCP] Received request', {
       method: rpcRequest.method,

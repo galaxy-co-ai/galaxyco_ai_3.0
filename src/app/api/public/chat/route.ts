@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { logger } from '@/lib/logger';
+import { PublicChatSchema } from '@/lib/validation/schemas';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -236,14 +237,17 @@ function getSuggestions(userMessage: string, aiResponse: string): string[] {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const body = await request.json();
+    const validation = PublicChatSchema.safeParse(body);
 
-    if (!message || typeof message !== 'string') {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Message is required' },
+        { error: validation.error.errors[0]?.message || 'Invalid request' },
         { status: 400 }
       );
     }
+
+    const { message } = validation.data;
 
     // Rate limiting check (simple IP-based)
     const ip = request.headers.get('x-forwarded-for') || 'unknown';

@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { z } from 'zod';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+// Validation schema for checkout request
+const CheckoutSchema = z.object({
+  priceId: z.string().min(1, 'Price ID is required'),
+  planName: z.string().optional(),
+});
 
 /**
  * Create a Stripe Checkout Session for subscription
@@ -20,14 +27,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { priceId, planName } = await request.json();
+    const body = await request.json();
+    const validation = CheckoutSchema.safeParse(body);
 
-    if (!priceId) {
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'Price ID is required' },
+        { error: validation.error.errors[0]?.message || 'Validation failed' },
         { status: 400 }
       );
     }
+
+    const { priceId, planName } = validation.data;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 

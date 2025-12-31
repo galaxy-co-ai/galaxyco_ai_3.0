@@ -11,6 +11,14 @@ import { syncEmails, isEmailSyncAvailable } from '@/lib/integrations/email-sync'
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { z } from 'zod';
+
+// Validation schema for email sync request
+const EmailSyncRequestSchema = z.object({
+  provider: z.enum(['google', 'microsoft']).optional(),
+  maxResults: z.number().int().min(1).max(500).optional().default(100),
+  afterDate: z.string().datetime().optional(),
+});
 
 // GET: Check sync status/availability
 export async function GET() {
@@ -73,11 +81,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const { 
-      provider, 
-      maxResults = 100, 
-      afterDate,
-    } = body;
+    const validation = EmailSyncRequestSchema.safeParse(body);
+    if (!validation.success) {
+      return createErrorResponse(new Error(validation.error.errors[0]?.message || 'Validation failed'), 'Email sync');
+    }
+    const { provider, maxResults, afterDate } = validation.data;
 
     // Default to last 30 days if no date specified
     const syncAfter = afterDate 

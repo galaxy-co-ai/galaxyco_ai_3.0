@@ -15,6 +15,18 @@ import { SignJWT, jwtVerify } from 'jose';
 import crypto from 'crypto';
 import { authorizationCodes } from '../authorize/route';
 import { registeredClients } from '../register/route';
+import { z } from 'zod';
+
+// Validation schema for OAuth token request
+const TokenRequestSchema = z.object({
+  grant_type: z.enum(['authorization_code', 'refresh_token']),
+  client_id: z.string().min(1, 'client_id is required'),
+  client_secret: z.string().optional(),
+  code: z.string().optional(),
+  redirect_uri: z.string().url().optional(),
+  refresh_token: z.string().optional(),
+  code_verifier: z.string().optional(),
+});
 
 // CORS headers for ChatGPT compatibility
 const CORS_HEADERS = {
@@ -54,7 +66,7 @@ export async function POST(request: Request) {
     // Parse request body (can be form-encoded or JSON)
     let body: Record<string, string>;
     const contentType = request.headers.get('content-type') || '';
-    
+
     if (contentType.includes('application/x-www-form-urlencoded')) {
       const formData = await request.formData();
       body = Object.fromEntries(formData.entries()) as Record<string, string>;
@@ -62,16 +74,17 @@ export async function POST(request: Request) {
       body = await request.json();
     }
 
-    const grantType = body.grant_type;
-    const clientId = body.client_id;
-    const clientSecret = body.client_secret;
-
-    if (!clientId) {
+    // Validate request body
+    const validation = TokenRequestSchema.safeParse(body);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
       return NextResponse.json(
-        { error: 'invalid_request', error_description: 'client_id is required' },
+        { error: 'invalid_request', error_description: firstError?.message || 'Validation failed' },
         { status: 400, headers: CORS_HEADERS }
       );
     }
+
+    const { grant_type: grantType, client_id: clientId, client_secret: clientSecret } = validation.data;
 
     // Validate client credentials - support BOTH static and dynamically registered clients
     const staticClientId = process.env.MCP_CLIENT_ID;

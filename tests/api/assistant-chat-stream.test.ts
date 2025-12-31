@@ -56,6 +56,9 @@ vi.mock('@/lib/db', () => ({
       aiMessages: {
         findMany: vi.fn(() => Promise.resolve([])),
       },
+      workspaces: {
+        findFirst: vi.fn(() => Promise.resolve({ subscriptionTier: 'free' })),
+      },
     },
     insert: vi.fn(() => ({
       values: vi.fn(() => ({
@@ -173,6 +176,34 @@ vi.mock('@/lib/logger', () => ({
     warn: vi.fn(),
     error: vi.fn(),
   },
+}));
+
+vi.mock('@/lib/cost-protection', () => ({
+  checkTokenLimit: vi.fn(() =>
+    Promise.resolve({ allowed: true, currentUsage: 0, limit: 100000 }),
+  ),
+  trackTokenUsage: vi.fn(() => Promise.resolve()),
+  estimateTokens: vi.fn(() => 100),
+}));
+
+vi.mock('@/lib/observability', () => ({
+  trackNeptuneRequest: vi.fn(),
+  trackNeptuneError: vi.fn(),
+}));
+
+vi.mock('@/lib/ai/intent-classifier', () => ({
+  classifyIntent: vi.fn(() =>
+    Promise.resolve({
+      intent: 'general',
+      confidence: 0.8,
+      detectionMethod: 'keyword',
+      processingTimeMs: 5,
+    }),
+  ),
+}));
+
+vi.mock('@/lib/integrations', () => ({
+  getConnectedApps: vi.fn(() => Promise.resolve([])),
 }));
 
 // ---------------------------------------------------------------------------

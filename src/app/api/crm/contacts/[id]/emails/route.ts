@@ -14,6 +14,7 @@ import { getContactEmails, syncEmails, isEmailSyncAvailable } from '@/lib/integr
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { ContactEmailSyncSchema } from '@/lib/validation/schemas';
 
 // GET: List emails for a contact
 export async function GET(
@@ -96,7 +97,11 @@ export async function POST(
 
     const { id: contactId } = await params;
     const body = await request.json().catch(() => ({}));
-    const { provider, maxResults = 50 } = body;
+    const validation = ContactEmailSyncSchema.safeParse(body);
+    if (!validation.success) {
+      return createErrorResponse(new Error(validation.error.errors[0]?.message || 'Validation failed'), 'Contact Emails API POST');
+    }
+    const { provider, maxResults } = validation.data;
 
     // Verify contact exists and belongs to workspace
     const contact = await db.query.contacts.findFirst({

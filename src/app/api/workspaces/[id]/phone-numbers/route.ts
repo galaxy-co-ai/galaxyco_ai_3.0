@@ -6,6 +6,7 @@ import { eq, and, desc, asc } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { PhoneNumberProvisionSchema } from '@/lib/validation/schemas';
 // Note: autoProvisionForWorkspace is lazily imported in POST to avoid loading SignalWire SDK on GET
 
 /**
@@ -162,9 +163,13 @@ export async function POST(
       return createErrorResponse(new Error('Forbidden: Phone numbers are only available on Pro and Enterprise plans'), 'Provision phone number error');
     }
 
-    // Parse request body
+    // Parse and validate request body
     const body = await request.json();
-    const { areaCode = '405', numberType = 'primary', friendlyName } = body;
+    const validation = PhoneNumberProvisionSchema.safeParse(body);
+    if (!validation.success) {
+      return createErrorResponse(new Error(validation.error.errors[0]?.message || 'Validation failed'), 'Provision phone number error');
+    }
+    const { areaCode, numberType, friendlyName } = validation.data;
 
     // For Enterprise, check if adding additional number
     const existingNumbers = await db.query.workspacePhoneNumbers.findMany({

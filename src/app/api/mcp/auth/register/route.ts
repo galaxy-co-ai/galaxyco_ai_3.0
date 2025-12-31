@@ -16,6 +16,7 @@
 import { NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
+import { OAuthClientRegistrationSchema } from '@/lib/validation/schemas';
 
 // Interface for registered client data
 interface RegisteredClient {
@@ -54,48 +55,44 @@ const CORS_HEADERS = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    // Extract registration data from request per RFC 7591
+
+    // Validate registration data using Zod schema (RFC 7591 compliant)
+    const validation = OAuthClientRegistrationSchema.safeParse(body);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      // Map Zod errors to OAuth error format
+      if (firstError?.path.includes('redirect_uris')) {
+        return NextResponse.json(
+          {
+            error: 'invalid_redirect_uri',
+            error_description: firstError.message
+          },
+          { status: 400, headers: CORS_HEADERS }
+        );
+      }
+      return NextResponse.json(
+        {
+          error: 'invalid_client_metadata',
+          error_description: firstError?.message || 'Validation failed'
+        },
+        { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    // Extract validated registration data
     const {
-      client_name = 'ChatGPT Client',
-      redirect_uris = [],
-      grant_types = ['authorization_code', 'refresh_token'],
-      response_types = ['code'],
-      token_endpoint_auth_method = 'client_secret_post',
-      // Optional fields ChatGPT may send
+      client_name,
+      redirect_uris,
+      grant_types,
+      response_types,
+      token_endpoint_auth_method,
       scope,
       contacts,
       logo_uri,
       client_uri,
       policy_uri,
       tos_uri,
-    } = body;
-
-    // Validate redirect_uris - REQUIRED per RFC 7591
-    if (!Array.isArray(redirect_uris) || redirect_uris.length === 0) {
-      return NextResponse.json(
-        { 
-          error: 'invalid_client_metadata', 
-          error_description: 'redirect_uris is required and must be a non-empty array' 
-        },
-        { status: 400, headers: CORS_HEADERS }
-      );
-    }
-
-    // Validate each redirect_uri is a valid URL
-    for (const uri of redirect_uris) {
-      try {
-        new URL(uri);
-      } catch {
-        return NextResponse.json(
-          { 
-            error: 'invalid_redirect_uri', 
-            error_description: `Invalid redirect_uri: ${uri}` 
-          },
-          { status: 400, headers: CORS_HEADERS }
-        );
-      }
-    }
+    } = validation.data;
 
     // Generate client credentials
     const clientId = crypto.randomUUID();

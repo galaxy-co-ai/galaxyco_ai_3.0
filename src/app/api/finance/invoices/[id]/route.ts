@@ -10,6 +10,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { QuickBooksService } from '@/lib/finance';
+import { InvoiceUpdateSchema } from '@/lib/validation/schemas';
 
 interface RouteParams {
   params: Promise<{
@@ -100,8 +101,15 @@ export async function PATCH(
       );
     }
 
-    // 4. Parse body
+    // 4. Parse and validate body
     const body = await request.json();
+    const validation = InvoiceUpdateSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validation.error.errors },
+        { status: 400 }
+      );
+    }
 
     // 5. Initialize QuickBooks service
     const qbService = new QuickBooksService(workspaceId);

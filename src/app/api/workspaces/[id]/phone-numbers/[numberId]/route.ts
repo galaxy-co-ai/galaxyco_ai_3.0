@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { releasePhoneNumber } from '@/lib/signalwire';
 import { rateLimit } from '@/lib/rate-limit';
 import { createErrorResponse } from '@/lib/api-error-handler';
+import { PhoneNumberUpdateSchema } from '@/lib/validation/schemas';
 
 /**
  * PATCH /api/workspaces/[id]/phone-numbers/[numberId]
@@ -81,9 +82,13 @@ export async function PATCH(
       return createErrorResponse(new Error('Phone number not found'), 'Update phone number error');
     }
 
-    // Parse request body
+    // Parse and validate request body
     const body = await request.json();
-    const { friendlyName, numberType } = body;
+    const validation = PhoneNumberUpdateSchema.safeParse(body);
+    if (!validation.success) {
+      return createErrorResponse(new Error(validation.error.errors[0]?.message || 'Validation failed'), 'Update phone number error');
+    }
+    const { friendlyName, numberType } = validation.data;
 
     // Update phone number
     await db
