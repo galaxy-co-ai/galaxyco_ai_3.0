@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import { Sidebar } from "./sidebar";
+import { SlimSidebar } from "./slim-sidebar";
 import { Header, HeaderProps } from "./header";
 import { Toaster } from "@/components/ui/sonner";
 import { FeedbackPanel } from "@/components/shared/FeedbackButton";
@@ -137,10 +137,10 @@ export function AppLayout({
             {/* Full-width Header */}
             {headerProps && <Header {...headerProps} user={user} />}
 
-            {/* Content Area with Floating Sidebar */}
+            {/* Content Area with Slim Sidebar */}
             <div className="flex flex-1 overflow-hidden">
-              {/* Floating Sidebar (hidden on mobile) */}
-              {showSidebar && <Sidebar />}
+              {/* Slim Sidebar (hidden on mobile) */}
+              {showSidebar && <SlimSidebar />}
 
               {/* Main Content */}
               <main className={cn(

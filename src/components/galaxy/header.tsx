@@ -104,66 +104,54 @@ export function Header({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+        "sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-gray-950/80",
         className
       )}
       {...props}
     >
-      <div className="flex h-16 items-center gap-4 px-4 w-full">
+      <div className="flex h-14 items-center gap-4 px-6 w-full">
         {/* Logo and Branding (Left) */}
         <Link 
-          href="/" 
-          className="flex items-center gap-2 rounded-lg transition-colors hover:opacity-80 flex-shrink-0"
-          aria-label="Go to landing page"
+          href="/dashboard" 
+          className="flex items-center gap-2 transition-opacity hover:opacity-80 flex-shrink-0"
+          aria-label="Go to dashboard"
         >
           <BrandLogo
             variant="icon"
             size="icon"
             tone="onLight"
-            className="h-8 w-8 flex-shrink-0"
+            className="h-7 w-7 flex-shrink-0"
             priority
           />
-          <span className="text-lg font-bold tracking-wide text-foreground hidden sm:inline">GALAXY</span>
-          <span className="text-base font-bold tracking-wide text-foreground sm:hidden">GALAXY</span>
+          <span className="text-base font-bold tracking-tight text-gray-900 dark:text-gray-50">GALAXY</span>
         </Link>
 
-        {/* Title Section (if provided) */}
-        {(title || description) && (
-          <div className="flex-1 min-w-0">
-            {title && (
-              <h1 className="text-lg font-semibold text-foreground truncate">{title}</h1>
-            )}
-            {description && (
-              <p className="text-sm text-muted-foreground truncate">{description}</p>
-            )}
-          </div>
-        )}
+        {/* Spacer */}
+        <div className="flex-1" />
 
-        {/* Search (Center) - Now triggers CommandPalette */}
+        {/* Search (Optional - minimized) */}
         {showSearch && (
-          <div className="flex-1 max-w-md mx-auto">
-            <Button
-              variant="outline"
-              className="w-full justify-start text-muted-foreground"
-              onClick={() => {
-                // Trigger CommandPalette by simulating Cmd+K
-                const event = new KeyboardEvent('keydown', {
-                  key: 'k',
-                  metaKey: true,
-                  ctrlKey: true,
-                  bubbles: true,
-                });
-                document.dispatchEvent(event);
-              }}
-              aria-label="Open command palette"
-            >
-              <Search className="h-4 w-4" />
-              <span className="hidden sm:inline-flex">Search...</span>
-              <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:ml-auto sm:flex">
-                <Command className="h-3 w-3" />K
-              </kbd>
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-50"
+            onClick={() => {
+              // Trigger CommandPalette by simulating Cmd+K
+              const event = new KeyboardEvent('keydown', {
+                key: 'k',
+                metaKey: true,
+                ctrlKey: true,
+                bubbles: true,
+              });
+              document.dispatchEvent(event);
+            }}
+            aria-label="Open command palette"
+          >
+            <Search className="h-4 w-4" />
+            <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-1.5 font-mono text-[10px] font-medium ml-2 sm:flex">
+              ⌘K
+            </kbd>
+          </Button>
         )}
 
         {/* Actions and User Controls (Right) */}

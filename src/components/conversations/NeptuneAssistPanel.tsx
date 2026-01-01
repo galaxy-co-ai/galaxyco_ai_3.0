@@ -41,7 +41,7 @@ import { NeptuneRoom } from "@/components/neptune/NeptuneRoom";
 import DynamicQuickActions from "@/components/neptune/DynamicQuickActions";
 import { MODULE_METADATA } from "@/lib/neptune/page-context";
 
-// Wrapper component for fullscreen variant to add card styling
+// Wrapper component for fullscreen variant - NO card styling for clean minimal design
 function NeptuneCardWrapper({
   children,
   isFullscreen,
@@ -49,13 +49,7 @@ function NeptuneCardWrapper({
   children: React.ReactNode;
   isFullscreen: boolean;
 }) {
-  if (isFullscreen) {
-    return (
-      <Card className="h-full flex flex-col border shadow-sm overflow-hidden">
-        {children}
-      </Card>
-    );
-  }
+  // Always render without card wrapper - fullscreen is clean and borderless
   return <>{children}</>;
 }
 
@@ -452,12 +446,10 @@ export default function NeptuneAssistPanel({
   return (
     <NeptuneRoom conversationId={conversationId}>
       <NeptuneCardWrapper isFullscreen={isFullscreen}>
-        <div
-          className={`flex h-full w-full flex-col ${isFullscreen ? "bg-card" : "bg-background"}`}
-        >
-        {/* Header */}
+        <div className="flex h-full w-full flex-col bg-white dark:bg-gray-950">
+        {/* Header - Clean minimal design */}
         {isFullscreen ? (
-          <div className="border-b bg-background px-6 py-4 shrink-0">
+          <div className="border-b border-gray-200 dark:border-gray-800 px-8 py-4 shrink-0">
             <div className="flex items-center justify-between">
               <PageTitle
                 title="Neptune"
@@ -470,7 +462,7 @@ export default function NeptuneAssistPanel({
               {!minimal && (
                 <div className="flex items-center gap-2">
                   {/* Chat/History Toggle */}
-                  <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
+                  <div className="flex items-center rounded-lg border bg-gray-50 dark:bg-gray-900 p-0.5">
                     <Button
                       variant={viewMode === "chat" ? "secondary" : "ghost"}
                       size="sm"
@@ -732,10 +724,10 @@ export default function NeptuneAssistPanel({
         ) : (
           /* Chat Messages */
           <div
-            className={`flex-1 overflow-y-auto ${isFullscreen ? "p-6" : "p-4"}`}
+            className="flex-1 overflow-y-auto px-8 py-12 max-w-[800px] mx-auto w-full"
             ref={scrollRef}
           >
-          <div className="space-y-4">
+          <div className="space-y-6">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -1154,7 +1146,8 @@ export default function NeptuneAssistPanel({
           {/* Typing Indicator - only show when in a Liveblocks room */}
           {conversationId && <TypingIndicator />}
           
-          <div className={`border-t ${isFullscreen ? "p-6" : "p-4"} shrink-0`}>
+          <div className="border-t border-gray-200 dark:border-gray-800 px-8 py-6 shrink-0">
+          <div className="max-w-[800px] mx-auto w-full">
           <input
             ref={fileInputRef}
             type="file"
@@ -1166,11 +1159,11 @@ export default function NeptuneAssistPanel({
           />
 
           {pendingAttachments.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-3">
               {pendingAttachments.map((att, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm"
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm"
                 >
                   {att.type === "image" ? (
                     <ImageIcon className="h-4 w-4" />
@@ -1194,13 +1187,13 @@ export default function NeptuneAssistPanel({
             </div>
           )}
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-3 items-end">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="h-9 w-9 shrink-0"
+              className="h-11 w-11 shrink-0"
               aria-label="Attach file"
             >
               {isUploading ? (
@@ -1215,7 +1208,7 @@ export default function NeptuneAssistPanel({
               onChange={(e) => {
                 setInput(e.target.value);
                 // Auto-resize
-                e.target.style.height = '44px';
+                e.target.style.height = '56px';
                 e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
               }}
               onPaste={handlePaste}
@@ -1340,7 +1333,7 @@ export default function NeptuneAssistPanel({
                 if (e.key === 'Tab') setTabHeld(false);
               }}
               placeholder="Ask Neptune... (⌘K to focus)"
-              className="flex-1 min-h-[44px] max-h-[200px] resize-none rounded-md border bg-background px-3 py-2 text-sm min-w-0"
+              className="flex-1 min-h-[56px] max-h-[200px] resize-none rounded-lg border-2 border-gray-200 dark:border-gray-700 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/30 bg-white dark:bg-gray-950 px-4 py-3 text-base min-w-0 transition-all duration-150"
               disabled={isLoading || isRecording}
               aria-label="Message Neptune, press Command+K to focus"
               rows={1}
@@ -1352,10 +1345,10 @@ export default function NeptuneAssistPanel({
               size="icon"
               onClick={handleVoiceToggle}
               disabled={isLoading}
-              className={`h-9 w-9 shrink-0 ${isRecording ? "animate-pulse" : ""}`}
+              className={`h-11 w-11 shrink-0 ${isRecording ? "animate-pulse" : ""}`}
               aria-label={isRecording ? "Stop recording" : "Start voice input"}
             >
-              <Mic className="h-4 w-4" />
+              <Mic className="h-5 w-5" />
             </Button>
             <Button
               onClick={() => handleSend(undefined)}
@@ -1363,11 +1356,12 @@ export default function NeptuneAssistPanel({
                 (!input.trim() && pendingAttachments.length === 0) || isLoading || isRecording
               }
               size="icon"
-              className="h-9 w-9 shrink-0 bg-nebula-violet hover:bg-nebula-violet/90 text-white"
+              className="h-11 w-11 shrink-0 bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label="Send message"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5" />
             </Button>
+          </div>
           </div>
         </div>
         </>
