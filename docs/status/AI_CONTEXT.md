@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2025-12-31 (740d4d2)  
+**Updated Through:** 2026-01-01 (36f4200)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-01 36f4200 feat(dashboard): Perplexity-inspired minimal redesign with clean UX
 - 2025-12-31 740d4d2 refactor(landing): use design system for coming soon page
 - 2025-12-31 314c7e9 fix(landing): use correct logo path for coming soon page
 - 2025-12-31 16cbaa9 feat(landing): enhance coming soon page with logo and position display
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-30 439ddf0 docs(design-system): add Pagination component documentation (Phase 3)
 - 2025-12-30 5553c82 docs(design-system): add Breadcrumb component documentation
 - 2025-12-30 1d42f1c docs(design-system): add comprehensive README and system index
-- 2025-12-30 60b03b9 fix(auth): sync taylor@galaxyco.ai to client-side admin list
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
