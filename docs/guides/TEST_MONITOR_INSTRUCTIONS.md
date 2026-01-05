@@ -13,7 +13,7 @@ I've created a **comprehensive test monitoring system** that tracks every micro-
 1. Open your browser (where GalaxyCo is running)
 2. Press `F12` to open DevTools
 3. Go to the **Console** tab
-4. Copy and paste the contents of `test-monitor.js` into the console
+4. Copy and paste the contents of `scripts/test-monitor.js` into the console
 5. Press Enter
 6. You should see: **"🧪 NEPTUNE TEST MONITOR ACTIVE"**
 
