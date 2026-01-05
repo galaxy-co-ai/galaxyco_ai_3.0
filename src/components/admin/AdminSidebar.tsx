@@ -14,6 +14,7 @@ import {
   Rocket,
   PanelLeftClose,
   PanelLeftOpen,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,13 @@ const adminNavItems = [
     href: "/admin", 
     id: "overview",
     description: "Dashboard & metrics"
+  },
+  { 
+    icon: Zap, 
+    label: "Mission Control", 
+    href: "/admin/mission-control", 
+    id: "mission-control",
+    description: "Agent Builder"
   },
   { 
     icon: FileText, 
