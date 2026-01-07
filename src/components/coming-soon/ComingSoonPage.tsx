@@ -10,6 +10,51 @@ import { Input } from '@/components/ui/input';
 import { GlassAccentCard } from '@/design-system/primitives/glass';
 
 // ============================================================================
+// ANIMATED STAR FIELD
+// ============================================================================
+
+function Star({ delay, duration, size, left, top }: { 
+  delay: number; 
+  duration: number; 
+  size: number; 
+  left: string; 
+  top: string;
+}) {
+  return (
+    <motion.div
+      className="absolute rounded-full"
+      style={{
+        width: size,
+        height: size,
+        left,
+        top,
+        background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%)',
+      }}
+      animate={{
+        opacity: [0.2, 0.8, 0.2],
+        scale: [1, 1.2, 1],
+      }}
+      transition={{
+        duration,
+        delay,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      }}
+    />
+  );
+}
+
+// Generate star positions deterministically
+const stars = Array.from({ length: 50 }, (_, i) => ({
+  id: i,
+  left: `${(i * 37) % 100}%`,
+  top: `${(i * 53) % 100}%`,
+  size: (i % 3) + 1,
+  delay: (i * 0.2) % 5,
+  duration: 3 + (i % 4),
+}));
+
+// ============================================================================
 // ANIMATED BACKGROUND
 // ============================================================================
 
@@ -30,6 +75,11 @@ function AnimatedBackground() {
           `
         }}
       />
+
+      {/* Floating Stars */}
+      {stars.map((star) => (
+        <Star key={star.id} {...star} />
+      ))}
 
       {/* Animated orbs */}
       <motion.div
@@ -122,6 +172,8 @@ const features = [
     description: 'Your intelligent CRM co-pilot that understands context and takes action.',
     gradientStyle: 'linear-gradient(135deg, #6aabab, #5B8A8A)',
     shadowColor: 'rgba(91, 138, 138, 0.5)',
+    hoverGlow: 'rgba(91, 138, 138, 0.3)',
+    borderHover: 'rgba(106, 171, 171, 0.5)',
   },
   {
     icon: Zap,
@@ -129,6 +181,8 @@ const features = [
     description: 'Autonomous agents that handle research, outreach, and follow-ups 24/7.',
     gradientStyle: 'linear-gradient(135deg, #9a84be, #7C6B9E)',
     shadowColor: 'rgba(124, 107, 158, 0.5)',
+    hoverGlow: 'rgba(124, 107, 158, 0.3)',
+    borderHover: 'rgba(154, 132, 190, 0.5)',
   },
   {
     icon: Shield,
@@ -136,29 +190,55 @@ const features = [
     description: 'SOC 2 compliant with fine-grained permissions and audit logging.',
     gradientStyle: 'linear-gradient(135deg, #8193b3, #5A6B8A)',
     shadowColor: 'rgba(90, 107, 138, 0.5)',
+    hoverGlow: 'rgba(90, 107, 138, 0.3)',
+    borderHover: 'rgba(129, 147, 179, 0.5)',
   },
 ];
 
 function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
   const Icon = feature.icon;
+  const [isHovered, setIsHovered] = React.useState(false);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+      transition={{ 
+        duration: 0.6, 
+        delay: 0.6 + index * 0.15,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className={cn(
-        'h-full group p-6 rounded-2xl',
-        'bg-white/[0.03] backdrop-blur-md backdrop-saturate-150',
-        'border border-white/10',
-        'shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
-        'transition-all duration-300',
-        'hover:bg-white/[0.06] hover:border-white/20',
-        'hover:shadow-[0_16px_48px_rgba(0,0,0,0.4)] hover:-translate-y-1'
-      )}>
+      <motion.div 
+        className={cn(
+          'h-full group p-6 rounded-2xl relative overflow-hidden',
+          'bg-white/[0.03] backdrop-blur-md backdrop-saturate-150',
+          'transition-all duration-300',
+        )}
+        style={{
+          border: `1px solid ${isHovered ? feature.borderHover : 'rgba(255,255,255,0.1)'}`,
+          boxShadow: isHovered 
+            ? `0 20px 60px ${feature.hoverGlow}, 0 0 40px ${feature.hoverGlow}`
+            : '0 8px 32px rgba(0,0,0,0.3)',
+        }}
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Glow effect on hover */}
+        <motion.div
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          animate={{
+            opacity: isHovered ? 0.15 : 0,
+          }}
+          style={{
+            background: `radial-gradient(circle at 50% 0%, ${feature.hoverGlow}, transparent 70%)`,
+          }}
+        />
+        
         <div 
-          className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300"
+          className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
           style={{
             background: feature.gradientStyle,
             boxShadow: `0 10px 25px ${feature.shadowColor}`,
@@ -166,13 +246,13 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
         >
           <Icon className="w-6 h-6 text-white drop-shadow-sm" />
         </div>
-        <h3 className="font-semibold text-lg text-white mb-2">
+        <h3 className="font-semibold text-lg text-white mb-2 relative z-10">
           {feature.title}
         </h3>
-        <p className="text-sm text-gray-400 leading-relaxed">
+        <p className="text-sm text-gray-400 leading-relaxed relative z-10">
           {feature.description}
         </p>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -279,34 +359,49 @@ function WaitlistForm() {
                   'rounded-xl'
                 )}
               />
-              <Button
-                type="submit"
-                disabled={status === 'loading'}
-                className={cn(
-                  'h-12 px-6 rounded-xl',
-                  'bg-gradient-to-r from-nebula-teal-600 to-nebula-teal-500',
-                  'hover:from-nebula-teal-500 hover:to-nebula-teal-400',
-                  'border border-nebula-teal-500/50',
-                  'shadow-lg shadow-nebula-teal-500/40',
-                  'hover:shadow-xl hover:shadow-nebula-teal-500/50',
-                  'transition-all duration-300',
-                  'text-white font-medium',
-                  'disabled:opacity-50'
-                )}
+              <motion.div
+                animate={{
+                  boxShadow: [
+                    '0 0 20px rgba(91, 138, 138, 0.4)',
+                    '0 0 40px rgba(91, 138, 138, 0.6)',
+                    '0 0 20px rgba(91, 138, 138, 0.4)',
+                  ],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="rounded-xl"
               >
-                {status === 'loading' ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
-                  />
-                ) : (
-                  <>
-                    Join Waitlist
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </>
-                )}
-              </Button>
+                <Button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className={cn(
+                    'h-12 px-6 rounded-xl',
+                    'bg-gradient-to-r from-nebula-teal-600 to-nebula-teal-500',
+                    'hover:from-nebula-teal-500 hover:to-nebula-teal-400',
+                    'border border-nebula-teal-500/50',
+                    'hover:scale-105',
+                    'transition-all duration-300',
+                    'text-white font-medium',
+                    'disabled:opacity-50'
+                  )}
+                >
+                  {status === 'loading' ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
+                    />
+                  ) : (
+                    <>
+                      Join Waitlist
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </Button>
+              </motion.div>
             </div>
 
             {status === 'error' && errorMessage && (
@@ -374,9 +469,12 @@ export function ComingSoonPage() {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ 
+              duration: 0.6, 
+              ease: [0.25, 0.46, 0.45, 0.94]
+            }}
           >
             <span 
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
@@ -400,30 +498,43 @@ export function ComingSoonPage() {
             </span>
           </motion.div>
 
-          {/* Headline */}
-          <motion.h1
+          {/* Headline with glow effect */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="relative"
           >
-            The AI-Native CRM
-            <br />
-            <span 
-              className="bg-clip-text text-transparent"
+            {/* Hero glow behind text */}
+            <div 
+              className="absolute inset-0 blur-3xl opacity-60 -z-10"
               style={{
-                backgroundImage: 'linear-gradient(to right, #8ac5c5, #b9aad4, #d6b7c1)'
+                background: 'radial-gradient(ellipse 60% 40% at 50% 60%, rgba(138, 197, 197, 0.4), transparent 70%)',
               }}
-            >
-              Built for Revenue Teams
-            </span>
-          </motion.h1>
+            />
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+              The AI-Native CRM
+              <br />
+              <span 
+                className="bg-clip-text text-transparent"
+                style={{
+                  backgroundImage: 'linear-gradient(to right, #8ac5c5, #b9aad4, #d6b7c1)'
+                }}
+              >
+                Built for Revenue Teams
+              </span>
+            </h1>
+          </motion.div>
 
           {/* Subheadline */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ 
+              duration: 0.6, 
+              delay: 0.2,
+              ease: [0.25, 0.46, 0.45, 0.94]
+            }}
             className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
             Stop managing your CRM. Let Neptune AI handle the busywork while
@@ -432,9 +543,13 @@ export function ComingSoonPage() {
 
           {/* Waitlist Form */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ 
+              duration: 0.6, 
+              delay: 0.35,
+              ease: [0.25, 0.46, 0.45, 0.94]
+            }}
           >
             <WaitlistForm />
           </motion.div>
@@ -443,9 +558,13 @@ export function ComingSoonPage() {
         {/* Feature Cards */}
         <div className="w-full max-w-5xl mx-auto mt-20 lg:mt-28">
           <motion.h2
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ 
+              duration: 0.6, 
+              delay: 0.5,
+              ease: [0.25, 0.46, 0.45, 0.94]
+            }}
             className="text-center text-sm font-medium text-gray-500 uppercase tracking-widest mb-8"
           >
             What&apos;s Coming
