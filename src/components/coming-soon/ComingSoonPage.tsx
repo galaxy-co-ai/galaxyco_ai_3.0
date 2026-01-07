@@ -120,19 +120,22 @@ const features = [
     icon: Brain,
     title: 'Neptune AI',
     description: 'Your intelligent CRM co-pilot that understands context and takes action.',
-    gradient: 'from-nebula-teal-400 to-nebula-teal-300',
+    gradientStyle: 'linear-gradient(135deg, #6aabab, #5B8A8A)',
+    shadowColor: 'rgba(91, 138, 138, 0.5)',
   },
   {
     icon: Zap,
     title: 'AI Agents',
     description: 'Autonomous agents that handle research, outreach, and follow-ups 24/7.',
-    gradient: 'from-nebula-violet-400 to-nebula-violet-300',
+    gradientStyle: 'linear-gradient(135deg, #9a84be, #7C6B9E)',
+    shadowColor: 'rgba(124, 107, 158, 0.5)',
   },
   {
     icon: Shield,
     title: 'Enterprise Ready',
     description: 'SOC 2 compliant with fine-grained permissions and audit logging.',
-    gradient: 'from-nebula-blue-400 to-nebula-blue-300',
+    gradientStyle: 'linear-gradient(135deg, #8193b3, #5A6B8A)',
+    shadowColor: 'rgba(90, 107, 138, 0.5)',
   },
 ];
 
@@ -147,24 +150,26 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
     >
       <div className={cn(
         'h-full group p-6 rounded-2xl',
-        'bg-nebula-deep/80 backdrop-blur-sm backdrop-saturate-[180%]',
-        'border border-white/15',
-        'shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
-        'transition-all duration-200',
-        'hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] hover:-translate-y-0.5'
+        'bg-white/[0.03] backdrop-blur-md backdrop-saturate-150',
+        'border border-white/10',
+        'shadow-[0_8px_32px_rgba(0,0,0,0.3)]',
+        'transition-all duration-300',
+        'hover:bg-white/[0.06] hover:border-white/20',
+        'hover:shadow-[0_16px_48px_rgba(0,0,0,0.4)] hover:-translate-y-1'
       )}>
-        <div className={cn(
-          'w-12 h-12 rounded-xl flex items-center justify-center mb-4',
-          'bg-gradient-to-br',
-          feature.gradient,
-          'shadow-lg group-hover:scale-110 transition-transform duration-300'
-        )}>
-          <Icon className="w-6 h-6 text-white" />
+        <div 
+          className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300"
+          style={{
+            background: feature.gradientStyle,
+            boxShadow: `0 10px 25px ${feature.shadowColor}`,
+          }}
+        >
+          <Icon className="w-6 h-6 text-white drop-shadow-sm" />
         </div>
         <h3 className="font-semibold text-lg text-white mb-2">
           {feature.title}
         </h3>
-        <p className="text-sm text-gray-300 leading-relaxed">
+        <p className="text-sm text-gray-400 leading-relaxed">
           {feature.description}
         </p>
       </div>
@@ -232,11 +237,11 @@ function WaitlistForm() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-nebula-teal-500 to-nebula-teal-400 flex items-center justify-center mx-auto mb-4"
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-nebula-teal-400 to-nebula-teal-500 shadow-lg shadow-nebula-teal-500/40 flex items-center justify-center mx-auto mb-4"
               >
                 <Check className="w-8 h-8 text-white" />
               </motion.div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
+              <h3 className="text-xl font-semibold text-white mb-2">
                 You&apos;re on the list!
               </h3>
               {position && (
@@ -244,7 +249,7 @@ function WaitlistForm() {
                   #{position}
                 </p>
               )}
-              <p className="text-muted-foreground text-sm">
+              <p className="text-gray-400 text-sm">
                 We&apos;ll notify you when Galaxy is ready for launch.
               </p>
             </GlassAccentCard>
@@ -314,7 +319,7 @@ function WaitlistForm() {
               </motion.p>
             )}
 
-            <p className="text-center text-muted-foreground text-xs">
+            <p className="text-center text-gray-500 text-xs">
               Be among the first to experience the future of CRM
             </p>
           </motion.form>
@@ -348,7 +353,7 @@ export function ComingSoonPage() {
             height={40}
             className="w-10 h-10"
           />
-          <span className="text-xl font-bold text-foreground tracking-tight">
+          <span className="text-xl font-bold text-white tracking-tight">
             Galaxy
           </span>
         </motion.div>
@@ -358,7 +363,7 @@ export function ComingSoonPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-gray-400 font-medium">
             Launching 2025
           </span>
         </motion.div>
@@ -373,14 +378,23 @@ export function ComingSoonPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <span className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 rounded-full',
-              'bg-nebula-teal-900/30 border border-nebula-teal-700/50',
-              'text-nebula-teal-300 text-sm font-medium'
-            )}>
+            <span 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
+              style={{
+                backgroundColor: 'rgba(91, 138, 138, 0.25)',
+                border: '1px solid rgba(106, 171, 171, 0.5)',
+                color: '#b5dddd',
+              }}
+            >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nebula-teal-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-nebula-teal-500" />
+                <span 
+                  className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  style={{ backgroundColor: '#8ac5c5' }}
+                />
+                <span 
+                  className="relative inline-flex rounded-full h-2 w-2"
+                  style={{ backgroundColor: '#6aabab' }}
+                />
               </span>
               Now accepting early access signups
             </span>
@@ -391,11 +405,16 @@ export function ComingSoonPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight"
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight"
           >
             The AI-Native CRM
             <br />
-            <span className="bg-gradient-to-r from-nebula-teal-400 via-nebula-violet-400 to-nebula-rose-400 bg-clip-text text-transparent">
+            <span 
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage: 'linear-gradient(to right, #8ac5c5, #b9aad4, #d6b7c1)'
+              }}
+            >
               Built for Revenue Teams
             </span>
           </motion.h1>
@@ -405,7 +424,7 @@ export function ComingSoonPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
             Stop managing your CRM. Let Neptune AI handle the busywork while
             autonomous agents research, engage, and nurture your pipeline 24/7.
@@ -427,7 +446,7 @@ export function ComingSoonPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-8"
+            className="text-center text-sm font-medium text-gray-500 uppercase tracking-widest mb-8"
           >
             What&apos;s Coming
           </motion.h2>
@@ -441,19 +460,19 @@ export function ComingSoonPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 px-6 border-t border-border">
+      <footer className="relative z-10 py-8 px-6 border-t border-white/10">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-gray-500">
             &copy; {new Date().getFullYear()} GalaxyCo. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/privacy" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
               Privacy
             </a>
-            <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/terms" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
               Terms
             </a>
-            <a href="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a href="/contact" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">
               Contact
             </a>
           </div>
