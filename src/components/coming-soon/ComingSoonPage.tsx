@@ -459,7 +459,7 @@ export function ComingSoonPage() {
           transition={{ duration: 0.5 }}
         >
           <span className="text-sm text-gray-400 font-medium">
-            Launching 2025
+            Launching 2026
           </span>
         </motion.div>
       </nav>
