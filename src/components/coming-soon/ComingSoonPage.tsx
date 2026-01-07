@@ -7,7 +7,7 @@ import { ArrowRight, Zap, Brain, Shield, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { GlassCard, GlassAccentCard } from '@/design-system/primitives/glass';
+import { GlassAccentCard } from '@/design-system/primitives/glass';
 
 // ============================================================================
 // ANIMATED BACKGROUND
@@ -120,19 +120,19 @@ const features = [
     icon: Brain,
     title: 'Neptune AI',
     description: 'Your intelligent CRM co-pilot that understands context and takes action.',
-    gradient: 'from-nebula-teal-700 to-nebula-teal-500',
+    gradient: 'from-nebula-teal-400 to-nebula-teal-300',
   },
   {
     icon: Zap,
     title: 'AI Agents',
     description: 'Autonomous agents that handle research, outreach, and follow-ups 24/7.',
-    gradient: 'from-nebula-violet-700 to-nebula-violet-500',
+    gradient: 'from-nebula-violet-400 to-nebula-violet-300',
   },
   {
     icon: Shield,
     title: 'Enterprise Ready',
     description: 'SOC 2 compliant with fine-grained permissions and audit logging.',
-    gradient: 'from-nebula-blue-700 to-nebula-blue-500',
+    gradient: 'from-nebula-blue-400 to-nebula-blue-300',
   },
 ];
 
@@ -145,7 +145,14 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
     >
-      <GlassCard intensity="subtle" hoverable className="h-full group">
+      <div className={cn(
+        'h-full group p-6 rounded-2xl',
+        'bg-nebula-deep/80 backdrop-blur-sm backdrop-saturate-[180%]',
+        'border border-white/15',
+        'shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
+        'transition-all duration-200',
+        'hover:shadow-[0_12px_40px_rgba(0,0,0,0.5)] hover:-translate-y-0.5'
+      )}>
         <div className={cn(
           'w-12 h-12 rounded-xl flex items-center justify-center mb-4',
           'bg-gradient-to-br',
@@ -154,13 +161,13 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
         )}>
           <Icon className="w-6 h-6 text-white" />
         </div>
-        <h3 className="font-semibold text-lg text-foreground mb-2">
+        <h3 className="font-semibold text-lg text-white mb-2">
           {feature.title}
         </h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">
+        <p className="text-sm text-gray-300 leading-relaxed">
           {feature.description}
         </p>
-      </GlassCard>
+      </div>
     </motion.div>
   );
 }
@@ -225,7 +232,7 @@ function WaitlistForm() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className="w-16 h-16 rounded-full bg-gradient-to-br from-nebula-teal-600 to-nebula-teal-400 flex items-center justify-center mx-auto mb-4"
+                className="w-16 h-16 rounded-full bg-gradient-to-br from-nebula-teal-500 to-nebula-teal-400 flex items-center justify-center mx-auto mb-4"
               >
                 <Check className="w-8 h-8 text-white" />
               </motion.div>
@@ -233,7 +240,7 @@ function WaitlistForm() {
                 You&apos;re on the list!
               </h3>
               {position && (
-                <p className="text-2xl font-bold text-nebula-teal-400 mb-2">
+                <p className="text-2xl font-bold text-nebula-teal-300 mb-2">
                   #{position}
                 </p>
               )}
@@ -260,9 +267,10 @@ function WaitlistForm() {
                 disabled={status === 'loading'}
                 className={cn(
                   'flex-1 h-12 px-4',
-                  'bg-white/[0.05] border-white/[0.1]',
-                  'text-foreground placeholder:text-muted-foreground',
-                  'focus-visible:border-nebula-teal-700 focus-visible:ring-nebula-teal-700/30',
+                  'bg-white/10 border-white/20',
+                  'text-white placeholder:text-gray-400',
+                  'focus-visible:border-nebula-teal-400',
+                  'focus-visible:ring-nebula-teal-400/30',
                   'rounded-xl'
                 )}
               />
@@ -271,11 +279,11 @@ function WaitlistForm() {
                 disabled={status === 'loading'}
                 className={cn(
                   'h-12 px-6 rounded-xl',
-                  'bg-gradient-to-r from-nebula-teal-800 to-nebula-teal-600',
-                  'hover:from-nebula-teal-700 hover:to-nebula-teal-500',
-                  'border border-nebula-teal-600/30',
-                  'shadow-[0_0_30px_rgba(91,138,138,0.3)]',
-                  'hover:shadow-[0_0_40px_rgba(91,138,138,0.4)]',
+                  'bg-gradient-to-r from-nebula-teal-600 to-nebula-teal-500',
+                  'hover:from-nebula-teal-500 hover:to-nebula-teal-400',
+                  'border border-nebula-teal-500/50',
+                  'shadow-lg shadow-nebula-teal-500/40',
+                  'hover:shadow-xl hover:shadow-nebula-teal-500/50',
                   'transition-all duration-300',
                   'text-white font-medium',
                   'disabled:opacity-50'
@@ -367,8 +375,8 @@ export function ComingSoonPage() {
           >
             <span className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-full',
-              'bg-nebula-teal-900/20 border border-nebula-teal-800/30',
-              'text-nebula-teal-400 text-sm font-medium'
+              'bg-nebula-teal-900/30 border border-nebula-teal-700/50',
+              'text-nebula-teal-300 text-sm font-medium'
             )}>
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-nebula-teal-400 opacity-75" />

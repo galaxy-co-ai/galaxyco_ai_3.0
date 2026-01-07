@@ -60,7 +60,7 @@ export function GlassCard({
         'backdrop-saturate-[180%]',
         
         // Border
-        bordered && 'border border-white/30 dark:border-white/10',
+        bordered && 'border border-gray-200 dark:border-white/15',
         
         // Rounded corners
         'rounded-2xl',
@@ -146,7 +146,7 @@ export const GlassDialogContent = React.forwardRef<
           // Glass effect
           glassStyles[intensity],
           'backdrop-saturate-[180%]',
-          'border border-white/30 dark:border-white/10',
+          'border border-gray-200 dark:border-white/15',
           'rounded-2xl',
           'shadow-[0_12px_40px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.5)]',
           
@@ -271,7 +271,7 @@ export const GlassPopoverContent = React.forwardRef<
           // Glass effect
           glassStyles[intensity],
           'backdrop-saturate-[180%]',
-          'border border-white/30 dark:border-white/10',
+          'border border-gray-200 dark:border-white/15',
           'rounded-xl',
           'shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]',
           
@@ -342,7 +342,7 @@ export function GlassNavigation({
         // Glass effect
         glassStyles[intensity],
         'backdrop-saturate-[180%]',
-        'border-white/30 dark:border-white/10',
+        'border-gray-200 dark:border-white/15',
         
         // Fixed positioning
         fixed && 'fixed left-0 right-0 z-40',
@@ -390,23 +390,23 @@ export function GlassAccentCard({
     <div
       className={cn(
         // Glass effect with accent tint
-        'bg-nebula-teal-900/15 dark:bg-nebula-teal-900/20',
+        'bg-nebula-teal-100/50 dark:bg-nebula-teal-900/25',
         'backdrop-blur-md backdrop-saturate-[180%]',
         
         // Border
-        bordered && 'border border-nebula-teal-900/30',
+        bordered && 'border border-nebula-teal-300 dark:border-nebula-teal-700/40',
         
         // Rounded corners
         'rounded-2xl',
         
         // Shadow with accent color
-        'shadow-[0_8px_32px_rgba(91,138,138,0.2)]',
+        'shadow-[0_8px_32px_rgba(91,138,138,0.15)] dark:shadow-[0_8px_32px_rgba(91,138,138,0.25)]',
         
         // Padding
         'p-6',
         
         // Hover effect
-        hoverable && 'transition-all duration-200 hover:shadow-[0_12px_40px_rgba(91,138,138,0.3)] hover:-translate-y-0.5',
+        hoverable && 'transition-all duration-200 hover:shadow-[0_12px_40px_rgba(91,138,138,0.25)] dark:hover:shadow-[0_12px_40px_rgba(91,138,138,0.35)] hover:-translate-y-0.5',
         
         className
       )}
