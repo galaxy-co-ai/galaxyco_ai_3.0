@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-07 (4ddbcff)  
+**Updated Through:** 2026-01-07 (64cdfd9)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-07 64cdfd9 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0 # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
+- 2026-01-07 ea6653c fix(web): use SVG logo for transparent background
 - 2026-01-07 4ddbcff feat(web): add premium visual enhancements - star field, hero glow, button pulse, card hover effects
 - 2026-01-07 20eeedc fix(web): improve dark mode contrast with inline styles for gradients and colors
 - 2026-01-06 5b148dd fix(web): improve Coming Soon page dark mode styling
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-31 bf5c59f fix(tools): add missing 'sales' capability handler
 - 2025-12-31 e4a1810 refactor(tools): migrate from monolithic tools.ts to modular structure
 - 2025-12-31 92f62ec refactor(api): consolidate Neptune conversation endpoints
-- 2025-12-30 82fdbeb fix(platform): F1 cleanup - blog access, remove dead code, fix navigation
-- 2025-12-30 9440bb7 feat(production): complete Phase 3 & 4 - Data Integrity + Polish & Docs
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
