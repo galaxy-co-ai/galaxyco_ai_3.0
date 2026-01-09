@@ -5,9 +5,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Target, TrendingUp, Loader2 } from 'lucide-react';
 
+// Contact data structure passed to scoring API
+interface ContactScoreData {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  company?: string | null;
+  title?: string | null;
+  phone?: string | null;
+  tags?: string[];
+  [key: string]: unknown;
+}
+
 interface ScoreCardProps {
   contactId: string;
-  contactData: any;
+  contactData: ContactScoreData;
 }
 
 export function ScoreCard({ contactId, contactData }: ScoreCardProps) {

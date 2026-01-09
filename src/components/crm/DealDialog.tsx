@@ -25,10 +25,22 @@ const dealSchema = z.object({
 
 type DealForm = z.infer<typeof dealSchema>;
 
+// Deal data shape for edit mode
+interface DealData {
+  id: string;
+  name?: string | null;
+  company?: string | null;
+  estimatedValue?: number | null;
+  stage?: string | null;
+  score?: number | null;
+  nextFollowUpAt?: Date | string | null;
+  notes?: string | null;
+}
+
 interface DealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  deal?: any; // Existing deal for edit mode
+  deal?: DealData;
   onSuccess: () => void;
 }
 
@@ -69,7 +81,7 @@ export function DealDialog({ open, onOpenChange, deal, onSuccess }: DealDialogPr
         name: deal.name || '',
         company: deal.company || '',
         estimatedValue: valueInDollars,
-        stage: deal.stage || 'new',
+        stage: (deal.stage as DealForm['stage']) || 'new',
         score: deal.score || 50,
         nextFollowUpAt: deal.nextFollowUpAt 
           ? new Date(deal.nextFollowUpAt).toISOString().split('T')[0]
@@ -189,7 +201,7 @@ export function DealDialog({ open, onOpenChange, deal, onSuccess }: DealDialogPr
               <Label htmlFor="stage">Stage *</Label>
               <Select
                 value={form.watch('stage')}
-                onValueChange={(value) => form.setValue('stage', value as any)}
+                onValueChange={(value) => form.setValue('stage', value as DealForm['stage'])}
                 disabled={isLoading}
               >
                 <SelectTrigger id="stage" className="rounded-xl">

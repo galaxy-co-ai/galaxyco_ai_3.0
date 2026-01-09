@@ -28,10 +28,23 @@ const contactSchema = z.object({
 
 type ContactForm = z.infer<typeof contactSchema>;
 
+// Contact data shape for edit mode
+interface ContactData {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  company?: string | null;
+  phone?: string | null;
+  title?: string | null;
+  tags?: string[];
+  status?: 'hot' | 'warm' | 'cold' | null;
+}
+
 interface ContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contact?: any; // Existing contact for edit mode
+  contact?: ContactData;
   onSuccess: () => void;
 }
 

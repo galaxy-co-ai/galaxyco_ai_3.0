@@ -69,6 +69,69 @@ export interface Lead {
   notes?: string;
 }
 
+// API response types for transforming raw data
+interface ApiLead {
+  id: string;
+  name?: string;
+  email?: string;
+  company?: string;
+  title?: string;
+  phone?: string;
+  stage?: string;
+  score?: number;
+  estimatedValue?: number;
+  lastContactedAt?: Date | null;
+  nextFollowUpAt?: Date | null;
+  interactionCount?: number;
+  source?: string;
+  tags?: string[];
+  notes?: string;
+}
+
+interface ApiOrganization {
+  id: string;
+  name?: string;
+  email?: string;
+  company?: string;
+  phone?: string;
+  website?: string;
+  status?: string;
+  industry?: string;
+  size?: string;
+  revenue?: number;
+  tags?: string[];
+  notes?: string;
+  lastContactedAt?: Date | null;
+}
+
+interface ApiContact {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  company?: string;
+  title?: string;
+  phone?: string;
+  tags?: string[];
+}
+
+interface ApiDeal {
+  id: string;
+  title?: string;
+  name?: string;
+  company?: string;
+  value?: number;
+  estimatedValue?: number;
+  stage?: string;
+  probability?: number;
+  score?: number;
+  closeDate?: Date | null;
+  nextFollowUpAt?: Date | null;
+  source?: string;
+  tags?: string[];
+  notes?: string;
+}
+
 export interface Organization {
   id: string;
   name: string;
@@ -407,22 +470,22 @@ export default function CRMDashboard({
         try {
           const response = await fetch('/api/crm/prospects');
           if (response.ok) {
-            const fresh = await response.json();
-            const transformed = fresh.map((lead: any) => ({
+            const fresh: ApiLead[] = await response.json();
+            const transformed = fresh.map((lead) => ({
               id: lead.id,
-              name: lead.name,
-              email: lead.email || '',
-              company: lead.company || '',
+              name: lead.name ?? '',
+              email: lead.email ?? '',
+              company: lead.company ?? '',
               title: lead.title,
               phone: lead.phone,
-              stage: lead.stage,
-              score: lead.score || 0,
-              estimatedValue: lead.estimatedValue || 0,
-              lastContactedAt: lead.lastContactedAt,
-              nextFollowUpAt: lead.nextFollowUpAt,
-              interactionCount: lead.interactionCount || 0,
+              stage: lead.stage ?? 'new',
+              score: lead.score ?? 0,
+              estimatedValue: lead.estimatedValue ?? 0,
+              lastContactedAt: lead.lastContactedAt ?? null,
+              nextFollowUpAt: lead.nextFollowUpAt ?? null,
+              interactionCount: lead.interactionCount ?? 0,
               source: lead.source,
-              tags: lead.tags || [],
+              tags: lead.tags ?? [],
               notes: lead.notes,
             }));
             setLeads(transformed);
@@ -462,7 +525,7 @@ export default function CRMDashboard({
           const response = await fetch('/api/crm/contacts');
           if (response.ok) {
             const fresh = await response.json();
-            const transformed = fresh.map((contact: any) => ({
+            const transformed = fresh.map((contact: ApiContact) => ({
               id: contact.id,
               firstName: contact.firstName || '',
               lastName: contact.lastName || '',
@@ -518,7 +581,7 @@ export default function CRMDashboard({
       const response = await fetch('/api/crm/contacts');
       if (response.ok) {
         const fresh = await response.json();
-        const transformed = fresh.map((contact: any) => ({
+        const transformed = fresh.map((contact: ApiContact) => ({
           id: contact.id,
           firstName: contact.firstName || '',
           lastName: contact.lastName || '',
@@ -555,7 +618,7 @@ export default function CRMDashboard({
           const response = await fetch('/api/crm/customers');
           if (response.ok) {
             const fresh = await response.json();
-            const transformed = fresh.map((org: any) => ({
+            const transformed = fresh.map((org: ApiOrganization) => ({
               id: org.id,
               name: org.name,
               email: org.email || '',
@@ -633,7 +696,7 @@ export default function CRMDashboard({
       const response = await fetch('/api/crm/deals');
       if (response.ok) {
         const fresh = await response.json();
-        const transformed = fresh.map((deal: any) => ({
+        const transformed = fresh.map((deal: ApiDeal) => ({
           id: deal.id,
           title: deal.name,
           company: deal.company || '',
@@ -1421,7 +1484,7 @@ export default function CRMDashboard({
                         if (response.ok) {
                           const freshLeads = await response.json();
                           // Transform to match Lead interface
-                          const transformedLeads: Lead[] = freshLeads.map((lead: any) => ({
+                          const transformedLeads: Lead[] = freshLeads.map((lead: ApiLead) => ({
                             id: lead.id,
                             name: lead.name,
                             email: lead.email || '',
@@ -1650,7 +1713,7 @@ export default function CRMDashboard({
                         const response = await fetch('/api/crm/customers');
                         if (response.ok) {
                           const fresh = await response.json();
-                          const transformed = fresh.map((org: any) => ({
+                          const transformed = fresh.map((org: ApiOrganization) => ({
                             id: org.id,
                             name: org.name,
                             email: org.email || '',
@@ -1843,7 +1906,7 @@ export default function CRMDashboard({
                         const response = await fetch('/api/crm/contacts');
                         if (response.ok) {
                           const fresh = await response.json();
-                          const transformed = fresh.map((contact: any) => ({
+                          const transformed = fresh.map((contact: ApiContact) => ({
                             id: contact.id,
                             firstName: contact.firstName || '',
                             lastName: contact.lastName || '',
@@ -2074,7 +2137,7 @@ export default function CRMDashboard({
                         const response = await fetch('/api/crm/deals');
                         if (response.ok) {
                           const fresh = await response.json();
-                          const transformed = fresh.map((deal: any) => ({
+                          const transformed = fresh.map((deal: ApiDeal) => ({
                             id: deal.id,
                             title: deal.name,
                             company: deal.company || '',

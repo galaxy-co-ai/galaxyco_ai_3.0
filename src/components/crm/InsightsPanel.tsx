@@ -7,13 +7,37 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, Loader2, TrendingUp, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
+// Contact data structure passed to insights API
+interface ContactInsightData {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  company?: string | null;
+  title?: string | null;
+  phone?: string | null;
+  tags?: string[];
+  [key: string]: unknown;
+}
+
 interface InsightsPanelProps {
   contactId: string;
-  contactData: any;
+  contactData: ContactInsightData;
+}
+
+// Insights data structure from API
+interface InsightsData {
+  summary?: string;
+  sentiment?: string;
+  healthScore?: number;
+  strengths?: string[];
+  opportunities?: string[];
+  recommendations?: string[];
+  riskFactors?: string[];
+  nextActions?: string[];
 }
 
 export function InsightsPanel({ contactId, contactData }: InsightsPanelProps) {
-  const [insights, setInsights] = useState<any>(null);
+  const [insights, setInsights] = useState<InsightsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const generateInsights = async () => {
