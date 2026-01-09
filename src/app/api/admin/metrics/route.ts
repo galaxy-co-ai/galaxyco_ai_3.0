@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    if ((error as any)?.status === 403) {
+    if ((error as { status?: number })?.status === 403) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized - Admin access required' },
         { status: 403 }

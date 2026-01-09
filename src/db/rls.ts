@@ -240,5 +240,5 @@ export async function getRLSEnabledTables(): Promise<string[]> {
       AND relnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public');
   `);
   
-  return result.rows.map((row: any) => row.table_name);
+  return result.rows.map((row) => (row as { table_name: string }).table_name);
 }

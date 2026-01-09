@@ -10,12 +10,16 @@ import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
+// pdf-parse function signature
+type PdfParseFn = (buffer: Buffer) => Promise<{ text: string; numpages: number }>;
+
 // Helper to extract text from PDF files
 async function extractPdfText(buffer: Buffer): Promise<string> {
   try {
     // Dynamic import for pdf-parse (CommonJS module)
     const pdfParseModule = await import('pdf-parse');
-    const pdfParse = (pdfParseModule as any).default ?? (pdfParseModule as any);
+    // pdf-parse exports differ between CJS and ESM - handle both
+    const pdfParse = ((pdfParseModule as { default?: PdfParseFn }).default ?? pdfParseModule) as PdfParseFn;
     const data = await pdfParse(buffer);
     return data.text || '';
   } catch (error) {

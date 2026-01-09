@@ -111,16 +111,17 @@ export async function POST(
           : `Webhook returned status ${statusCode}`,
         response: responseBody.substring(0, 500), // Limit response size
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errMessage = error instanceof Error ? error.message : String(error);
       logger.error('Webhook test failed', {
         userId,
         webhookId: id,
-        error: error.message,
+        error: errMessage,
       });
 
       return NextResponse.json({
         success: false,
-        message: `Failed to deliver webhook: ${error.message}`,
+        message: `Failed to deliver webhook: ${errMessage}`,
       }, { status: 200 }); // Return 200 so UI can show the error
     }
   } catch (error) {

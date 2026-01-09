@@ -53,7 +53,7 @@ export async function GET() {
         description: agent.description,
         type: agent.type,
         status: agent.status,
-        nodeCount: (agent.config as any)?.nodes?.length || 0,
+        nodeCount: (agent.config as { nodes?: unknown[] } | null)?.nodes?.length || 0,
         executionCount: agent.executionCount,
         createdAt: agent.createdAt,
         lastExecutedAt: agent.lastExecutedAt,
