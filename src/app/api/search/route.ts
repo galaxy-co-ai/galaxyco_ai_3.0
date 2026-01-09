@@ -24,7 +24,6 @@ import {
   blogPosts
 } from '@/db/schema';
 import { getCurrentWorkspace } from '@/lib/auth';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { and, eq, ilike, or, sql, desc } from 'drizzle-orm';
 import { withRateLimit } from '@/lib/rate-limit';

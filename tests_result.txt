@@ -1,0 +1,5 @@
+npm error Missing script: "coverage"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: C:\Users\Owner\AppData\Local\npm-cache\_logs\2026-01-08T20_58_54_468Z-debug-0.log

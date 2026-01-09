@@ -1,6 +1,13 @@
 import { getCurrentWorkspace, getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { aiConversations, aiMessages, aiUserPreferences } from '@/db/schema';
+import { 
+  aiConversations, 
+  aiMessages, 
+  aiUserPreferences, 
+  type AiMessage,
+  type AiConversation,
+  type AiUserPreferences,
+} from '@/db/schema';
 import { eq, and, desc, asc, ne } from 'drizzle-orm';
 import { getOpenAI } from '@/lib/ai-providers';
 import { rateLimit } from '@/lib/rate-limit';
@@ -18,7 +25,7 @@ const streamMessageSchema = z.object({
 export async function POST(request: Request) {
   try {
     let workspaceId: string;
-    let user: any;
+    let user: Awaited<ReturnType<typeof getCurrentUser>>;
     
     try {
       const workspaceResult = await getCurrentWorkspace();
@@ -234,11 +241,11 @@ export async function POST(request: Request) {
         communicationStyle: 'balanced',
         topicsOfInterest: [],
         frequentQuestions: [],
-      } as any;
+      } as Partial<AiUserPreferences>;
     }
 
     // Get conversation history - increased context window
-    let history: any[] = [];
+    let history: AiMessage[] = [];
     try {
       history = await db.query.aiMessages.findMany({
         where: eq(aiMessages.conversationId, conversation.id),
@@ -251,7 +258,7 @@ export async function POST(request: Request) {
     }
 
     // Get recent conversations for context (last 5 conversations) - only if we have a conversation ID
-    let recentConversations: any[] = [];
+    let recentConversations: AiConversation[] = [];
     if (conversationId) {
       recentConversations = await db.query.aiConversations.findMany({
         where: and(
@@ -265,8 +272,9 @@ export async function POST(request: Request) {
     }
 
     // Build context about user's interests and patterns
-    const userContext = preferences.topicsOfInterest.length > 0
-      ? `User frequently asks about: ${preferences.topicsOfInterest.join(', ')}`
+    const topicsOfInterest = preferences.topicsOfInterest ?? [];
+    const userContext = topicsOfInterest.length > 0
+      ? `User frequently asks about: ${topicsOfInterest.join(', ')}`
       : '';
 
     const communicationStyle = preferences.communicationStyle || 'balanced';
@@ -537,7 +545,7 @@ async function updateUserPreferencesFromConversation({
   userId: string;
   userMessage: string;
   assistantResponse: string;
-  history: any[];
+  history: AiMessage[];
 }) {
   try {
     // Get current preferences

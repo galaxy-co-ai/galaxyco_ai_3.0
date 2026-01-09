@@ -597,10 +597,10 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
  */
 export function generateQuickActions(context: QuickActionContext): SuggestedAction[] {
   const { pageContext } = context;
-  const module = pageContext.module;
+  const pageModule = pageContext.module;
 
   // Get module-specific actions
-  const moduleActionGenerator = MODULE_ACTIONS[module];
+  const moduleActionGenerator = MODULE_ACTIONS[pageModule];
   if (!moduleActionGenerator) {
     return getDefaultActions();
   }

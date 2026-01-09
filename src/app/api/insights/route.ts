@@ -9,7 +9,6 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { proactiveInsights } from '@/db/schema';
 import { and, eq, gte, sql, or, desc } from 'drizzle-orm';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 export async function GET(request: NextRequest) {

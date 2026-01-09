@@ -38,7 +38,7 @@ export function ToastExamples() {
       description: "Your file is ready to view.",
       action: {
         label: "View File",
-        onClick: () => console.log("Opening file..."),
+        onClick: () => { /* Open file handler */ },
       },
     });
   };
@@ -150,7 +150,7 @@ toast.success("File uploaded", {
   description: "Your file is ready",
   action: {
     label: "View",
-    onClick: () => console.log("View file")
+    onClick: () => { /* View file handler */ }
   }
 });
 

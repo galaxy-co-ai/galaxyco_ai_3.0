@@ -1,7 +1,6 @@
 import {
   test,
   expect,
-  devices,
   type Page,
   type TestInfo,
   type ConsoleMessage,
@@ -76,15 +75,12 @@ async function captureRouteScreenshots(page: Page, testInfo: TestInfo, options: 
 }
 
 test.describe("Marketing QA (screenshots)", () => {
-  test("desktop", async ({ page }, testInfo) => {
-    await captureRouteScreenshots(page, testInfo, { folder: "screenshots-desktop" });
-  });
-
-  test.describe("mobile", () => {
-    test.use({ ...devices["iPhone 13"] });
-
-    test("mobile", async ({ page }, testInfo) => {
-      await captureRouteScreenshots(page, testInfo, { folder: "screenshots-mobile" });
-    });
+  test("captures all marketing routes", async ({ page }, testInfo) => {
+    // Determine folder based on project name (chromium or mobile)
+    const folder = testInfo.project.name === "mobile" 
+      ? "screenshots-mobile" 
+      : "screenshots-desktop";
+    
+    await captureRouteScreenshots(page, testInfo, { folder });
   });
 });

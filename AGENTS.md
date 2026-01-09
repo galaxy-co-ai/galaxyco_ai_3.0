@@ -1,19 +1,24 @@
-# Repository Guidelines
+﻿# Repository Guidelines
 
 ## Project Structure & Module Organization
-Source lives in `src/app` (routes + API), `src/components` (UI primitives/features), `src/lib` (AI + utilities), and `src/db` (Drizzle schema). Other key folders: `drizzle/` for migrations, `scripts/` for automation, `docs/` for product knowledge, `public/` for assets, `src/trigger/` for Trigger.dev, and `tests/` + `tests/e2e/` for Vitest and Playwright suites.
+GalaxyCo.ai keeps runtime code inside `src/`: `src/app` (Next.js routes + API handlers), `src/components` (UI primitives and layouts), `src/lib` (AI orchestration, caching, utilities), `src/db` (Drizzle schema) and `src/trigger` (Trigger.dev jobs). Database migrations stay in `drizzle/`, shared automation scripts live in `scripts/`, docs plus checkpoint status logs sit in `docs/`, and static assets belong in `public/`. Tests mirror the runtime folders in `tests/` (unit + integration) and `tests/e2e/` (Playwright flows).
 
 ## Build, Test, and Development Commands
-Use `npm run dev` locally; `npm run build && npm run start` mirrors production. Before every PR run `npm run env:check`, `npm run lint`, `npm run typecheck`, and `npm run format:check` (auto-fix with `npm run format`). Database helpers: `npm run db:push`, `npm run db:generate`, `npm run db:migrate`, `npm run db:studio`, and `npm run db:seed`. Testing commands: `npm test`, `npm run test:run`, `npm run test:coverage` (>=80%), `npm run test:e2e` or `npx playwright test`, plus `npm run trigger:dev` when touching background jobs.
+Use Node 18+ and copy `.env.example` to `.env.local` before running commands. Core workflow:
+- `npm run dev` - start the Next.js dev server on http://localhost:3000.
+- `npm run build && npm run start` - production build and runtime smoke test.
+- `npm run lint`, `npm run typecheck`, `npm run format:check` - enforce style and types (auto-fix with `npm run format`).
+- Database helpers: `npm run db:generate`, `npm run db:migrate`, `npm run db:push`, `npm run db:seed`, `npm run db:studio`.
+- Tests: `npm test` (Vitest watch), `npm run test:run`, `npm run test:coverage`, `npm run test:e2e` (Playwright), and `npm run trigger:dev` when iterating on background jobs.
 
 ## Coding Style & Naming Conventions
-Ship only TypeScript on Next.js 16. Prettier enforces 2-space indentation, 100-character width, semicolons, and single quotes in TSX; always format before committing. ESLint (Next + `unused-imports`) must pass without new `eslint-disable` blocks. Components/hooks are PascalCase, helpers camelCase, and test files mirror their subjects. Use Lucide icons, Radix wrappers, Tailwind utilities, Zod validation, and update `.env.example` when introducing env vars.
+TypeScript + React only; avoid `.js` files unless migrating legacy code. Prettier enforces 2-space indentation, semicolons, single quotes, and 100 character width; run formatting before commits. ESLint (Next config plus `unused-imports`) must pass without new suppressions. Components, hooks, and providers use PascalCase; helpers and utilities use camelCase; route folders follow Next.js kebab-case (for example `crm-dashboard`). Update `.env.example` whenever a new secret or feature flag is introduced.
 
 ## Testing Guidelines
-Unit and integration specs belong in `tests/unit` or `tests/integration` using Vitest + Testing Library to assert observable behavior. UI changes require component coverage, and flows touching navigation, auth, or billing must re-run Playwright (`tests/e2e/*.spec.ts`) with shared fixtures in `tests/e2e/fixtures`. Keep coverage at or above 80% and note justified gaps in `tests/STATUS.md`.
+Vitest with Testing Library powers unit and integration suites in `tests/lib`, `tests/app`, and `tests/components`; match test names to their sources (for example `TeamChat.test.tsx`). Keep coverage >=80% and document intentional gaps in `tests/STATUS.md`. End-to-end coverage runs with Playwright specs in `tests/e2e`; smoke the spec relevant to your feature plus `tests/e2e/marketing-qa.spec.ts` before merging. Store fixtures under `tests/e2e/fixtures` or feature folders rather than inlining JSON blobs.
 
 ## Commit & Pull Request Guidelines
-Commits follow Conventional Commits (`feat(ai):`, `fix(app):`, `docs(status):`). PRs should summarize scope, link the ticket, attach screenshots or Looms for UI, and confirm lint, typecheck, build, tests, and migrations were run. Squash WIP commits, highlight schema or env updates, and tag platform/security reviewers when relevant.
+Commits follow Conventional Commits (`feat(ai):`, `fix(app):`, `docs(status):`). A pull request should describe scope, link the issue or checkpoint, include screenshots or Looms for UI changes, and confirm lint, typecheck, unit, E2E, and database tasks were executed. Squash noisy WIP commits, call out schema or env impacts in the description, and ping platform/security reviewers for auth, billing, or storage modifications.
 
-## Security & Configuration
-Secrets stay in `.env.local`; never paste credentials into issues or logs. Keep `.env.example` current, validate with `npm run env:check`, and document new providers in `docs/integrations/`. Changes to auth, billing, or uploads require a short risk summary plus a security reviewer tag. Report vulnerabilities privately (Slack or confidential issue), not in public threads.
+## Security & Configuration Tips
+Never commit `.env.local`; secrets stay local or in the managed vault. Run `npm run env:check` before builds to verify required keys. When touching Trigger.dev jobs, Sentry config, or webhook handlers, document the new variables in `docs/integrations/` and outline rotation steps. Report vulnerabilities privately (Slack #security or a confidential GitHub issue) rather than public threads.

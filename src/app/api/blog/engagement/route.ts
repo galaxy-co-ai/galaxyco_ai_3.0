@@ -7,7 +7,6 @@ import {
   blogReactions,
   blogPosts
 } from '@/db/schema';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';

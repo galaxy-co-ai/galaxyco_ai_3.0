@@ -1,0 +1,59 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - generic [ref=e10]:
+      - text: Compiling
+      - generic [ref=e11]:
+        - generic [ref=e12]: .
+        - generic [ref=e13]: .
+        - generic [ref=e14]: .
+  - alert [ref=e15]
+  - generic [ref=e16]:
+    - navigation [ref=e17]:
+      - generic [ref=e18]:
+        - img "Galaxy" [ref=e19]
+        - generic [ref=e20]: Galaxy
+      - generic [ref=e21]: Launching 2026
+    - main [ref=e22]:
+      - generic [ref=e23]:
+        - generic [ref=e25]: Now accepting early access signups
+        - heading "The AI-Native CRM Built for Revenue Teams" [level=1] [ref=e31]:
+          - text: The AI-Native CRM
+          - text: Built for Revenue Teams
+        - paragraph [ref=e32]: Stop managing your CRM. Let Neptune AI handle the busywork while autonomous agents research, engage, and nurture your pipeline 24/7.
+        - generic [ref=e35]:
+          - generic [ref=e36]:
+            - textbox "Enter your email" [ref=e37]
+            - button "Join Waitlist" [ref=e39]:
+              - text: Join Waitlist
+              - img
+          - paragraph [ref=e40]: Be among the first to experience the future of CRM
+      - generic [ref=e41]:
+        - heading "What's Coming" [level=2] [ref=e42]
+        - generic [ref=e43]:
+          - generic [ref=e45]:
+            - img [ref=e47]
+            - heading "Neptune AI" [level=3] [ref=e57]
+            - paragraph [ref=e58]: Your intelligent CRM co-pilot that understands context and takes action.
+          - generic [ref=e60]:
+            - img [ref=e62]
+            - heading "AI Agents" [level=3] [ref=e64]
+            - paragraph [ref=e65]: Autonomous agents that handle research, outreach, and follow-ups 24/7.
+          - generic [ref=e67]:
+            - img [ref=e69]
+            - heading "Enterprise Ready" [level=3] [ref=e71]
+            - paragraph [ref=e72]: SOC 2 compliant with fine-grained permissions and audit logging.
+    - contentinfo [ref=e73]:
+      - generic [ref=e74]:
+        - paragraph [ref=e75]: © 2026 GalaxyCo. All rights reserved.
+        - generic [ref=e76]:
+          - link "Privacy" [ref=e77] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e78] [cursor=pointer]:
+            - /url: /terms
+          - link "Contact" [ref=e79] [cursor=pointer]:
+            - /url: /contact
+  - region "Notifications alt+T"
+```

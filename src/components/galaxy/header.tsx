@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Command, Settings, Plug, Gauge, LogOut } from "lucide-react";
+import { Search, Settings, Plug, Gauge, LogOut } from "lucide-react";
 import { OrganizationSwitcher, useUser, useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

@@ -8,7 +8,7 @@ import { createErrorResponse } from '@/lib/api-error-handler';
 import { broadcastActivity, broadcastAgentStatus } from '@/lib/pusher-server';
 import { logger } from '@/lib/logger';
 import { expensiveOperationLimit } from '@/lib/rate-limit';
-import { checkConcurrentRunLimit, startConcurrentRun, type WorkspaceTier } from '@/lib/cost-protection';
+import { checkConcurrentRunLimit, type WorkspaceTier } from '@/lib/cost-protection';
 
 type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 

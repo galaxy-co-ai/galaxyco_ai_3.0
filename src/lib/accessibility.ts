@@ -87,6 +87,8 @@ export function useKeyboardNavigation<T extends HTMLElement>({
     [itemCount, onSelect, onEscape, orientation, loop]
   );
 
+  // Ref access in return is intentional - avoids re-renders during keyboard nav
+  // eslint-disable-next-line react-hooks/refs
   return { currentIndex: currentIndex.current, handleKeyDown };
 }
 

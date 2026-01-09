@@ -6,7 +6,6 @@
 
 import { NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 import { getTwitterIntegration } from '@/lib/social/twitter';
 

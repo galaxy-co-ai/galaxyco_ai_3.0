@@ -1,0 +1,296 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - banner [ref=e13]:
+      - generic [ref=e15]:
+        - link "Launchpad" [ref=e16] [cursor=pointer]:
+          - /url: /launchpad
+          - img [ref=e20]
+          - generic [ref=e25]: Launchpad
+        - generic [ref=e27]:
+          - img [ref=e28]
+          - textbox "Search articles" [ref=e31]:
+            - /placeholder: Search articles...
+    - main [ref=e32]:
+      - generic [ref=e33]:
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - img [ref=e43]
+            - text: AI for Business Owners
+          - heading "AI Made Simple" [level=1] [ref=e45]
+        - generic [ref=e50]:
+          - link "Discover" [ref=e51] [cursor=pointer]:
+            - /url: /launchpad
+            - button "Discover" [ref=e52]
+          - link "Learn" [ref=e53] [cursor=pointer]:
+            - /url: /launchpad/learn
+            - button "Learn" [ref=e54]
+          - link "Docs" [ref=e55] [cursor=pointer]:
+            - /url: /docs
+            - button "Docs" [ref=e56]
+          - link "Saved" [ref=e57] [cursor=pointer]:
+            - /url: /launchpad/bookmarks
+            - button "Saved" [ref=e58]
+        - generic [ref=e59]:
+          - paragraph [ref=e61]:
+            - img [ref=e62]
+            - strong [ref=e64]: "Preview Mode:"
+            - text: This is demo content showing the Launchpad layout. Create your first post in Mission Control to see real content here.
+          - generic [ref=e65]:
+            - generic [ref=e66]:
+              - img [ref=e68]
+              - heading "Featured" [level=2] [ref=e70]
+            - generic [ref=e71]:
+              - generic [ref=e73]:
+                - img [ref=e75]
+                - generic [ref=e77]:
+                  - generic [ref=e78]: Getting Started
+                  - heading "5 Ways AI Can Transform Your Small Business in 2024" [level=4] [ref=e79]
+                - generic [ref=e80]:
+                  - paragraph [ref=e81]: Discover practical AI applications that are accessible to businesses of any size. No technical expertise required.
+                  - generic [ref=e82]:
+                    - generic [ref=e83]:
+                      - img [ref=e84]
+                      - text: 8 min
+                    - generic [ref=e87]: less than a minute ago
+                - generic [ref=e89]: Demo Content
+              - generic [ref=e91]:
+                - img [ref=e93]
+                - generic [ref=e95]:
+                  - generic [ref=e96]: Tutorials
+                  - heading "The Complete Guide to AI-Powered Customer Service" [level=4] [ref=e97]
+                - generic [ref=e98]:
+                  - paragraph [ref=e99]: Learn how to implement AI chatbots and automated responses that actually help your customers.
+                  - generic [ref=e100]:
+                    - generic [ref=e101]:
+                      - img [ref=e102]
+                      - text: 12 min
+                    - generic [ref=e105]: 1 day ago
+                - generic [ref=e107]: Demo Content
+          - generic [ref=e108]:
+            - generic [ref=e109]:
+              - heading "Latest Articles" [level=2] [ref=e111]
+              - generic [ref=e112]:
+                - generic [ref=e114]:
+                  - img [ref=e116]
+                  - generic [ref=e118]:
+                    - generic [ref=e119]: Getting Started
+                    - heading "Getting Started with ChatGPT for Business" [level=4] [ref=e120]
+                  - generic [ref=e121]:
+                    - paragraph [ref=e122]: A practical introduction to using ChatGPT for everyday business tasks.
+                    - generic [ref=e123]:
+                      - generic [ref=e124]:
+                        - img [ref=e125]
+                        - text: 6 min
+                      - generic [ref=e128]: 2 days ago
+                  - generic [ref=e130]: Demo Content
+                - generic [ref=e132]:
+                  - img [ref=e134]
+                  - generic [ref=e136]:
+                    - generic [ref=e137]: Tutorials
+                    - heading "Creating Social Media Content with AI Tools" [level=4] [ref=e138]
+                  - generic [ref=e139]:
+                    - paragraph [ref=e140]: Save hours every week by automating your social media content creation.
+                    - generic [ref=e141]:
+                      - generic [ref=e142]:
+                        - img [ref=e143]
+                        - text: 7 min
+                      - generic [ref=e146]: 3 days ago
+                  - generic [ref=e148]: Demo Content
+                - generic [ref=e150]:
+                  - img [ref=e152]
+                  - generic [ref=e154]:
+                    - generic [ref=e155]: Use Cases
+                    - heading "AI Tools for Financial Planning and Forecasting" [level=4] [ref=e156]
+                  - generic [ref=e157]:
+                    - paragraph [ref=e158]: Leverage AI to make better financial decisions for your business.
+                    - generic [ref=e159]:
+                      - generic [ref=e160]:
+                        - img [ref=e161]
+                        - text: 9 min
+                      - generic [ref=e164]: 4 days ago
+                  - generic [ref=e166]: Demo Content
+                - generic [ref=e168]:
+                  - img [ref=e170]
+                  - generic [ref=e172]:
+                    - generic [ref=e173]: Industry News
+                    - 'heading "The Latest in AI: What''s New This Month" [level=4] [ref=e174]'
+                  - generic [ref=e175]:
+                    - paragraph [ref=e176]: A roundup of the most important AI developments affecting small businesses.
+                    - generic [ref=e177]:
+                      - generic [ref=e178]:
+                        - img [ref=e179]
+                        - text: 5 min
+                      - generic [ref=e182]: 5 days ago
+                  - generic [ref=e184]: Demo Content
+                - generic [ref=e186]:
+                  - img [ref=e188]
+                  - generic [ref=e190]:
+                    - generic [ref=e191]: Best Practices
+                    - heading "Building Trust with AI-Generated Content" [level=4] [ref=e192]
+                  - generic [ref=e193]:
+                    - paragraph [ref=e194]: Best practices for using AI while maintaining authenticity with your audience.
+                    - generic [ref=e195]:
+                      - generic [ref=e196]:
+                        - img [ref=e197]
+                        - text: 8 min
+                      - generic [ref=e200]: 6 days ago
+                  - generic [ref=e202]: Demo Content
+                - generic [ref=e204]:
+                  - img [ref=e206]
+                  - generic [ref=e208]:
+                    - generic [ref=e209]: Case Studies
+                    - 'heading "From Skeptic to Advocate: A Restaurant Owner''s AI Journey" [level=4] [ref=e210]'
+                  - generic [ref=e211]:
+                    - paragraph [ref=e212]: How one restaurant owner went from AI skeptic to saving 15 hours per week.
+                    - generic [ref=e213]:
+                      - generic [ref=e214]:
+                        - img [ref=e215]
+                        - text: 10 min
+                      - generic [ref=e218]: 7 days ago
+                  - generic [ref=e220]: Demo Content
+            - complementary [ref=e221]:
+              - generic [ref=e222]:
+                - generic [ref=e223]:
+                  - img [ref=e225]
+                  - heading "Trending" [level=3] [ref=e228]
+                - generic [ref=e231]:
+                  - 'link "1 How to Write Better Prompts: A Beginner''s Guide Tutorials" [ref=e232]':
+                    - /url: "#"
+                    - generic [ref=e233]: "1"
+                    - generic [ref=e234]:
+                      - paragraph [ref=e235]: "How to Write Better Prompts: A Beginner's Guide"
+                      - generic [ref=e236]: Tutorials
+                  - 'link "2 OpenAI vs Claude vs Gemini: Which is Right for Your Business? Industry News" [ref=e237]':
+                    - /url: "#"
+                    - generic [ref=e238]: "2"
+                    - generic [ref=e239]:
+                      - paragraph [ref=e240]: "OpenAI vs Claude vs Gemini: Which is Right for Your Business?"
+                      - generic [ref=e241]: Industry News
+                  - link "3 Automating Your Email Marketing with AI Use Cases" [ref=e242]:
+                    - /url: "#"
+                    - generic [ref=e243]: "3"
+                    - generic [ref=e244]:
+                      - paragraph [ref=e245]: Automating Your Email Marketing with AI
+                      - generic [ref=e246]: Use Cases
+                  - link "4 AI Security Best Practices for Small Businesses Best Practices" [ref=e247]:
+                    - /url: "#"
+                    - generic [ref=e248]: "4"
+                    - generic [ref=e249]:
+                      - paragraph [ref=e250]: AI Security Best Practices for Small Businesses
+                      - generic [ref=e251]: Best Practices
+                  - link "5 How a Local Bakery Increased Sales 40% with AI Case Studies" [ref=e252]:
+                    - /url: "#"
+                    - generic [ref=e253]: "5"
+                    - generic [ref=e254]:
+                      - paragraph [ref=e255]: How a Local Bakery Increased Sales 40% with AI
+                      - generic [ref=e256]: Case Studies
+              - generic [ref=e257]:
+                - heading "Browse by Topic" [level=3] [ref=e258]
+                - link "Test Category - Mission Control Testing the ability to add a category in the Mission control page of the site" [ref=e260]:
+                  - /url: "#"
+                  - img [ref=e262]
+                  - generic [ref=e264]:
+                    - paragraph [ref=e265]: Test Category - Mission Control
+                    - paragraph [ref=e266]: Testing the ability to add a category in the Mission control page of the site
+          - generic [ref=e272]:
+            - img [ref=e274]
+            - heading "Stay Updated" [level=3] [ref=e277]
+            - paragraph [ref=e278]: Get practical AI tips delivered to your inbox. No spam, just value.
+            - generic [ref=e279]:
+              - textbox "Enter your email" [ref=e280]
+              - button "Subscribe" [ref=e281]
+            - paragraph [ref=e282]: Unsubscribe anytime. We respect your inbox.
+    - contentinfo [ref=e283]:
+      - generic [ref=e288]:
+        - generic [ref=e289]:
+          - generic [ref=e290]:
+            - generic [ref=e291]:
+              - img [ref=e295]
+              - generic [ref=e300]: Launchpad
+            - paragraph [ref=e301]: Practical AI guidance for small business owners. Learn how to leverage AI without the technical complexity.
+            - generic [ref=e302]:
+              - paragraph [ref=e303]: Stay updated with our newsletter
+              - generic [ref=e304]:
+                - textbox "Enter your email" [ref=e305]
+                - button [ref=e306]:
+                  - img
+          - generic [ref=e307]:
+            - heading "Explore" [level=4] [ref=e308]
+            - list [ref=e309]:
+              - listitem [ref=e310]:
+                - link "All Articles" [ref=e311] [cursor=pointer]:
+                  - /url: /launchpad
+              - listitem [ref=e312]:
+                - link "Getting Started" [ref=e313] [cursor=pointer]:
+                  - /url: /launchpad/category/getting-started
+              - listitem [ref=e314]:
+                - link "Tutorials" [ref=e315] [cursor=pointer]:
+                  - /url: /launchpad/category/tutorials
+              - listitem [ref=e316]:
+                - link "Use Cases" [ref=e317] [cursor=pointer]:
+                  - /url: /launchpad/category/use-cases
+              - listitem [ref=e318]:
+                - link "Industry News" [ref=e319] [cursor=pointer]:
+                  - /url: /launchpad/category/industry-news
+          - generic [ref=e320]:
+            - heading "Resources" [level=4] [ref=e321]
+            - list [ref=e322]:
+              - listitem [ref=e323]:
+                - link "Documentation" [ref=e324] [cursor=pointer]:
+                  - /url: /docs
+              - listitem [ref=e325]:
+                - link "Saved Articles" [ref=e326] [cursor=pointer]:
+                  - /url: /blog/bookmarks
+              - listitem [ref=e327]:
+                - link "API Reference" [ref=e328] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e329]:
+                - link "Community" [ref=e330] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e331]:
+            - heading "GalaxyCo.ai" [level=4] [ref=e332]
+            - list [ref=e333]:
+              - listitem [ref=e334]:
+                - link "Home" [ref=e335] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e336]:
+                - link "Features" [ref=e337] [cursor=pointer]:
+                  - /url: /features
+              - listitem [ref=e338]:
+                - link "Pricing" [ref=e339] [cursor=pointer]:
+                  - /url: /pricing
+              - listitem [ref=e340]:
+                - link "Get Started" [ref=e341] [cursor=pointer]:
+                  - /url: /sign-up
+          - generic [ref=e342]:
+            - heading "Legal" [level=4] [ref=e343]
+            - list [ref=e344]:
+              - listitem [ref=e345]:
+                - link "Privacy Policy" [ref=e346] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e347]:
+                - link "Terms of Service" [ref=e348] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e349]:
+                - link "Cookie Policy" [ref=e350] [cursor=pointer]:
+                  - /url: "#"
+        - generic [ref=e352]:
+          - paragraph [ref=e353]: © 2026 GalaxyCo.ai. All rights reserved.
+          - generic [ref=e354]:
+            - link "Twitter" [ref=e355] [cursor=pointer]:
+              - /url: https://x.com/galaxyco_ai
+              - img [ref=e356]
+            - link "LinkedIn" [ref=e358] [cursor=pointer]:
+              - /url: https://linkedin.com/company/galaxyco
+              - img [ref=e359]
+            - link "Email" [ref=e363] [cursor=pointer]:
+              - /url: mailto:hello@galaxyco.ai
+              - img [ref=e364]
+  - region "Notifications alt+T"
+```

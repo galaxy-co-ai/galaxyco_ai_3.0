@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { generateForecast, getQuickForecast } from '@/lib/crm/forecasting';
-import { logger } from '@/lib/logger';
 import { rateLimit } from '@/lib/rate-limit';
 import { createErrorResponse } from '@/lib/api-error-handler';
 

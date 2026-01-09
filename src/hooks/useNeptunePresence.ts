@@ -64,6 +64,7 @@ export function useNeptunePresence() {
   }, [updateMyPresence]);
 
   // Get list of other users with their presence
+  // eslint-disable-next-line react-hooks/purity -- Date.now() fallback is intentional for missing lastActive
   const otherUsers: OtherUser[] = others.map((other) => ({
     connectionId: other.connectionId,
     id: other.id || 'unknown',

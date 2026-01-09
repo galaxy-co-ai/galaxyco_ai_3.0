@@ -1,12 +1,17 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
   // Specify the root to avoid lockfile confusion
   // Note: turbo config removed as it's not part of ExperimentalConfig in this Next.js version
 };
 
-export default withSentryConfig(nextConfig, {
+export default withBundleAnalyzer(withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
@@ -37,4 +42,4 @@ export default withSentryConfig(nextConfig, {
 
   // Enables automatic instrumentation of Vercel Cron Monitors.
   automaticVercelMonitors: true,
-});
+}));

@@ -19,6 +19,14 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'mobile',
+      use: { 
+        ...devices['iPhone 13'],
+        // Use Chromium with mobile viewport instead of WebKit
+        browserName: 'chromium',
+      },
+    },
   ],
 
   webServer: {

@@ -309,9 +309,9 @@ export function getPageTypeFromPath(pathname: string): PageType {
  * Get human-readable page name from pathname
  */
 export function getPageNameFromPath(pathname: string): string {
-  const module = getModuleFromPath(pathname);
+  const pageModule = getModuleFromPath(pathname);
   const pageType = getPageTypeFromPath(pathname);
-  const metadata = MODULE_METADATA[module];
+  const metadata = MODULE_METADATA[pageModule];
   
   const segments = pathname.split('/').filter(Boolean);
   const lastSegment = segments[segments.length - 1];

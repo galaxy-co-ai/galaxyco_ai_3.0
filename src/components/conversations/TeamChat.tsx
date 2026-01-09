@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import ReactMarkdown from "react-markdown";
 import {
   Hash,
   Plus,
@@ -20,9 +19,7 @@ import {
   X,
   FileText,
   Image as ImageIcon,
-  Link as LinkIcon,
   Download,
-  ExternalLink,
   Loader2,
   Trash2,
   Settings,

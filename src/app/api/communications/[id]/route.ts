@@ -9,7 +9,6 @@ import {
 } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { z } from 'zod';
-import { logger } from '@/lib/logger';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 const updateConversationSchema = z.object({

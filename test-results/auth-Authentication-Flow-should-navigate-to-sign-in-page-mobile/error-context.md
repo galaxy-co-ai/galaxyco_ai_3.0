@@ -1,0 +1,54 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - navigation [ref=e13]:
+      - generic [ref=e14]:
+        - img "Galaxy" [ref=e15]
+        - generic [ref=e16]: Galaxy
+      - generic [ref=e17]: Launching 2026
+    - main [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e21]: Now accepting early access signups
+        - heading "The AI-Native CRM Built for Revenue Teams" [level=1] [ref=e27]:
+          - text: The AI-Native CRM
+          - text: Built for Revenue Teams
+        - paragraph [ref=e28]: Stop managing your CRM. Let Neptune AI handle the busywork while autonomous agents research, engage, and nurture your pipeline 24/7.
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - textbox "Enter your email" [ref=e33]
+            - button "Join Waitlist" [ref=e35]:
+              - text: Join Waitlist
+              - img
+          - paragraph [ref=e36]: Be among the first to experience the future of CRM
+      - generic [ref=e37]:
+        - heading "What's Coming" [level=2] [ref=e38]
+        - generic [ref=e39]:
+          - generic [ref=e41]:
+            - img [ref=e43]
+            - heading "Neptune AI" [level=3] [ref=e53]
+            - paragraph [ref=e54]: Your intelligent CRM co-pilot that understands context and takes action.
+          - generic [ref=e56]:
+            - img [ref=e58]
+            - heading "AI Agents" [level=3] [ref=e60]
+            - paragraph [ref=e61]: Autonomous agents that handle research, outreach, and follow-ups 24/7.
+          - generic [ref=e63]:
+            - img [ref=e65]
+            - heading "Enterprise Ready" [level=3] [ref=e67]
+            - paragraph [ref=e68]: SOC 2 compliant with fine-grained permissions and audit logging.
+    - contentinfo [ref=e69]:
+      - generic [ref=e70]:
+        - paragraph [ref=e71]: © 2026 GalaxyCo. All rights reserved.
+        - generic [ref=e72]:
+          - link "Privacy" [ref=e73] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e74] [cursor=pointer]:
+            - /url: /terms
+          - link "Contact" [ref=e75] [cursor=pointer]:
+            - /url: /contact
+  - region "Notifications alt+T"
+```

@@ -3,7 +3,6 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { articleAnalytics, blogPosts } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
-import { logger } from "@/lib/logger";
 import { eq, and, sql, gte, lte } from "drizzle-orm";
 import { createErrorResponse } from "@/lib/api-error-handler";
 

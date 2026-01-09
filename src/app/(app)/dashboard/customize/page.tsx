@@ -184,7 +184,8 @@ export default function DashboardCustomizePage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
 
-  // Load saved config on mount
+  // Load saved config on mount - setState in mount effect is valid pattern for localStorage hydration
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {

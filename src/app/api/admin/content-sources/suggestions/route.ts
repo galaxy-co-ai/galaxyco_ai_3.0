@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { contentSources } from "@/db/schema";
 import { getCurrentWorkspace } from "@/lib/auth";
-import { logger } from "@/lib/logger";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { createErrorResponse } from "@/lib/api-error-handler";
 

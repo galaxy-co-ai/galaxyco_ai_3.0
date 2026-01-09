@@ -446,10 +446,10 @@ Quick access hub. Help the user:
  */
 export function generatePagePrompt(context: PagePromptContext): string {
   const { pageContext } = context;
-  const module = pageContext.module;
+  const pageModule = pageContext.module;
   
   // Get module-specific prompt
-  const modulePromptGenerator = MODULE_PROMPTS[module];
+  const modulePromptGenerator = MODULE_PROMPTS[pageModule];
   if (!modulePromptGenerator) {
     // Fallback for unknown modules
     return `## CURRENT CONTEXT: ${pageContext.pageName}
@@ -465,8 +465,8 @@ Help the user with their current task.`;
  * Generate contextual greeting based on page
  */
 export function generateContextualGreeting(pageContext: PageContextData): string {
-  const module = pageContext.module;
-  const metadata = MODULE_METADATA[module];
+  const pageModule = pageContext.module;
+  const metadata = MODULE_METADATA[pageModule];
   
   const greetings: Record<AppModule, string> = {
     dashboard: "Welcome back! What would you like to tackle today?",
@@ -485,7 +485,7 @@ export function generateContextualGreeting(pageContext: PageContextData): string
     launchpad: "Quick access mode. Where would you like to go?",
   };
   
-  return greetings[module] || `I'm here to help with ${metadata.displayName}. What do you need?`;
+  return greetings[pageModule] || `I'm here to help with ${metadata.displayName}. What do you need?`;
 }
 
 /**
