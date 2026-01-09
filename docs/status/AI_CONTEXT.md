@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-09 (111b039)  
+**Updated Through:** 2026-01-09 (f75e2fc)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-09 f75e2fc Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2026-01-09 94e1bad fix(deps): update @clerk/nextjs to 6.36.7 for Next.js 16 Turbopack compatibility
 - 2026-01-09 111b039 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-09 25ec071 fix(settings): handle null lastUsed for API keys that have never been used
 - 2026-01-09 1c292d2 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-08 7d5965c fix(lint): prefix unused variables with underscore in lib files
 - 2026-01-08 d7b3242 fix(lint): resolve lint errors, add bundle analyzer and bug tracker
 - 2026-01-07 785f140 docs: add AGENTS.md and Neptune improvement plan
-- 2026-01-07 8a1e00a Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2026-01-07 e918a37 fix(web): update launch year to 2026
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
