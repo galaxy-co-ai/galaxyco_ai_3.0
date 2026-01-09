@@ -117,7 +117,7 @@ export default async function ConversationsPage() {
     return (
       <ErrorBoundary>
         <ConversationsDashboard
-          phoneNumbers={phoneNumbers as any}
+          phoneNumbers={phoneNumbers as Array<{ id: string; phoneNumber: string; friendlyName: string | null; numberType: 'primary' | 'sales' | 'support' | 'custom'; status: string }>}
           initialConversations={conversationsList.map((conv) => {
             const convMessages = latestMessages.filter(m => m.conversationId === conv.id);
             const latestMessage = convMessages.sort((a, b) => 

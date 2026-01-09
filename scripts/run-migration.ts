@@ -48,8 +48,9 @@ async function runMigration() {
       try {
         console.log(`Executing statement ${i + 1}/${statements.length}...`);
         await sql.unsafe(statement);
-      } catch (error: any) {
-        if (error.message?.includes('already exists')) {
+      } catch (error: unknown) {
+        const errMessage = error instanceof Error ? error.message : String(error);
+        if (errMessage.includes('already exists')) {
           console.log(`  ⚠️  Skipped (already exists)`);
         } else {
           throw error;
@@ -64,11 +65,12 @@ async function runMigration() {
     console.log('3. Phase 4: Update webhooks to route by phone number');
     console.log('\nRun: tsx scripts/test-phone-provisioning.ts to test');
     
-  } catch (error: any) {
-    console.error('❌ Migration failed:', error.message);
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ Migration failed:', errMessage);
     
     // Check if table already exists
-    if (error.message?.includes('already exists')) {
+    if (errMessage.includes('already exists')) {
       console.log('\n✅ Table already exists - migration skipped');
     } else {
       throw error;

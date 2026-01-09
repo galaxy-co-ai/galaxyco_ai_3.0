@@ -76,7 +76,7 @@ export default async function LibraryPage() {
         url: item.sourceUrl || undefined,
       };
     });
-  } catch (error) {
+  } catch {
     // On error, fall back to empty state; ErrorBoundary + dashboard will handle UI.
   }
 

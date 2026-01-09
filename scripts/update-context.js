@@ -43,7 +43,8 @@ function normalizeVersion(version) {
   return trimmed.slice(firstDigit);
 }
 
-function countMarkdownFiles(dirPath) {
+// Utility for future file stats feature - currently unused
+function _countMarkdownFiles(dirPath) {
   let count = 0;
 
   try {
@@ -52,7 +53,7 @@ function countMarkdownFiles(dirPath) {
       const fullPath = path.join(dirPath, entry.name);
 
       if (entry.isDirectory()) {
-        count += countMarkdownFiles(fullPath);
+        count += _countMarkdownFiles(fullPath);
         continue;
       }
 

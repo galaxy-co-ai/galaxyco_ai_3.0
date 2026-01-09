@@ -46,7 +46,8 @@ const steps: { id: WizardStep; label: string; icon: React.ComponentType<{ classN
   { id: 'editor', label: 'Editor', icon: PenTool },
 ];
 
-export function NewPostWizard({ categories }: NewPostWizardProps) {
+export function NewPostWizard({ categories: _categories }: NewPostWizardProps) {
+  // TODO(dalton): Wire up categories for post categorization
   const router = useRouter();
   const searchParams = useSearchParams();
   

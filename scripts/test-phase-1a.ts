@@ -94,7 +94,7 @@ async function testWebsiteAnalysis() {
   console.log(`\n🌐 Testing cache with: ${cacheTestUrl}`);
   
   const cacheStartTime = Date.now();
-  const cachedResult = await analyzeWebsiteQuick(cacheTestUrl);
+  const _cachedResult = await analyzeWebsiteQuick(cacheTestUrl); // Result unused, just testing cache speed
   const cacheDuration = Date.now() - cacheStartTime;
 
   if (cacheDuration < 100) {

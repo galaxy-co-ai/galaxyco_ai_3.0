@@ -1,20 +1,21 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState } from "react";
+
+// Generate stars once at module load for stable, random positions
+// This pattern avoids React purity warnings while maintaining randomness
+const generateStars = () =>
+  Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    top: `${Math.random() * 100}%`,
+    animationDelay: `${Math.random() * 3}s`,
+    animationDuration: `${2 + Math.random() * 2}s`,
+  }));
 
 export function LunarLabsStars() {
-  // Generate stars once on mount with stable positions
-  // Using Math.random in useMemo is intentional for star placement variance
-  // eslint-disable-next-line react-hooks/purity -- Math.random in useMemo[] is stable
-  const stars = useMemo(() => {
-    return Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      animationDelay: `${Math.random() * 3}s`,
-      animationDuration: `${2 + Math.random() * 2}s`,
-    }));
-  }, []);
+  // Initialize once with lazy state initializer
+  const [stars] = useState(generateStars);
 
   return (
     <div className="absolute inset-0 opacity-40">

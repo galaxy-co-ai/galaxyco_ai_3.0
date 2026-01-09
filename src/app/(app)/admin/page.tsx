@@ -68,7 +68,7 @@ async function getAdminStats() {
       users: { total: totalUsers, recent: recentUsers },
       subscribers: totalSubscribers,
     };
-  } catch (error) {
+  } catch {
     // Return zeros if tables don't exist yet
     return {
       posts: { total: 0, published: 0, drafts: 0 },
@@ -101,7 +101,8 @@ async function getRecentFeedback() {
 }
 
 export default async function AdminDashboard() {
-  const { user } = await getAdminContext();
+  // Validates admin access - throws if not admin
+  await getAdminContext();
   const stats = await getAdminStats();
   const recentFeedback = await getRecentFeedback();
 

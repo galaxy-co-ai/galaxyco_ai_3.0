@@ -5,8 +5,7 @@
  * Tests all API keys and secrets to ensure they are properly configured
  */
 
-const https = require('https');
-const http = require('http');
+// Note: Using fetch API instead of http/https modules
 
 // Color codes for terminal output
 const colors = {

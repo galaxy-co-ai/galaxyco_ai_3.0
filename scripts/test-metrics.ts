@@ -24,7 +24,7 @@ import { Redis } from '@upstash/redis';
 // ============================================================================
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
-const TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || '';
+const _TEST_ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || ''; // Reserved for future auth tests
 
 // Colors for terminal output
 const colors = {

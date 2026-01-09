@@ -9,7 +9,7 @@
  * - Saving preferences to localStorage
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { PageTitle } from '@/components/ui/page-title';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -179,29 +179,28 @@ const ROLE_TEMPLATES: RoleTemplate[] = [
   },
 ];
 
+// Load saved widget config from localStorage (runs once at component init)
+function getInitialWidgets(): WidgetConfig[] {
+  if (typeof window === 'undefined') return DEFAULT_WIDGETS;
+  
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return DEFAULT_WIDGETS;
+  
+  try {
+    const savedConfig = JSON.parse(saved) as { id: string; enabled: boolean }[];
+    return DEFAULT_WIDGETS.map((widget) => {
+      const savedWidget = savedConfig.find((s) => s.id === widget.id);
+      return savedWidget ? { ...widget, enabled: savedWidget.enabled } : widget;
+    });
+  } catch {
+    return DEFAULT_WIDGETS;
+  }
+}
+
 export default function DashboardCustomizePage() {
-  const [widgets, setWidgets] = useState<WidgetConfig[]>(DEFAULT_WIDGETS);
+  const [widgets, setWidgets] = useState<WidgetConfig[]>(getInitialWidgets);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
-
-  // Load saved config on mount - setState in mount effect is valid pattern for localStorage hydration
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const savedConfig = JSON.parse(saved) as { id: string; enabled: boolean }[];
-        setWidgets((prev) =>
-          prev.map((widget) => {
-            const savedWidget = savedConfig.find((s) => s.id === widget.id);
-            return savedWidget ? { ...widget, enabled: savedWidget.enabled } : widget;
-          })
-        );
-      } catch (e) {
-        console.error('Failed to load widget config', e);
-      }
-    }
-  }, []);
 
   const toggleWidget = (id: string) => {
     setWidgets((prev) =>

@@ -444,7 +444,7 @@ export function ArticleStudioClient() {
 
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Sections</h4>
-                  {generatedOutline.sections.map((section, index) => (
+                  {generatedOutline.sections.map((section) => (
                     <div 
                       key={section.id} 
                       className="p-3 rounded-lg bg-muted/50 border"

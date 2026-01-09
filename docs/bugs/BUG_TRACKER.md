@@ -55,12 +55,17 @@ _No P0 issues identified at this time._
 ### CODE-001: TypeScript `any` Types in Production Code
 - **Status**: 🔄 In Progress
 - **Severity**: MEDIUM
-- **Count**: ~81 instances across 37 files in `src/`
-- **Priority Files**:
-  - `src/db/schema.ts` (16 instances)
-  - `src/components/crm/CRMDashboard.tsx` (9 instances)
-  - `src/app/api/assistant/stream/route.ts` (5 instances)
-  - `src/components/shared/EnhancedDataTable.tsx` (5 instances)
+- **Count**: Reduced from ~81 to ~60 instances
+- **Fixed Files** (Jan 8, 2026):
+  - `src/app/api/assistant/stream/route.ts` (5 → 0)
+  - `src/components/crm/CRMDashboard.tsx` (9 → 0)
+  - `src/components/crm/ContactDialog.tsx` (1 → 0)
+  - `src/components/crm/DealDialog.tsx` (2 → 0)
+  - `src/components/crm/InsightsPanel.tsx` (1 → 0)
+  - `src/components/crm/ScoreCard.tsx` (1 → 0)
+- **Remaining**:
+  - `src/db/schema.ts` (16 - JSONB columns, some intentional)
+  - `src/components/shared/EnhancedDataTable.tsx` (5)
 - **Fix**: Add proper types, use `unknown` with type guards
 - **Owner**: Dalton
 
@@ -69,11 +74,25 @@ _No P0 issues identified at this time._
 ## 🟢 P3 Low Priority (Technical Debt)
 
 ### LINT-001: Unused Variables
-- **Status**: 🔓 Open
-- **Count**: ~100+ warnings across codebase
-- **Files Affected**: Various (mostly tool implementations and tests)
+- **Status**: 🔄 In Progress
+- **Count**: Reduced by 15+ in lib files (Jan 8, 2026)
+- **Files Fixed**:
+  - `src/lib/ai/website-intelligence.ts`
+  - `src/lib/ai/agent-wizard.ts`
+  - `src/lib/ai/article-layouts.ts`
+  - `src/lib/ai/memory.ts`
+  - `src/lib/ai/workflow-builder.ts`
+  - `src/lib/auth.ts`
+  - `src/lib/dashboard.ts`
+  - `src/lib/neptune/business-intelligence.ts`
+  - `src/lib/neptune/unified-context.ts`
+  - `src/lib/orchestration/team-executor.ts`
+  - `src/lib/orchestration/workflow-engine.ts`
+  - `src/lib/vector.ts`
+  - `src/lib/website-crawler.ts`
+  - `src/lib/search.ts`
 - **Fix**: Prefix with `_` or remove unused code
-- **Notes**: Many are in test mocks (acceptable)
+- **Notes**: Many remaining are in test mocks (acceptable)
 
 ### LINT-002: Missing React Hook Dependencies
 - **Status**: 🔓 Open

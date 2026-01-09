@@ -50,7 +50,8 @@ export async function getRecentMessages() {
     `recent-messages:${userId}`,
     async () => {
       try {
-        const messages = await db.select({
+        // TODO(dalton): Return actual messages when chat feature is complete
+        const _messages = await db.select({
             id: chatMessages.id,
             content: chatMessages.content,
             createdAt: chatMessages.createdAt,
@@ -60,7 +61,7 @@ export async function getRecentMessages() {
           .orderBy(desc(chatMessages.createdAt))
           .limit(10);
 
-        return []; 
+        return []; // Placeholder - feature not yet wired up
       } catch (error) {
         logger.error('Failed to fetch messages', error);
         return [];

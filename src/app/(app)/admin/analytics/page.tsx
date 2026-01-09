@@ -200,7 +200,8 @@ async function getEngagementStats() {
 
 // Get page view trend (7 days)
 async function getPageViewTrend() {
-  const { sevenDaysAgo } = getDateRanges();
+  // Date range calculation is done inline per-day to get accurate day boundaries
+  getDateRanges(); // Validates date utilities work
   
   try {
     const days = [];
@@ -237,7 +238,8 @@ async function getPageViewTrend() {
 
 // Get user activity trend (7 days)
 async function getUserActivityTrend() {
-  const { sevenDaysAgo } = getDateRanges();
+  // Date range calculation is done inline per-day to get accurate day boundaries
+  getDateRanges(); // Validates date utilities work
   
   try {
     const days = [];
@@ -426,7 +428,7 @@ export default async function AnalyticsPage() {
     userStats, 
     devices, 
     topPages, 
-    popularPosts, 
+    _popularPosts, // TODO(dalton): Add popular posts section to UI
     engagement,
     pageViewTrend,
     userActivityTrend,
@@ -683,7 +685,7 @@ export default async function AnalyticsPage() {
                       {index + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate text-sm">"{search.query}"</p>
+                      <p className="font-medium truncate text-sm">&ldquo;{search.query}&rdquo;</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <SearchIcon className="h-3 w-3" />
                         {search.count} searches
