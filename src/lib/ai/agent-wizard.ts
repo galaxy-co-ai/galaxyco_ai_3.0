@@ -58,7 +58,7 @@ export async function analyzeAgentIntent(
   message: string,
   context: AIContextData
 ): Promise<AgentIntentAnalysis> {
-  const messageLower = message.toLowerCase();
+  const _messageLower = message.toLowerCase();
   
   // Try to match to a template
   const template = matchTemplate(message, context);

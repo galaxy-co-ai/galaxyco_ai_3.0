@@ -104,7 +104,7 @@ export async function generateNeptuneContext(
   const {
     workspaceId,
     userId,
-    conversationId,
+    conversationId: _conversationId,
     currentPage,
     currentTopic,
     includeBusinessIntelligence = true,

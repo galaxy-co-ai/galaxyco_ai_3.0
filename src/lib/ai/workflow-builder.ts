@@ -219,7 +219,7 @@ export async function createAutomationFromChat(
       workflow,
       message: `Created automation "${workflow.name}". It will ${describeTrigger(workflow.trigger)} and ${describeActions(workflow.actions)}. The automation is saved as a draft - activate it when ready!`,
     };
-  } catch (error) {
+  } catch (_error) {
     return {
       success: false,
       workflow,

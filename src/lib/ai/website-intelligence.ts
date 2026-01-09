@@ -59,13 +59,13 @@ export async function detectSiteTechnology(url: string): Promise<SiteTechnology>
     // Analyze response headers
     const headers = headResponse.headers;
     const server = headers.get('server')?.toLowerCase() || '';
-    const xPoweredBy = headers.get('x-powered-by')?.toLowerCase() || '';
-    const contentType = headers.get('content-type')?.toLowerCase() || '';
+    const _xPoweredBy = headers.get('x-powered-by')?.toLowerCase() || '';
+    const _contentType = headers.get('content-type')?.toLowerCase() || '';
 
     // Check for common SPA/framework indicators in headers
     const hasNextJsHeader = headers.get('x-nextjs-cache') !== null;
-    const hasVercelHeader = headers.get('x-vercel-id') !== null;
-    const hasNetlifyHeader = headers.get('x-nf-request-id') !== null;
+    const _hasVercelHeader = headers.get('x-vercel-id') !== null;
+    const _hasNetlifyHeader = headers.get('x-nf-request-id') !== null;
 
     // Quick GET request to analyze initial HTML (first 5KB)
     let initialHtml = '';

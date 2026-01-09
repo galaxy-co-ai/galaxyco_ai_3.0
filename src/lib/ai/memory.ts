@@ -39,8 +39,8 @@ export interface ConversationAnalysis {
  */
 export async function analyzeConversationForLearning(
   conversationId: string,
-  workspaceId: string,
-  userId: string
+  _workspaceId: string,
+  _userId: string
 ): Promise<LearningInsight[]> {
   try {
     // Get conversation messages

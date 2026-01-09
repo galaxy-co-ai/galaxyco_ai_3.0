@@ -222,7 +222,7 @@ async function searchWebWithPerplexity(
 
   // If sonar-pro fails (e.g., not available on free tier), try sonar
   if (!response.ok && model === 'sonar-pro') {
-    const errorData = await response.json().catch(() => ({}));
+    const _errorData = await response.json().catch(() => ({}));
     // If it's a model not found error, try the regular sonar model
     if (response.status === 400 || response.status === 404) {
       model = 'sonar';

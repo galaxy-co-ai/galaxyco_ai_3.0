@@ -703,8 +703,8 @@ export function semanticChunk(
 
   // Detect section headers (markdown-style or numbered)
   const sectionPattern = /^(?:#{1,6}\s+|\d+\.\s+|[A-Z][A-Z\s]+:)/gm;
-  const sections = text.split(sectionPattern);
-  const sectionHeaders = text.match(sectionPattern) || [];
+  const _sections = text.split(sectionPattern);
+  const _sectionHeaders = text.match(sectionPattern) || [];
 
   // Parse into sentences while preserving structure
   const sentences = parseSentences(text);

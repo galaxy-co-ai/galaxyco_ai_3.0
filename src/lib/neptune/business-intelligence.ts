@@ -258,7 +258,7 @@ async function collectMarketingSignals(workspaceId: string): Promise<BusinessSig
       .from(campaigns)
       .where(eq(campaigns.workspaceId, workspaceId));
     
-    const totalCampaigns = allCampaigns.length;
+    const _totalCampaigns = allCampaigns.length;
     let totalOpenRate = 0;
     let totalClickRate = 0;
     let validOpenRates = 0;

@@ -35,8 +35,8 @@ export interface LayoutTemplate {
   exampleTitle: string;
 }
 
-// Generate unique section IDs
-const generateId = (prefix: string, index: number) => `${prefix}-${index + 1}`;
+// Generate unique section IDs (reserved for future use)
+const _generateId = (prefix: string, index: number) => `${prefix}-${index + 1}`;
 
 /**
  * Standard Article Layout

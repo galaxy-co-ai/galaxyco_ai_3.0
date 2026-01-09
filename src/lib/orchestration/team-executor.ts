@@ -146,8 +146,8 @@ export class TeamExecutor {
 
       // 4. Identify coordinator and specialists
       const coordinator = members.find((m) => m.role === 'coordinator');
-      const specialists = members.filter((m) => m.role === 'specialist');
-      const supportAgents = members.filter((m) => m.role === 'support');
+      const _specialists = members.filter((m) => m.role === 'specialist');
+      const _supportAgents = members.filter((m) => m.role === 'support');
 
       executionState.currentPhase = 'coordination';
 

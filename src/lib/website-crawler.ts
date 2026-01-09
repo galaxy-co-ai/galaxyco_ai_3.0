@@ -233,7 +233,7 @@ async function checkRobotsTxt(baseUrl: string): Promise<Set<string>> {
 
     const text = await response.text();
     const lines = text.split('\n');
-    let currentUserAgent = '*';
+    let _currentUserAgent = '*';
     let inUserAgentBlock = false;
 
     for (const line of lines) {
@@ -245,7 +245,7 @@ async function checkRobotsTxt(baseUrl: string): Promise<Set<string>> {
       // User-agent directive
       if (trimmed.startsWith('user-agent:')) {
         const agent = trimmed.replace('user-agent:', '').trim();
-        currentUserAgent = agent;
+        _currentUserAgent = agent;
         inUserAgentBlock = agent === '*' || agent.includes('bot') || agent.includes('crawler');
         continue;
       }
@@ -289,7 +289,7 @@ export async function crawlWebsite(
   } = options;
 
   const baseUrl = normalizeUrl(url);
-  const baseDomain = new URL(baseUrl).hostname;
+  const _baseDomain = new URL(baseUrl).hostname;
 
   const crawledPages: CrawledPage[] = [];
   const visitedUrls = new Set<string>();
@@ -333,7 +333,7 @@ export async function crawlWebsite(
 
       // Check robots.txt if enabled
       if (respectRobotsTxt && robotsAllowedPaths.size > 0) {
-        const urlPath = new URL(currentUrl).pathname;
+        const _urlPath = new URL(currentUrl).pathname;
         // Simple check - if robots.txt has specific allows, only crawl those
         // For now, we'll be permissive and only block if explicitly disallowed
       }

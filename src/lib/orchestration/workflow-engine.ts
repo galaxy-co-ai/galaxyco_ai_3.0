@@ -89,7 +89,7 @@ export class WorkflowEngine {
    * Execute a workflow from start
    */
   async execute(options: ExecuteWorkflowOptions): Promise<WorkflowEngineResult> {
-    const startTime = Date.now();
+    const _startTime = Date.now();
 
     try {
       logger.info('[WorkflowEngine] Starting workflow execution', {

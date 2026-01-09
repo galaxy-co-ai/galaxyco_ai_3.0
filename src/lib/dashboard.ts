@@ -310,8 +310,8 @@ export function getEmptyDashboardData(userName: string = 'there'): DashboardV2Da
  */
 function determineNextStep(
   stats: DashboardStats,
-  agentsData: Array<{ status: string }>,
-  tasksData: Array<{ status: string }>
+  _agentsData: Array<{ status: string }>,
+  _tasksData: Array<{ status: string }>
 ): NextStepAction {
   // Priority 1: No agents - create first one
   if (stats.totalAgents === 0) {

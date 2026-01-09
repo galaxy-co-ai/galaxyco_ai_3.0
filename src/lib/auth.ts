@@ -114,7 +114,7 @@ export async function getAdminContext() {
  * ```
  */
 export const getCurrentWorkspace = cache(async () => {
-  const { userId, orgId, orgSlug } = await auth();
+  const { userId, orgId, orgSlug: _orgSlug } = await auth();
 
   // TEMPORARY: Development bypass for testing
   // Use explicit environment variable instead of NODE_ENV to prevent accidental production deployment
