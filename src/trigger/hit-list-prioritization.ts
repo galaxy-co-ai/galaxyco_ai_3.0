@@ -213,7 +213,7 @@ export const prioritizeWorkspaceTask = task({
     try {
       const result = await prioritizeWorkspaceHitList(workspaceId);
 
-      logger.info("[HitListPrioritization] Prioritization complete", result);
+      logger.info("[HitListPrioritization] Prioritization complete", { ...result });
 
       return { success: true, ...result };
     } catch (error) {

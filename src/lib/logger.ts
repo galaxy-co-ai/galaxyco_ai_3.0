@@ -6,9 +6,9 @@
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogMetadata {
-  [key: string]: any;
-}
+// Log metadata can contain any serializable values - we use Record pattern
+// to allow spreading objects while maintaining flexibility
+type LogMetadata = Record<string, unknown>;
 
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';

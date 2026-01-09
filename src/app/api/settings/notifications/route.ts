@@ -37,6 +37,12 @@ const updateNotificationsSchema = z.object({
   }).optional(),
 });
 
+// User preferences JSONB column structure
+interface UserPreferences {
+  notifications?: NotificationPreferences;
+  [key: string]: unknown;
+}
+
 interface NotificationPreferences {
   types?: {
     new_task?: { email?: boolean; push?: boolean };
@@ -86,7 +92,7 @@ export async function GET() {
       return createErrorResponse(new Error('User not found'), 'Get notification preferences error');
     }
 
-    const preferences = (userRecord.preferences as any)?.notifications as NotificationPreferences | undefined;
+    const preferences = (userRecord.preferences as UserPreferences | null)?.notifications;
 
     // Return defaults if not set
     const defaults: NotificationPreferences = {
@@ -166,7 +172,7 @@ export async function PUT(request: Request) {
     }
 
     // Merge notification preferences
-    const currentPrefs = (userRecord.preferences as any) || {};
+    const currentPrefs = (userRecord.preferences as UserPreferences | null) || {};
     const currentNotifications = currentPrefs.notifications || {};
 
     const updatedNotifications = {
@@ -183,12 +189,14 @@ export async function PUT(request: Request) {
     };
 
     // Update user preferences
+    // Note: The schema type for preferences.notifications is narrower than what we store
+    // We cast to the expected type to allow storing extended notification preferences
     const [updatedUser] = await db
       .update(users)
       .set({
         preferences: {
           ...currentPrefs,
-          notifications: updatedNotifications,
+          notifications: updatedNotifications as { email?: boolean; push?: boolean },
         },
         updatedAt: new Date(),
       })
@@ -200,7 +208,7 @@ export async function PUT(request: Request) {
       updates,
     });
 
-    const finalNotifications = (updatedUser.preferences as any)?.notifications || {};
+    const finalNotifications = (updatedUser.preferences as UserPreferences | null)?.notifications || {};
 
     return NextResponse.json({
       success: true,

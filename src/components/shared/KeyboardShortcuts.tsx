@@ -30,7 +30,7 @@ import {
 interface Shortcut {
   keys: string[];
   description: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 interface ShortcutCategory {

@@ -68,7 +68,7 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
           ),
           // Task list checkboxes (interactive)
           input: ({ type, checked, ...props }) => {
-            if ((props as any).type === 'checkbox') {
+            if (type === 'checkbox') {
               return (
                 <input
                   type="checkbox"
@@ -78,7 +78,7 @@ export function MarkdownContent({ content, className }: MarkdownContentProps) {
                 />
               );
             }
-            return <input type={type as any} {...(props as any)} />;
+            return <input type={type} {...props} />;
           },
 
           // Code blocks with syntax highlighting

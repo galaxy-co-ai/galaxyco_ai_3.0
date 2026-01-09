@@ -97,7 +97,22 @@ export async function searchAvailableNumbers(options: {
 
     const data = await response.json();
 
-    return (data.available_phone_numbers || []).slice(0, limit).map((num: any) => ({
+    // SignalWire API response shape for available phone numbers
+    interface SignalWireAvailableNumber {
+      phone_number: string;
+      friendly_name: string;
+      locality: string;
+      region: string;
+      postal_code: string;
+      capabilities: {
+        voice: boolean;
+        sms: boolean;
+        mms: boolean;
+        fax: boolean;
+      };
+    }
+
+    return (data.available_phone_numbers || []).slice(0, limit).map((num: SignalWireAvailableNumber) => ({
       phoneNumber: num.phone_number,
       friendlyName: num.friendly_name,
       locality: num.locality,

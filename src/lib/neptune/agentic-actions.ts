@@ -391,7 +391,8 @@ export async function updateProspectStage(
     
     await db.update(prospects)
       .set({
-        stage: newStage as any,
+        // Stage is validated by the database enum - cast to proper type
+        stage: newStage as typeof prospects.stage.enumValues[number],
         updatedAt: new Date(),
       })
       .where(eq(prospects.id, prospectId));

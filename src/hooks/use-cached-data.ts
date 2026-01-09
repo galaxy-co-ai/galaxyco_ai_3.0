@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
  */
 
 // Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
 
 export interface CacheOptions {
   ttl?: number; // Time to live in milliseconds (default: 5 minutes)

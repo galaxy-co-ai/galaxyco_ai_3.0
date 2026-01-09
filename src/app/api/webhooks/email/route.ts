@@ -193,6 +193,18 @@ async function parseSendGridEmail(request: Request): Promise<ParsedEmail> {
   };
 }
 
+// Postmark webhook payload types
+interface PostmarkAttachment {
+  Name: string;
+  ContentType: string;
+  Content: string;
+}
+
+interface PostmarkHeader {
+  Name: string;
+  Value: string;
+}
+
 /**
  * Parse Postmark Inbound format
  */
@@ -207,17 +219,24 @@ async function parsePostmarkEmail(request: Request): Promise<ParsedEmail> {
     text: json.TextBody || '',
     html: json.HtmlBody || '',
     messageId: json.MessageID || '',
-    attachments: (json.Attachments || []).map((att: any) => ({
+    attachments: (json.Attachments || []).map((att: PostmarkAttachment) => ({
       filename: att.Name,
       type: att.ContentType,
       content: att.Content,
     })),
-    headers: json.Headers?.reduce((acc: Record<string, string>, h: any) => {
+    headers: json.Headers?.reduce((acc: Record<string, string>, h: PostmarkHeader) => {
       acc[h.Name.toLowerCase()] = h.Value;
       return acc;
     }, {}) || {},
-    inReplyTo: json.Headers?.find((h: any) => h.Name.toLowerCase() === 'in-reply-to')?.Value,
+    inReplyTo: json.Headers?.find((h: PostmarkHeader) => h.Name.toLowerCase() === 'in-reply-to')?.Value,
   };
+}
+
+// Resend webhook payload types
+interface ResendAttachment {
+  filename: string;
+  content_type: string;
+  content: string;
 }
 
 /**
@@ -234,7 +253,7 @@ async function parseResendEmail(request: Request): Promise<ParsedEmail> {
     text: json.text || '',
     html: json.html || '',
     messageId: json.message_id || '',
-    attachments: (json.attachments || []).map((att: any) => ({
+    attachments: (json.attachments || []).map((att: ResendAttachment) => ({
       filename: att.filename,
       type: att.content_type,
       content: att.content,

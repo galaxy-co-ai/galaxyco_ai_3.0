@@ -148,7 +148,7 @@ export async function getLinkedInUser(
       profileImageUrl = displayImage?.identifiers?.[0]?.identifier;
     }
   } catch (err) {
-    logger.warn('Failed to fetch LinkedIn profile picture', err instanceof Error ? err : { error: String(err) });
+    logger.warn('Failed to fetch LinkedIn profile picture', { error: err instanceof Error ? err.message : String(err) });
   }
 
   return {

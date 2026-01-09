@@ -359,9 +359,10 @@ export async function releasePhoneNumber(phoneNumberSid: string): Promise<void> 
       'SignalWire releasePhoneNumber'
     );
     logger.info('Phone number released successfully', { phoneNumberSid });
-  } catch (error: any) {
-    logger.error('Failed to release phone number', { phoneNumberSid, error: error.message });
-    throw new Error(`Failed to release phone number: ${error.message}`);
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
+    logger.error('Failed to release phone number', { phoneNumberSid, error: errMessage });
+    throw new Error(`Failed to release phone number: ${errMessage}`);
   }
 }
 
@@ -391,11 +392,12 @@ export async function updatePhoneNumberWebhooks(
       'SignalWire updatePhoneNumberWebhooks'
     );
     logger.info('Phone number webhooks updated successfully', { phoneNumberSid });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : String(error);
     logger.error('Failed to update phone number webhooks', {
       phoneNumberSid,
-      error: error.message,
+      error: errMessage,
     });
-    throw new Error(`Failed to update phone number: ${error.message}`);
+    throw new Error(`Failed to update phone number: ${errMessage}`);
   }
 }

@@ -277,10 +277,20 @@ async function searchWebWithPerplexity(
     responseKeys: Object.keys(data),
   });
 
+  // Perplexity returns sources with varying shapes
+  interface PerplexitySource {
+    url?: string;
+    link?: string;
+    title?: string;
+    snippet?: string;
+    text?: string;
+    description?: string;
+  }
+
   // Convert Perplexity search_results to our SearchResult format
   const results: SearchResult[] = searchResults
     .slice(0, options?.numResults || 5)
-    .map((source: any, index: number) => {
+    .map((source: PerplexitySource, index: number) => {
       try {
         const url = source.url || source.link || '';
         return {

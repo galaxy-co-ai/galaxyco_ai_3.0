@@ -8,7 +8,9 @@ import mammoth from 'mammoth';
 import { logger } from '@/lib/logger';
 
 // Dynamically import pdf-parse only when needed to avoid server-side issues
-let pdfParse: any = null;
+// pdf-parse returns { text: string, numpages: number, ... }
+type PdfParser = (buffer: Buffer) => Promise<{ text: string; numpages: number; info: unknown }>;
+let pdfParse: PdfParser | null = null;
 
 async function getPdfParse() {
   if (!pdfParse) {

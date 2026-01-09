@@ -82,7 +82,7 @@ export async function getIntegrationForProvider(
       where: and(
         eq(integrations.workspaceId, workspaceId),
         eq(integrations.userId, userId),
-        eq(integrations.provider, provider as any),
+        eq(integrations.provider, provider as typeof integrations.provider.enumValues[number]),
         eq(integrations.status, 'active')
       ),
     });

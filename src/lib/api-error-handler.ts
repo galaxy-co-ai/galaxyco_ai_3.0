@@ -193,7 +193,7 @@ function classifyError(error: Error): { statusCode: number; message: string } {
  * }, 'Get users error');
  * ```
  */
-export function withErrorHandler<T extends (...args: any[]) => Promise<NextResponse>>(
+export function withErrorHandler<T extends (...args: unknown[]) => Promise<NextResponse>>(
   handler: T,
   context?: string
 ): T {
