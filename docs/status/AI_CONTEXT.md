@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-09 (f75e2fc)  
+**Updated Through:** 2026-01-09 (80e03e4)  
 **Branch:** main
 
 ## Quick Start
@@ -11,7 +11,7 @@
 - Tests: `npm test`
 
 ## Stack (from package.json)
-Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, Drizzle ORM 0.44.7, Neon Postgres, Upstash (Redis/Vector), Trigger.dev, Stripe, Sentry
+Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, Drizzle ORM 0.44.7, Neon Postgres, Upstash (Redis/Vector), Trigger.dev, Stripe, Sentry
 
 ## Current Status (manual)
 <!-- AI_CONTEXT:STATUS_START -->
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-09 80e03e4 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2026-01-09 3a1dd93 fix(deps): align react version constraint to ^19.2.3 to match react-dom peer requirement
 - 2026-01-09 f75e2fc Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-09 94e1bad fix(deps): update @clerk/nextjs to 6.36.7 for Next.js 16 Turbopack compatibility
 - 2026-01-09 111b039 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-08 bc0f6d0 fix(types): replace any types with proper interfaces in CRM components
 - 2026-01-08 8ecfe1b Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-08 7d5965c fix(lint): prefix unused variables with underscore in lib files
-- 2026-01-08 d7b3242 fix(lint): resolve lint errors, add bundle analyzer and bug tracker
-- 2026-01-07 785f140 docs: add AGENTS.md and Neptune improvement plan
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
