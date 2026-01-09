@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-08 (8ecfe1b)  
+**Updated Through:** 2026-01-08 (e6fab2b)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-08 e6fab2b Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2026-01-08 bc0f6d0 fix(types): replace any types with proper interfaces in CRM components
 - 2026-01-08 8ecfe1b Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-08 7d5965c fix(lint): prefix unused variables with underscore in lib files
 - 2026-01-08 d7b3242 fix(lint): resolve lint errors, add bundle analyzer and bug tracker
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-05 e5ca110 chore: cleanup project directory structure
 - 2026-01-01 36f4200 feat(dashboard): Perplexity-inspired minimal redesign with clean UX
 - 2025-12-31 740d4d2 refactor(landing): use design system for coming soon page
-- 2025-12-31 314c7e9 fix(landing): use correct logo path for coming soon page
-- 2025-12-31 16cbaa9 feat(landing): enhance coming soon page with logo and position display
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
