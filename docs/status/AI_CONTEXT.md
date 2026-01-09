@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-09 (1c292d2)  
+**Updated Through:** 2026-01-09 (111b039)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-09 111b039 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2026-01-09 25ec071 fix(settings): handle null lastUsed for API keys that have never been used
 - 2026-01-09 1c292d2 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-09 4719f4d docs(bugs): update BUG_TRACKER with any type elimination progress
 - 2026-01-09 93cd307 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-07 785f140 docs: add AGENTS.md and Neptune improvement plan
 - 2026-01-07 8a1e00a Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-07 e918a37 fix(web): update launch year to 2026
-- 2026-01-07 64cdfd9 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0 # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
-- 2026-01-07 ea6653c fix(web): use SVG logo for transparent background
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
