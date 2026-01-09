@@ -824,7 +824,7 @@ export const agents = pgTable(
         maxTokens?: number;
         systemPrompt?: string;
         tools?: string[];
-        triggers?: { type: string; config: any }[];
+        triggers?: { type: string; config: Record<string, unknown> }[];
         knowledgeBase?: {
           enabled: boolean;
           scope?: 'all' | 'collections';
@@ -898,8 +898,8 @@ export const agentTemplates = pgTable(
         tools?: string[];
         inputs?: { name: string; type: string; required?: boolean }[];
         outputs?: { name: string; type: string }[];
-        triggers?: { type: string; config: any }[];
-        defaults?: Record<string, any>;
+        triggers?: { type: string; config: Record<string, unknown> }[];
+        defaults?: Record<string, unknown>;
       }>()
       .notNull()
       .default({}),
@@ -967,7 +967,7 @@ export const agentPacks = pgTable(
         Array<{
           name: string;
           type: string;
-          config: any;
+          config: Record<string, unknown>;
         }>
       >()
       .notNull()
@@ -2393,8 +2393,8 @@ export const aiMessages = pgTable(
         durationMs?: number;
         functionCalls?: Array<{
           name: string;
-          args: any;
-          result: any;
+          args: unknown;
+          result: unknown;
         }>;
       }>()
       .default({}),
@@ -3544,7 +3544,8 @@ export const segments = pgTable(
         rules: Array<{
           field: string;
           operator: string;
-          value: any;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Filter values can be any serializable type
+          value: unknown;
         }>;
         logic?: 'and' | 'or';
       }>()
@@ -6985,7 +6986,7 @@ export const gridNodes = pgTable(
         // Condition Node
         conditionType?: 'equals' | 'contains' | 'greater' | 'less';
         conditionField?: string;
-        conditionValue?: any;
+        conditionValue?: string | number | boolean | null;
         // Transform Node
         transformScript?: string;
         transformMapping?: Record<string, string>;
@@ -6995,8 +6996,8 @@ export const gridNodes = pgTable(
         maxIterations?: number;
         // Delay Node
         delayMs?: number;
-        // Any other config
-        [key: string]: any;
+        // Any other config - index signature for extensibility
+        [key: string]: string | number | boolean | null | undefined | Record<string, unknown>;
       }>()
       .notNull()
       .default({}),
@@ -7059,7 +7060,7 @@ export const gridEdges = pgTable(
       .$type<{
         type?: 'equals' | 'contains' | 'greater' | 'less' | 'exists';
         field?: string;
-        value?: any;
+        value?: string | number | boolean | null;
         operator?: 'and' | 'or';
       }>()
       .default({}),
@@ -7105,11 +7106,11 @@ export const gridVersions = pgTable(
     // Complete snapshot of grid state at this version
     snapshot: jsonb('snapshot')
       .$type<{
-        layout: any;
+        layout: Record<string, unknown>;
         viewport: { x: number; y: number; zoom: number };
-        nodes: any[];
-        edges: any[];
-        metadata: any;
+        nodes: Array<Record<string, unknown>>;
+        edges: Array<Record<string, unknown>>;
+        metadata: Record<string, unknown>;
       }>()
       .notNull(),
 
@@ -7156,13 +7157,13 @@ export const gridExecutions = pgTable(
       .$type<{
         userId?: string;
         source?: string;
-        payload?: any;
+        payload?: Record<string, unknown>;
       }>()
       .default({}),
 
     // Input/Output
-    input: jsonb('input').$type<Record<string, any>>().default({}),
-    output: jsonb('output').$type<Record<string, any>>().default({}),
+    input: jsonb('input').$type<Record<string, unknown>>().default({}),
+    output: jsonb('output').$type<Record<string, unknown>>().default({}),
 
     // Performance metrics
     startedAt: timestamp('started_at'),
@@ -7266,8 +7267,8 @@ export const gridTemplates = pgTable(
     // Template snapshot (complete grid definition)
     previewData: jsonb('preview_data')
       .$type<{
-        nodes: any[];
-        edges: any[];
+        nodes: Array<Record<string, unknown>>;
+        edges: Array<Record<string, unknown>>;
         viewport?: { x: number; y: number; zoom: number };
       }>()
       .notNull(),
