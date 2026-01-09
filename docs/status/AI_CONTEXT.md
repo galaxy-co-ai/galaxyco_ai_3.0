@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-07 (8a1e00a)  
+**Updated Through:** 2026-01-08 (d7b3242)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-08 d7b3242 fix(lint): resolve lint errors, add bundle analyzer and bug tracker
+- 2026-01-07 785f140 docs: add AGENTS.md and Neptune improvement plan
 - 2026-01-07 8a1e00a Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-07 e918a37 fix(web): update launch year to 2026
 - 2026-01-07 64cdfd9 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0 # Please enter a commit message to explain why this merge is necessary, # especially if it merges an updated upstream into a topic branch. # # Lines starting with '#' will be ignored, and an empty message aborts # the commit.
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.0, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2025-12-31 16cbaa9 feat(landing): enhance coming soon page with logo and position display
 - 2025-12-31 4671123 feat(landing): add coming soon page with waitlist signup
 - 2025-12-31 be7f9c3 feat(crm): add Apollo.io integration for visitor tracking and enrichment
-- 2025-12-31 ceaa28a docs(neptune): clarify module export comments
-- 2025-12-31 bf5c59f fix(tools): add missing 'sales' capability handler
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
