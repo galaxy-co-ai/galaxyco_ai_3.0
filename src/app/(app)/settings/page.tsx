@@ -98,7 +98,7 @@ interface ApiKeyItem {
   name: string;
   key: string;
   created: string;
-  lastUsed: string;
+  lastUsed: string | null;
 }
 
 const SETTINGS_CATEGORIES: SettingsCategory[] = [
@@ -1725,7 +1725,7 @@ const { user, isLoaded } = useUser();
                     </span>
                     <span className="flex items-center gap-1">
                       <RefreshCw className="h-3 w-3" />
-                      Last used {apiKey.lastUsed}
+                      {apiKey.lastUsed ? `Last used ${apiKey.lastUsed}` : 'Never used'}
                     </span>
                   </div>
                 </div>
