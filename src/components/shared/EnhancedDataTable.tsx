@@ -55,10 +55,13 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export interface ColumnDef<T = any> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Generic table requires flexibility for row data
+type RowData = Record<string, any>;
+
+export interface ColumnDef<T extends RowData = RowData> {
   id: string;
   header: string;
-  accessorKey?: string;
+  accessorKey?: keyof T & string;
   cell?: (row: T) => React.ReactNode;
   sortable?: boolean;
   filterable?: boolean;
@@ -86,7 +89,7 @@ export interface BulkAction {
   variant?: 'default' | 'destructive';
 }
 
-interface EnhancedDataTableProps<T = any> {
+interface EnhancedDataTableProps<T extends RowData = RowData> {
   data: T[];
   columns: ColumnDef<T>[];
   getRowId: (row: T) => string;
@@ -98,7 +101,7 @@ interface EnhancedDataTableProps<T = any> {
   className?: string;
 }
 
-export default function EnhancedDataTable<T = any>({
+export default function EnhancedDataTable<T extends RowData = RowData>({
   data,
   columns: initialColumns,
   getRowId,
@@ -183,7 +186,7 @@ export default function EnhancedDataTable<T = any>({
         if (!column) return true;
 
         const cellValue = column.accessorKey 
-          ? (row as any)[column.accessorKey]
+          ? row[column.accessorKey]
           : null;
 
         if (cellValue === null || cellValue === undefined) return false;
@@ -217,8 +220,8 @@ export default function EnhancedDataTable<T = any>({
     if (!column) return filteredData;
 
     return [...filteredData].sort((a, b) => {
-      const aValue = column.accessorKey ? (a as any)[column.accessorKey] : null;
-      const bValue = column.accessorKey ? (b as any)[column.accessorKey] : null;
+      const aValue = column.accessorKey ? a[column.accessorKey] : null;
+      const bValue = column.accessorKey ? b[column.accessorKey] : null;
 
       if (aValue === null) return 1;
       if (bValue === null) return -1;
@@ -514,7 +517,7 @@ export default function EnhancedDataTable<T = any>({
                         {col.cell 
                           ? col.cell(row)
                           : col.accessorKey 
-                            ? String((row as any)[col.accessorKey] ?? '')
+                            ? String(row[col.accessorKey] ?? '')
                             : ''}
                       </TableCell>
                     ))}

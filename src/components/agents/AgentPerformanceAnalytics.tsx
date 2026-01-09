@@ -273,8 +273,18 @@ export function AgentPerformanceAnalytics({ className }: AgentPerformanceAnalyti
       const activityRes = await fetch(`/api/activity?limit=100&timeRange=${timeRange}`);
       const activityData = await activityRes.json();
 
+      // API response agent shape
+      interface ApiAgent {
+        id: string;
+        name: string;
+        type: string;
+        status: string;
+        executionCount?: number;
+        lastExecutedAt?: string;
+      }
+
       // Process agent metrics
-      const agents: AgentMetrics[] = (agentsData.agents || []).map((agent: any) => ({
+      const agents: AgentMetrics[] = (agentsData.agents || []).map((agent: ApiAgent) => ({
         id: agent.id,
         name: agent.name,
         type: agent.type,

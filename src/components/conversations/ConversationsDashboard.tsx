@@ -67,7 +67,8 @@ interface WorkspacePhoneNumber {
   friendlyName: string | null;
   numberType: 'primary' | 'sales' | 'support' | 'custom';
   status: string;
-  [key: string]: any; // Allow additional fields from database
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Allow additional fields from database
+  [key: string]: string | boolean | number | null | undefined | Date | unknown[];
 }
 
 interface ConversationsDashboardProps {

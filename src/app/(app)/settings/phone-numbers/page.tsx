@@ -70,9 +70,9 @@ export default function PhoneNumbersPage() {
       setPhoneNumbers([...phoneNumbers, data.phoneNumber]);
       toast.success('Phone number provisioned successfully');
       setShowAddModal(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error provisioning phone number:', error);
-      toast.error(error.message || 'Failed to provision phone number');
+      toast.error(error instanceof Error ? error.message : 'Failed to provision phone number');
     } finally {
       setProvisioning(false);
     }
@@ -109,9 +109,9 @@ export default function PhoneNumbersPage() {
       toast.success('Phone number updated successfully');
       setShowEditModal(false);
       setEditingNumber(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating phone number:', error);
-      toast.error(error.message || 'Failed to update phone number');
+      toast.error(error instanceof Error ? error.message : 'Failed to update phone number');
     } finally {
       setSaving(false);
     }
@@ -136,9 +136,9 @@ export default function PhoneNumbersPage() {
 
       setPhoneNumbers(phoneNumbers.filter((p) => p.id !== phoneNumber.id));
       toast.success('Phone number released successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error releasing phone number:', error);
-      toast.error(error.message || 'Failed to release phone number');
+      toast.error(error instanceof Error ? error.message : 'Failed to release phone number');
     }
   };
 

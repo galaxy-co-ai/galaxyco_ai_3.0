@@ -82,6 +82,25 @@ interface SettingsCategory {
   description: string;
 }
 
+interface WebhookItem {
+  id: string;
+  name: string;
+  url: string;
+  events: string[];
+  enabled: boolean;
+  description?: string;
+  createdAt: string;
+  lastTriggeredAt?: string | null;
+}
+
+interface ApiKeyItem {
+  id: string;
+  name: string;
+  key: string;
+  created: string;
+  lastUsed: string;
+}
+
 const SETTINGS_CATEGORIES: SettingsCategory[] = [
   { id: "profile", name: "Profile", icon: User, description: "Your personal information" },
   { id: "workspace", name: "Workspace", icon: Building2, description: "Workspace settings" },
@@ -325,7 +344,11 @@ const { user, isLoaded } = useUser();
     }
   };
   
-  const handleNotificationChange = async (updates: any) => {
+  const handleNotificationChange = async (updates: {
+    types?: Record<string, { email: boolean; push: boolean }>;
+    frequency?: 'instant' | 'hourly' | 'daily';
+    quietHours?: { enabled: boolean; start: string; end: string };
+  }) => {
     try {
       const res = await fetch('/api/settings/notifications', {
         method: 'PUT',
@@ -1488,7 +1511,7 @@ const { user, isLoaded } = useUser();
                   <p className="text-xs mt-1">Click "Add Webhook" to get started</p>
                 </div>
               ) : (
-                userWebhooks.map((webhook: any) => (
+                userWebhooks.map((webhook: WebhookItem) => (
                   <div
                     key={webhook.id}
                     className="p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
@@ -1637,7 +1660,7 @@ const { user, isLoaded } = useUser();
             <div className="space-y-2">
               {apiKeys.length === 0 ? (
                 <p className="text-sm text-gray-500 text-center py-8">No API keys yet</p>
-              ) : apiKeys.map((apiKey: any) => (
+              ) : apiKeys.map((apiKey: ApiKeyItem) => (
                 <div
                   key={apiKey.id}
                   className="p-3 rounded-lg border border-gray-100"
