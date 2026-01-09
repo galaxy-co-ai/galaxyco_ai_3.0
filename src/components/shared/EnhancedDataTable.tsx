@@ -69,10 +69,13 @@ export interface ColumnDef<T = any> {
   visible?: boolean;
 }
 
+// Filter values vary by filter type: text, number, date, or select options
+type FilterValue = string | number | Date | string[] | null;
+
 export interface FilterPreset {
   id: string;
   name: string;
-  filters: Record<string, any>;
+  filters: Record<string, FilterValue>;
 }
 
 export interface BulkAction {
@@ -89,7 +92,7 @@ interface EnhancedDataTableProps<T = any> {
   getRowId: (row: T) => string;
   bulkActions?: BulkAction[];
   filterPresets?: FilterPreset[];
-  onSavePreset?: (name: string, filters: Record<string, any>) => void;
+  onSavePreset?: (name: string, filters: Record<string, FilterValue>) => void;
   storageKey?: string;
   pageSize?: number;
   className?: string;
@@ -124,7 +127,8 @@ export default function EnhancedDataTable<T = any>({
   const [currentPage, setCurrentPage] = useState(1);
   
   // Undo state
-  const [undoStack, setUndoStack] = useState<Array<{ action: string; data: any }>>([]);
+  // Undo data varies by action type - using unknown until full undo implementation
+  const [undoStack, setUndoStack] = useState<Array<{ action: string; data: { selectedIds: string[] } }>>([]);
 
   // Load saved preferences
   useEffect(() => {

@@ -1,6 +1,6 @@
 # Bug Tracker & Technical Debt
 **GalaxyCo AI 3.0 - Issue Tracking**
-**Last Updated**: January 8, 2026
+**Last Updated**: January 9, 2026
 
 ---
 
@@ -9,7 +9,7 @@
 | Category | P0 Critical | P1 High | P2 Medium | P3 Low | Total |
 |----------|-------------|---------|-----------|--------|-------|
 | Security | 0 | 2 | 4 | 7 | 13 |
-| Lint Issues | 0 | 0 | 0 | ~890 | ~890 |
+| Lint Issues | 0 | 0 | 0 | ~824 | ~824 |
 | Known Bugs | 0 | 0 | TBD | TBD | TBD |
 
 ---
@@ -121,6 +121,20 @@ _No P0 issues identified at this time._
 ### LINT-005: React Purity Warnings (Jan 8, 2026)
 - **Files**: `stars.tsx`, `customize/page.tsx`, `accessibility.ts`, `useNeptunePresence.ts`
 - **Fix**: Added eslint-disable comments with explanations for intentional patterns
+- **Resolved By**: AI Assistant
+
+### LINT-006: React Hooks Pattern Refactors (Jan 9, 2026)
+- **Files**: `stars.tsx`, `customize/page.tsx`
+- **Issue**: ESLint rules for React purity and setState-in-effect warnings
+- **Fix**: Refactored to use proper patterns:
+  - `LunarLabsStars`: Changed from `useMemo` with `Math.random` to lazy `useState` initializer
+  - `DashboardCustomizePage`: Extracted `getInitialWidgets()` function to avoid `useEffect` + `setState`
+- **Resolved By**: AI Assistant
+
+### LINT-007: Unused Variable Cleanup Batch 2 (Jan 9, 2026)
+- **Files**: 15 files across scripts/, src/app/, src/actions/
+- **Fix**: Prefixed unused vars with `_`, removed unused imports, replaced `any` with `unknown`
+- **Impact**: Reduced warnings from 858 → 824 (34 fewer)
 - **Resolved By**: AI Assistant
 
 ---
