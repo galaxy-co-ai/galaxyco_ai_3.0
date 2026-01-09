@@ -9,7 +9,7 @@
 | Category | P0 Critical | P1 High | P2 Medium | P3 Low | Total |
 |----------|-------------|---------|-----------|--------|-------|
 | Security | 0 | 2 | 4 | 7 | 13 |
-| Lint Issues | 0 | 0 | 0 | ~824 | ~824 |
+| Lint Issues | 0 | 0 | 0 | ~790 | ~790 |
 | Known Bugs | 0 | 0 | TBD | TBD | TBD |
 
 ---
@@ -53,20 +53,27 @@ _No P0 issues identified at this time._
 - **Owner**: TBD
 
 ### CODE-001: TypeScript `any` Types in Production Code
-- **Status**: 🔄 In Progress
-- **Severity**: MEDIUM
-- **Count**: Reduced from ~81 to ~60 instances
-- **Fixed Files** (Jan 8, 2026):
+- **Status**: ✅ Resolved (Minimal)
+- **Severity**: MEDIUM → LOW
+- **Count**: Reduced from ~81 to **5 instances** (94% reduction)
+- **Fixed Files** (Jan 8-9, 2026):
   - `src/app/api/assistant/stream/route.ts` (5 → 0)
   - `src/components/crm/CRMDashboard.tsx` (9 → 0)
   - `src/components/crm/ContactDialog.tsx` (1 → 0)
   - `src/components/crm/DealDialog.tsx` (2 → 0)
   - `src/components/crm/InsightsPanel.tsx` (1 → 0)
   - `src/components/crm/ScoreCard.tsx` (1 → 0)
-- **Remaining**:
-  - `src/db/schema.ts` (16 - JSONB columns, some intentional)
-  - `src/components/shared/EnhancedDataTable.tsx` (5)
-- **Fix**: Add proper types, use `unknown` with type guards
+  - `src/db/schema.ts` (16 → 1 intentional)
+  - `src/components/shared/EnhancedDataTable.tsx` (5 → 1 intentional)
+  - `src/app/(app)/settings/page.tsx` (3 → 0)
+  - `src/app/(app)/settings/phone-numbers/page.tsx` (3 → 0)
+  - `src/components/agents/AgentPerformanceAnalytics.tsx` (1 → 0)
+- **Remaining (Intentional/Acceptable)**:
+  - `src/lib/email.ts` (1 - Resend SDK type incompatibility)
+  - `src/trigger/workflow-executor.ts` (1 - metadata API limitation)
+  - `src/lib/ai/workspace-health.ts` (2 - false positives, using "any" in comments)
+  - `src/types/_archive-dashboard-old.ts` (1 - archived code)
+- **Fix**: ✅ Complete - proper types with `unknown` and type guards
 - **Owner**: Dalton
 
 ---
@@ -135,6 +142,17 @@ _No P0 issues identified at this time._
 - **Files**: 15 files across scripts/, src/app/, src/actions/
 - **Fix**: Prefixed unused vars with `_`, removed unused imports, replaced `any` with `unknown`
 - **Impact**: Reduced warnings from 858 → 824 (34 fewer)
+- **Resolved By**: AI Assistant
+
+### CODE-002: TypeScript `any` Type Elimination (Jan 9, 2026)
+- **Files**: 20+ files across src/components/, src/app/, src/db/, src/lib/
+- **Fix**: Replaced `any` with proper types, `unknown`, and type guards
+- **Impact**: Reduced `any` types from ~81 → 5 instances (94% reduction)
+- **Key Changes**:
+  - `src/db/schema.ts`: Replaced 15+ JSONB `any` types with `Record<string, unknown>`
+  - `src/components/shared/EnhancedDataTable.tsx`: Introduced `RowData` type for generic tables
+  - `src/app/(app)/settings/page.tsx`: Added `WebhookItem`, `ApiKeyItem` interfaces
+  - `src/components/agents/AgentPerformanceAnalytics.tsx`: Added `ApiAgent` interface
 - **Resolved By**: AI Assistant
 
 ---
