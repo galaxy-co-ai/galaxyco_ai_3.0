@@ -10,23 +10,17 @@ import {
   Users,
   MessageSquare,
   TrendingUp,
-  MoreHorizontal,
   MessageSquarePlus,
   Rocket,
   Sparkles,
   Bot,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { trackClick } from "@/lib/analytics";
 import { useFeedback } from "@/contexts/feedback-context";
 import { useConversationsUnread } from "@/hooks/useConversationsUnread";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
 
 // Core navigation items (always visible)
 const coreNavItems = [
@@ -36,6 +30,8 @@ const coreNavItems = [
   { icon: BookOpen, label: "Library", href: "/library", id: "library" },
   { icon: Users, label: "CRM", href: "/crm", id: "crm" },
   { icon: MessageSquare, label: "Conversations", href: "/conversations", id: "conversations" },
+  { icon: Megaphone, label: "Marketing", href: "/marketing", id: "marketing" },
+  { icon: TrendingUp, label: "Finance HQ", href: "/finance", id: "finance" },
 ];
 
 // Secondary navigation items (Bottom section)
@@ -52,7 +48,6 @@ export function SlimSidebar({ className }: SlimSidebarProps) {
   const pathname = usePathname();
   const { openFeedback } = useFeedback();
   const unreadCount = useConversationsUnread();
-  const [isMoreOpen, setIsMoreOpen] = React.useState(false);
 
   const isActive = (href: string) => {
     if (href === "/") {
@@ -117,45 +112,6 @@ export function SlimSidebar({ className }: SlimSidebarProps) {
             </Link>
           );
         })}
-
-        {/* More Collapsible Section */}
-        <Collapsible open={isMoreOpen} onOpenChange={setIsMoreOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full h-10 flex items-center gap-3 justify-start px-3 rounded-md transition-all duration-150",
-                "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900"
-              )}
-            >
-              <MoreHorizontal className="h-5 w-5 flex-shrink-0" />
-              <span className="text-sm font-medium flex-1 text-left">More</span>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 transition-transform duration-200",
-                  isMoreOpen && "rotate-180"
-                )}
-              />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-1 space-y-1 ml-4">
-            <Link href="/finance" onClick={() => trackClick('sidebar_finance', { section: 'more', label: 'Finance HQ' })}>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full h-9 flex items-center gap-3 justify-start px-3 rounded-md transition-all duration-150",
-                  isActive("/finance")
-                    ? "bg-purple-50 dark:bg-purple-900/10 text-purple-600 dark:text-purple-400"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
-                )}
-              >
-                <TrendingUp className="h-4 w-4 flex-shrink-0" />
-                <span className="text-sm">Finance HQ</span>
-              </Button>
-            </Link>
-            {/* Add more hidden items here as needed */}
-          </CollapsibleContent>
-        </Collapsible>
 
         {/* Feedback Button */}
         <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800">
