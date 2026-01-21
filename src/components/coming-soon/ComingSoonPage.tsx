@@ -168,8 +168,12 @@ function AnimatedBackground() {
 const features = [
   {
     icon: Brain,
-    title: 'Neptune AI',
-    description: 'Your intelligent CRM co-pilot that understands context and takes action.',
+    title: 'Simplify Your Operations',
+    bullets: [
+      'CRM managed from day one',
+      'Documents built for you',
+      'AI that works for you',
+    ],
     gradientStyle: 'linear-gradient(135deg, #6aabab, #5B8A8A)',
     shadowColor: 'rgba(91, 138, 138, 0.5)',
     hoverGlow: 'rgba(91, 138, 138, 0.3)',
@@ -177,8 +181,12 @@ const features = [
   },
   {
     icon: Zap,
-    title: 'AI Agents',
-    description: 'Autonomous agents that handle research, outreach, and follow-ups 24/7.',
+    title: 'Boost Lead Outreach',
+    bullets: [
+      'Branding on autopilot',
+      'Marketing campaigns on deck',
+      'Sales agents ready to close',
+    ],
     gradientStyle: 'linear-gradient(135deg, #9a84be, #7C6B9E)',
     shadowColor: 'rgba(124, 107, 158, 0.5)',
     hoverGlow: 'rgba(124, 107, 158, 0.3)',
@@ -186,8 +194,12 @@ const features = [
   },
   {
     icon: Shield,
-    title: 'Enterprise Ready',
-    description: 'SOC 2 compliant with fine-grained permissions and audit logging.',
+    title: 'Turn Leads Into Sales',
+    bullets: [
+      'Proactive AI that does the work',
+      'Approve or revise its next move',
+      'Sales agents to turn leads into sales',
+    ],
     gradientStyle: 'linear-gradient(135deg, #8193b3, #5A6B8A)',
     shadowColor: 'rgba(90, 107, 138, 0.5)',
     hoverGlow: 'rgba(90, 107, 138, 0.3)',
@@ -237,21 +249,28 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
           }}
         />
         
-        <div 
-          className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all duration-300 group-hover:scale-110"
-          style={{
-            background: feature.gradientStyle,
-            boxShadow: `0 10px 25px ${feature.shadowColor}`,
-          }}
-        >
-          <Icon className="w-6 h-6 text-white drop-shadow-sm" />
+        <div className="flex items-center gap-3 mb-4">
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-110"
+            style={{
+              background: feature.gradientStyle,
+              boxShadow: `0 10px 25px ${feature.shadowColor}`,
+            }}
+          >
+            <Icon className="w-5 h-5 text-white drop-shadow-sm" />
+          </div>
+          <h3 className="font-semibold text-lg text-white relative z-10">
+            {feature.title}
+          </h3>
         </div>
-        <h3 className="font-semibold text-lg text-white mb-2 relative z-10">
-          {feature.title}
-        </h3>
-        <p className="text-sm text-gray-400 leading-relaxed relative z-10">
-          {feature.description}
-        </p>
+        <ul className="space-y-1.5 relative z-10">
+          {feature.bullets.map((bullet, i) => (
+            <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
+              <span className="text-nebula-teal-400 mt-0.5">•</span>
+              <span>{bullet}</span>
+            </li>
+          ))}
+        </ul>
       </motion.div>
     </motion.div>
   );
@@ -513,16 +532,17 @@ export function ComingSoonPage() {
               }}
             />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
-              The AI-Native CRM
-              <br />
+              AI Built to{' '}
               <span 
                 className="bg-clip-text text-transparent"
                 style={{
                   backgroundImage: 'linear-gradient(to right, #8ac5c5, #b9aad4, #d6b7c1)'
                 }}
               >
-                Built for Revenue Teams
+                EMPOWER
               </span>
+              <br />
+              not replace.
             </h1>
           </motion.div>
 
@@ -537,8 +557,9 @@ export function ComingSoonPage() {
             }}
             className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
-            Stop managing your CRM. Let Neptune AI handle the busywork while
-            autonomous agents research, engage, and nurture your pipeline 24/7.
+            The AI-native operating system for business.
+            <br />
+            It&apos;s time to 10x your employees, not replace them.
           </motion.p>
 
           {/* Waitlist Form */}
