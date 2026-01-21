@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-21 (6afdb3c)  
+**Updated Through:** 2026-01-21 (33c2f20)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-21 33c2f20 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2026-01-21 3910437 feat(nav): add Marketing and Finance HQ to main sidebar, remove More section
 - 2026-01-21 6afdb3c Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-21 003ec3e chore: declutter root - remove artifacts and consolidate docs
 - 2026-01-09 80e03e4 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-09 24d506e fix(types): replace any types across 15 files
 - 2026-01-09 cc91dbd fix(types): replace any types in EnhancedDataTable and update tracker
 - 2026-01-09 4304092 fix(lint): reduce warnings by 34 - refactor hooks and unused vars
-- 2026-01-08 e6fab2b Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2026-01-08 bc0f6d0 fix(types): replace any types with proper interfaces in CRM components
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
