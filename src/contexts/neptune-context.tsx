@@ -508,7 +508,10 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        logger.error("[Neptune] Send message failed", error);
+        logger.error("[Neptune] Send message failed", { 
+          error: error instanceof Error ? error.message : String(error),
+          name: error instanceof Error ? error.name : 'Unknown',
+        });
         
         // Determine error type for specific messaging
         let errorContent = "I encountered an issue. Please try again or rephrase your question.";

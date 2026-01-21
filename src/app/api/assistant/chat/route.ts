@@ -82,7 +82,7 @@ const chatSchema = z.object({
   }).nullish(),
   feature: z.string().nullish(),
   // Rich page context for Neptune's contextual awareness
-  pageContext: pageContextSchema,
+  pageContext: pageContextSchema.optional(),
 });
 
 // ============================================================================
