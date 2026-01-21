@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-21 (f8660f9)  
+**Updated Through:** 2026-01-21 (8f0145e)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-21 8f0145e fix(web): update feature card bullet points
 - 2026-01-21 f8660f9 feat(web): update landing page hero and feature cards
 - 2026-01-21 8b19354 fix(api): make pageContext optional in Neptune chat schema
 - 2026-01-21 33c2f20 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-09 74d50ae Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-09 f70b10c fix(types): replace any types in settings, components, and pages
 - 2026-01-09 506413e fix(types): more any type replacements across API routes
-- 2026-01-09 24d506e fix(types): replace any types across 15 files
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
