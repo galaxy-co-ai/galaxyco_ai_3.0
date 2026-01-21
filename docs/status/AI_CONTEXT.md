@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-09 (80e03e4)  
+**Updated Through:** 2026-01-21 (6afdb3c)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-21 6afdb3c Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
+- 2026-01-21 003ec3e chore: declutter root - remove artifacts and consolidate docs
 - 2026-01-09 80e03e4 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-09 3a1dd93 fix(deps): align react version constraint to ^19.2.3 to match react-dom peer requirement
 - 2026-01-09 f75e2fc Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-09 4304092 fix(lint): reduce warnings by 34 - refactor hooks and unused vars
 - 2026-01-08 e6fab2b Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-08 bc0f6d0 fix(types): replace any types with proper interfaces in CRM components
-- 2026-01-08 8ecfe1b Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2026-01-08 7d5965c fix(lint): prefix unused variables with underscore in lib files
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
