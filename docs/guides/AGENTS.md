@@ -1,7 +1,7 @@
 # AI Agent Playbook — GalaxyCo.ai 3.0
 
 > Comprehensive guide for AI agents working on this codebase.
-> Read WARP.md first for foundation, use this for detailed decisions.
+> Start with `AGENTS.md` (repo root) for foundation, use this for detailed decisions.
 
 ## Table of Contents
 1. [Decision Framework](#decision-framework)
