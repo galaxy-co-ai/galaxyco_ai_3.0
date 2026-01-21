@@ -185,7 +185,7 @@ const features = [
     bullets: [
       'Branding on autopilot',
       'Marketing campaigns on deck',
-      'Sales agents ready to close',
+      'Leads ready to convert',
     ],
     gradientStyle: 'linear-gradient(135deg, #9a84be, #7C6B9E)',
     shadowColor: 'rgba(124, 107, 158, 0.5)',
@@ -198,7 +198,7 @@ const features = [
     bullets: [
       'Proactive AI that does the work',
       'Approve or revise its next move',
-      'Sales agents to turn leads into sales',
+      'Deal pipelines designed to close',
     ],
     gradientStyle: 'linear-gradient(135deg, #8193b3, #5A6B8A)',
     shadowColor: 'rgba(90, 107, 138, 0.5)',
