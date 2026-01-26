@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-26 (8dd65c7)  
+**Updated Through:** 2026-01-26 (eaa9935)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-26 eaa9935 fix(neptune): remove dead stream route, improve error handling
 - 2026-01-26 8dd65c7 chore: remove dead code and add architecture documentation
 - 2026-01-26 7b9beb6 fix: add missing Drizzle relations for integrations tables
 - 2026-01-21 8f0145e fix(web): update feature card bullet points
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-09 4719f4d docs(bugs): update BUG_TRACKER with any type elimination progress
 - 2026-01-09 93cd307 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-09 71bb025 fix(types): eliminate any types in db schema with proper type definitions
-- 2026-01-09 74d50ae Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
