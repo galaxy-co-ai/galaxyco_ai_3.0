@@ -1,3 +1,5 @@
+![GalaxyCo.ai Cover](galaxyco-cover.png)
+
 # GalaxyCo.ai - AI-Native Business Platform
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
