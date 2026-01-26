@@ -1185,11 +1185,32 @@ Show your reasoning process naturally in your response.`;
         });
       }
       
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'An unexpected error occurred';
+      // Provide user-friendly error messages without exposing internal details
+      let userMessage = 'An unexpected error occurred. Please try again.';
       
-      sse.sendError(errorMessage);
+      if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
+        
+        // OpenAI API errors
+        if (msg.includes('api key') || msg.includes('not configured') || msg.includes('authentication')) {
+          userMessage = 'AI service configuration error. Please contact support.';
+          logger.error('[AI Chat Stream] API configuration issue', { message: error.message });
+        } else if (msg.includes('rate limit') || msg.includes('429')) {
+          userMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+        } else if (msg.includes('timeout') || msg.includes('timed out')) {
+          userMessage = 'Request timed out. Please try again with a shorter message.';
+        } else if (msg.includes('network') || msg.includes('econnrefused') || msg.includes('fetch')) {
+          userMessage = 'Network error. Please check your connection and try again.';
+        } else if (msg.includes('500') || msg.includes('502') || msg.includes('503')) {
+          userMessage = 'AI service temporarily unavailable. Please try again in a moment.';
+        } else {
+          // For other errors, log the actual error but show generic message
+          logger.error('[AI Chat Stream] Unhandled error type', { message: error.message, name: error.name });
+          userMessage = 'Something went wrong. Please try again.';
+        }
+      }
+      
+      sse.sendError(userMessage);
       sse.sendDone();
     }
   })();

@@ -101,44 +101,6 @@ registerRoute({
 });
 
 /**
- * POST /api/assistant/stream
- * Stream AI assistant responses
- */
-registerRoute({
-  method: 'post',
-  path: '/api/assistant/stream',
-  tags: ['AI & Assistant'],
-  summary: 'Stream AI responses',
-  description: 'Send a message and receive a streaming response via Server-Sent Events (SSE)',
-  request: {
-    body: {
-      content: {
-        'application/json': {
-          schema: z.object({
-            message: z.string().min(1).max(10000),
-            conversationId: z.string().uuid().optional(),
-            context: z.record(z.any()).optional(),
-          }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: 'SSE stream of AI response chunks',
-      content: {
-        'text/event-stream': {
-          schema: z.object({
-            content: z.string().describe('Response chunk'),
-            done: z.boolean().optional().describe('True when stream is complete'),
-          }),
-        },
-      },
-    },
-  },
-});
-
-/**
  * GET /api/assistant/conversations
  * List conversations
  */

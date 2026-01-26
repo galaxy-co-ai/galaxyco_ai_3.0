@@ -540,8 +540,13 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
             errorTitle = "Session Expired";
             errorContent = "Your session has expired. Please refresh the page to continue.";
           }
-          // Validation errors (400)
-          else if (errorMsg.includes("400") || errorMsg.includes("validation") || errorMsg.includes("invalid")) {
+          // API key / configuration errors
+          else if (errorMsg.includes("api key") || errorMsg.includes("not configured") || errorMsg.includes("openai")) {
+            errorTitle = "AI Service Error";
+            errorContent = "The AI service is temporarily unavailable. Our team has been notified.";
+          }
+          // Validation errors (400) - be more specific to avoid catching API errors
+          else if (errorMsg.includes("400") || (errorMsg.includes("validation") && !errorMsg.includes("api")) || errorMsg.includes("message is required")) {
             errorTitle = "Invalid Message";
             errorContent = "Your message couldn't be processed. Try rephrasing or shortening it.";
           }
