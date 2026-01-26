@@ -514,41 +514,48 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
         });
         
         // Determine error type for specific messaging
+        // NOTE: Server sends sanitized messages, so we match on those patterns
         let errorContent = "I encountered an issue. Please try again or rephrase your question.";
         let errorTitle = "Something went wrong";
         
         if (error instanceof Error) {
           const errorMsg = error.message.toLowerCase();
           
-          // Network/connection errors
-          if (errorMsg.includes("network") || errorMsg.includes("fetch") || errorMsg.includes("connection") || error.name === "TypeError") {
+          // Match sanitized server messages (from /api/assistant/chat error handling)
+          // Network errors - server sends "Network error. Please check..."
+          if (errorMsg.includes("network error") || errorMsg.includes("connection") || error.name === "TypeError") {
             errorTitle = "Connection Lost";
             errorContent = "Your internet connection was interrupted. Check your connection and try again.";
           }
-          // Server errors (5xx)
-          else if (errorMsg.includes("500") || errorMsg.includes("502") || errorMsg.includes("503") || errorMsg.includes("504")) {
-            errorTitle = "Server Error";
-            errorContent = "Our servers encountered an issue. We're looking into it. Please try again in a moment.";
+          // Service unavailable - server sends "AI service temporarily unavailable..."
+          else if (errorMsg.includes("temporarily unavailable") || errorMsg.includes("503") || errorMsg.includes("502")) {
+            errorTitle = "Service Unavailable";
+            errorContent = "The AI service is temporarily unavailable. Please try again in a moment.";
           }
-          // Rate limiting (429)
-          else if (errorMsg.includes("429") || errorMsg.includes("rate limit")) {
+          // Rate limiting - server sends "Rate limit exceeded..."
+          else if (errorMsg.includes("rate limit")) {
             errorTitle = "Too Many Requests";
             errorContent = "You've sent too many messages. Please wait a moment before trying again.";
           }
-          // Auth errors (401, 403)
-          else if (errorMsg.includes("401") || errorMsg.includes("403") || errorMsg.includes("unauthorized") || errorMsg.includes("forbidden")) {
+          // Timeout - server sends "Request timed out..."
+          else if (errorMsg.includes("timed out") || errorMsg.includes("timeout")) {
+            errorTitle = "Request Timeout";
+            errorContent = "The request took too long. Please try again with a shorter message.";
+          }
+          // Auth errors (from HTTP response, not sanitized)
+          else if (errorMsg.includes("sign in") || errorMsg.includes("session") || errorMsg.includes("401") || errorMsg.includes("403")) {
             errorTitle = "Session Expired";
             errorContent = "Your session has expired. Please refresh the page to continue.";
           }
-          // API key / configuration errors
-          else if (errorMsg.includes("api key") || errorMsg.includes("not configured") || errorMsg.includes("openai")) {
+          // API configuration - server sends "AI service configuration error..."
+          else if (errorMsg.includes("configuration error") || errorMsg.includes("contact support")) {
             errorTitle = "AI Service Error";
             errorContent = "The AI service is temporarily unavailable. Our team has been notified.";
           }
-          // Validation errors (400) - be more specific to avoid catching API errors
-          else if (errorMsg.includes("400") || (errorMsg.includes("validation") && !errorMsg.includes("api")) || errorMsg.includes("message is required")) {
-            errorTitle = "Invalid Message";
-            errorContent = "Your message couldn't be processed. Try rephrasing or shortening it.";
+          // Generic "Something went wrong" from server
+          else if (errorMsg.includes("something went wrong") || errorMsg.includes("unexpected error")) {
+            errorTitle = "Something Went Wrong";
+            errorContent = "An unexpected error occurred. Please try again.";
           }
           
           toast.error(errorTitle);
