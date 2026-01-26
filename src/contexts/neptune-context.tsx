@@ -552,6 +552,12 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
             errorTitle = "AI Service Error";
             errorContent = "The AI service is temporarily unavailable. Our team has been notified.";
           }
+          // Validation errors - server sends "Invalid request: Message is required" etc.
+          // These come directly from the API validation, not the catch block
+          else if (errorMsg.includes("invalid request") || errorMsg.includes("message is required") || errorMsg.includes("validation")) {
+            errorTitle = "Invalid Message";
+            errorContent = "Your message couldn't be processed. Try rephrasing or shortening it.";
+          }
           // Generic "Something went wrong" from server
           else if (errorMsg.includes("something went wrong") || errorMsg.includes("unexpected error")) {
             errorTitle = "Something Went Wrong";
