@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-26 (59e6549)  
+**Updated Through:** 2026-01-26 (b9a565a)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-01-26 b9a565a Add cover image to README
 - 2026-01-26 59e6549 Add GalaxyCo.ai cover image for README
 - 2026-01-26 a9f4772 fix(neptune): restore validation error matching for input errors
 - 2026-01-26 f7c3259 fix(neptune): align client error handling with sanitized server messages
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-09 94e1bad fix(deps): update @clerk/nextjs to 6.36.7 for Next.js 16 Turbopack compatibility
 - 2026-01-09 111b039 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 - 2026-01-09 25ec071 fix(settings): handle null lastUsed for API keys that have never been used
-- 2026-01-09 1c292d2 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
