@@ -6821,6 +6821,22 @@ export const oauthTokens = pgTable(
   }),
 );
 
+// Integration Relations - Required for Drizzle ORM relational queries
+export const integrationsRelations = relations(integrations, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [integrations.workspaceId],
+    references: [workspaces.id],
+  }),
+  tokens: many(oauthTokens),
+}));
+
+export const oauthTokensRelations = relations(oauthTokens, ({ one }) => ({
+  integration: one(integrations, {
+    fields: [oauthTokens.integrationId],
+    references: [integrations.id],
+  }),
+}));
+
 // ============================================================================
 // SOCIAL MEDIA POSTS
 // ============================================================================
