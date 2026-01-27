@@ -89,7 +89,6 @@
     "@tiptap/starter-kit": "^3.12.0",
     "@trigger.dev/react-hooks": "^4.3.1",
     "@trigger.dev/sdk": "^4.1.2",
-    "@types/canvas-confetti": "^1.9.0",
     "@upstash/redis": "^1.35.6",
     "@upstash/vector": "^1.2.2",
     "@vercel/analytics": "^1.6.1",
@@ -142,9 +141,11 @@
     "@next/bundle-analyzer": "^16.1.1",
     "@playwright/test": "^1.57.0",
     "@tailwindcss/typography": "^0.5.19",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@trigger.dev/build": "^4.1.2",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20.10.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19.0.0",
@@ -166,5 +167,8 @@
   "overrides": {
     "import-in-the-middle": "2.0.0",
     "require-in-the-middle": "8.0.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.56.0"
   }
 }
