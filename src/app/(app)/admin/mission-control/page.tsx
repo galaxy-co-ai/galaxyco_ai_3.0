@@ -1,8 +1,8 @@
 /**
  * Mission Control - Agent Builder
- * 
+ *
  * Build, test, and deploy n8n-powered agents for users.
- * 
+ *
  * Workflow:
  * 1. Build agents in local n8n desktop app
  * 2. Export workflow JSON
@@ -14,6 +14,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { MissionControlClient } from '@/components/admin/MissionControlClient';
+import { isSystemAdmin } from '@/lib/auth';
 
 export const metadata = {
   title: 'Mission Control - Agent Builder | GalaxyCo Admin',
@@ -22,15 +23,16 @@ export const metadata = {
 
 export default async function MissionControlPage() {
   const { userId } = await auth();
-  
+
   if (!userId) {
     redirect('/sign-in');
   }
-  
-  // TODO: Add admin check
-  // const isAdmin = await checkIsAdmin(userId);
-  // if (!isAdmin) redirect('/dashboard');
-  
+
+  const isAdmin = await isSystemAdmin();
+  if (!isAdmin) {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="h-full">
       <MissionControlClient />
