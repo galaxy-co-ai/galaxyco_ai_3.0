@@ -10,7 +10,6 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { INSIGHT_TYPE_COLORS } from '@/components/ui/chart';
-import { cn } from '@/lib/utils';
 
 interface TrendDataPoint {
   week: string;

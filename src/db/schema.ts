@@ -3544,7 +3544,7 @@ export const segments = pgTable(
         rules: Array<{
           field: string;
           operator: string;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Filter values can be any serializable type
+           
           value: unknown;
         }>;
         logic?: 'and' | 'or';

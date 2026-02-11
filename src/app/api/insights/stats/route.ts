@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { proactiveInsights } from '@/db/schema';
-import { and, eq, gte, sql, or, count, avg } from 'drizzle-orm';
+import { and, eq, gte, sql, or } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
 interface InsightStats {

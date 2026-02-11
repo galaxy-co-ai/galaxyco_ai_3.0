@@ -1,7 +1,7 @@
 'use client';
 
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChartContainer, ChartTooltipContent, INSIGHT_TYPE_COLORS } from '@/components/ui/chart';
+import { INSIGHT_TYPE_COLORS } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
 
 interface InsightsByTierChartProps {

@@ -19,7 +19,6 @@ import {
   Target,
   TrendingUp,
   X,
-  Filter,
   Sparkles,
   BarChart3,
   Zap,
