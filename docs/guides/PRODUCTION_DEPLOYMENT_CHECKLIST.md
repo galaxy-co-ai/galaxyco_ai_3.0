@@ -11,6 +11,7 @@
 ### 1. Environment Variables Setup (1 hour)
 
 #### Copy to Vercel Dashboard
+
 - [ ] Navigate to Vercel Dashboard → Project Settings → Environment Variables
 - [ ] Copy ALL variables from `.env.local` to Vercel
 - [ ] Set correct scopes:
@@ -19,11 +20,13 @@
   - Development: Local only
 
 #### Critical Updates
-- [ ] **REMOVE:** `ALLOW_ADMIN_BYPASS=true` (CRITICAL SECURITY!)
+
+- [ ] **REMOVE:** `ALLOW_DEV_BYPASS=true` (CRITICAL SECURITY!)
 - [ ] **UPDATE:** `NEXT_PUBLIC_APP_URL=https://yourdomain.com`
 - [ ] **UPDATE:** `NODE_ENV=production`
 
 #### Rotate API Keys to Production
+
 - [ ] OpenAI - Switch to production tier API key
 - [ ] Anthropic - Production key
 - [ ] Twilio - Production account credentials
@@ -69,15 +72,19 @@ Configure webhooks in Twilio console:
 Update redirect URIs for each provider:
 
 **Google OAuth:**
+
 - [ ] Authorized redirect URI: `https://yourdomain.com/api/auth/oauth/google/callback`
 
 **Microsoft OAuth:**
+
 - [ ] Redirect URI: `https://yourdomain.com/api/auth/oauth/microsoft/callback`
 
 **QuickBooks OAuth:**
+
 - [ ] Redirect URI: `https://yourdomain.com/api/auth/oauth/quickbooks/callback`
 
 **Shopify OAuth:**
+
 - [ ] Redirect URI: `https://yourdomain.com/api/auth/oauth/shopify/callback`
 
 ### 6. Domain & SSL (15 min)
@@ -99,6 +106,7 @@ Update redirect URIs for each provider:
 ## Build Verification (1 hour)
 
 ### Local Build Test
+
 ```bash
 # Clean install
 rm -rf node_modules .next
@@ -116,6 +124,7 @@ ls -lh .next/static/chunks/pages
 ```
 
 ### Pre-Flight Checklist
+
 - [ ] No TypeScript errors
 - [ ] No ESLint errors
 - [ ] All tests passing (70%+ coverage)
@@ -136,6 +145,7 @@ vercel --prod=false
 ```
 
 **Smoke Tests on Staging:**
+
 - [ ] Homepage loads
 - [ ] Sign up new user
 - [ ] Sign in existing user
@@ -149,6 +159,7 @@ vercel --prod=false
 - [ ] Check error monitoring (Sentry)
 
 **Performance Tests:**
+
 - [ ] Lighthouse audit score >90
 - [ ] Core Web Vitals:
   - LCP <2.5s
@@ -165,6 +176,7 @@ vercel --prod
 ```
 
 **Immediate Verification:**
+
 - [ ] Deployment successful (check Vercel dashboard)
 - [ ] Production URL loads
 - [ ] SSL certificate active
@@ -177,6 +189,7 @@ vercel --prod
 ### 1. Smoke Tests (30 min)
 
 Run through critical user journeys:
+
 - [ ] Visit homepage
 - [ ] Sign up flow works
 - [ ] Sign in flow works
@@ -223,6 +236,7 @@ Run through critical user journeys:
 ## Week 1 Monitoring
 
 ### Daily Tasks
+
 - [ ] Review error rate in Sentry
 - [ ] Check uptime percentage
 - [ ] Monitor user signups
@@ -230,6 +244,7 @@ Run through critical user journeys:
 - [ ] Check for critical bugs
 
 ### Success Metrics
+
 - **Uptime:** >99.9%
 - **Error Rate:** <1%
 - **Response Time:** <2s average
@@ -237,6 +252,7 @@ Run through critical user journeys:
 - **User Engagement:** Track feature usage
 
 ### Bug Response
+
 - **Critical (site down):** Fix within 1 hour
 - **High (feature broken):** Fix within 24 hours
 - **Medium (minor issue):** Fix within 1 week
@@ -249,12 +265,15 @@ Run through critical user journeys:
 ### If Critical Issues Occur:
 
 **1. Immediate Rollback (Vercel)**
+
 ```bash
 vercel rollback
 ```
+
 Or use Vercel dashboard → Deployments → Previous deployment → Promote
 
 **2. Database Rollback**
+
 - Stop application (set to maintenance mode)
 - Restore from latest backup in Neon
 - Re-run migrations if needed
@@ -262,12 +281,14 @@ Or use Vercel dashboard → Deployments → Previous deployment → Promote
 - Resume application
 
 **3. Communication**
+
 - [ ] Update status page
 - [ ] Notify users via email
 - [ ] Post in community channels
 - [ ] Create incident report
 
 **4. Post-Mortem**
+
 - Document what went wrong
 - Identify root cause
 - Create prevention plan
@@ -290,16 +311,19 @@ After successful deployment:
 ## Support Resources
 
 ### Deployment Help
+
 - Vercel Docs: https://vercel.com/docs
 - Clerk Deployment: https://clerk.com/docs/deployments
 - Neon Production: https://neon.tech/docs/guides/production
 
 ### Monitoring
+
 - Sentry Dashboard: https://sentry.io
 - Vercel Analytics: https://vercel.com/analytics
 - Uptime Robot: https://uptimerobot.com
 
 ### Service Dashboards
+
 - **Database:** https://console.neon.tech
 - **Auth:** https://dashboard.clerk.com
 - **AI:** https://platform.openai.com
@@ -312,6 +336,7 @@ After successful deployment:
 ## Success Criteria
 
 Deployment is successful when:
+
 - [ ] All smoke tests pass
 - [ ] Uptime >99% in first 24h
 - [ ] Error rate <1%

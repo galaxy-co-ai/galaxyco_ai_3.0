@@ -2,10 +2,12 @@
 
 # GalaxyCo.ai - AI-Native Business Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
-[![Tailwind](https://img.shields.io/badge/Tailwind-4.0-cyan)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-green)](./LICENSE)
+[![CI](https://github.com/galaxy-co-ai/galaxyco_ai_3.0/actions/workflows/ci.yml/badge.svg)](https://github.com/galaxy-co-ai/galaxyco_ai_3.0/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-Proprietary-red)](LICENSE)
 
 An intelligent business automation platform combining AI agents, CRM, workflow automation, and knowledge management.
 
@@ -28,12 +30,13 @@ GalaxyCo.ai is a comprehensive business platform that leverages AI to automate o
 **Completion Status:** ✅ **Phase 2 Complete** (Week 2 - Proactive Intelligence & Learning)  
 **Latest:** ✅ **Phase 3 Complete** (Week 3 - Optimization & Polish)
 
-📚 **Full Capabilities:** See [docs/NEPTUNE_CAPABILITIES.md](./docs/NEPTUNE_CAPABILITIES.md)  
-🔧 **Troubleshooting:** See [docs/NEPTUNE_TROUBLESHOOTING.md](./docs/NEPTUNE_TROUBLESHOOTING.md)
+📚 **Full Capabilities:** See [docs/guides/NEPTUNE_CAPABILITIES.md](./docs/guides/NEPTUNE_CAPABILITIES.md)  
+🔧 **Troubleshooting:** See [docs/guides/NEPTUNE_TROUBLESHOOTING.md](./docs/guides/NEPTUNE_TROUBLESHOOTING.md)
 
 ## Features
 
 ### 🧠 Neptune AI Assistant (NEW)
+
 - **Adaptive Communication** - Mirrors your communication style automatically
 - **Session Memory** - Remembers context within conversations for natural follow-ups
 - **Proactive Suggestions** - Detects patterns and suggests relevant actions
@@ -56,6 +59,7 @@ GalaxyCo.ai is a comprehensive business platform that leverages AI to automate o
 ## Tech Stack
 
 ### Core
+
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Database**: PostgreSQL (Neon)
@@ -63,18 +67,21 @@ GalaxyCo.ai is a comprehensive business platform that leverages AI to automate o
 - **Auth**: Clerk
 
 ### Frontend
+
 - **Styling**: Tailwind CSS
 - **Components**: Radix UI
 - **Icons**: Lucide
 - **Forms**: React Hook Form + Zod
 
 ### AI & ML
+
 - **LLM**: OpenAI GPT-4, Anthropic Claude
 - **Embeddings**: OpenAI text-embedding-3-small
 - **Vector DB**: Upstash Vector
 - **Search**: Perplexity AI
 
 ### Infrastructure
+
 - **Hosting**: Vercel
 - **Storage**: Vercel Blob
 - **Background Jobs**: Trigger.dev
@@ -83,9 +90,11 @@ GalaxyCo.ai is a comprehensive business platform that leverages AI to automate o
 
 ## Getting Started
 
+For the canonical onboarding guide, see `docs/START.md`.
+
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL database (Neon recommended)
 - API keys for required services (see `.env.example`)
 
@@ -124,6 +133,8 @@ Key environment variables required:
 
 See `.env.example` for complete list.
 
+MCP (ChatGPT integration) is experimental and disabled by default. Set `MCP_ENABLED=true` to enable it locally.
+
 ## Development
 
 ```bash
@@ -152,7 +163,7 @@ This application is optimized for deployment on Vercel:
 3. Configure environment variables
 4. Deploy
 
-For production deployment checklist, see internal documentation.
+For production deployment checklist, see `docs/guides/PRODUCTION_DEPLOYMENT_CHECKLIST.md`.
 
 ## Project Structure
 
@@ -169,11 +180,18 @@ For production deployment checklist, see internal documentation.
 
 ## Contributing
 
-This is a private repository. For contribution guidelines, contact the maintainers.
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details on:
+
+- Setting up your development environment
+- Coding standards and conventions
+- Testing requirements
+- Pull request process
+
+For security issues, please see [SECURITY.md](SECURITY.md).
 
 ## License
 
-This project is proprietary software. All rights reserved.
+This project is proprietary software. All rights reserved. See `LICENSE`.
 
 ## Support
 

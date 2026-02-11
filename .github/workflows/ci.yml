@@ -2,9 +2,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   quality-checks:
@@ -31,11 +35,13 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Check formatting
+        run: npm run format:check
+
   tests:
-    name: Vitest (non-blocking for now)
+    name: Vitest
     runs-on: ubuntu-latest
     needs: quality-checks
-    continue-on-error: true # TODO: remove once test suite is green
     env:
       NEXT_TELEMETRY_DISABLED: 1
     steps:
@@ -53,6 +59,41 @@ jobs:
 
       - name: Run Vitest suite
         run: npm run test:run
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [quality-checks, tests]
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          SKIP_ENV_VALIDATION: true
 
   e2e-tests:
     name: E2E Tests (Playwright)
