@@ -11,7 +11,7 @@ import { rateLimit } from '@/lib/rate-limit';
  * 
  * Export all contacts as CSV
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
 

@@ -129,7 +129,7 @@ export async function generatePDF(params: PDFGenerationParams): Promise<PDFGener
 /**
  * Get the appropriate PDF component based on type
  */
-async function getPDFComponent(type: string) {
+async function getPDFComponent(_type: string) {
   const { Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer');
   const React = await import('react');
 

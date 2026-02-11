@@ -91,7 +91,7 @@ export function formatToolName(toolName: string): string {
  * ```
  */
 export async function* streamNeptuneProgress(
-  request: {
+  _request: {
     message: string;
     workspaceId: string;
     pageContext?: unknown;

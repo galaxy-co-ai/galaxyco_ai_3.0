@@ -20,7 +20,7 @@ interface ChatMessageProps {
   isLast?: boolean;
 }
 
-export function ChatMessage({ message, isLast }: ChatMessageProps) {
+export function ChatMessage({ message, isLast: _isLast }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   const copyToClipboard = () => {

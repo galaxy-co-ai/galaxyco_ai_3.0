@@ -148,7 +148,7 @@ export default function FeaturesPage() {
               A Complete AI Operating System for Your Business
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Explore what's live now, what's coming next, and help shape our future.
+              Explore what&apos;s live now, what&apos;s coming next, and help shape our future.
             </p>
           </motion.div>
         </section>
@@ -250,7 +250,7 @@ export default function FeaturesPage() {
                   <Badge className="px-4 py-2 bg-primary/10 text-primary border-primary/20 mb-4">
                     Product Roadmap
                   </Badge>
-                  <h2 className="text-3xl font-bold mb-4">What We're Building</h2>
+                  <h2 className="text-3xl font-bold mb-4">What We&apos;re Building</h2>
                   <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                     Our commitment to transparency. Vote on features and help shape the future of GalaxyCo.
                   </p>
@@ -272,7 +272,7 @@ export default function FeaturesPage() {
                         <div className="flex-1 h-px bg-border" />
                       </div>
                       <div className="grid md:grid-cols-2 gap-4">
-                        {quarter.items.map((item, iIndex) => (
+                        {quarter.items.map((item, _iIndex) => (
                           <Card key={item.name} className="bg-card/50 backdrop-blur-sm hover:shadow-md transition-shadow">
                             <CardHeader>
                               <div className="flex items-start justify-between">
@@ -297,7 +297,7 @@ export default function FeaturesPage() {
                   </Badge>
                   <h2 className="text-3xl font-bold mb-4">The Future of Work</h2>
                   <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    We're building more than software—we're creating an AI-native operating system for modern businesses.
+                    We&apos;re building more than software—we&apos;re creating an AI-native operating system for modern businesses.
                   </p>
                 </div>
 
@@ -366,7 +366,7 @@ export default function FeaturesPage() {
                   </Badge>
                   <h2 className="text-3xl font-bold mb-4">Request Features</h2>
                   <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    Help us build the platform you need. Submit requests, vote on ideas, and see what we're working on.
+                    Help us build the platform you need. Submit requests, vote on ideas, and see what we&apos;re working on.
                   </p>
                 </div>
 
@@ -379,7 +379,7 @@ export default function FeaturesPage() {
                       <div>
                         <h3 className="text-2xl font-bold mb-2">Feature Request System Coming Soon</h3>
                         <p className="text-muted-foreground text-lg">
-                          We're building a public feature request board where you can:
+                          We&apos;re building a public feature request board where you can:
                         </p>
                       </div>
                       <div className="grid sm:grid-cols-2 gap-4 text-left">

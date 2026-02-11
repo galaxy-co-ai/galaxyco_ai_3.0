@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, type ComponentProps } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -250,7 +250,7 @@ export default function CRMDashboard({
   });
   const [showAddDealDialog, setShowAddDealDialog] = useState(false);
   const [showDealDialog, setShowDealDialog] = useState(false);
-  const [editingDeal, setEditingDeal] = useState<any>(null);
+  const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [isAddingDeal, setIsAddingDeal] = useState(false);
   const [deals, setDeals] = useState<Deal[]>(initialDeals);
   const [newDeal, setNewDeal] = useState({
@@ -1297,7 +1297,7 @@ export default function CRMDashboard({
           <DialogHeader>
             <DialogTitle>Add New Lead</DialogTitle>
             <DialogDescription>
-              Enter the lead's information to add them to your CRM
+              Enter the lead&apos;s information to add them to your CRM
             </DialogDescription>
           </DialogHeader>
 
@@ -1543,7 +1543,7 @@ export default function CRMDashboard({
           <DialogHeader>
             <DialogTitle>Add New Organization</DialogTitle>
             <DialogDescription>
-              Enter the organization's information to add them to your CRM
+              Enter the organization&apos;s information to add them to your CRM
             </DialogDescription>
           </DialogHeader>
 
@@ -1762,7 +1762,7 @@ export default function CRMDashboard({
           <DialogHeader>
             <DialogTitle>Add New Contact</DialogTitle>
             <DialogDescription>
-              Enter the contact's information to add them to your CRM
+              Enter the contact&apos;s information to add them to your CRM
             </DialogDescription>
           </DialogHeader>
 
@@ -1969,7 +1969,7 @@ export default function CRMDashboard({
           <DialogHeader>
             <DialogTitle>Add New Deal</DialogTitle>
             <DialogDescription>
-              Enter the deal's information to add it to your pipeline
+              Enter the deal&apos;s information to add it to your pipeline
             </DialogDescription>
           </DialogHeader>
 
@@ -2317,7 +2317,7 @@ export default function CRMDashboard({
           setShowDealDialog(open);
           if (!open) setEditingDeal(null);
         }}
-        deal={editingDeal}
+        deal={editingDeal as ComponentProps<typeof DealDialog>['deal']}
         onSuccess={handleDealSuccess}
       />
     </div>

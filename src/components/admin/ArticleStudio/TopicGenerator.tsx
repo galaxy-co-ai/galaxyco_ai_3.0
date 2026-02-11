@@ -84,7 +84,7 @@ const statusColors: Record<string, string> = {
   'archived': 'bg-amber-50 text-amber-700 border-amber-200',
 };
 
-export function TopicGenerator({ onSelectTopic, onStartWriting }: TopicGeneratorProps) {
+export function TopicGenerator({ onSelectTopic: _onSelectTopic, onStartWriting }: TopicGeneratorProps) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedTopics, setGeneratedTopics] = useState<GeneratedTopic[]>([]);

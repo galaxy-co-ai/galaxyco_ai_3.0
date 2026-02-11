@@ -30,7 +30,7 @@ const createRuleSchema = z.object({
  * 
  * List all lead scoring rules and tiers
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
 

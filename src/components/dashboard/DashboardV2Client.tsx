@@ -24,7 +24,7 @@ export default function DashboardV2Client({
   initialData,
   userId,
   workspaceId,
-  userName,
+  userName: _userName,
 }: DashboardV2ClientProps) {
   // Real-time stats state - initialized from server data
   const [stats, setStats] = useState<DashboardStats>(initialData.stats);

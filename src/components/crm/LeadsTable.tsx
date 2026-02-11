@@ -23,7 +23,7 @@ export default function LeadsTable({
   onSelect,
   onAddNew,
   onDelete,
-  formatDate,
+  formatDate: _formatDate,
   formatCurrency,
 }: LeadsTableProps) {
   const getScoreColor = (score: number) => {

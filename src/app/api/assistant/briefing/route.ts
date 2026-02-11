@@ -13,7 +13,7 @@ import { createErrorResponse } from '@/lib/api-error-handler';
 import { getOpenAI } from '@/lib/ai-providers';
 import { expensiveOperationLimit } from '@/lib/rate-limit';
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
 

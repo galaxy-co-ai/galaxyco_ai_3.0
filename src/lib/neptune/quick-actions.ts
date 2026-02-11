@@ -292,7 +292,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     return actions.slice(0, 4);
   },
 
-  marketing: (ctx) => {
+  marketing: (_ctx) => {
     const actions: SuggestedAction[] = [];
 
     actions.push({
@@ -327,7 +327,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     return actions.slice(0, 4);
   },
 
-  finance: (ctx) => {
+  finance: (_ctx) => {
     const actions: SuggestedAction[] = [];
 
     actions.push({
@@ -447,7 +447,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     return actions.slice(0, 4);
   },
 
-  conversations: (ctx) => [
+  conversations: (_ctx) => [
     {
       id: 'recent-conversations',
       label: 'Recent conversations',
@@ -464,7 +464,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     },
   ],
 
-  calendar: (ctx) => [
+  calendar: (_ctx) => [
     {
       id: 'schedule-meeting',
       label: 'Schedule meeting',
@@ -488,7 +488,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     },
   ],
 
-  orchestration: (ctx) => [
+  orchestration: (_ctx) => [
     {
       id: 'create-team',
       label: 'Create agent team',
@@ -512,7 +512,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     },
   ],
 
-  'neptune-hq': (ctx) => [
+  'neptune-hq': (_ctx) => [
     {
       id: 'neptune-analytics',
       label: 'My analytics',
@@ -536,7 +536,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     },
   ],
 
-  settings: (ctx) => [
+  settings: (_ctx) => [
     {
       id: 'connect-integration',
       label: 'Connect an app',
@@ -553,7 +553,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     },
   ],
 
-  'lunar-labs': (ctx) => [
+  'lunar-labs': (_ctx) => [
     {
       id: 'try-experiment',
       label: 'Try an experiment',
@@ -570,7 +570,7 @@ const MODULE_ACTIONS: Record<AppModule, (ctx: QuickActionContext) => SuggestedAc
     },
   ],
 
-  launchpad: (ctx) => [
+  launchpad: (_ctx) => [
     {
       id: 'quick-navigate',
       label: 'Quick navigate',

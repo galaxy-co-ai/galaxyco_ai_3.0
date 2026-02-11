@@ -129,7 +129,7 @@ function DefaultErrorFallback({
               Something went wrong
             </h2>
             <p className="text-sm text-gray-600">
-              We encountered an unexpected error. Don't worry, your data is safe.
+              We encountered an unexpected error. Don&apos;t worry, your data is safe.
             </p>
           </div>
 

@@ -166,7 +166,7 @@ export function HitListPage() {
   };
 
   // Handle edit - for now, just show toast
-  const handleEdit = (item: TopicIdea) => {
+  const handleEdit = (_item: TopicIdea) => {
     toast.info("Edit functionality coming soon");
   };
 

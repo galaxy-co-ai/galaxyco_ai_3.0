@@ -576,7 +576,7 @@ export async function detectUseCaseInsights(
  * Detect content gap opportunities
  */
 export async function detectContentGapInsights(
-  workspaceId: string
+  _workspaceId: string
 ): Promise<ProactiveInsight[]> {
   try {
     const insights: ProactiveInsight[] = [];

@@ -122,7 +122,7 @@ export function ExpenseChart({ data, total, isLoading }: ExpenseChartProps) {
           <ChartTooltip
             content={
               <ChartTooltipContent
-                formatter={(value, name) => (
+                formatter={(value, _name) => (
                   <span className="font-mono">
                     {formatCurrency(value as number)}
                   </span>

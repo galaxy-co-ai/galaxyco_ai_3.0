@@ -126,7 +126,7 @@ export default function NeptuneDashboardWelcome({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              Today's Top Priorities
+              Today&apos;s Top Priorities
             </h3>
             <div className="space-y-3">
               {insights.slice(0, 3).map((insight) => (
@@ -216,7 +216,7 @@ export default function NeptuneDashboardWelcome({
               Welcome to Galaxy, {firstName}! 👋
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              I'm Neptune, your AI assistant. Let's get your workspace set up and
+              I&apos;m Neptune, your AI assistant. Let&apos;s get your workspace set up and
               help you build something amazing.
             </p>
             <div className="flex flex-wrap gap-2">

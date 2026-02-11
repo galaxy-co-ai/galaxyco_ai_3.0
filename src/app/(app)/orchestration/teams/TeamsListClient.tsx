@@ -81,7 +81,7 @@ interface TeamsListClientProps {
 }
 
 export default function TeamsListClient({
-  workspaceId,
+  workspaceId: _workspaceId,
   initialTeams,
   initialAgents,
 }: TeamsListClientProps) {

@@ -210,8 +210,8 @@ function PricingContent() {
                 </h2>
                 
                 <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                  We're actively building and your feedback shapes our roadmap. Join now, unlock everything, 
-                  and help us create the AI platform you've always wanted.
+                  We&apos;re actively building and your feedback shapes our roadmap. Join now, unlock everything,
+                  and help us create the AI platform you&apos;ve always wanted.
                 </p>
                 
                 <div className="flex flex-wrap justify-center gap-4 pt-2">

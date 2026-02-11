@@ -68,7 +68,7 @@ export function UserJourneyStep() {
   return (
     <div className="space-y-6">
       <p className="text-sm text-gray-600">
-        Define the key stages in your user's journey. These stages represent the
+        Define the key stages in your user&apos;s journey. These stages represent the
         progression from first awareness to ongoing success.
       </p>
 
@@ -216,7 +216,7 @@ export function UserJourneyStep() {
           />
           <p className="font-medium">No journey stages defined</p>
           <p className="text-sm mt-1">
-            Add stages to map out the user's progression
+            Add stages to map out the user&apos;s progression
           </p>
         </div>
       )}

@@ -312,7 +312,7 @@ export default function WorkflowBuilder({
         description,
         triggerType,
         triggerConfig,
-        steps: steps.map(({ isExpanded, ...step }) => ({
+        steps: steps.map(({ isExpanded: _isExpanded, ...step }) => ({
           ...step,
           agentId: step.agentId || "",
         })),
@@ -344,7 +344,7 @@ export default function WorkflowBuilder({
 
     if (onTest) {
       onTest(
-        steps.map(({ isExpanded, ...step }) => ({
+        steps.map(({ isExpanded: _isExpanded, ...step }) => ({
           ...step,
           agentId: step.agentId || "",
         }))

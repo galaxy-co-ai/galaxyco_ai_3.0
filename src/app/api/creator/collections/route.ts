@@ -32,7 +32,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   presentations: { icon: 'Presentation', color: 'text-indigo-600' },
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const { workspaceId } = await getCurrentWorkspace();
 

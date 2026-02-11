@@ -23,7 +23,7 @@ const defaultSuggestions = [
 ];
 
 export function CRMHeader({
-  transcribingCount,
+  transcribingCount: _transcribingCount,
   onRunCommand,
   suggestions = defaultSuggestions,
 }: CRMHeaderProps) {

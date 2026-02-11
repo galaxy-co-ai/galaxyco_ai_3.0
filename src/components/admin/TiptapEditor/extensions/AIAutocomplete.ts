@@ -81,7 +81,7 @@ export const AIAutocomplete = Extension.create<AIAutocompleteOptions>({
         return true;
       },
 
-      acceptAISuggestion: () => ({ editor, chain }) => {
+      acceptAISuggestion: () => ({ editor: _editor, chain }) => {
         const suggestion = this.storage.suggestion;
         if (!suggestion) return false;
 

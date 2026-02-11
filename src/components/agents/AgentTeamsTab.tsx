@@ -106,7 +106,7 @@ interface AgentTeamsTabProps {
   neptuneOpen?: boolean;
 }
 
-export default function AgentTeamsTab({ neptuneOpen = false }: AgentTeamsTabProps) {
+export default function AgentTeamsTab({ neptuneOpen: _neptuneOpen = false }: AgentTeamsTabProps) {
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");

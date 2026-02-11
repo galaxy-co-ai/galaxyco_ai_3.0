@@ -163,7 +163,7 @@ function formatTime(date: Date) {
 
 export default function AgentMessagesTab({
   selectedAgent,
-  onSelectAgent,
+  onSelectAgent: _onSelectAgent,
   onConfigureAgent,
 }: AgentMessagesTabProps) {
   const [messages, setMessages] = useState<Message[]>([]);

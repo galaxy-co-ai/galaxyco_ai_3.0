@@ -160,7 +160,7 @@ function GettingStartedContent() {
       {/* Welcome message */}
       <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
         <p className="text-base text-foreground/90 leading-relaxed">
-          Welcome to GalaxyCo! Here's how to get started in under 5 minutes:
+          Welcome to GalaxyCo! Here&apos;s how to get started in under 5 minutes:
         </p>
       </div>
       
@@ -242,7 +242,7 @@ function GettingStartedContent() {
       {/* Closing message */}
       <div className="bg-gradient-to-r from-nebula-violet/10 to-nebula-teal/10 border border-nebula-violet/20 rounded-xl p-5">
         <p className="text-base text-foreground/90 leading-relaxed">
-          You're now ready to start using GalaxyCo! Explore the other documentation sections to dive deeper into specific features.
+          You&apos;re now ready to start using GalaxyCo! Explore the other documentation sections to dive deeper into specific features.
         </p>
       </div>
     </div>
@@ -532,7 +532,7 @@ function NeptuneAIContent() {
           <div className="space-y-2 text-sm text-muted-foreground/90">
             <p>• Neptune works best with specific questions</p>
             <p>• You can always undo or modify what Neptune does</p>
-            <p>• Use the 'Explain' button to understand Neptune's reasoning</p>
+            <p>• Use the &apos;Explain&apos; button to understand Neptune&apos;s reasoning</p>
             <p>• Access Neptune from anywhere with <kbd className="px-1.5 py-0.5 rounded bg-nebula-dark/60 text-nebula-frost text-xs font-mono">⌘K</kbd></p>
           </div>
         </div>
@@ -714,7 +714,7 @@ function CRMEssentialsContent() {
     <div className="space-y-8">
       <div className="bg-gradient-to-r from-nebula-teal/10 to-nebula-violet/10 border border-nebula-teal/20 rounded-xl p-5">
         <p className="text-base text-foreground/90 leading-relaxed">
-          Our CRM is built to work with AI, not against it. Here's what you need to know:
+          Our CRM is built to work with AI, not against it. Here&apos;s what you need to know:
         </p>
       </div>
 
@@ -2211,7 +2211,7 @@ function PermissionsContent() {
           <h4 className="font-semibold text-foreground">Custom Roles (Professional & Enterprise)</h4>
         </div>
         <p className="text-sm text-muted-foreground/90">
-          Create custom roles tailored to your needs. Go to Settings → Roles → Create Custom Role. Examples: 'Sales Rep', 'Marketing Manager', 'Support Agent'.
+          Create custom roles tailored to your needs. Go to Settings → Roles → Create Custom Role. Examples: &apos;Sales Rep&apos;, &apos;Marketing Manager&apos;, &apos;Support Agent&apos;.
         </p>
       </div>
     </div>
@@ -3976,7 +3976,7 @@ export default function DocsPage() {
                 </div>
                 <h3 className="text-lg font-semibold mb-2">No results found</h3>
                 <p className="text-muted-foreground">
-                  No documentation matches "{searchQuery}"
+                  No documentation matches &quot;{searchQuery}&quot;
                 </p>
               </motion.div>
             )}
@@ -4000,7 +4000,7 @@ export default function DocsPage() {
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-1">Full Documentation Coming Soon</h3>
                     <p className="text-nebula-frost/70 text-sm">
-                      We're actively writing comprehensive guides. Get started with the platform while we expand our docs.
+                      We&apos;re actively writing comprehensive guides. Get started with the platform while we expand our docs.
                     </p>
                   </div>
                   <Button

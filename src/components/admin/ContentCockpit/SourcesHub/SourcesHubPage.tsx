@@ -113,7 +113,7 @@ export function SourcesHubPage() {
   };
 
   // Handle edit source (placeholder - could open edit dialog)
-  const handleEditSource = (source: ContentSource) => {
+  const handleEditSource = (_source: ContentSource) => {
     // For now, just log - could be expanded to open an edit dialog
     toast.info("Edit functionality coming soon");
   };

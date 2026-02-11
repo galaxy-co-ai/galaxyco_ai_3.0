@@ -39,7 +39,7 @@ const TYPE_CONFIG = {
 export function InsightsTrendChart({
   data,
   onPointClick,
-  activeWeek,
+  activeWeek: _activeWeek,
   loading = false,
   stacked = true,
 }: InsightsTrendChartProps) {

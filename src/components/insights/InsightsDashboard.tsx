@@ -95,7 +95,7 @@ interface ActiveFilters {
 
 export function InsightsDashboard({
   maxInsights = 10,
-  showFilters = true,
+  showFilters: _showFilters = true,
   compact = false,
 }: InsightsDashboardProps) {
   const [insights, setInsights] = useState<ProactiveInsight[]>([]);

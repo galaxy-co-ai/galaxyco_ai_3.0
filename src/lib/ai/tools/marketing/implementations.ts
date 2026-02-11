@@ -53,7 +53,7 @@ export const marketingToolImplementations: ToolImplementations = {
     }
   },
 
-  async update_campaign_roadmap(args, context) {
+  async update_campaign_roadmap(args, _context) {
     try {
       const action = args.action as 'add' | 'complete' | 'replace';
       const items = args.items as Array<{ id: string; title: string; description?: string; value?: string }>;
@@ -971,7 +971,7 @@ Looking forward to your response!`;
     }
   },
 
-  async schedule_social_posts(args, context) {
+  async schedule_social_posts(args, _context) {
     try {
       const platforms = args.platforms as string[];
       const topic = args.topic as string;
@@ -1038,7 +1038,7 @@ Looking forward to your response!`;
     }
   },
 
-  async analyze_competitor(args, context) {
+  async analyze_competitor(args, _context) {
     try {
       const competitorName = args.competitorName as string;
       const focusAreas = (args.focusAreas as string[]) || ['pricing', 'features', 'marketing'];

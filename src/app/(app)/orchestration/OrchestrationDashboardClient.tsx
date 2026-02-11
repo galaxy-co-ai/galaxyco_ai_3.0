@@ -56,7 +56,7 @@ const quickActions = [
 ];
 
 export default function OrchestrationDashboardClient({
-  workspaceId,
+  workspaceId: _workspaceId,
 }: OrchestrationDashboardClientProps) {
   const router = useRouter();
 

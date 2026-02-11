@@ -117,7 +117,7 @@ export function RevenueChart({
           <ChartTooltip
             content={
               <ChartTooltipContent
-                formatter={(value, name) => (
+                formatter={(value, _name) => (
                   <span className="font-mono">
                     {formatCurrency(value as number)}
                   </span>

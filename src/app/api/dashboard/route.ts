@@ -7,7 +7,7 @@ import { getCacheOrFetch } from '@/lib/cache';
 import { rateLimit } from '@/lib/rate-limit';
 import { createErrorResponse } from '@/lib/api-error-handler';
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
 

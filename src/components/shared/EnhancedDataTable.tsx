@@ -119,7 +119,7 @@ export default function EnhancedDataTable<T extends RowData = RowData>({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   // Filter state
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, FilterValue>>({});
   const [activePreset, setActivePreset] = useState<string | null>(null);
   
   // Sort state
@@ -202,7 +202,7 @@ export default function EnhancedDataTable<T extends RowData = RowData>({
             return cellValue === Number(value);
           case 'date':
             // Simple date comparison (can be enhanced)
-            return new Date(cellValue).toDateString() === new Date(value).toDateString();
+            return new Date(cellValue).toDateString() === new Date(value as string | number | Date).toDateString();
           default:
             return true;
         }
@@ -431,7 +431,7 @@ export default function EnhancedDataTable<T extends RowData = RowData>({
           <div key={col.id} className="flex-1 min-w-[200px]">
             {col.filterType === 'select' && col.filterOptions ? (
               <Select
-                value={filters[col.id] || ''}
+                value={String(filters[col.id] ?? '')}
                 onValueChange={(value) => setFilters(prev => ({ ...prev, [col.id]: value }))}
               >
                 <SelectTrigger className="h-9">
@@ -448,7 +448,7 @@ export default function EnhancedDataTable<T extends RowData = RowData>({
             ) : (
               <Input
                 placeholder={`Filter ${col.header}...`}
-                value={filters[col.id] || ''}
+                value={String(filters[col.id] ?? '')}
                 onChange={(e) => setFilters(prev => ({ ...prev, [col.id]: e.target.value }))}
                 className="h-9"
               />

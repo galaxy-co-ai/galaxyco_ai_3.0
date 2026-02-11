@@ -288,7 +288,7 @@ export default function VisionTab({ workspaceId }: VisionTabProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <blockquote className="text-lg font-semibold text-gray-900 mb-4 leading-relaxed">
-                  "{motivation.motivation.quote}"
+                  &quot;{motivation.motivation.quote}&quot;
                 </blockquote>
                 <p className="text-sm text-gray-700 leading-relaxed">
                   {motivation.motivation.context}

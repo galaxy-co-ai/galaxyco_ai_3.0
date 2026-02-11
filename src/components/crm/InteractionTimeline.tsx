@@ -22,7 +22,7 @@ export function InteractionTimeline({ interactions, actionState, onToggleAction 
   return (
     <div className="relative pl-6">
       <div className="absolute left-3 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-border/40 to-transparent" />
-      {interactions.map((interaction, idx) => {
+      {interactions.map((interaction, _idx) => {
         const Icon = typeIconMap[interaction.type];
         const currentActions = actionState[interaction.id] ?? interaction.actionItems.map((item) => item.completed);
         

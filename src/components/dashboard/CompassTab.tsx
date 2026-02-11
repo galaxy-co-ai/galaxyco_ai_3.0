@@ -127,7 +127,7 @@ export default function CompassTab({ workspaceId }: CompassTabProps) {
         <div className="space-y-2">
           <h3 className="font-semibold text-lg">Your Compass Awaits</h3>
           <p className="text-sm text-muted-foreground max-w-md">
-            Chat with Neptune about your goals and workspace activity. I'll analyze everything
+            Chat with Neptune about your goals and workspace activity. I&apos;ll analyze everything
             and build you a personalized compass to keep you on the optimal path.
           </p>
         </div>

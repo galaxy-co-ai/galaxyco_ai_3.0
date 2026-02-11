@@ -19,7 +19,7 @@ const pipelineSchema = z.object({
  * GET /api/crm/pipelines
  * List all pipelines for the workspace with their stages
  */
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
 

@@ -176,13 +176,13 @@ export async function trackDatabaseQuery<T>(
  * Track Neptune-specific errors
  * Captures error context for debugging
  */
-export function trackNeptuneError(error: Error, context: Record<string, any>) {
+export function trackNeptuneError(error: Error, context: Record<string, unknown>) {
   try {
     Sentry.captureException(error, {
       tags: {
         component: 'neptune',
         error_type: error.name,
-        workspace: context.workspaceId || 'unknown',
+        workspace: String(context.workspaceId ?? 'unknown'),
       },
       extra: context,
     });

@@ -271,7 +271,7 @@ export default function ReportBuilder() {
               <div className="border rounded-xl p-6 bg-muted/30">
                 <h3 className="font-semibold mb-4">{template.name} Preview</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {template.metrics.map((metric, i) => (
+                  {template.metrics.map((metric, _i) => (
                     <div key={metric} className="text-center p-4 bg-background rounded-lg border">
                       <p className="text-2xl font-semibold">
                         {Math.floor(Math.random() * 1000).toLocaleString()}

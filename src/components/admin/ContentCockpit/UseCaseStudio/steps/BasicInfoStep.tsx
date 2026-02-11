@@ -126,7 +126,7 @@ export function BasicInfoStep() {
           <p className="font-medium mb-1">Why categories matter</p>
           <p className="text-blue-700">
             The category helps the AI generate more relevant onboarding steps and
-            recommendations tailored to your target audience's typical workflow
+            recommendations tailored to your target audience&apos;s typical workflow
             and challenges.
           </p>
         </div>

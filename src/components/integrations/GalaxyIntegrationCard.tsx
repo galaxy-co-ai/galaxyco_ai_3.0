@@ -18,7 +18,7 @@ interface IntegrationCardProps {
 }
 
 export function GalaxyIntegrationCard({
-  id,
+  id: _id,
   name,
   description,
   icon,

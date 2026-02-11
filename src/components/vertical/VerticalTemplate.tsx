@@ -346,7 +346,7 @@ export function VerticalTemplate({ data }: VerticalTemplateProps) {
                 <CardContent className="p-8 lg:p-12 text-center">
                   <Sparkles className="h-12 w-12 text-accent-cyan mx-auto mb-6" />
                   <blockquote className="text-2xl font-semibold mb-6">
-                    "{data.testimonial.quote}"
+                    &quot;{data.testimonial.quote}&quot;
                   </blockquote>
                   <div>
                     <p className="font-medium">{data.testimonial.author}</p>

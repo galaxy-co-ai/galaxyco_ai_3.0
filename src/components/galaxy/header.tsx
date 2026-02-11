@@ -47,11 +47,11 @@ export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
 }
 
 export function Header({
-  title,
-  description,
+  title: _title,
+  description: _description,
   showSearch = false,
-  showNotifications = true,
-  notificationCount = 0,
+  showNotifications: _showNotifications = true,
+  notificationCount: _notificationCount = 0,
   user,
   actions,
   className,

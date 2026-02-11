@@ -44,7 +44,7 @@ export interface SearchResult {
   type: SearchEntityType;
   title: string;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   href: string;
   relevance?: number;
 }

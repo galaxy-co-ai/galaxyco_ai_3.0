@@ -23,7 +23,7 @@ export default function OrganizationsTable({
   onSelect,
   onAddNew,
   onDelete,
-  formatDate,
+  formatDate: _formatDate,
   formatCurrency,
 }: OrganizationsTableProps) {
   const getStatusColor = (status: string) => {

@@ -18,7 +18,7 @@ interface ApprovalsPageClientProps {
 }
 
 export default function ApprovalsPageClient({
-  workspaceId,
+  workspaceId: _workspaceId,
 }: ApprovalsPageClientProps) {
   const searchParams = useSearchParams();
   const teamId = searchParams.get("team") || undefined;

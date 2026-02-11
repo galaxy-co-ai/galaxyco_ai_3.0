@@ -848,7 +848,7 @@ export const financeToolImplementations: ToolImplementations = {
     }
   },
 
-  async auto_categorize_expenses(args, context) {
+  async auto_categorize_expenses(args, _context) {
     try {
       const expenseIds = (args.expenseIds as string[]) || [];
 

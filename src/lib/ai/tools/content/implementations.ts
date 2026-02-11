@@ -987,7 +987,7 @@ A: [Detailed answer]`,
   },
 
   // analyze_brand_message
-  async analyze_brand_message(args, context): Promise<ToolResult> {
+  async analyze_brand_message(args, _context): Promise<ToolResult> {
     try {
       const content = args.content as string;
       const intendedAudience = args.intended_audience as string;

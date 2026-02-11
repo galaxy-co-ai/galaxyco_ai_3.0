@@ -538,7 +538,7 @@ export default function GuidedSession({
 }
 
 // Helper function for acknowledgment messages
-function getAcknowledgment(label: string): string {
+function getAcknowledgment(_label: string): string {
   const acks = [
     `Got it! That helps a lot.`,
     `Perfect, I've noted that down.`,

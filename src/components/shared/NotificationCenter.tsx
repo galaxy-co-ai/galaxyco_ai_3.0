@@ -53,7 +53,7 @@ export function NotificationCenter({
   onArchive,
   onDelete,
   onAction,
-  maxHeight = "400px",
+  maxHeight: _maxHeight = "400px",
 }: NotificationCenterProps) {
   const [open, setOpen] = React.useState(false);
   const [filter, setFilter] = React.useState<"all" | "unread" | "archived">("all");

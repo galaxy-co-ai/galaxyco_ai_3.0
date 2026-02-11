@@ -504,7 +504,7 @@ export function proposeAction(
 export async function buildContextualProposals(
   workspaceId: string,
   userId: string,
-  currentTopic?: string
+  _currentTopic?: string
 ): Promise<ProposedAction[]> {
   const proposals: ProposedAction[] = [];
   

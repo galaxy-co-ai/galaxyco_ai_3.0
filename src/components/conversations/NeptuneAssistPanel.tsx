@@ -43,7 +43,7 @@ import { MODULE_METADATA } from "@/lib/neptune/page-context";
 // Wrapper component for fullscreen variant - NO card styling for clean minimal design
 function NeptuneCardWrapper({
   children,
-  isFullscreen,
+  isFullscreen: _isFullscreen,
 }: {
   children: React.ReactNode;
   isFullscreen: boolean;
@@ -63,8 +63,8 @@ interface NeptuneAssistPanelProps {
 }
 
 export default function NeptuneAssistPanel({
-  conversationId: legacyConversationId,
-  conversation: legacyConversation,
+  conversationId: _legacyConversationId,
+  conversation: _legacyConversation,
   variant = "default",
   feature,
   minimal = false,

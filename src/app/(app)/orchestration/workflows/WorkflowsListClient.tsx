@@ -106,10 +106,10 @@ interface WorkflowsListClientProps {
 }
 
 export default function WorkflowsListClient({
-  workspaceId,
+  workspaceId: _workspaceId,
   initialWorkflows,
-  initialTeams,
-  initialAgents,
+  initialTeams: _initialTeams,
+  initialAgents: _initialAgents,
 }: WorkflowsListClientProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");

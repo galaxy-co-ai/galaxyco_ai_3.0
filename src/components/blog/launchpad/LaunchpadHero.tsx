@@ -125,7 +125,7 @@ function NavStarField() {
   );
 }
 
-export function LaunchpadHero({ categories, hasContent }: LaunchpadHeroProps) {
+export function LaunchpadHero({ categories: _categories, hasContent: _hasContent }: LaunchpadHeroProps) {
   const pathname = usePathname();
   
   // Determine active tab based on current route

@@ -1115,8 +1115,8 @@ export const agentExecutions = pgTable(
 
     // Execution data
     status: executionStatusEnum('status').notNull().default('pending'),
-    input: jsonb('input').$type<Record<string, any>>(),
-    output: jsonb('output').$type<Record<string, any>>(),
+    input: jsonb('input').$type<Record<string, unknown>>(),
+    output: jsonb('output').$type<Record<string, unknown>>(),
     error: jsonb('error').$type<{
       message: string;
       code?: string;
@@ -2760,7 +2760,7 @@ export const customers = pgTable(
 
     // Metadata
     tags: text('tags').array().default([]),
-    customFields: jsonb('custom_fields').$type<Record<string, any>>().default({}),
+    customFields: jsonb('custom_fields').$type<Record<string, unknown>>().default({}),
     notes: text('notes'),
 
     // Timestamps
@@ -2814,7 +2814,7 @@ export const projects = pgTable(
 
     // Metadata
     tags: text('tags').array().default([]),
-    customFields: jsonb('custom_fields').$type<Record<string, any>>().default({}),
+    customFields: jsonb('custom_fields').$type<Record<string, unknown>>().default({}),
 
     // Timestamps
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -2867,7 +2867,7 @@ export const prospects = pgTable(
     // Metadata
     tags: text('tags').array().default([]),
     notes: text('notes'),
-    customFields: jsonb('custom_fields').$type<Record<string, any>>().default({}),
+    customFields: jsonb('custom_fields').$type<Record<string, unknown>>().default({}),
 
     // Conversion
     convertedToCustomer: boolean('converted_to_customer').default(false),
@@ -2925,7 +2925,7 @@ export const contacts = pgTable(
     // Metadata
     tags: text('tags').array().default([]),
     notes: text('notes'),
-    customFields: jsonb('custom_fields').$type<Record<string, any>>().default({}),
+    customFields: jsonb('custom_fields').$type<Record<string, unknown>>().default({}),
 
     // Engagement
     lastContactedAt: timestamp('last_contacted_at'),
@@ -3399,7 +3399,7 @@ export const campaigns = pgTable(
     targetAudience: jsonb('target_audience')
       .$type<{
         count?: number;
-        criteria?: Record<string, any>;
+        criteria?: Record<string, unknown>;
       }>()
       .default({}),
 
@@ -4188,7 +4188,7 @@ export const dataExports = pgTable(
     status: jobStatusEnum('status').notNull().default('pending'),
 
     // Configuration
-    filters: jsonb('filters').$type<Record<string, any>>().default({}),
+    filters: jsonb('filters').$type<Record<string, unknown>>().default({}),
     columns: text('columns').array(), // Specific columns to export
 
     // Results
@@ -4301,7 +4301,7 @@ export const inboxMessages = pgTable(
     replyToId: text('reply_to_id'), // Self-reference to parent message
 
     // Metadata
-    metadata: jsonb('metadata').$type<Record<string, any>>().default({}),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
     attachments: jsonb('attachments')
       .$type<Array<{ name: string; url: string; size: number }>>()
       .default([]),
@@ -4444,7 +4444,7 @@ export const notifications = pgTable(
     actionLabel: text('action_label'),
 
     // Metadata
-    metadata: jsonb('metadata').$type<Record<string, any>>().default({}),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
 
     // Status
     isRead: boolean('is_read').default(false),
@@ -4485,7 +4485,7 @@ export const conversations = pgTable(
 
     // External IDs (for syncing with external services)
     externalId: text('external_id'), // Gmail thread ID, Twilio conversation SID, etc.
-    externalMetadata: jsonb('external_metadata').$type<Record<string, any>>().default({}),
+    externalMetadata: jsonb('external_metadata').$type<Record<string, unknown>>().default({}),
 
     // Status tracking
     isUnread: boolean('is_unread').default(true),
@@ -4550,7 +4550,7 @@ export const conversationMessages = pgTable(
 
     // External IDs
     externalId: text('external_id'), // Gmail message ID, Twilio message SID, etc.
-    externalMetadata: jsonb('external_metadata').$type<Record<string, any>>().default({}),
+    externalMetadata: jsonb('external_metadata').$type<Record<string, unknown>>().default({}),
 
     // Threading (self-reference handled via relations to avoid circular type inference)
     replyToId: uuid('reply_to_id'),
@@ -6601,7 +6601,7 @@ export const webhooks = pgTable(
     failureCount: integer('failure_count').default(0),
 
     // Metadata
-    metadata: jsonb('metadata').$type<Record<string, any>>().default({}),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
 
     // Relationships
     createdBy: uuid('created_by')
@@ -6634,7 +6634,7 @@ export const webhookDeliveries = pgTable(
 
     // Delivery info
     event: text('event').notNull(),
-    payload: jsonb('payload').$type<Record<string, any>>().notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
 
     // Response
     status: integer('status'), // HTTP status code
@@ -6690,11 +6690,11 @@ export const auditLogs = pgTable(
     // Details
     changes: jsonb('changes')
       .$type<{
-        before?: Record<string, any>;
-        after?: Record<string, any>;
+        before?: Record<string, unknown>;
+        after?: Record<string, unknown>;
       }>()
       .default({}),
-    metadata: jsonb('metadata').$type<Record<string, any>>().default({}),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
 
     // Timestamp
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -6769,7 +6769,7 @@ export const integrations = pgTable(
     scopes: jsonb('scopes').$type<string[]>().notNull().default([]),
 
     // Configuration
-    config: jsonb('config').$type<Record<string, any>>().default({}),
+    config: jsonb('config').$type<Record<string, unknown>>().default({}),
 
     // Error tracking
     lastError: text('last_error'),
@@ -7235,8 +7235,8 @@ export const executionSteps = pgTable(
     status: gridNodeStatusEnum('status').notNull().default('pending'),
 
     // Input/Output for this step
-    inputData: jsonb('input_data').$type<Record<string, any>>().default({}),
-    outputData: jsonb('output_data').$type<Record<string, any>>().default({}),
+    inputData: jsonb('input_data').$type<Record<string, unknown>>().default({}),
+    outputData: jsonb('output_data').$type<Record<string, unknown>>().default({}),
 
     // Performance
     startedAt: timestamp('started_at'),
@@ -8302,7 +8302,7 @@ export const neptuneActivityLog = pgTable(
     // Activity data
     action: text('action').notNull(), // 'started_conversation', 'sent_message', 'used_tool', etc.
     description: text('description').notNull(),
-    metadata: jsonb('metadata').$type<Record<string, any>>().default({}),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}),
     
     // Timestamps
     createdAt: timestamp('created_at').notNull().defaultNow(),

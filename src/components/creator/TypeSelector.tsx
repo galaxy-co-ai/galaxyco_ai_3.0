@@ -19,7 +19,7 @@ export default function TypeSelector({ onSelect, className }: TypeSelectorProps)
           What would you like to create?
         </h2>
         <p className="text-sm text-gray-500">
-          Select a content type to get started with Neptune's guidance
+          Select a content type to get started with Neptune&apos;s guidance
         </p>
       </div>
 

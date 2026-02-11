@@ -475,7 +475,7 @@ export class TeamExecutor {
     team: NonNullable<Awaited<ReturnType<typeof this.getTeam>>>,
     members: TeamMemberInfo[],
     task: TeamTask,
-    state: TeamExecutionState
+    _state: TeamExecutionState
   ): Promise<AgentExecutionResult[]> {
     const results: AgentExecutionResult[] = [];
     let sharedContext = task.context || {};

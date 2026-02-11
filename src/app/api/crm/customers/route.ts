@@ -34,7 +34,7 @@ const customerSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
 

@@ -144,7 +144,7 @@ export function TiptapEditor({
       ...(enableAI ? [
         AIAutocomplete.configure({
           onContinue: handleAIContinue,
-          onAccept: (text: string) => {
+          onAccept: (_text: string) => {
             setSuggestionVisible(false);
             setSuggestion('');
           },

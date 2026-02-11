@@ -27,7 +27,7 @@ interface ReviewStepProps {
   onSaveDraft: () => Promise<void>;
 }
 
-export function ReviewStep({ useCaseId, mode, onSaveDraft }: ReviewStepProps) {
+export function ReviewStep({ useCaseId, mode: _mode, onSaveDraft }: ReviewStepProps) {
   const router = useRouter();
   const { getValues } = useFormContext<UseCaseFormData>();
   const [isGenerating, setIsGenerating] = useState(false);

@@ -38,7 +38,7 @@ export function ActivityFeed({ title = 'Recent Activity', items, className }: Ac
               No recent activity
             </div>
           ) : (
-            items.map((item, index) => (
+            items.map((item, _index) => (
               <div key={item.id} className="flex gap-2.5 p-3 hover:bg-muted/50 transition-colors">
                 <Avatar className="h-7 w-7 shrink-0">
                   {item.user.avatar && <AvatarImage src={item.user.avatar} alt={item.user.name} />}

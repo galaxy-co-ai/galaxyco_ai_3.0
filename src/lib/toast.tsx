@@ -158,7 +158,7 @@ class ToastManager {
    */
   private buildOptions(
     options?: ToastOptions,
-    type?: "success" | "error" | "warning" | "info"
+    _type?: "success" | "error" | "warning" | "info"
   ): ExternalToast {
     const baseOptions: ExternalToast = {
       description: options?.description,

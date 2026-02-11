@@ -210,7 +210,7 @@ function ModuleList({ items }: { items: ListData["items"] }) {
 /**
  * Large metric display for module
  */
-function ModuleMetric({ value, formattedValue, trend }: MetricData) {
+function ModuleMetric({ value: _value, formattedValue, trend }: MetricData) {
   return (
     <div className="flex items-center justify-center gap-3">
       <span className="text-xl font-semibold text-foreground">{formattedValue}</span>

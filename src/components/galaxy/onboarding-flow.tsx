@@ -44,7 +44,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <h2 className="text-2xl font-bold">Welcome to the Future of Work</h2>
         <p className="text-muted-foreground">
-          We'll connect your essential work tools so AI can start saving you hours each week
+          We&apos;ll connect your essential work tools so AI can start saving you hours each week
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
@@ -180,9 +180,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div className="space-y-6">
       <div className="text-center space-y-4">
         <div className="text-6xl">🎉</div>
-        <h2 className="text-2xl font-bold">You're Ready to Go!</h2>
+        <h2 className="text-2xl font-bold">You&apos;re Ready to Go!</h2>
         <p className="text-muted-foreground">
-          Your AI assistant is processing your data. You'll start seeing insights in minutes.
+          Your AI assistant is processing your data. You&apos;ll start seeing insights in minutes.
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">

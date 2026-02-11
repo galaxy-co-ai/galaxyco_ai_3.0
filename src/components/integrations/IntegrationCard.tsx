@@ -20,9 +20,9 @@ interface IntegrationCardProps {
 }
 
 export function IntegrationCard({
-  id,
+  id: _id,
   name,
-  description,
+  description: _description,
   icon,
   gradient,
   isConnected,

@@ -442,7 +442,7 @@ function generateWorkflowName(sequence: string[]): string {
  */
 function determineTrigger(
   sequence: string[],
-  actionHistory: Array<{ toolName: string; timestamp: Date }>
+  _actionHistory: Array<{ toolName: string; timestamp: Date }>
 ): string {
   const firstAction = sequence[0];
   

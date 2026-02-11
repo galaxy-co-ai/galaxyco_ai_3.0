@@ -173,7 +173,7 @@ export function EnhancedContactHeader({ contact }: ContactHeaderProps) {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] font-bold text-purple-600 mb-0.5 uppercase tracking-wide">Last Interaction Context</p>
-              <p className="text-xs font-semibold text-slate-900 leading-snug">"{contact.aiInsight}"</p>
+              <p className="text-xs font-semibold text-slate-900 leading-snug">&quot;{contact.aiInsight}&quot;</p>
               <p className="text-[10px] text-slate-500 mt-0.5">{contact.lastContact}</p>
             </div>
           </div>

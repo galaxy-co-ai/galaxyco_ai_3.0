@@ -75,7 +75,7 @@ export function DashboardMockup() {
                 key={i}
                 className="text-xs px-2.5 py-1.5 rounded bg-white border border-purple-200 text-purple-900"
               >
-                "{question}"
+                &quot;{question}&quot;
               </div>
             ))}
           </div>

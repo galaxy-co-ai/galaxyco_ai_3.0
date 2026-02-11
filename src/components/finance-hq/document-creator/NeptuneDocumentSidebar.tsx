@@ -53,7 +53,7 @@ export function NeptuneDocumentSidebar({
   documentType,
   messages,
   onSendMessage,
-  onClose,
+  onClose: _onClose,
 }: NeptuneDocumentSidebarProps) {
   const [input, setInput] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);

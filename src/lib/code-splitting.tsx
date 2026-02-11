@@ -67,7 +67,7 @@ export class LazyLoadErrorBoundary extends React.Component<
  *   loadingMessage: "Loading dashboard..."
  * });
  */
-export function lazyLoad<T extends React.ComponentType<any>>(
+export function lazyLoad<T extends React.ComponentType<Record<string, unknown>>>(
   loader: () => Promise<{ default: T }>,
   options?: {
     loadingMessage?: string;
@@ -110,7 +110,7 @@ export function preloadModule<T>(loader: () => Promise<{ default: T }>) {
  * Lazy load with retry logic
  * Retries failed module loads up to maxRetries times
  */
-export function lazyLoadWithRetry<T extends React.ComponentType<any>>(
+export function lazyLoadWithRetry<T extends React.ComponentType<Record<string, unknown>>>(
   loader: () => Promise<{ default: T }>,
   maxRetries = 3,
   options?: {
@@ -147,7 +147,7 @@ export function lazyLoadWithRetry<T extends React.ComponentType<any>>(
  *   settings: createLazyRoute(() => import("@/pages/Settings")),
  * };
  */
-export function createLazyRoute<T extends React.ComponentType<any>>(
+export function createLazyRoute<T extends React.ComponentType<Record<string, unknown>>>(
   loader: () => Promise<{ default: T }>,
   routeName?: string
 ) {

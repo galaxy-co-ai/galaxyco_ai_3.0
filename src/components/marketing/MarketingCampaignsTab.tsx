@@ -17,6 +17,7 @@ import {
   Share2,
   X,
   Lightbulb,
+  type LucideIcon,
 } from "lucide-react";
 
 interface Campaign {
@@ -57,7 +58,7 @@ const neptuneRecommendations = [
 ];
 
 // Channel icon mapping
-const channelIcons: Record<string, any> = {
+const channelIcons: Record<string, LucideIcon> = {
   email: Mail,
   linkedin: Linkedin,
   twitter: Twitter,

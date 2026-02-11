@@ -39,7 +39,7 @@ export default function GlobalError({
               Something went wrong!
             </h1>
             <p className="text-gray-400 mb-6">
-              We've been notified and are working to fix the issue.
+              We&apos;ve been notified and are working to fix the issue.
             </p>
             <button
               onClick={() => reset()}

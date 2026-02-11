@@ -185,7 +185,7 @@ export function PlatformMappingStep() {
         <div className="text-sm text-blue-800">
           <p className="font-medium mb-1">Tool selection tips</p>
           <p className="text-blue-700">
-            Select tools that align with your personas' goals. The AI will
+            Select tools that align with your personas&apos; goals. The AI will
             prioritize these when generating the onboarding roadmap, ensuring
             users discover the most valuable features first.
           </p>

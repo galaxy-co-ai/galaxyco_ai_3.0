@@ -112,7 +112,7 @@ export function DocumentsPanel() {
   
   const groupedDocuments = groupDocumentsByProject(filteredDocuments);
 
-  const getFileIcon = (type: string) => {
+  const getFileIcon = (_type: string) => {
     return FileText;
   };
 

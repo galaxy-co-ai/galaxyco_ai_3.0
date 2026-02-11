@@ -28,7 +28,7 @@ interface ContactDetailViewProps {
   onDelete?: (contactId: string) => void;
 }
 
-export default function ContactDetailView({ contact, formatDate, onDelete }: ContactDetailViewProps) {
+export default function ContactDetailView({ contact, formatDate: _formatDate, onDelete }: ContactDetailViewProps) {
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase().slice(0, 2);
   };

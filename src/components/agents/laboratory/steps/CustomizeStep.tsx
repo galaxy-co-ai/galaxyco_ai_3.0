@@ -56,7 +56,7 @@ const CAPABILITY_ICONS: Record<string, React.ReactNode> = {
 
 export default function CustomizeStep({
   config,
-  template,
+  template: _template,
   onUpdate,
 }: CustomizeStepProps) {
   const toggleCapability = (capId: string) => {

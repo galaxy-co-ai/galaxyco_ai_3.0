@@ -1008,7 +1008,7 @@ const toolHandlers: Record<string, ToolHandler> = {
   },
 
   // Draft Email
-  draft_email: async (args, context) => {
+  draft_email: async (args, _context) => {
     const to = args.to as string;
     const purpose = args.purpose as string;
     const emailContext = args.context as string | undefined;

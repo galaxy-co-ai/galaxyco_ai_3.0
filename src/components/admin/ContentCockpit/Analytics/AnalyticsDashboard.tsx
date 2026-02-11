@@ -192,7 +192,7 @@ export function AnalyticsDashboard() {
 
   // Calculate aggregate engagement data
   const aggregateTrafficSources = articlesData?.articles.reduce(
-    (acc, article) => {
+    (acc, _article) => {
       // Since we don't have per-article traffic sources from list endpoint,
       // we'll show placeholder data. In real implementation, aggregate from overview
       return acc;

@@ -30,7 +30,7 @@ const TABS: Tab[] = [
 
 export default function WorkspacePanel({
   workspaceId,
-  userId,
+  userId: _userId,
 }: WorkspacePanelProps) {
   const [activeTab, setActiveTab] = useState<TabValue>('compass');
 

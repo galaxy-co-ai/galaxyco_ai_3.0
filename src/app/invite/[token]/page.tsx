@@ -109,7 +109,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
             </div>
             <h2 className="text-2xl font-bold mb-2">Welcome aboard! 🎉</h2>
             <p className="text-muted-foreground mb-4">
-              You've successfully joined the workspace.
+              You&apos;ve successfully joined the workspace.
             </p>
             <p className="text-sm text-muted-foreground">
               Redirecting to dashboard...
@@ -162,7 +162,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
           <div className="rounded-full bg-indigo-100 p-4 w-fit mx-auto mb-4">
             <Mail className="h-12 w-12 text-indigo-600" />
           </div>
-          <CardTitle className="text-2xl">You're Invited! 🎉</CardTitle>
+          <CardTitle className="text-2xl">You&apos;re Invited! 🎉</CardTitle>
           <CardDescription className="text-base mt-2">
             Join your team on GalaxyCo.ai
           </CardDescription>
@@ -191,7 +191,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
 
               <div className="text-sm text-muted-foreground text-center">
                 <p>
-                  By accepting, you'll join <strong>{invitation.workspace}</strong> and 
+                  By accepting, you&apos;ll join <strong>{invitation.workspace}</strong> and
                   get access to all shared resources and collaboration tools.
                 </p>
               </div>

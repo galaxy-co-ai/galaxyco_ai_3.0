@@ -73,7 +73,7 @@ export function InsightsWidget() {
           <h3 className="font-semibold">Proactive Insights</h3>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
-          No insights yet. Keep working and we'll surface intelligent suggestions soon!
+          No insights yet. Keep working and we&apos;ll surface intelligent suggestions soon!
         </p>
       </Card>
     );

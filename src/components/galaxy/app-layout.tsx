@@ -119,7 +119,7 @@ export function AppLayout({
   user,
   workspaceId,
   showSidebar = true,
-  sidebarCollapsed: initialCollapsed = false,
+  sidebarCollapsed: _initialCollapsed = false,
   className,
   ...props
 }: AppLayoutProps) {

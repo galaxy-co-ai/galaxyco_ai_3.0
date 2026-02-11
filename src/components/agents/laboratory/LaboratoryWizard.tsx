@@ -30,7 +30,7 @@ interface LaboratoryWizardProps {
 
 export default function LaboratoryWizard({
   onComplete,
-  onCancel,
+  onCancel: _onCancel,
   neptuneOpen = false,
 }: LaboratoryWizardProps) {
   const [step, setStep] = useState(1);

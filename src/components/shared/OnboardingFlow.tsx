@@ -365,7 +365,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 </motion.div>
                 
                 <h3 className="text-xl md:text-2xl mb-2 md:mb-3 leading-tight">
-                  🎉 You're Ready to Go!
+                  🎉 You&apos;re Ready to Go!
                 </h3>
                 
                 <p className="text-sm text-muted-foreground mb-4 md:mb-6 max-w-lg mx-auto leading-relaxed">

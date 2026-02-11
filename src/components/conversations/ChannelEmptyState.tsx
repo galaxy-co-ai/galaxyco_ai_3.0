@@ -110,7 +110,7 @@ const channelConfig: Record<ChannelType, {
   },
 };
 
-export default function ChannelEmptyState({ channel, onStartConversation }: ChannelEmptyStateProps) {
+export default function ChannelEmptyState({ channel, onStartConversation: _onStartConversation }: ChannelEmptyStateProps) {
   const config = channelConfig[channel];
   const Icon = config.icon;
   const isComingSoon = channel === 'social' || channel === 'support';
