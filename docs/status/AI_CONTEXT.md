@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-01-26 (31cc6a9)  
+**Updated Through:** 2026-02-10 (e4ed167)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,15 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-02-10 e4ed167 docs: add CLAUDE.md and INDEX.md for AI-assisted development
+- 2026-02-10 d6eaf18 docs: add demo preparation materials and archive old status
+- 2026-02-10 d138537 test: refactor assistant, workflow execution, and campaign tests
+- 2026-02-10 e6ac792 fix: update global styles and auth helpers
+- 2026-02-10 8b9e898 chore: update CI workflow, docs, and env example
+- 2026-02-10 20eadb3 feat(admin): update mission control and agent management routes
+- 2026-02-10 595b0ad feat(mcp): improve OAuth authorization and add CORS support
+- 2026-02-10 37fa9fe feat(insights): add insights dashboard stats and chart components
+- 2026-02-10 8fd007e docs: add community and OSS documentation
 - 2026-01-26 31cc6a9 fix(deps): add @rollup/rollup-win32-x64-msvc for Windows test support
 - 2026-01-26 b9a565a Add cover image to README
 - 2026-01-26 59e6549 Add GalaxyCo.ai cover image for README
@@ -38,15 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-21 8f0145e fix(web): update feature card bullet points
 - 2026-01-21 f8660f9 feat(web): update landing page hero and feature cards
 - 2026-01-21 8b19354 fix(api): make pageContext optional in Neptune chat schema
-- 2026-01-21 33c2f20 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2026-01-21 3910437 feat(nav): add Marketing and Finance HQ to main sidebar, remove More section
-- 2026-01-21 6afdb3c Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2026-01-21 003ec3e chore: declutter root - remove artifacts and consolidate docs
-- 2026-01-09 80e03e4 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2026-01-09 3a1dd93 fix(deps): align react version constraint to ^19.2.3 to match react-dom peer requirement
-- 2026-01-09 f75e2fc Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
-- 2026-01-09 94e1bad fix(deps): update @clerk/nextjs to 6.36.7 for Next.js 16 Turbopack compatibility
-- 2026-01-09 111b039 Merge branch 'main' of github.com:galaxy-co-ai/galaxyco_ai_3.0
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
