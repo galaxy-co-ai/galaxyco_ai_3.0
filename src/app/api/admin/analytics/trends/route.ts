@@ -39,20 +39,20 @@ export async function GET(request: NextRequest) {
     );
 
     // Build aggregation based on period
-    let dateFormat: string;
+    let _dateFormat: string;
     let groupByExpr;
 
     switch (params.period) {
       case "weekly":
-        dateFormat = "YYYY-WW";
+        _dateFormat = "YYYY-WW";
         groupByExpr = sql`to_char(${articleAnalytics.periodStart}, 'IYYY-IW')`;
         break;
       case "monthly":
-        dateFormat = "YYYY-MM";
+        _dateFormat = "YYYY-MM";
         groupByExpr = sql`to_char(${articleAnalytics.periodStart}, 'YYYY-MM')`;
         break;
       default:
-        dateFormat = "YYYY-MM-DD";
+        _dateFormat = "YYYY-MM-DD";
         groupByExpr = sql`date_trunc('day', ${articleAnalytics.periodStart})`;
     }
 

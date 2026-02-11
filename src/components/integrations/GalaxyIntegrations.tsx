@@ -277,6 +277,7 @@ export function GalaxyIntegrations() {
     });
     
     return connected;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- providerMap is a static mapping object defined in the component body; it never changes
   }, [statusData]);
 
   const handleConnect = async (id: string) => {
@@ -303,7 +304,7 @@ export function GalaxyIntegrations() {
       // QuickBooks, Shopify, and Twitter use OAuth
       if (provider === 'quickbooks' || provider === 'shopify' || provider === 'twitter') {
         // Redirect to OAuth flow
-        window.location.href = `/api/auth/oauth/${provider}/authorize`;
+        window.location.assign(`/api/auth/oauth/${provider}/authorize`);
         return;
       }
       await connect(provider as 'google' | 'microsoft');

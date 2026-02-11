@@ -478,6 +478,7 @@ export function AIImageModal({
                       aria-pressed={selectedImageId === image.id}
                       aria-label={`Select image: ${image.revisedPrompt.substring(0, 50)}...`}
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={image.url}
                         alt={image.revisedPrompt}

@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { type, context } = validationResult.data;
+    const { type, context: _context } = validationResult.data;
 
     // Gather CRM data
     const contactsList = await db.query.contacts.findMany({

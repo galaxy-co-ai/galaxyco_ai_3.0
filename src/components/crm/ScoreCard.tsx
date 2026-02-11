@@ -46,7 +46,7 @@ export function ScoreCard({ contactId, contactData }: ScoreCardProps) {
         setScore(data.score);
         setTier(data.tier || calculateTier(data.score));
       }
-    } catch (err) {
+    } catch {
       // Silently fail - optional feature
       setScore(null);
     } finally {

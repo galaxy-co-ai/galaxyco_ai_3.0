@@ -57,7 +57,7 @@ export default function InsightsTab({
   const [period, setPeriod] = useState("30");
   
   // Fetch real analytics from the API
-  const { data: analyticsData, isLoading, mutate } = useSWR(
+  const { data: analyticsData, isLoading, mutate: _mutate } = useSWR(
     `/api/crm/analytics?period=${period}`,
     fetcher,
     { refreshInterval: 60000 } // Refresh every minute
@@ -117,7 +117,8 @@ export default function InsightsTab({
 
     const recentlyContacted = leads.filter((l) => {
       if (!l.lastContactedAt) return false;
-      const daysSince = Math.floor((Date.now() - new Date(l.lastContactedAt).getTime()) / (1000 * 60 * 60 * 24));
+      const now = Date.now(); // eslint-disable-line react-hooks/purity -- Date.now() needed for recency check
+      const daysSince = Math.floor((now - new Date(l.lastContactedAt).getTime()) / (1000 * 60 * 60 * 24));
       return daysSince <= 7;
     }).length;
 

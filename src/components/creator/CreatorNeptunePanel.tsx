@@ -280,7 +280,8 @@ export default function CreatorNeptunePanel({ activeTab }: CreatorNeptunePanelPr
                     <div className="mt-3 rounded-lg border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-hidden">
                       {/* Image Preview */}
                       <div className="relative group">
-                        <img 
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={imageData.imageUrl}
                           alt={imageData.revisedPrompt || "Generated image"}
                           className="w-full h-auto max-h-96 object-contain bg-white"

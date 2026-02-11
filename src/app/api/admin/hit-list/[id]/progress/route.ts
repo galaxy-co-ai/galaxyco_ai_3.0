@@ -21,7 +21,7 @@ const WIZARD_STAGES = [
   "published",
 ] as const;
 
-type WizardStage = (typeof WIZARD_STAGES)[number];
+type _WizardStage = (typeof WIZARD_STAGES)[number];
 
 /**
  * PATCH /api/admin/hit-list/[id]/progress

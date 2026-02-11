@@ -26,7 +26,7 @@ export default async function MarketingPage() {
     });
 
     // Calculate stats
-    const [activeCampaignsCount, totalBudgetStats, totalSpentStats] = await Promise.all([
+    const [activeCampaignsCount, totalBudgetStats, _totalSpentStats] = await Promise.all([
       db
         .select({ count: count() })
         .from(campaigns)

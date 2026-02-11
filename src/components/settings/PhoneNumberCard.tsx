@@ -44,7 +44,7 @@ export function PhoneNumberCard({ phoneNumber, onEdit, onDelete }: PhoneNumberCa
       setCopied(true);
       toast.success('Phone number copied');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy');
     }
   };

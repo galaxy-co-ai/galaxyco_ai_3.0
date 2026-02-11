@@ -168,8 +168,9 @@ export default async function CategoryPage({ params }: PageProps) {
               <Card className="h-full hover:shadow-lg transition-all hover:border-primary/20 group overflow-hidden">
                 {post.featuredImage && (
                   <div className="aspect-video overflow-hidden">
-                    <img 
-                      src={post.featuredImage} 
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={post.featuredImage}
                       alt={post.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />

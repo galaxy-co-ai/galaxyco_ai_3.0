@@ -108,7 +108,7 @@ export default function NeptuneDashboardWelcome({
     return null; // Don't show welcome until data is loaded or if dismissed
   }
 
-  const { isNewUser, recentActivity, workspaceHealth } = welcomeData;
+  const { isNewUser, recentActivity: _recentActivity, workspaceHealth: _workspaceHealth } = welcomeData;
   const firstName = userName.split(' ')[0] || 'there';
 
   // Show insights for returning users, welcome for new users

@@ -336,7 +336,7 @@ export const crmToolImplementations: ToolImplementations = {
   // CRM: Get Deals Closing Soon
   async get_deals_closing_soon(args, context): Promise<ToolResult> {
     try {
-      const days = (args.days as number) || 30;
+      const _days = (args.days as number) || 30;
       const minValue = args.minValue as number | undefined;
 
       // Get deals in closing stages

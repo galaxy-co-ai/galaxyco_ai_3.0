@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Sparkles,
   RefreshCw,
@@ -52,7 +52,7 @@ export function AICommandPalette({
   const paletteRef = useRef<HTMLDivElement>(null);
   const [adjustedPosition, setAdjustedPosition] = useState(position);
 
-  const commands: AICommandItem[] = [
+  const commands: AICommandItem[] = useMemo(() => [
     {
       id: 'continue',
       label: 'Continue writing...',
@@ -103,7 +103,7 @@ export function AICommandPalette({
       icon: <MessageSquare className="h-4 w-4" />,
       action: onOpenBrainstorm,
     }] : []),
-  ];
+  ], [onContinue, onRephrase, onExpand, onShorten, onFindSource, onSuggestImage, onOpenBrainstorm]);
 
   // Adjust position to stay within viewport
   useEffect(() => {
@@ -128,6 +128,7 @@ export function AICommandPalette({
         y = position.y - rect.height - 16;
       }
       
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- position adjustment requires DOM measurement
       setAdjustedPosition({ x, y });
     }
   }, [isOpen, position]);
@@ -135,6 +136,7 @@ export function AICommandPalette({
   // Reset selection when opening
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset selection index when palette opens
       setSelectedIndex(0);
     }
   }, [isOpen]);

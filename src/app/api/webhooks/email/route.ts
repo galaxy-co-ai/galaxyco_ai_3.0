@@ -12,7 +12,7 @@ const WebhookQuerySchema = z.object({
 });
 
 // Base validation schema for parsed email (used internally after provider-specific parsing)
-const ParsedEmailSchema = z.object({
+const _ParsedEmailSchema = z.object({
   from: z.string(),
   fromName: z.string(),
   to: z.string(),
@@ -142,7 +142,7 @@ async function parseSendGridEmail(request: Request): Promise<ParsedEmail> {
   const text = formData.get('text')?.toString() || '';
   const html = formData.get('html')?.toString() || '';
   const headers = formData.get('headers')?.toString() || '';
-  const envelope = formData.get('envelope')?.toString() || '{}';
+  const _envelope = formData.get('envelope')?.toString() || '{}';
 
   // Parse email address and name
   const fromMatch = from.match(/^(?:"?([^"]*)"?\s)?<?([^>]+)>?$/);

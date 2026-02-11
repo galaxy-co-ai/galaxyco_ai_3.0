@@ -19,7 +19,7 @@ const createWebhookSchema = z.object({
   events: z.array(z.string()).min(1),
 });
 
-const updateWebhookSchema = z.object({
+const _updateWebhookSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   url: z.string().url().optional(),
   events: z.array(z.string()).min(1).optional(),

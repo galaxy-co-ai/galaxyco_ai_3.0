@@ -39,6 +39,7 @@ function StarField({ count = 40 }: { count?: number }) {
       duration: Math.random() * 5 + 3,
       delay: Math.random() * 4
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only star generation avoids hydration mismatch
     setStars(generatedStars);
   }, [count]);
 
@@ -92,6 +93,7 @@ function NavStarField() {
       duration: Math.random() * 4 + 3,
       delay: Math.random() * 3
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only star generation avoids hydration mismatch
     setStars(generatedStars);
   }, []);
 
@@ -259,29 +261,29 @@ export function LaunchpadHero({ categories: _categories, hasContent: _hasContent
             <div className="inline-flex items-center gap-1 p-1.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
-                const TabButton = (
-                  <button 
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                      isActive 
-                        ? 'bg-white text-slate-900 shadow-lg hover:bg-indigo-50' 
+                const buttonEl = (
+                  <span
+                    className={`block px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                      isActive
+                        ? 'bg-white text-slate-900 shadow-lg hover:bg-indigo-50'
                         : 'text-indigo-200/80 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {tab.label}
-                  </button>
+                  </span>
                 );
-                
+
                 if (tab.external) {
                   return (
                     <Link key={tab.id} href={tab.href} target="_blank" rel="noopener noreferrer">
-                      {TabButton}
+                      {buttonEl}
                     </Link>
                   );
                 }
-                
+
                 return (
                   <Link key={tab.id} href={tab.href}>
-                    {TabButton}
+                    {buttonEl}
                   </Link>
                 );
               })}

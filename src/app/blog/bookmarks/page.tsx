@@ -103,8 +103,9 @@ export default async function BookmarksPage() {
                 <Card className="h-full hover:shadow-lg transition-all hover:border-primary/20 group overflow-hidden">
                   {bookmark.featuredImage && (
                     <div className="aspect-video overflow-hidden">
-                      <img 
-                        src={bookmark.featuredImage} 
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={bookmark.featuredImage}
                         alt={bookmark.title || ''}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

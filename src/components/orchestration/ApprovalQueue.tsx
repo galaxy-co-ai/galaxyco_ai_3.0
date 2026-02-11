@@ -165,7 +165,7 @@ export default function ApprovalQueue({
     }
   );
 
-  const actions = data?.actions || [];
+  const actions = useMemo(() => data?.actions || [], [data?.actions]);
   const pendingCount = data?.pendingCount || 0;
 
   // Filter by search query

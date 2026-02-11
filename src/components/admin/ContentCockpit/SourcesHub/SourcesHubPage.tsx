@@ -45,7 +45,7 @@ export function SourcesHubPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSuggestionsSheetOpen, setIsSuggestionsSheetOpen] = useState(false);
   const [isDiscovering, setIsDiscovering] = useState(false);
-  const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [_isUpdating, setIsUpdating] = useState<string | null>(null);
 
   // Build query string for sources
   const buildQueryString = useCallback(() => {
@@ -71,7 +71,7 @@ export function SourcesHubPage() {
   // Fetch suggestions
   const {
     data: suggestionsData,
-    error: suggestionsError,
+    error: _suggestionsError,
     isLoading: isSuggestionsLoading,
     mutate: mutateSuggestions,
   } = useSWR<SuggestionsResponse>(
@@ -134,7 +134,7 @@ export function SourcesHubPage() {
 
       toast.success("Source deleted");
       mutateSources();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete source");
     } finally {
       setIsUpdating(null);
@@ -157,7 +157,7 @@ export function SourcesHubPage() {
 
       toast.success(status === "archived" ? "Source archived" : "Source restored");
       mutateSources();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update source");
     } finally {
       setIsUpdating(null);
@@ -181,7 +181,7 @@ export function SourcesHubPage() {
       toast.success("Source approved and added to your list");
       mutateSources();
       mutateSuggestions();
-    } catch (error) {
+    } catch {
       toast.error("Failed to approve source");
     } finally {
       setIsUpdating(null);
@@ -204,7 +204,7 @@ export function SourcesHubPage() {
 
       toast.success("Source rejected");
       mutateSuggestions();
-    } catch (error) {
+    } catch {
       toast.error("Failed to reject source");
     } finally {
       setIsUpdating(null);

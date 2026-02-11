@@ -80,6 +80,7 @@ export default function CompassTab({ workspaceId }: CompassTabProps) {
 
   useEffect(() => {
     fetchInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchInsights is defined in the component body; adding it would cause infinite re-renders
   }, [workspaceId]);
 
   const handleRefresh = () => {

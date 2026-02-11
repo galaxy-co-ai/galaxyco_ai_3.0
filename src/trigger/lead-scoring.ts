@@ -234,7 +234,7 @@ export const scheduledLeadScoring = schedules.task({
     // Use date-based idempotency keys to prevent duplicate daily runs
     const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
     
-    const batchHandle = await bulkScoreLeadsTask.batchTrigger(
+    const _batchHandle = await bulkScoreLeadsTask.batchTrigger(
       workspacesWithProspects.map((w) => ({
         payload: { workspaceId: w.workspaceId },
         options: {

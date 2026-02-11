@@ -10,11 +10,11 @@ interface SmartNavigationProps {
 }
 
 export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
-  const [activeSection, setActiveSection] = useState("");
+  const [_activeSection, _setActiveSection] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   const { scrollYProgress } = useScroll();
-  const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  const _progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
   // Navigation links
   const navLinks = [
@@ -37,7 +37,7 @@ export function SmartNavigation({ onEnterApp }: SmartNavigationProps) {
 
   // Smooth scroll to section (Updated to simple navigation)
   const handleNavigation = (href: string) => {
-    window.location.href = href;
+    window.location.assign(href);
     setMobileMenuOpen(false);
   };
 

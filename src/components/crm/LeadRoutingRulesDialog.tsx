@@ -68,7 +68,7 @@ interface AvailableField {
 }
 
 export function LeadRoutingRulesDialog({ open, onOpenChange }: LeadRoutingRulesDialogProps) {
-  const { data, error, mutate } = useSWR(open ? '/api/crm/routing-rules' : null, fetcher);
+  const { data, error: _error, mutate } = useSWR(open ? '/api/crm/routing-rules' : null, fetcher);
   const [showAddRule, setShowAddRule] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   

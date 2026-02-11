@@ -518,7 +518,7 @@ export default function KnowledgeBaseDashboard({
       });
       
       await mutateKnowledge();
-    } catch (error) {
+    } catch {
       toast.error("Failed to create collection");
     } finally {
       setIsCreatingCollection(false);
@@ -1272,6 +1272,7 @@ export default function KnowledgeBaseDashboard({
               <div className="flex-1 overflow-y-auto p-6 bg-white">
                 {viewingDocument.type.toLowerCase().includes('image') && viewingDocument.url ? (
                   <div className="flex items-center justify-center min-h-[400px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={viewingDocument.url}
                       alt={viewingDocument.name}

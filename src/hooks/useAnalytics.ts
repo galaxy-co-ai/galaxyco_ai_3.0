@@ -133,5 +133,6 @@ export function useScrollTracking(postId?: string) {
     };
   }, [postId, pathname]);
 
+  // eslint-disable-next-line react-hooks/refs -- maxDepthRef used as stable accumulator; value only consumed for diagnostics
   return { maxDepth: maxDepthRef.current };
 }

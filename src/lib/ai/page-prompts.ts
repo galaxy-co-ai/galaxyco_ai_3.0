@@ -117,7 +117,7 @@ IMPORTANT - This is a common query on Creator. Respond with:
   },
 
   crm: (ctx) => {
-    const { pageContext, workspaceData } = ctx;
+    const { pageContext, workspaceData: _workspaceData } = ctx;
     const selectedItems = pageContext.selectedItems;
     const focusedItem = pageContext.focusedItem;
     

@@ -7,7 +7,7 @@ interface TrendDataPoint {
   value: number;
 }
 
-interface AnalyticsChartsProps {
+interface _AnalyticsChartsProps {
   pageViewTrend: TrendDataPoint[];
   userActivityTrend: TrendDataPoint[];
 }

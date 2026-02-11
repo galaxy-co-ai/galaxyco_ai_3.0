@@ -202,7 +202,7 @@ export function PriorityScoreCompact({
 }: {
   breakdown: PriorityScoreBreakdownData;
 }) {
-  const totalScore =
+  const _totalScore =
     (breakdown.contentGap || 0) +
     (breakdown.trendingScore || 0) +
     (breakdown.engagementPotential || 0) +

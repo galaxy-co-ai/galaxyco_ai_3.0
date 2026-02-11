@@ -89,7 +89,7 @@ export function CategoriesClient({ initialCategories }: CategoriesClientProps) {
 
   // Calculate totals
   const totalPosts = categories.reduce((sum, cat) => sum + cat.postCount, 0);
-  const activeCategories = categories.filter(cat => cat.isActive);
+  const _activeCategories = categories.filter(cat => cat.isActive);
   const emptyCategories = categories.filter(cat => cat.postCount === 0);
 
   // Sidebar items

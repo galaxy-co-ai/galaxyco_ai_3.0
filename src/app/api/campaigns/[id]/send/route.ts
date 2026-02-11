@@ -19,7 +19,7 @@ interface RouteParams {
 
 export async function POST(request: Request, { params }: RouteParams) {
   try {
-    const { workspaceId, userId } = await getCurrentWorkspace();
+    const { workspaceId, userId: _userId } = await getCurrentWorkspace();
     const { id: campaignId } = await params;
 
     // Rate limit campaign sends

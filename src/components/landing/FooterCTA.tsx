@@ -32,6 +32,7 @@ const CTAStarField = () => {
       duration: Math.random() * 3 + 2,
       delay: Math.random() * 2
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only star generation avoids hydration mismatch
     setStars(generatedStars);
   }, []);
 

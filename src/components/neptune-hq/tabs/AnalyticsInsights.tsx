@@ -56,7 +56,7 @@ export function AnalyticsInsights() {
   );
 
   // Fetch quality trends
-  const { data: qualityTrends, isLoading: qualityLoading } = useSWR<{ data: Array<{ name: string; value: number }> }>(
+  const { data: qualityTrends, isLoading: _qualityLoading } = useSWR<{ data: Array<{ name: string; value: number }> }>(
     orgId ? `/api/neptune-hq/quality-trends?workspaceId=${orgId}` : null,
     fetcher
   );

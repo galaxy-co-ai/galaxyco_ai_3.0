@@ -52,7 +52,7 @@ function formatCurrency(cents: number): string {
 }
 
 // Format compact number
-function formatCompact(num: number): string {
+function _formatCompact(num: number): string {
   if (num >= 1000000) {
     return `${(num / 1000000).toFixed(1)}M`;
   }

@@ -59,7 +59,7 @@ interface AvailableField {
 }
 
 export function LeadScoringRulesDialog({ open, onOpenChange }: LeadScoringRulesDialogProps) {
-  const { data, error, mutate } = useSWR(open ? '/api/crm/scoring-rules' : null, fetcher);
+  const { data, error: _error, mutate } = useSWR(open ? '/api/crm/scoring-rules' : null, fetcher);
   const [showAddRule, setShowAddRule] = useState(false);
   const [newRule, setNewRule] = useState<{
     name: string;

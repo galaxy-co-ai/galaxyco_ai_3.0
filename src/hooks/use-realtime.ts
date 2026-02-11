@@ -71,6 +71,7 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
     const channel = subscribeToWorkspace(workspaceId);
     if (!channel) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- store channel reference after Pusher subscribe
     setWorkspaceChannel(channel);
 
     // Handle connection state
@@ -130,6 +131,7 @@ export function useRealtime(options: UseRealtimeOptions): UseRealtimeReturn {
     const channel = subscribeToUser(userId);
     if (!channel) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- store channel reference after Pusher subscribe
     setUserChannel(channel);
 
     // Bind to notification events
@@ -215,6 +217,7 @@ export function useChannel(options: UseChannelOptions): Channel | null {
     if (!client) return;
 
     const newChannel = client.subscribe(channelName);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- store channel reference after Pusher subscribe
     setChannel(newChannel);
 
     // Bind all events

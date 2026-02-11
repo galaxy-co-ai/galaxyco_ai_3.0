@@ -10,7 +10,7 @@
  * - Real-time data fetching
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -100,6 +100,15 @@ export default function ReportBuilder() {
 
   const template = REPORT_TEMPLATES.find((t) => t.id === selectedTemplate);
 
+  // Generate preview values once when report is generated, not during every render
+  const previewValues = useMemo(() => {
+    if (!generatedReport || !template) return {};
+    return Object.fromEntries(
+      template.metrics.map((metric) => [metric, Math.floor(Math.random() * 1000)])
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Regenerate only when report is freshly generated
+  }, [generatedReport, selectedTemplate]);
+
   const generateReport = async () => {
     if (!template || !startDate || !endDate) return;
     
@@ -112,10 +121,11 @@ export default function ReportBuilder() {
 
   const exportCSV = () => {
     if (!template) return;
-    
+
     const headers = template.metrics.join(',');
-    const data = template.metrics.map(() => Math.floor(Math.random() * 1000)).join(',');
-    const csv = `${headers}\n${data}`;
+    // Math.random() is fine here — called inside event handler, not during render
+    const csvData = template.metrics.map(() => Math.floor(Math.random() * 1000)).join(',');
+    const csv = `${headers}\n${csvData}`;
     
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -271,10 +281,10 @@ export default function ReportBuilder() {
               <div className="border rounded-xl p-6 bg-muted/30">
                 <h3 className="font-semibold mb-4">{template.name} Preview</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {template.metrics.map((metric, _i) => (
+                  {template.metrics.map((metric) => (
                     <div key={metric} className="text-center p-4 bg-background rounded-lg border">
                       <p className="text-2xl font-semibold">
-                        {Math.floor(Math.random() * 1000).toLocaleString()}
+                        {(previewValues[metric] ?? 0).toLocaleString()}
                       </p>
                       <p className="text-xs text-muted-foreground">{metric}</p>
                     </div>

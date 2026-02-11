@@ -89,6 +89,7 @@ export function AISelectionMenu({
         y = position.y + 8;
       }
       
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- position adjustment requires DOM measurement
       setAdjustedPosition({ x, y });
     }
   }, [isVisible, position]);

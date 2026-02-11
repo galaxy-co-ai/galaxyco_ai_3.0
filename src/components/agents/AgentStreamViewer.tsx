@@ -140,6 +140,7 @@ export function AgentStreamViewer({
   // Handle completion callback (only call once)
   useEffect(() => {
     if (isComplete && !hasCalledComplete) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- guard flag to ensure onComplete fires once
       setHasCalledComplete(true);
       onComplete?.();
     }

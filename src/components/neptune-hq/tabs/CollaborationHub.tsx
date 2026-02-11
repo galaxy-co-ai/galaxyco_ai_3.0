@@ -45,7 +45,7 @@ export function CollaborationHub() {
   );
 
   // Fetch recent activity
-  const { data: activity, isLoading: activityLoading } = useSWR<{ activities: ActivityItem[] }>(
+  const { data: activity, isLoading: _activityLoading } = useSWR<{ activities: ActivityItem[] }>(
     orgId ? `/api/neptune-hq/recent-activity?workspaceId=${orgId}` : null,
     fetcher,
     { refreshInterval: 10000 } // Refresh every 10 seconds

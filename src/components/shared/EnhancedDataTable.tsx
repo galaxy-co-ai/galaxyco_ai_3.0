@@ -141,6 +141,7 @@ export default function EnhancedDataTable<T extends RowData = RowData>({
         try {
           const prefs = JSON.parse(saved);
           if (prefs.columns) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- restore saved column preferences from localStorage
             setColumns(prev => prev.map(col => ({
               ...col,
               visible: prefs.columns[col.id]?.visible ?? col.visible ?? true,

@@ -50,7 +50,7 @@ export function NeptuneSettings() {
   const { orgId } = useAuth();
   const [hasChanges, setHasChanges] = useState(false);
   
-  const { data, isLoading, mutate } = useSWR<{ config: NeptuneConfig }>(
+  const { data, isLoading, mutate: _mutate } = useSWR<{ config: NeptuneConfig }>(
     orgId ? `/api/neptune-hq/settings?workspaceId=${orgId}` : null,
     fetcher
   );

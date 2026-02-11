@@ -57,6 +57,7 @@ export function SearchResultsCard({
                 {/* Favicon */}
                 <div className="shrink-0 mt-0.5">
                   {result.favicon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={result.favicon}
                       alt=""

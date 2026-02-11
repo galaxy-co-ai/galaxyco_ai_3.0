@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Rocket, Search, ArrowLeft, Twitter, Linkedin, Mail, ArrowUp, Send, Newspaper, Loader2 } from 'lucide-react';
@@ -21,7 +21,7 @@ interface BlogSearchResult {
   excerpt: string | null;
 }
 
-interface BlogSearchResponse {
+interface _BlogSearchResponse {
   results: BlogSearchResult[];
   total: number;
 }
@@ -46,6 +46,7 @@ function StarField({ count = 25 }: { count?: number }) {
       duration: Math.random() * 4 + 3,
       delay: Math.random() * 3
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only star generation avoids hydration mismatch
     setStars(generatedStars);
   }, [count]);
 
@@ -99,6 +100,7 @@ function HeaderStarField() {
       duration: Math.random() * 4 + 3,
       delay: Math.random() * 3
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only star generation avoids hydration mismatch
     setStars(generatedStars);
   }, []);
 
@@ -145,7 +147,7 @@ export default function BlogLayout({
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [_isScrolled, setIsScrolled] = useState(false);
   const [email, setEmail] = useState("");
   const [isSubscribing, setIsSubscribing] = useState(false);
   const { trackEvent } = useAnalytics({ trackPageViews: false });
@@ -159,6 +161,8 @@ export default function BlogLayout({
   const debouncedQuery = useDebounce(searchQuery, 300);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  // Memoize to avoid calling new Date() during every render
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
 
   // Fetch blog search results
   useEffect(() => {
@@ -695,7 +699,7 @@ export default function BlogLayout({
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               {/* Copyright */}
               <p className="text-sm text-indigo-200/50 text-center md:text-left">
-                © {new Date().getFullYear()} GalaxyCo.ai. All rights reserved.
+                © {currentYear} GalaxyCo.ai. All rights reserved.
               </p>
 
               {/* Social Links */}

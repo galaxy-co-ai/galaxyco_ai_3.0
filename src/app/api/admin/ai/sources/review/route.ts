@@ -52,7 +52,7 @@ interface AIReviewResult {
 
 export async function POST(request: NextRequest) {
   try {
-    const { workspaceId, workspace } = await getCurrentWorkspace();
+    const { workspaceId, workspace: _workspace } = await getCurrentWorkspace();
 
     // Rate limit: 30 reviews per minute per workspace
     const rateLimitResult = await rateLimit(

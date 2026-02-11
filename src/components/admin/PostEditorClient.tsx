@@ -475,9 +475,10 @@ export function PostEditorClient({ categories, mode, initialData }: PostEditorCl
             <CardContent>
               {featuredImage ? (
                 <div className="relative group">
-                  <img 
-                    src={featuredImage} 
-                    alt="Featured" 
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={featuredImage}
+                    alt="Featured"
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <Button

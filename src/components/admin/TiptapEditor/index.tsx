@@ -427,6 +427,7 @@ export function TiptapEditor({
     } else if (suggestionMode === 'rewrite' && originalText) {
       handleAIRewrite(originalText, 'rephrase');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleAIContinue and handleAIRewrite are defined in the component body; adding them would cause infinite re-renders
   }, [editor, suggestionMode, originalText]);
 
   // Command handlers
@@ -436,6 +437,7 @@ export function TiptapEditor({
       handleAIContinue(editor.getHTML(), selection.from);
     }
     setCommandPaletteOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleAIContinue is defined in the component body; adding it would cause infinite re-renders
   }, [editor]);
 
   const handleRephrase = useCallback(() => {
@@ -450,6 +452,7 @@ export function TiptapEditor({
       }
     }
     setCommandPaletteOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleAIRewrite is defined in the component body; adding it would cause infinite re-renders
   }, [editor]);
 
   const handleExpand = useCallback(() => {
@@ -464,6 +467,7 @@ export function TiptapEditor({
       }
     }
     setCommandPaletteOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleAIRewrite is defined in the component body; adding it would cause infinite re-renders
   }, [editor]);
 
   const handleShorten = useCallback(() => {
@@ -478,6 +482,7 @@ export function TiptapEditor({
       }
     }
     setCommandPaletteOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleAIRewrite is defined in the component body; adding it would cause infinite re-renders
   }, [editor]);
 
   const handleFindSource = useCallback(() => {

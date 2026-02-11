@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -134,7 +134,7 @@ export default function TeamCreationWizard({
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [createNewAgents, setCreateNewAgents] = useState(true);
 
-  const steps: WizardStep[] = ["template", "customize", "agents", "confirm"];
+  const steps: WizardStep[] = useMemo(() => ["template", "customize", "agents", "confirm"], []);
   const currentStepIndex = steps.indexOf(currentStep);
 
   // Navigation

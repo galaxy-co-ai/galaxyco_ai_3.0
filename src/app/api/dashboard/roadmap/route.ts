@@ -49,9 +49,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Get workspace health (optional - don't fail if this errors)
-    let workspaceHealth;
+    let _workspaceHealth;
     try {
-      workspaceHealth = await getWorkspaceHealth(finalWorkspaceId);
+      _workspaceHealth = await getWorkspaceHealth(finalWorkspaceId);
     } catch (error) {
       logger.warn('Failed to get workspace health, continuing anyway', { error, workspaceId: finalWorkspaceId });
     }

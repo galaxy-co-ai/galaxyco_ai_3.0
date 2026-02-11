@@ -31,6 +31,7 @@ export default function PhoneNumbersPage() {
     if (workspace?.id) {
       fetchPhoneNumbers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchPhoneNumbers is defined in the component body; adding it would cause infinite re-renders
   }, [workspace?.id]);
 
   const fetchPhoneNumbers = async () => {

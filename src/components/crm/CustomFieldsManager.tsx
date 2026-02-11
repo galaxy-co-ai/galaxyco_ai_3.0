@@ -127,6 +127,7 @@ export function CustomFieldsManager({ entityType }: CustomFieldsManagerProps) {
   // Fetch fields
   useEffect(() => {
     fetchFields();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchFields is defined in the component body; adding it would cause infinite re-renders
   }, [selectedEntity]);
 
   const fetchFields = async () => {
@@ -235,7 +236,7 @@ export function CustomFieldsManager({ entityType }: CustomFieldsManagerProps) {
       
       toast.success("Field deleted");
       fetchFields();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete field");
     }
   };
@@ -251,7 +252,7 @@ export function CustomFieldsManager({ entityType }: CustomFieldsManagerProps) {
       if (!response.ok) throw new Error("Failed to update field");
       
       fetchFields();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update field");
     }
   };

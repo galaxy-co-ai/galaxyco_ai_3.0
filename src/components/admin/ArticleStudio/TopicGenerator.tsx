@@ -96,14 +96,14 @@ export function TopicGenerator({ onSelectTopic: _onSelectTopic, onStartWriting }
   const [postsAnalyzed, setPostsAnalyzed] = useState(0);
 
   // Load saved topics from database
-  const loadSavedTopics = useCallback(async () => {
+  const _loadSavedTopics = useCallback(async () => {
     setIsLoadingTopics(true);
     try {
       const response = await fetch('/api/admin/topics?status=saved&limit=10');
       if (!response.ok) throw new Error('Failed to fetch topics');
       const data = await response.json();
       setSavedTopics(data.topics || []);
-    } catch (error) {
+    } catch {
       toast.error('Failed to load saved topics');
     } finally {
       setIsLoadingTopics(false);

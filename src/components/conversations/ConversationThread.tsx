@@ -187,6 +187,7 @@ export default function ConversationThread({
                 rel="noopener noreferrer"
                 className="block"
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={att.url}
                   alt={att.name}

@@ -151,7 +151,7 @@ function formatLastActive(ts?: Date | number): string {
 export default function SettingsPage() {
 const { user, isLoaded } = useUser();
   const { session: currentSession } = useSession();
-  const { sessions, isLoaded: sessionsLoaded } = useSessionList();
+  const { sessions, isLoaded: _sessionsLoaded } = useSessionList();
   const [activeSection, setActiveSection] = React.useState<SettingsSection>("profile");
   const [showApiKey, setShowApiKey] = React.useState<string | null>(null);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -162,12 +162,12 @@ const { user, isLoaded } = useUser();
   const { data: workspaceData, mutate: mutateWorkspace } = useSWR('/api/settings/workspace', fetcher);
   const { data: apiKeysData, mutate: mutateApiKeys } = useSWR('/api/settings/api-keys', fetcher);
   const { data: notificationsData, mutate: mutateNotifications } = useSWR('/api/settings/notifications', fetcher);
-  const { data: appearanceData, mutate: mutateAppearance } = useSWR('/api/settings/appearance', fetcher);
+  const { data: _appearanceData, mutate: mutateAppearance } = useSWR('/api/settings/appearance', fetcher);
   const { data: webhooksData, mutate: mutateWebhooks } = useSWR('/api/settings/webhooks', fetcher);
   const { data: billingData, isLoading: billingLoading } = useSWR('/api/settings/billing', fetcher);
   
   // Build user profile from Clerk data and API
-  const userProfile = React.useMemo(() => {
+  const _userProfile = React.useMemo(() => {
     if (!user) return null;
     const fullName = user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
     const email = user.primaryEmailAddress?.emailAddress || profileData?.email || '';

@@ -220,7 +220,7 @@ const addToHitListSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const { workspaceId, user } = await getCurrentWorkspace();
+    const { workspaceId, user: _user } = await getCurrentWorkspace();
 
     const body = await request.json();
     const validatedData = addToHitListSchema.parse(body);

@@ -208,6 +208,7 @@ export default function AgentMessagesTab({
       setMessages([]);
       setConversationId(null);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally using .id to avoid re-fetching on other property changes
   }, [selectedAgent?.id, fetchMessages]);
 
   // Scroll to bottom when messages change

@@ -76,6 +76,7 @@ export function useNeptunePresence() {
     },
     presence: {
       isTyping: other.presence?.isTyping || false,
+      // eslint-disable-next-line react-hooks/purity -- fallback timestamp for presence tracking
       lastActive: other.presence?.lastActive || Date.now(),
       currentMessage: other.presence?.currentMessage,
     },

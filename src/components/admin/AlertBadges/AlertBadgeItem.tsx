@@ -136,6 +136,7 @@ export function AlertBadgeItem({
         )}
         aria-hidden="true"
       >
+        {/* eslint-disable-next-line react-hooks/static-components -- Icon is a Lucide component reference, not a new component definition */}
         <Icon className={cn("h-4 w-4", colors.icon)} />
       </div>
 

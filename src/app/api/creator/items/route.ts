@@ -34,9 +34,9 @@ const CreateItemSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const { workspaceId, user } = await getCurrentWorkspace();
+    const { workspaceId, user: _user } = await getCurrentWorkspace();
     const { searchParams } = new URL(request.url);
-    
+
     // Filter parameters
     const type = searchParams.get('type');
     const collectionId = searchParams.get('collectionId');

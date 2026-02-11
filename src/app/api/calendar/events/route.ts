@@ -160,7 +160,7 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
-    const { workspaceId, userId, user } = await getCurrentWorkspace();
+    const { workspaceId, userId: _userId, user } = await getCurrentWorkspace();
     const body = await request.json();
 
     // Validate input

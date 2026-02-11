@@ -64,7 +64,7 @@ const features = [
   },
 ];
 
-const stats = [
+const _stats = [
   { value: "10+", label: "hours saved weekly" },
   { value: "24/7", label: "AI support" },
   { value: "98%", label: "success rate" },

@@ -720,7 +720,7 @@ export default function CRMDashboard({
     }
   };
 
-  const handleDealStageChange = async (dealId: string, newStage: string) => {
+  const _handleDealStageChange = async (dealId: string, newStage: string) => {
     try {
       // Optimistically update UI
       setDeals(prev => prev.map(deal => 
@@ -786,7 +786,7 @@ export default function CRMDashboard({
   }, [tabs]);
 
   // Quick actions for CRM
-  const quickActions = [
+  const _quickActions = [
     { 
       icon: Mail, 
       iconColor: 'bg-blue-100 text-blue-600',

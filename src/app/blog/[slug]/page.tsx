@@ -233,8 +233,9 @@ export default async function ArticlePage({ params }: PageProps) {
           {/* Featured Image */}
           {post.featuredImage && (
             <div className="mb-8 rounded-xl overflow-hidden">
-              <img 
-                src={post.featuredImage} 
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.featuredImage}
                 alt={post.title}
                 className="w-full"
               />
@@ -339,8 +340,9 @@ export default async function ArticlePage({ params }: PageProps) {
                 <Card className="h-full hover:shadow-lg transition-all hover:border-primary/20 group">
                   {related.featuredImage && (
                     <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img 
-                        src={related.featuredImage} 
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={related.featuredImage}
                         alt={related.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

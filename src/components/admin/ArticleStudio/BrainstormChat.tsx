@@ -65,6 +65,7 @@ export function BrainstormChat({ onGenerateOutline, initialTopic }: BrainstormCh
     if (initialTopic && messages.length === 0) {
       sendMessage(initialTopic);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sendMessage is defined in the component body; adding it would cause infinite re-renders
   }, [initialTopic]);
 
   // Send message to brainstorm API
@@ -151,7 +152,7 @@ export function BrainstormChat({ onGenerateOutline, initialTopic }: BrainstormCh
               if (parsed.keyInsights) {
                 setKeyInsights(parsed.keyInsights);
               }
-            } catch (e) {
+            } catch {
               // Ignore parse errors for incomplete chunks
             }
           }

@@ -558,7 +558,7 @@ export async function searchKnowledgeBaseEnhanced(
     useReranking = true,
     useCache = true,
     documentType,
-    collectionId,
+    collectionId: _collectionId,
   } = options;
   
   // Check cache first

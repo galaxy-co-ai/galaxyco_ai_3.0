@@ -38,7 +38,7 @@ interface VoiceRecorderProps {
 
 export default function VoiceRecorder({ onRecorded, onCancel }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+  const [_isPaused, _setIsPaused] = useState(false);
   const [duration, setDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);

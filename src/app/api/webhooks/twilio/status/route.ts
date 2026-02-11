@@ -90,8 +90,8 @@ export async function POST(request: Request) {
       CallDuration,
       ErrorCode,
       ErrorMessage,
-      To,
-      From,
+      To: _To,
+      From: _From,
     } = params;
 
     // Determine if this is a message or call status

@@ -19,7 +19,7 @@ const inviteMemberSchema = z.object({
   role: z.enum(['owner', 'admin', 'member', 'viewer']).default('member'),
 });
 
-const updateMemberRoleSchema = z.object({
+const _updateMemberRoleSchema = z.object({
   role: z.enum(['owner', 'admin', 'member', 'viewer']),
 });
 

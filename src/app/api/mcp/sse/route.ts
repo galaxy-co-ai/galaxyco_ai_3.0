@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     // User lookup failed, continue with basic info
   }
 
-  const authContext: MCPAuthContext = {
+  const _authContext: MCPAuthContext = {
     userId: tokenData.userId,
     workspaceId: tokenData.workspaceId,
     userEmail,

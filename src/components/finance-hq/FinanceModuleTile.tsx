@@ -243,6 +243,7 @@ interface FinanceModuleTileProps {
  * Clickable to open detail drawer.
  */
 export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
+   
   const Icon = getIconByName(module.icon);
   const sourceColors = getSourceColors(module.source);
 
@@ -280,6 +281,7 @@ export function FinanceModuleTile({ module, onClick }: FinanceModuleTileProps) {
       {/* Header: icon and title */}
       <div className="flex items-center gap-2 mb-2">
         <div className={cn("p-1.5 rounded-lg shrink-0", sourceColors.iconBg)}>
+          {/* eslint-disable-next-line react-hooks/static-components -- dynamic icon lookup */}
           <Icon className={cn("h-3.5 w-3.5", sourceColors.iconColor)} aria-hidden="true" />
         </div>
         <h3 className="text-sm font-medium text-foreground truncate">{module.title}</h3>
@@ -336,7 +338,7 @@ export function FinanceModuleTileSkeleton() {
           <Skeleton
             key={i}
             className="flex-1 rounded-t"
-            style={{ height: `${30 + Math.random() * 70}%` }}
+            style={{ height: `${30 + ((i * 37 + 13) % 70)}%` }}
           />
         ))}
       </div>

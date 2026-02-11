@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get('period') || '30';
-    const groupBy = searchParams.get('groupBy') || 'day'; // day, week, month
+    const _groupBy = searchParams.get('groupBy') || 'day'; // day, week, month
     const periodDays = parseInt(period, 10);
     
     const now = new Date();

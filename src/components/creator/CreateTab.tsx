@@ -41,7 +41,7 @@ export default function CreateTab({ onCreationComplete }: CreateTabProps) {
   const [currentStep, setCurrentStep] = useState<CreateStep>(1);
   const [selectedDocType, setSelectedDocType] = useState<DocumentTypeConfig | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [savedDocument, setSavedDocument] = useState<GeneratedDocument | null>(null);
+  const [_savedDocument, setSavedDocument] = useState<GeneratedDocument | null>(null);
 
   // Handle type selection (Step 1 → Step 2)
   const handleTypeSelect = useCallback((docType: DocumentTypeConfig) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import useSWR from "swr";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -132,7 +132,7 @@ export default function AgentWorkflowsTab({
   const workflows: WorkflowType[] = (workflowsData?.workflows || []).map(
     transformApiWorkflow
   );
-  const agents = agentsData?.agents || [];
+  const agents = useMemo(() => agentsData?.agents || [], [agentsData?.agents]);
 
   // Filter workflows
   const filteredWorkflows = workflows.filter((workflow) => {

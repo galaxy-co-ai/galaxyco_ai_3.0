@@ -87,13 +87,13 @@ export default function ConversationsDashboard({
   initialConversations,
   stats,
 }: ConversationsDashboardProps) {
-  const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
+  const [conversations, _setConversations] = useState<Conversation[]>(initialConversations);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [activeChannel, setActiveChannel] = useState<ChannelType>('team');
   const [activeDepartment, setActiveDepartment] = useState<DepartmentType>('all');
   const [searchQuery, setSearchQuery] = useState("");
   const [showNeptune, setShowNeptune] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, _setStatusFilter] = useState<string>("all");
 
 
   // Filter conversations based on channel, department, and search

@@ -56,7 +56,7 @@ export default function BoardsTab({ workspaceId }: BoardsTabProps) {
     updateBoard,
     deleteBoard,
     addItem,
-    updateItem,
+    updateItem: _updateItem,
     deleteItem,
     searchBoards,
     exportBoard,
@@ -78,7 +78,7 @@ export default function BoardsTab({ workspaceId }: BoardsTabProps) {
   const [newItemType, setNewItemType] = useState<BoardItemType>('note');
   const [newItemContent, setNewItemContent] = useState('');
   const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemTags, setNewItemTags] = useState('');
+  const [_newItemTags, setNewItemTags] = useState('');
 
   const selectedBoard = useMemo(
     () => boards.find(b => b.id === selectedBoardId),
@@ -547,12 +547,14 @@ function BoardItemCard({ item, onDelete }: BoardItemCardProps) {
     }
   };
 
+   
   const Icon = getIcon();
 
   return (
     <Card className="p-4 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
+          {/* eslint-disable-next-line react-hooks/static-components -- dynamic icon lookup */}
           <Icon className="h-4 w-4 text-muted-foreground" />
           {item.metadata?.title && (
             <h4 className="font-semibold text-sm">{item.metadata.title}</h4>
@@ -583,6 +585,7 @@ function BoardItemCard({ item, onDelete }: BoardItemCardProps) {
           {item.content}
         </a>
       ) : (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={item.content}
           alt={item.metadata?.description || 'Board image'}

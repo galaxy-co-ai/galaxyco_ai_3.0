@@ -131,7 +131,7 @@ export default function MyAgentsDashboard({
 }: MyAgentsDashboardProps) {
   const [activeTab, setActiveTab] = useState<AgentTabType>("activity");
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [isLive, setIsLive] = useState(true);
+  const [isLive, _setIsLive] = useState(true);
   const [isUpdatingAgent, setIsUpdatingAgent] = useState<string | null>(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [configAgent, setConfigAgent] = useState<Agent | null>(null);
@@ -267,6 +267,7 @@ export default function MyAgentsDashboard({
         setSelectedAgent(updatedAgent);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- using selectedAgent?.id intentionally; adding full selectedAgent object would cause infinite re-renders
   }, [agents, selectedAgent?.id]);
 
   return (

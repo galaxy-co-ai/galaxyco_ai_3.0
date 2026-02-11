@@ -148,6 +148,7 @@ export function SearchResults({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSelect is defined in the component body; adding it would cause infinite re-renders
   }, [flatResults, selectedIndex, onClose]);
 
   // Scroll selected item into view

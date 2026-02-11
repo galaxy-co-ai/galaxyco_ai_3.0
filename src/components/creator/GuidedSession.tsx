@@ -222,6 +222,7 @@ export default function GuidedSession({
         setIsLoading(false);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- docType.requirements is intentionally excluded; changes to requirements mid-session would disrupt the guided flow
     [
       input,
       isLoading,

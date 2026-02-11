@@ -1386,7 +1386,7 @@ Provide analysis in JSON format:
 
   async analyze_company_website(args, context) {
     // Helper function to infer company info from URL when crawling fails
-    const inferCompanyFromUrl = (websiteUrl: string) => {
+    const _inferCompanyFromUrl = (websiteUrl: string) => {
       let domain = '';
       try {
         domain = new URL(websiteUrl).hostname.replace('www.', '').replace('.com', '').replace('.ai', '').replace('.io', '');

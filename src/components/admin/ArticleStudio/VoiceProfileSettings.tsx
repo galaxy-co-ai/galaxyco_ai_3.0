@@ -191,7 +191,7 @@ export function VoiceProfileSettings({ onProfileUpdated }: VoiceProfileSettingsP
         setProfile(data.profile);
         setProfileExists(false);
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load voice profile');
     } finally {
       setIsLoading(false);

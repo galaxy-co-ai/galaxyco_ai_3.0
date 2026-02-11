@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Zap } from "lucide-react";
 
-interface OnboardingStep {
+interface _OnboardingStep {
   id: number;
   title: string;
   subtitle: string;

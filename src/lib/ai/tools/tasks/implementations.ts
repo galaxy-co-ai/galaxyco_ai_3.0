@@ -217,7 +217,7 @@ export const tasksToolImplementations: ToolImplementations = {
       const autoTag = (args.autoTag as boolean) ?? true;
 
       // Import knowledge base schema
-      const { knowledgeItems, knowledgeCollections } = await import('@/db/schema');
+      const { knowledgeItems, knowledgeCollections: _knowledgeCollections } = await import('@/db/schema');
 
       // Get knowledge items
       const whereConditions = [eq(knowledgeItems.workspaceId, context.workspaceId)];

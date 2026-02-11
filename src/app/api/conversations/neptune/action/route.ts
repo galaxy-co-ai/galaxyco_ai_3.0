@@ -341,7 +341,7 @@ async function handleScheduleFollowup(
     const endTime = new Date(tomorrow);
     endTime.setMinutes(endTime.getMinutes() + 30);
 
-    const [event] = await db
+    const [_event] = await db
       .insert(calendarEvents)
       .values({
         workspaceId,
@@ -388,7 +388,7 @@ async function handleCreateTask(
         createdBy: userId,
       })
       .returning();
-    const task = Array.isArray(taskResult) ? taskResult[0] : taskResult;
+    const _task = Array.isArray(taskResult) ? taskResult[0] : taskResult;
 
     return `**Task Created** ✅\n\n📋 **Title:** Follow up on ${conversation.channel} conversation\n📅 **Due:** ${tomorrow.toLocaleDateString()}\n🎯 **Priority:** Medium\n📌 **Status:** To Do\n\n_Task added to your CRM._`;
   } catch (error) {

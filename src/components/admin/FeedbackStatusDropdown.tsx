@@ -119,7 +119,7 @@ export default function FeedbackStatusDropdown({
       onStatusChange?.(newStatus);
       
       toast.success(`Status updated to ${statusConfig[newStatus].label}`);
-    } catch (error) {
+    } catch {
       // Revert on error
       setStatus(previousStatus);
       toast.error('Failed to update status. Please try again.');

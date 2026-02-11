@@ -292,7 +292,7 @@ function PipelineCard({
         }
       );
       if (!response.ok) throw new Error("Failed to reorder stages");
-    } catch (error) {
+    } catch {
       toast.error("Failed to save stage order");
       setStages(pipeline.stages); // Revert
     }
@@ -364,7 +364,7 @@ function PipelineCard({
       if (!response.ok) throw new Error("Failed to delete stage");
       toast.success("Stage deleted");
       onRefresh();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete stage");
     }
   };
@@ -649,7 +649,7 @@ export function PipelineSettings() {
       if (!response.ok) throw new Error("Failed to fetch pipelines");
       const data = await response.json();
       setPipelines(data.pipelines || []);
-    } catch (error) {
+    } catch {
       toast.error("Failed to load pipelines");
     } finally {
       setLoading(false);
@@ -696,7 +696,7 @@ export function PipelineSettings() {
 
       if (!response.ok) throw new Error("Failed to update pipeline");
       fetchPipelines();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update pipeline");
     }
   };
@@ -710,7 +710,7 @@ export function PipelineSettings() {
       if (!response.ok) throw new Error("Failed to delete pipeline");
       toast.success("Pipeline deleted");
       fetchPipelines();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete pipeline");
     }
   };

@@ -175,7 +175,7 @@ export const scheduledOverdueTasksCheck = schedules.task({
     logger.info('[Proactive Events] Starting scheduled overdue tasks check');
 
     try {
-      const { workspaces } = await import('@/db/schema');
+      const { workspaces: _workspaces } = await import('@/db/schema');
       const allWorkspaces = await db.query.workspaces.findMany({
         columns: { id: true },
       });
@@ -221,7 +221,7 @@ export const scheduledCampaignPerformanceCheck = schedules.task({
     logger.info('[Proactive Events] Starting scheduled campaign performance check');
 
     try {
-      const { workspaces } = await import('@/db/schema');
+      const { workspaces: _workspaces2 } = await import('@/db/schema');
       const allWorkspaces = await db.query.workspaces.findMany({
         columns: { id: true },
       });
@@ -267,7 +267,7 @@ export const scheduledUpcomingMeetingsCheck = schedules.task({
     logger.info('[Proactive Events] Starting scheduled upcoming meetings check');
 
     try {
-      const { workspaces } = await import('@/db/schema');
+      const { workspaces: _workspaces3 } = await import('@/db/schema');
       const allWorkspaces = await db.query.workspaces.findMany({
         columns: { id: true },
       });

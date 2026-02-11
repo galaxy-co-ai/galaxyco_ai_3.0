@@ -140,7 +140,7 @@ export async function PUT(request: Request, context: RouteContext) {
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
     // Update pipeline
-    const [updated] = await db
+    const [_updated] = await db
       .update(dealPipelines)
       .set(updateData)
       .where(and(

@@ -111,6 +111,7 @@ export function InsightsDashboard({
 
   useEffect(() => {
     fetchInsights();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally run once on mount; fetchInsights depends on state that would cause loops
   }, []);
 
   async function fetchInsights() {

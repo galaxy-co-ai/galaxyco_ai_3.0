@@ -164,7 +164,7 @@ export default function KnowledgeQA({
               if (parsed.error) {
                 throw new Error(parsed.error);
               }
-            } catch (e) {
+            } catch {
               // Skip invalid JSON
             }
           }

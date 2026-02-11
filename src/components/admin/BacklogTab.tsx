@@ -65,7 +65,7 @@ export function BacklogTab() {
   const [newItemNeedsReview, setNewItemNeedsReview] = useState(false);
   const [newItemScreenshots, setNewItemScreenshots] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<BacklogItem | null>(null);
+  const [_selectedItem, setSelectedItem] = useState<BacklogItem | null>(null);
   const [filterPage, setFilterPage] = useState<string>("all");
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [showNeedsReviewOnly, setShowNeedsReviewOnly] = useState(false);
@@ -77,6 +77,7 @@ export function BacklogTab() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- restore persisted backlog items from localStorage
         setItems(parsed);
       } catch (error) {
         console.error("Failed to parse backlog items", error);
@@ -267,6 +268,7 @@ export function BacklogTab() {
             <div className="flex flex-wrap gap-2">
               {newItemScreenshots.map((screenshot, index) => (
                 <div key={index} className="relative group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={screenshot}
                     alt={`Screenshot ${index + 1}`}
@@ -456,6 +458,7 @@ export function BacklogTab() {
                             </DialogHeader>
                             <div className="grid gap-4">
                               {item.screenshots.map((screenshot, index) => (
+                                // eslint-disable-next-line @next/next/no-img-element
                                 <img
                                   key={index}
                                   src={screenshot}

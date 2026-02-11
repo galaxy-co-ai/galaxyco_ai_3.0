@@ -27,7 +27,7 @@ const askSchema = z.object({
 export async function POST(request: Request) {
   try {
     const { workspaceId, userId } = await getCurrentWorkspace();
-    const user = await getCurrentUser();
+    const _user = await getCurrentUser();
 
     // Rate limit - 30 questions per minute
     const rateLimitResult = await rateLimit(`knowledge:ask:${userId}`, 30, 60);
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
     }
     // Fallback: keyword search in database
     else {
-      const searchPattern = `%${question.split(' ').slice(0, 5).join('%')}%`;
+      const _searchPattern = `%${question.split(' ').slice(0, 5).join('%')}%`;
       const items = await db.query.knowledgeItems.findMany({
         where: and(
           eq(knowledgeItems.workspaceId, workspaceId),

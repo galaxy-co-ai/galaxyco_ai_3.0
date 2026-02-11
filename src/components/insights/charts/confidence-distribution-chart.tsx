@@ -34,13 +34,15 @@ export function ConfidenceDistributionChart({
   const total = chartData.reduce((sum, item) => sum + item.count, 0);
 
   if (loading) {
+    // Static heights for skeleton placeholders to avoid impure Math.random() during render
+    const skeletonHeights = [120, 90, 145, 110];
     return (
       <div className="h-[250px] flex items-end gap-4 justify-center px-8 pb-8">
-        {[...Array(4)].map((_, i) => (
+        {skeletonHeights.map((height, i) => (
           <div key={i} className="flex flex-col items-center gap-2 flex-1">
             <div
               className="w-full bg-muted rounded-t animate-pulse"
-              style={{ height: `${60 + Math.random() * 100}px` }}
+              style={{ height: `${height}px` }}
             />
             <div className="h-3 w-12 bg-muted rounded animate-pulse" />
           </div>

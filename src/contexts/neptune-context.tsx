@@ -193,7 +193,7 @@ export function NeptuneProvider({ children }: { children: ReactNode }) {
   const [currentPage, setCurrentPage] = useState<string>('dashboard');
   const [currentToolStatus, setCurrentToolStatus] = useState<string | null>(null);
   const [pageContext, setPageContextState] = useState<PageContextData>(DEFAULT_PAGE_CONTEXT);
-  const [suggestedActions, setSuggestedActions] = useState<SuggestedAction[]>([]);
+  const [suggestedActions, _setSuggestedActions] = useState<SuggestedAction[]>([]);
   const initRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   

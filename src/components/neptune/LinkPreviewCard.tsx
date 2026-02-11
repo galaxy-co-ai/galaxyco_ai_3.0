@@ -38,7 +38,7 @@ export function LinkPreviewCard({ url, className }: LinkPreviewCardProps) {
         } else {
           throw new Error("No preview data");
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError(true);
         }
@@ -119,6 +119,7 @@ export function LinkPreviewCard({ url, className }: LinkPreviewCardProps) {
       <div className="flex gap-3 p-3">
         {/* Thumbnail */}
         {preview.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={preview.image}
             alt={preview.title || "Preview"}
@@ -131,6 +132,7 @@ export function LinkPreviewCard({ url, className }: LinkPreviewCardProps) {
         ) : (
           <div className="h-20 w-20 shrink-0 rounded bg-muted flex items-center justify-center">
             {preview.favicon ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={preview.favicon}
                 alt=""
@@ -159,6 +161,7 @@ export function LinkPreviewCard({ url, className }: LinkPreviewCardProps) {
           )}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             {preview.favicon && (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={preview.favicon}
                 alt=""

@@ -193,7 +193,8 @@ export function usePageContext(options: UsePageContextOptions): UsePageContextRe
         clearTimeout(updateTimeoutRef.current);
       }
     };
-  }, [module, pageType, pageName]); // Only re-run if core identity changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only re-run when core identity changes; other deps (path, activeTab, viewMode, customData, setPageContext) are handled separately
+  }, [module, pageType, pageName]);
 
   // Update activeTab when it changes
   useEffect(() => {

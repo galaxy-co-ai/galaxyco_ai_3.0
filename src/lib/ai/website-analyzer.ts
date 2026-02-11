@@ -271,7 +271,7 @@ export async function analyzeWebsiteQuick(
 
     // Check cache first (unless skipCache is true)
     if (!options?.skipCache) {
-      const { getCache, ContextCacheKeys, CONTEXT_CACHE_TTL } = await import('@/lib/cache');
+      const { getCache, ContextCacheKeys, CONTEXT_CACHE_TTL: _CONTEXT_CACHE_TTL } = await import('@/lib/cache');
       const cacheKey = ContextCacheKeys.websiteAnalysis(normalizedUrl);
       const cached = await getCache<QuickWebsiteInsights>(cacheKey);
       

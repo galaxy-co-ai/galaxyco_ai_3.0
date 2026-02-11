@@ -123,7 +123,7 @@ const AGENT_TYPES = [
   },
 ] as const;
 
-type AgentTypeId = (typeof AGENT_TYPES)[number]["id"];
+type _AgentTypeId = (typeof AGENT_TYPES)[number]["id"];
 
 interface AIModel {
   id: string;

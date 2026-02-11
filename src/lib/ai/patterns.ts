@@ -653,7 +653,7 @@ export function isOptimalTime(
   const dayIsOptimal = timing.optimalDays.includes(day);
   
   const hourSuccessRate = timing.successRateByHour[hour] || 50;
-  const avgSuccessRate = Object.values(timing.successRateByHour).length > 0
+  const _avgSuccessRate = Object.values(timing.successRateByHour).length > 0
     ? Object.values(timing.successRateByHour).reduce((a, b) => a + b, 0) / Object.values(timing.successRateByHour).length
     : 50;
   

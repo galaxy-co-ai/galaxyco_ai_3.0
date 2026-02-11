@@ -37,7 +37,7 @@ interface HitListFiltersProps {
   };
 }
 
-const statusOptions: { value: TopicIdeaStatus; label: string }[] = [
+const _statusOptions: { value: TopicIdeaStatus; label: string }[] = [
   { value: "saved", label: "Queued" },
   { value: "in_progress", label: "In Progress" },
   { value: "published", label: "Published" },

@@ -822,6 +822,7 @@ export function PrePublishChecklist({
                       <p className="text-xs text-gray-500 mb-2">Social Share Preview</p>
                       <div className="border rounded-lg overflow-hidden">
                         {article.featuredImage ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={article.featuredImage}
                             alt="Featured"

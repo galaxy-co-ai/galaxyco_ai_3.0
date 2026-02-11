@@ -33,6 +33,7 @@ function CardStarField() {
       duration: Math.random() * 4 + 3,
       delay: Math.random() * 3
     }));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client-only star generation avoids hydration mismatch
     setStars(generatedStars);
   }, []);
 

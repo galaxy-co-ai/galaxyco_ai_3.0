@@ -203,7 +203,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
+    const { workspaceId: _workspaceId } = await getCurrentWorkspace();
     const { id } = await params;
 
     // Validate article ID

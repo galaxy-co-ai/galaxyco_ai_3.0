@@ -130,7 +130,7 @@ export function HitListPage() {
         status === "archived" ? "Item archived" : "Status updated"
       );
       mutateHitList();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update item");
     } finally {
       setIsUpdating(null);
@@ -153,7 +153,7 @@ export function HitListPage() {
 
       toast.success("Item removed from hit list");
       mutateHitList();
-    } catch (error) {
+    } catch {
       toast.error("Failed to remove item");
     } finally {
       setIsUpdating(null);
@@ -229,7 +229,7 @@ export function HitListPage() {
 
       mutateHitList();
       toast.success("List reordered");
-    } catch (error) {
+    } catch {
       toast.error("Failed to reorder list");
     }
 

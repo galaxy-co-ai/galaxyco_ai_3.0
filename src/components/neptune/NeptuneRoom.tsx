@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from 'react';
+import { ReactNode, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { RoomProvider } from '@/lib/liveblocks';
 import { getNeptuneRoomId } from '@/lib/liveblocks';
@@ -17,6 +17,8 @@ interface NeptuneRoomProps {
  */
 export function NeptuneRoom({ conversationId, children }: NeptuneRoomProps) {
   const { user, isLoaded } = useUser();
+  // eslint-disable-next-line react-hooks/purity -- Date.now() as initial presence timestamp is intentionally impure
+  const initialLastActiveRef = useRef(Date.now());
 
   // Render children immediately if no conversation ID (dashboard with null conversationId)
   // This prevents blocking the entire page while Clerk/Liveblocks loads
@@ -49,7 +51,7 @@ export function NeptuneRoom({ conversationId, children }: NeptuneRoomProps) {
       id={roomId}
       initialPresence={{
         isTyping: false,
-        lastActive: Date.now(),
+        lastActive: initialLastActiveRef.current,
       }}
       initialStorage={{
         content: '',

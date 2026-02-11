@@ -16,7 +16,7 @@ export async function GET() {
     const { workspaceId } = await getCurrentWorkspace();
 
     // Get daily average ratings for the last 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const _thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
     const qualityTrends = [];
     

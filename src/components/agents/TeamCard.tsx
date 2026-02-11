@@ -167,7 +167,7 @@ export default function TeamCard({
         team.status === "archived" && "opacity-60"
       )}
       onClick={onClick}
-      role="button"
+      role="option"
       aria-label={`Team ${team.name}`}
       aria-selected={isSelected}
       tabIndex={0}

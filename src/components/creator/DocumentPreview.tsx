@@ -112,6 +112,7 @@ export default function DocumentPreview({
   // Generate document on mount using real AI
   useEffect(() => {
     generateDocument();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally run once on mount; generateDocument depends on state that would cause loops
   }, []);
 
   const generateDocument = async () => {

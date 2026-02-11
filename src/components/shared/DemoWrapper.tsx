@@ -15,7 +15,7 @@ interface DemoWrapperProps {
  */
 export function DemoWrapper({ children, scale = 0.6, height = 600, needsSidebar = true }: DemoWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(1200);
+  const [_containerWidth, setContainerWidth] = useState(1200);
 
   useEffect(() => {
     if (!containerRef.current) return;

@@ -113,7 +113,7 @@ const statusConfig: Record<TopicIdeaStatus, { label: string; className: string }
   },
 };
 
-function getScoreColor(score: number | null): string {
+function _getScoreColor(score: number | null): string {
   if (score === null) return "text-gray-400";
   if (score >= 80) return "text-emerald-600";
   if (score >= 60) return "text-blue-600";

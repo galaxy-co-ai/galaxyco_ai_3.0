@@ -19,7 +19,7 @@ const createPathSchema = z.object({
   skillLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('beginner'),
 });
 
-const learningStepSchema = z.object({
+const _learningStepSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string(),

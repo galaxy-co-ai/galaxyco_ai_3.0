@@ -134,7 +134,7 @@ export default function WorkflowCard({
         "focus-within:ring-2 focus-within:ring-violet-500"
       )}
       onClick={onSelect}
-      role="button"
+      role="option"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onSelect?.()}
       aria-label={`Workflow: ${workflow.name}`}

@@ -32,7 +32,7 @@ async function gatherWorkspaceMetrics(workspaceId: string) {
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const weekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const _monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   // Get lead metrics
   const allLeads = await db.query.prospects.findMany({
@@ -315,7 +315,7 @@ export const scheduledInsightsPrecompute = schedules.task({
       // Use date-based idempotency keys to prevent duplicate daily runs
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       
-      const batchHandle = await precomputeWorkspaceInsightsTask.batchTrigger(
+      const _batchHandle = await precomputeWorkspaceInsightsTask.batchTrigger(
         allWorkspaces.map((workspace) => ({
           payload: { workspaceId: workspace.id },
           options: {

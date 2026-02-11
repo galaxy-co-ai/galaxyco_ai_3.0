@@ -112,7 +112,7 @@ export default function TemplatesTab() {
     fetcher
   );
 
-  const templates = data?.templates || [];
+  const templates = useMemo(() => data?.templates || [], [data?.templates]);
 
   // Count templates per category
   const categoryCounts = useMemo(() => {

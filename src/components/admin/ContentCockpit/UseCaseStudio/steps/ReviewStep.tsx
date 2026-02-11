@@ -104,7 +104,7 @@ export function ReviewStep({ useCaseId, mode: _mode, onSaveDraft }: ReviewStepPr
 
       toast.success("Use case published!");
       router.push("/admin/content/use-cases");
-    } catch (error) {
+    } catch {
       toast.error("Failed to publish use case");
     } finally {
       setIsPublishing(false);

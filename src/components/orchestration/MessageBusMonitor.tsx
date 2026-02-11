@@ -36,6 +36,16 @@ interface MessageBusMonitorProps {
   workspaceId?: string;
 }
 
+// Channels to subscribe to (static, defined outside component to avoid re-creation)
+const channelPrefixes = [
+  'workspace',
+  'notifications',
+  'activity',
+  'agents',
+  'workflows',
+  'crm',
+];
+
 export function MessageBusMonitor({ workspaceId }: MessageBusMonitorProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -46,16 +56,6 @@ export function MessageBusMonitor({ workspaceId }: MessageBusMonitorProps) {
   const pusherRef = useRef<Pusher | null>(null);
   const channelsRef = useRef<Map<string, ReturnType<Pusher['subscribe']>>>(new Map());
   const eventIdRef = useRef(0);
-
-  // Channels to subscribe to
-  const channelPrefixes = [
-    'workspace',
-    'notifications',
-    'activity',
-    'agents',
-    'workflows',
-    'crm',
-  ];
 
   const addEvent = useCallback((channel: string, event: string, data: unknown) => {
     if (isPaused) return;
@@ -141,8 +141,9 @@ export function MessageBusMonitor({ workspaceId }: MessageBusMonitorProps) {
     return true;
   });
 
-  // Stats - use useMemo to avoid calling Date.now() during render
+  // Stats
   const stats = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity -- Date.now() needed for rate calculation
     const now = Date.now();
     return {
       total: events.length,

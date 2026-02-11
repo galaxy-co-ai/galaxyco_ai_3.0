@@ -70,6 +70,7 @@ interface FinanceKPITileProps {
  * Individual KPI card with label badge in top-right, icon + value inline.
  */
 export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
+   
   const Icon = getIconByName(kpi.icon);
   const isPositive = kpi.delta !== undefined && kpi.delta >= 0;
   const badgeClasses = getBadgeClasses(kpi.iconBg);
@@ -94,6 +95,7 @@ export function FinanceKPITile({ kpi }: FinanceKPITileProps) {
       {/* Icon + Value centered */}
       <div className="flex items-center justify-center gap-2.5">
         <div className={cn("p-1.5 rounded-lg shrink-0", kpi.iconBg)}>
+          {/* eslint-disable-next-line react-hooks/static-components -- dynamic icon lookup */}
           <Icon className={cn("h-4 w-4", kpi.iconColor)} aria-hidden="true" />
         </div>
         <div className="text-xl font-semibold text-foreground leading-tight">

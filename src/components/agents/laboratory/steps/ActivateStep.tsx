@@ -104,7 +104,7 @@ export default function ActivateStep({
         setTestStatus("error");
         setTestResult(data.error || "Test failed. Please check the configuration.");
       }
-    } catch (error) {
+    } catch {
       setTestStatus("error");
       setTestResult("Failed to connect to test service. Please try again.");
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -120,7 +120,7 @@ export default function TeamChat() {
   );
 
   const channels = channelsData?.channels || [];
-  const messages = messagesData?.messages || [];
+  const messages = useMemo(() => messagesData?.messages || [], [messagesData?.messages]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -144,7 +144,7 @@ export default function TeamChat() {
         });
         // Refresh channels to update unread counts
         await mutateChannels();
-      } catch (error) {
+      } catch {
         // Silent fail - not critical
       }
     }, 1000); // 1 second delay
@@ -179,7 +179,7 @@ export default function TeamChat() {
       setPendingAttachments([]);
       await mutateMessages();
       await mutateChannels();
-    } catch (error) {
+    } catch {
       toast.error("Failed to send message");
     } finally {
       setIsSending(false);
@@ -247,7 +247,7 @@ export default function TeamChat() {
           const data = await res.json();
           setPendingAttachments(prev => [...prev, data.attachment]);
           toast.success("Image pasted");
-        } catch (error) {
+        } catch {
           toast.error("Failed to upload pasted image");
         } finally {
           setIsUploading(false);
@@ -261,7 +261,7 @@ export default function TeamChat() {
   };
 
   // Auto-detect links in message
-  const detectLinks = (text: string): string[] => {
+  const _detectLinks = (text: string): string[] => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.match(urlRegex) || [];
   };
@@ -291,7 +291,7 @@ export default function TeamChat() {
       await mutateChannels();
       setSelectedChannel(data.channel.id);
       toast.success(`#${newChannelName} created!`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to create channel");
     }
   };
@@ -638,6 +638,7 @@ export default function TeamChat() {
                                       rel="noopener noreferrer"
                                       className="block"
                                     >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
                                         src={att.url}
                                         alt={att.name || "Shared image"}
@@ -711,6 +712,7 @@ export default function TeamChat() {
                       >
                         {att.type === "image" ? (
                           <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={att.url}
                               alt={att.name || "Image"}

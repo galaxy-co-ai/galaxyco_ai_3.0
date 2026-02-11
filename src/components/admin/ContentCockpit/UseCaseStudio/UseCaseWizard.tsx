@@ -107,7 +107,7 @@ export function UseCaseWizard({ initialData, mode }: UseCaseWizardProps) {
     mode: "onChange",
   });
 
-  const { handleSubmit, formState: { errors, isDirty }, watch } = methods;
+  const { handleSubmit: _handleSubmit, formState: { errors: _errors, isDirty }, watch } = methods;
 
   // Watch form values for auto-save
   const formValues = watch();
@@ -125,6 +125,7 @@ export function UseCaseWizard({ initialData, mode }: UseCaseWizardProps) {
       }, 2000);
       return () => clearTimeout(timer);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- saveDraft is defined in the component body; adding it would cause infinite re-renders
   }, [formValues, mode, initialData, isDirty]);
 
   // Save as draft

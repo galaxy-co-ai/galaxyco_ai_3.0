@@ -11,7 +11,7 @@ export const orchestrationToolImplementations: ToolImplementations = {
   // Team Management: Create Agent Team
   async create_agent_team(args, context): Promise<ToolResult> {
     try {
-      const { AgentOrchestrator } = await import('@/lib/orchestration');
+      const { AgentOrchestrator: _AgentOrchestrator } = await import('@/lib/orchestration');
       const { getTeamTemplate } = await import('@/lib/orchestration/team-templates');
 
       const name = args.name as string;
@@ -234,7 +234,7 @@ export const orchestrationToolImplementations: ToolImplementations = {
       const teamId = args.teamId as string | undefined;
       const teamName = args.teamName as string | undefined;
       const objective = args.objective as string;
-      const priority = (args.priority as string) || 'normal';
+      const _priority = (args.priority as string) || 'normal';
 
       if (!objective) {
         return {
@@ -382,7 +382,7 @@ export const orchestrationToolImplementations: ToolImplementations = {
       }
 
       // Get recent activity
-      let recentActivity: { type: string; count: number }[] = [];
+      let _recentActivity: { type: string; count: number }[] = [];
       if (includeRecentActivity) {
         const recentMessages = await db.query.agentMessages.findMany({
           where: and(
@@ -391,7 +391,7 @@ export const orchestrationToolImplementations: ToolImplementations = {
           ),
           limit: 10,
         });
-        recentActivity = [{ type: 'messages_24h', count: recentMessages.length }];
+        _recentActivity = [{ type: 'messages_24h', count: recentMessages.length }];
       }
 
       const config = team.config as { autonomyLevel?: string } | null;
@@ -915,7 +915,7 @@ export const orchestrationToolImplementations: ToolImplementations = {
       const agentIds = args.agentIds as string[] | undefined;
       const teamId = args.teamId as string | undefined;
       const executionMode = (args.executionMode as string) || 'sequential';
-      const sharedContext = args.context as Record<string, unknown> | undefined;
+      const _sharedContext = args.context as Record<string, unknown> | undefined;
 
       if (!objective) {
         return {
@@ -962,7 +962,7 @@ export const orchestrationToolImplementations: ToolImplementations = {
       const agentNames = agentsList.map((a) => a.name);
 
       // Use TeamExecutor for coordination (even without a formal team)
-      const executor = new TeamExecutor(context.workspaceId);
+      const _executor = new TeamExecutor(context.workspaceId);
 
       logger.info('[Neptune] Coordinating agents', {
         objective,

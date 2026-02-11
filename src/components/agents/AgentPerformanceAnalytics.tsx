@@ -69,7 +69,7 @@ interface ExecutionTrend {
 // MINI SPARKLINE CHART
 // ============================================================================
 
-function MiniSparkline({ data, color }: { data: number[]; color: string }) {
+function _MiniSparkline({ data, color }: { data: number[]; color: string }) {
   const max = Math.max(...data, 1);
   const min = Math.min(...data, 0);
   const range = max - min || 1;
@@ -339,6 +339,7 @@ export function AgentPerformanceAnalytics({ className }: AgentPerformanceAnalyti
 
   useEffect(() => {
     fetchMetrics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchMetrics is defined in the component body; adding it would cause infinite re-renders
   }, [timeRange]);
 
   if (loading) {

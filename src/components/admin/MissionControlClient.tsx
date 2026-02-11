@@ -32,7 +32,7 @@ interface AgentTemplate {
 export function MissionControlClient() {
   const [agents, setAgents] = useState<AgentTemplate[]>([]);
   const [isImporting, setIsImporting] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<AgentTemplate | null>(null);
+  const [_selectedAgent, setSelectedAgent] = useState<AgentTemplate | null>(null);
 
   // Handle importing workflow JSON from local n8n
   const handleImportWorkflow = async (file: File) => {
