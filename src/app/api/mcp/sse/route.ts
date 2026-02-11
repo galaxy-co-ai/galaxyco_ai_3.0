@@ -1,12 +1,12 @@
 /**
  * Neptune MCP Server - Unified Endpoint
- * 
+ *
  * Single endpoint for ChatGPT MCP integration supporting both:
  * - JSON-RPC 2.0 over POST (primary method for ChatGPT)
  * - Server-Sent Events over GET (for real-time updates)
- * 
+ *
  * ChatGPT Connection URL: https://app.galaxyco.ai/api/mcp/sse
- * 
+ *
  * Protocol: Model Context Protocol (MCP) 2024-11-05
  * Reference: https://modelcontextprotocol.io/
  */
@@ -29,6 +29,7 @@ import { db } from '@/lib/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { ensureMcpEnabled, getCorsHeaders } from '@/lib/mcp/cors';
 
 // Validation schema for JSON-RPC request
 const JsonRpcRequestSchema = z.object({
@@ -37,25 +38,6 @@ const JsonRpcRequestSchema = z.object({
   params: z.record(z.unknown()).optional(),
   id: z.union([z.string(), z.number()]).optional(),
 });
-
-// ============================================================================
-// CORS CONFIGURATION FOR CHATGPT
-// ============================================================================
-
-const CHATGPT_ORIGINS = [
-  'https://chatgpt.com',
-  'https://chat.openai.com',
-  'https://www.chatgpt.com',
-  'https://www.chat.openai.com',
-];
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*', // ChatGPT requires wildcard for initial handshake
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, MCP-Protocol-Version',
-  'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Max-Age': '86400',
-};
 
 // ============================================================================
 // MCP SERVER INFO
@@ -78,15 +60,21 @@ const CAPABILITIES = {
 // ============================================================================
 
 export async function GET(request: NextRequest) {
+  const disabled = ensureMcpEnabled();
+  if (disabled) {
+    return disabled;
+  }
+
+  const corsHeaders = getCorsHeaders(request.headers.get('origin'), 'GET, OPTIONS');
+
   // Extract access token from Authorization header or query param
   const authHeader = request.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '') || 
-                request.nextUrl.searchParams.get('token');
+  const token = authHeader?.replace('Bearer ', '') || request.nextUrl.searchParams.get('token');
 
   if (!token) {
     return new Response(
       JSON.stringify({ error: 'unauthorized', message: 'Access token required' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
+      { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
 
@@ -95,7 +83,7 @@ export async function GET(request: NextRequest) {
   if (!tokenData) {
     return new Response(
       JSON.stringify({ error: 'unauthorized', message: 'Invalid or expired access token' }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
+      { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
     );
   }
 
@@ -107,9 +95,10 @@ export async function GET(request: NextRequest) {
       where: eq(users.id, tokenData.userId),
     });
     userEmail = user?.email || '';
-    userName = user?.firstName && user?.lastName 
-      ? `${user.firstName} ${user.lastName}`.trim() 
-      : user?.firstName || '';
+    userName =
+      user?.firstName && user?.lastName
+        ? `${user.firstName} ${user.lastName}`.trim()
+        : user?.firstName || '';
   } catch {
     // User lookup failed, continue with basic info
   }
@@ -162,8 +151,9 @@ export async function GET(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'X-Accel-Buffering': 'no', // Disable nginx buffering
+      ...corsHeaders,
     },
   });
 }
@@ -173,6 +163,13 @@ export async function GET(request: NextRequest) {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  const disabled = ensureMcpEnabled();
+  if (disabled) {
+    return disabled;
+  }
+
+  const corsHeaders = getCorsHeaders(request.headers.get('origin'));
+
   try {
     // Extract access token
     const authHeader = request.headers.get('authorization');
@@ -181,12 +178,12 @@ export async function POST(request: NextRequest) {
     if (!token) {
       return new Response(
         JSON.stringify({ error: 'unauthorized', message: 'Access token required' }),
-        { 
-          status: 401, 
-          headers: { 
+        {
+          status: 401,
+          headers: {
             'Content-Type': 'application/json',
-            ...CORS_HEADERS,
-          } 
+            ...corsHeaders,
+          },
         }
       );
     }
@@ -196,12 +193,12 @@ export async function POST(request: NextRequest) {
     if (!tokenData) {
       return new Response(
         JSON.stringify({ error: 'unauthorized', message: 'Invalid or expired access token' }),
-        { 
-          status: 401, 
-          headers: { 
+        {
+          status: 401,
+          headers: {
             'Content-Type': 'application/json',
-            ...CORS_HEADERS,
-          } 
+            ...corsHeaders,
+          },
         }
       );
     }
@@ -214,9 +211,10 @@ export async function POST(request: NextRequest) {
         where: eq(users.id, tokenData.userId),
       });
       userEmail = user?.email || '';
-      userName = user?.firstName && user?.lastName 
-        ? `${user.firstName} ${user.lastName}`.trim() 
-        : user?.firstName || '';
+      userName =
+        user?.firstName && user?.lastName
+          ? `${user.firstName} ${user.lastName}`.trim()
+          : user?.firstName || '';
     } catch {
       // User lookup failed, continue with basic info
     }
@@ -244,7 +242,7 @@ export async function POST(request: NextRequest) {
         status: 400,
         headers: {
           'Content-Type': 'application/json',
-          ...CORS_HEADERS,
+          ...corsHeaders,
         },
       });
     }
@@ -259,14 +257,14 @@ export async function POST(request: NextRequest) {
     const response = await handleJsonRpcRequest(rpcRequest, authContext);
 
     return new Response(JSON.stringify(response), {
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        ...CORS_HEADERS,
+        ...corsHeaders,
       },
     });
   } catch (error) {
     logger.error('[MCP] Request failed', { error });
-    
+
     const errorResponse: JsonRpcResponse = {
       jsonrpc: '2.0',
       id: 0,
@@ -278,9 +276,9 @@ export async function POST(request: NextRequest) {
 
     return new Response(JSON.stringify(errorResponse), {
       status: 500,
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        ...CORS_HEADERS,
+        ...corsHeaders,
       },
     });
   }
@@ -304,7 +302,11 @@ async function handleJsonRpcRequest(
       return handleToolsList(id);
 
     case 'tools/call':
-      return handleToolCall(id, params as { name: string; arguments?: Record<string, unknown> }, context);
+      return handleToolCall(
+        id,
+        params as { name: string; arguments?: Record<string, unknown> },
+        context
+      );
 
     case 'ping':
       return {
@@ -384,11 +386,7 @@ async function handleToolCall(
   }
 
   // Execute the tool
-  const result: MCPToolResult = await executeTool(
-    params.name,
-    params.arguments || {},
-    context
-  );
+  const result: MCPToolResult = await executeTool(params.name, params.arguments || {}, context);
 
   return {
     jsonrpc: '2.0',
@@ -401,9 +399,14 @@ async function handleToolCall(
 // CORS OPTIONS (Required for ChatGPT preflight)
 // ============================================================================
 
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
+  const disabled = ensureMcpEnabled();
+  if (disabled) {
+    return disabled;
+  }
+
   return new Response(null, {
     status: 204,
-    headers: CORS_HEADERS,
+    headers: getCorsHeaders(request.headers.get('origin')),
   });
 }

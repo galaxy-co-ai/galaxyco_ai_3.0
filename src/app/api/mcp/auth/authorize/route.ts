@@ -1,9 +1,9 @@
 /**
  * MCP OAuth Authorization Endpoint
- * 
+ *
  * Handles the OAuth 2.0 authorization flow for ChatGPT MCP integration.
  * Users are redirected here to authorize Neptune access to their GalaxyCo workspace.
- * 
+ *
  * Supports both:
  * - Static clients (via MCP_CLIENT_ID env var)
  * - Dynamic clients (via RFC 7591 registration)
@@ -14,29 +14,40 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 import { registeredClients } from '../register/route';
+import { ensureMcpEnabled, getCorsHeaders } from '@/lib/mcp/cors';
 
 // In-memory store for authorization codes (use Redis in production)
 // This is fine for MVP - codes expire in 10 minutes anyway
-const authorizationCodes = new Map<string, {
-  userId: string;
-  workspaceId: string;
-  redirectUri: string;
-  codeChallenge?: string;
-  codeChallengeMethod?: string;
-  expiresAt: Date;
-}>();
+const authorizationCodes = new Map<
+  string,
+  {
+    userId: string;
+    workspaceId: string;
+    redirectUri: string;
+    codeChallenge?: string;
+    codeChallengeMethod?: string;
+    expiresAt: Date;
+  }
+>();
 
-// Clean up expired codes periodically
-setInterval(() => {
+const pruneExpiredAuthorizationCodes = () => {
   const now = new Date();
   for (const [code, data] of authorizationCodes.entries()) {
     if (data.expiresAt < now) {
       authorizationCodes.delete(code);
     }
   }
-}, 60000); // Every minute
+};
 
 export async function GET(request: Request) {
+  const disabled = ensureMcpEnabled();
+  if (disabled) {
+    return disabled;
+  }
+
+  const corsHeaders = getCorsHeaders(request.headers.get('origin'), 'GET, OPTIONS');
+  pruneExpiredAuthorizationCodes();
+
   try {
     const url = new URL(request.url);
     const responseType = url.searchParams.get('response_type');
@@ -50,21 +61,21 @@ export async function GET(request: Request) {
     if (responseType !== 'code') {
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'response_type must be "code"' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
     if (!clientId) {
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'client_id is required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
     if (!redirectUri) {
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'redirect_uri is required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -77,14 +88,14 @@ export async function GET(request: Request) {
     if (!isStaticClient && !isDynamicClient) {
       return NextResponse.json(
         { error: 'invalid_client', error_description: 'Invalid client_id' },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
     // For dynamic clients, validate redirect_uri against registered URIs
     if (isDynamicClient) {
-      const isValidRedirect = dynamicClient.redirectUris.some(uri => 
-        redirectUri === uri || redirectUri.startsWith(uri)
+      const isValidRedirect = dynamicClient.redirectUris.some(
+        (uri) => redirectUri === uri || redirectUri.startsWith(uri)
       );
       if (!isValidRedirect) {
         logger.warn('[MCP OAuth] Invalid redirect_uri for dynamic client', {
@@ -93,8 +104,11 @@ export async function GET(request: Request) {
           registeredUris: dynamicClient.redirectUris,
         });
         return NextResponse.json(
-          { error: 'invalid_request', error_description: 'redirect_uri not registered for this client' },
-          { status: 400 }
+          {
+            error: 'invalid_request',
+            error_description: 'redirect_uri not registered for this client',
+          },
+          { status: 400, headers: corsHeaders }
         );
       }
     }
@@ -115,7 +129,7 @@ export async function GET(request: Request) {
 
     // Generate authorization code
     const code = crypto.randomBytes(32).toString('hex');
-    
+
     // Store the code with metadata
     authorizationCodes.set(code, {
       userId,
@@ -144,9 +158,21 @@ export async function GET(request: Request) {
     logger.error('[MCP OAuth] Authorization failed', { error });
     return NextResponse.json(
       { error: 'server_error', error_description: 'Authorization failed' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
+}
+
+export async function OPTIONS(request: Request) {
+  const disabled = ensureMcpEnabled();
+  if (disabled) {
+    return disabled;
+  }
+
+  return new Response(null, {
+    status: 204,
+    headers: getCorsHeaders(request.headers.get('origin'), 'GET, OPTIONS'),
+  });
 }
 
 // Export for use by token endpoint
