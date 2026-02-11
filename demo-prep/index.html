@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GalaxyCo.ai Demo Prep</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      theme: {
+        extend: {
+          colors: {
+            nebula: {
+              void: '#0A0A0F',
+              deep: '#13111C',
+              teal: '#5B8A8A',
+              violet: '#7C6B9E',
+              rose: '#9E7B8A',
+              frost: '#F0F0F5',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .nav-btn.active { background: #5B8A8A; color: white; }
+    pre { white-space: pre-wrap; word-wrap: break-word; }
+    .checklist-item { cursor: pointer; }
+    .checklist-item.checked { text-decoration: line-through; opacity: 0.6; }
+    .copy-btn { transition: all 0.2s; }
+    .copy-btn:hover { transform: scale(1.05); }
+    .copy-btn.copied { background: #10b981 !important; }
+  </style>
+</head>
+<body class="bg-nebula-void text-nebula-frost min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-nebula-deep border-b border-nebula-violet/30 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-nebula-teal">GalaxyCo.ai Demo Prep</h1>
+          <p class="text-sm text-nebula-frost/60">January 26, 2026 | 1:00 PM EST</p>
+        </div>
+        <div class="text-right">
+          <div id="countdown" class="text-3xl font-mono text-nebula-teal"></div>
+          <p class="text-xs text-nebula-frost/60">until demo</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="bg-nebula-deep/50 border-b border-nebula-violet/20 sticky top-[72px] z-40">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex gap-2 py-3 overflow-x-auto">
+        <button onclick="showTab('investor')" class="nav-btn active px-4 py-2 rounded-lg text-sm font-medium bg-nebula-deep hover:bg-nebula-teal/20 transition whitespace-nowrap">
+          1. Investor Prep
+        </button>
+        <button onclick="showTab('data')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium bg-nebula-deep hover:bg-nebula-teal/20 transition whitespace-nowrap">
+          2. Seed Data
+        </button>
+        <button onclick="showTab('preflight')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium bg-nebula-deep hover:bg-nebula-teal/20 transition whitespace-nowrap">
+          3. Pre-Flight
+        </button>
+        <button onclick="showTab('script')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium bg-nebula-deep hover:bg-nebula-teal/20 transition whitespace-nowrap">
+          4. Meeting Script
+        </button>
+        <button onclick="showTab('cheatsheet')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium bg-nebula-deep hover:bg-nebula-teal/20 transition whitespace-nowrap">
+          5. Cheat Sheet
+        </button>
+        <button onclick="showTab('technical')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium bg-nebula-deep hover:bg-nebula-teal/20 transition whitespace-nowrap">
+          6. Technical Doc
+        </button>
+        <button onclick="showTab('architecture')" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium bg-nebula-deep hover:bg-nebula-teal/20 transition whitespace-nowrap">
+          7. Architecture
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Tab 1: Investor Prep -->
+    <div id="investor" class="tab-content active">
+      <div class="bg-nebula-deep rounded-xl p-8 border border-nebula-violet/20">
+        <h2 class="text-3xl font-bold text-nebula-teal mb-6">Investor Pre-Meeting Prep</h2>
+        <p class="text-nebula-frost/70 mb-8">Quick sync before the team demo</p>
+
+        <div class="space-y-8">
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Purpose of This Meeting</h3>
+            <p class="text-nebula-frost/80">The investor set up the 1pm meeting with engineers and designers. This pre-meeting is likely to:</p>
+            <ol class="list-decimal list-inside mt-3 space-y-2 text-nebula-frost/70">
+              <li>Align on goals for the 1pm demo</li>
+              <li>Discuss what the investor needs to see</li>
+              <li>Possibly finalize investment terms</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Key Points to Cover</h3>
+            <div class="space-y-4">
+              <div class="bg-nebula-void/50 rounded-lg p-4 border-l-4 border-nebula-teal">
+                <p class="font-medium text-nebula-teal mb-2">1. Confirm Demo Strategy</p>
+                <p class="text-nebula-frost/70 italic">"For the team demo, I'm focusing on recruitment - showing them the technical depth and interesting problems. Does that align with what you're hoping they see?"</p>
+              </div>
+              <div class="bg-nebula-void/50 rounded-lg p-4 border-l-4 border-nebula-teal">
+                <p class="font-medium text-nebula-teal mb-2">2. Clarify Investment Timeline</p>
+                <p class="text-nebula-frost/70 italic">"Assuming the team demo goes well, what's the timeline for finalizing the seed round?"</p>
+              </div>
+              <div class="bg-nebula-void/50 rounded-lg p-4 border-l-4 border-nebula-teal">
+                <p class="font-medium text-nebula-teal mb-2">3. Understand Their Lens</p>
+                <p class="text-nebula-frost/70 italic">"What do you think will most impress the engineers and designers you've invited? Any specific concerns I should address?"</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Questions to Ask</h3>
+            <ul class="space-y-2 text-nebula-frost/80">
+              <li class="flex items-start gap-2"><span class="text-nebula-teal">1.</span> "Who exactly is coming at 1pm? What are their backgrounds?"</li>
+              <li class="flex items-start gap-2"><span class="text-nebula-teal">2.</span> "Are they evaluating this as potential employees, or just advising?"</li>
+              <li class="flex items-start gap-2"><span class="text-nebula-teal">3.</span> "What's the one thing you most want them to walk away thinking?"</li>
+              <li class="flex items-start gap-2"><span class="text-nebula-teal">4.</span> "Is there anything about the product or pitch I should avoid?"</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Your 30-Second Pitch</h3>
+            <div class="bg-nebula-teal/10 rounded-lg p-6 border border-nebula-teal/30">
+              <p class="text-nebula-frost/90 leading-relaxed">
+                "GalaxyCo.ai is an AI-native business operating system. Instead of juggling Salesforce, HubSpot, QuickBooks, and Notion, you get one unified platform with Neptune - an AI assistant that actually executes, not just chats.
+                <br><br>
+                We're at 90% feature complete with 130K lines of production code. The tech is solid. Now I need the founding team to take it to market. That's what today is about."
+              </p>
+            </div>
+          </section>
+
+          <section class="bg-nebula-violet/10 rounded-lg p-6 border border-nebula-violet/30">
+            <p class="text-center text-nebula-frost/70 italic">
+              This investor already believes in you. This meeting is coordination, not persuasion.
+            </p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Seed Data -->
+    <div id="data" class="tab-content">
+      <div class="bg-nebula-deep rounded-xl p-8 border border-nebula-violet/20">
+        <h2 class="text-3xl font-bold text-nebula-teal mb-6">Demo Data Preparation</h2>
+        <p class="text-nebula-frost/70 mb-8">Use Neptune to seed realistic demo data. Run these commands 30 minutes before the demo.</p>
+
+        <div class="space-y-8">
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Step 1: Create Demo Contacts</h3>
+            <div class="space-y-4">
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Contact 1 - Primary Demo Contact</span>
+                  <button onclick="copyToClipboard(this, 'cmd1')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="cmd1" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Add Sarah Chen as a contact. She's VP of Engineering at TechFlow, email sarah@techflow.io, phone 415-555-0142. Tag her as "hot lead" and "enterprise". Note: Met at AI Summit, very interested in workflow automation.</pre>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Contact 2 - Active Deal</span>
+                  <button onclick="copyToClipboard(this, 'cmd2')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="cmd2" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Add Marcus Rodriguez as a contact. He's CEO at GrowthLabs, email marcus@growthlabs.co, phone 212-555-0198. Tag as "decision-maker" and "Q1-priority". Note: Referred by existing customer, ready for proposal.</pre>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Contact 3 - Design Agency</span>
+                  <button onclick="copyToClipboard(this, 'cmd3')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="cmd3" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Add Emma Watson as a contact. She's Creative Director at PixelForge Design, email emma@pixelforge.design, phone 310-555-0234. Tag as "agency" and "warm". Note: Interested in client management features.</pre>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Contact 4 - Enterprise Prospect</span>
+                  <button onclick="copyToClipboard(this, 'cmd4')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="cmd4" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Add James Park as a contact. He's CTO at DataScale, email james.park@datascale.io, phone 650-555-0187. Tag as "enterprise" and "technical-buyer". Note: Evaluating against Salesforce, needs security docs.</pre>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Contact 5 - Referral</span>
+                  <button onclick="copyToClipboard(this, 'cmd5')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="cmd5" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Add Lisa Thompson as a contact. She's Operations Manager at SwiftStart, email lisa@swiftstart.io, phone 512-555-0156. Tag as "smb" and "referral". Note: Heard about us from Marcus at GrowthLabs.</pre>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Step 2: Create Demo Organizations</h3>
+            <div class="space-y-4">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Organization 1</span>
+                  <button onclick="copyToClipboard(this, 'org1')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="org1" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Create an organization called TechFlow. Industry: SaaS, size: 50-200 employees, website: techflow.io. Annual revenue around $5M.</pre>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Organization 2</span>
+                  <button onclick="copyToClipboard(this, 'org2')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="org2" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Create an organization called GrowthLabs. Industry: Marketing Agency, size: 10-50 employees, website: growthlabs.co. Annual revenue around $2M.</pre>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Organization 3</span>
+                  <button onclick="copyToClipboard(this, 'org3')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="org3" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Create an organization called DataScale. Industry: Data Infrastructure, size: 200-500 employees, website: datascale.io. Annual revenue around $25M.</pre>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Step 3: Create Demo Deals</h3>
+            <div class="space-y-4">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Deal 1 - $48K</span>
+                  <button onclick="copyToClipboard(this, 'deal1')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="deal1" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Create a deal called "TechFlow Enterprise Pilot" worth $48,000. Stage: Proposal. Associate with Sarah Chen. Expected close date: end of this month. Notes: 50-seat pilot, potential expansion to 200.</pre>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Deal 2 - $24K</span>
+                  <button onclick="copyToClipboard(this, 'deal2')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="deal2" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Create a deal called "GrowthLabs Full Platform" worth $24,000 annually. Stage: Negotiation. Associate with Marcus Rodriguez. Expected close date: next week. Notes: Ready to sign, finalizing terms.</pre>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Deal 3 - $150K</span>
+                  <button onclick="copyToClipboard(this, 'deal3')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="deal3" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Create a deal called "DataScale Security Review" worth $150,000. Stage: Qualification. Associate with James Park. Notes: Enterprise deal, requires SOC2 documentation and security review.</pre>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Step 4: Add Activity</h3>
+            <div class="space-y-4">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Activity Note 1</span>
+                  <button onclick="copyToClipboard(this, 'note1')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="note1" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Log a note for Sarah Chen: Had a 30-minute discovery call. She's impressed with Neptune's capabilities. Main pain point is tool fragmentation - they use 6 different apps. Ready for demo next week.</pre>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="text-sm text-nebula-teal font-medium">Activity Note 2</span>
+                  <button onclick="copyToClipboard(this, 'note2')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+                </div>
+                <pre id="note2" class="text-sm text-nebula-frost/80 bg-nebula-void/50 p-3 rounded">Log a note for Marcus Rodriguez: Sent final proposal. He's reviewing with his team. Decision expected by Friday.</pre>
+              </div>
+            </div>
+          </section>
+
+          <section class="bg-nebula-rose/10 rounded-lg p-6 border border-nebula-rose/30">
+            <h3 class="text-lg font-semibold text-nebula-rose mb-3">Verification Checklist</h3>
+            <div class="space-y-2">
+              <label class="checklist-item flex items-center gap-3 cursor-pointer" onclick="this.classList.toggle('checked')">
+                <span class="w-5 h-5 border-2 border-nebula-frost/30 rounded flex items-center justify-center">
+                  <svg class="w-3 h-3 text-nebula-teal hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                </span>
+                <span>5+ contacts visible in CRM</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer" onclick="this.classList.toggle('checked')">
+                <span class="w-5 h-5 border-2 border-nebula-frost/30 rounded flex items-center justify-center">
+                  <svg class="w-3 h-3 text-nebula-teal hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                </span>
+                <span>3+ organizations created</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer" onclick="this.classList.toggle('checked')">
+                <span class="w-5 h-5 border-2 border-nebula-frost/30 rounded flex items-center justify-center">
+                  <svg class="w-3 h-3 text-nebula-teal hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                </span>
+                <span>3+ deals in pipeline (different stages)</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer" onclick="this.classList.toggle('checked')">
+                <span class="w-5 h-5 border-2 border-nebula-frost/30 rounded flex items-center justify-center">
+                  <svg class="w-3 h-3 text-nebula-teal hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
+                </span>
+                <span>Activity feed showing recent notes</span>
+              </label>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Pre-Flight -->
+    <div id="preflight" class="tab-content">
+      <div class="bg-nebula-deep rounded-xl p-8 border border-nebula-violet/20">
+        <h2 class="text-3xl font-bold text-nebula-teal mb-6">Pre-Flight Checklist</h2>
+        <p class="text-nebula-frost/70 mb-8">Complete this 30 minutes before demo</p>
+
+        <!-- Critical Warning -->
+        <div class="bg-red-950 border-2 border-red-500 rounded-lg p-6 mb-8">
+          <h3 class="text-xl font-bold text-white mb-4">CRITICAL: Areas to Avoid</h3>
+          <div class="space-y-4">
+            <div>
+              <p class="font-semibold text-red-400">Finance Demo Mode</p>
+              <ul class="text-white text-sm mt-1 space-y-1">
+                <li>DO NOT navigate to /finance?demo=true</li>
+                <li>DO NOT click "Preview Demo" button in Finance</li>
+                <li>Contains fake data: "Demo Company LLC", "demo_acct_123"</li>
+              </ul>
+            </div>
+            <div>
+              <p class="font-semibold text-red-400">Browser DevTools</p>
+              <p class="text-white text-sm">KEEP CLOSED during demo - some console.error statements exist</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Safe Areas -->
+        <div class="bg-green-950 border-2 border-green-500 rounded-lg p-6 mb-8">
+          <h3 class="text-lg font-semibold text-white mb-3">Safe Demo Areas</h3>
+          <div class="grid grid-cols-3 gap-4 text-sm">
+            <div class="text-green-400">Dashboard</div>
+            <div class="text-green-400">Neptune Assistant</div>
+            <div class="text-green-400">CRM Contacts</div>
+            <div class="text-green-400">CRM Deals</div>
+            <div class="text-green-400">Knowledge Base</div>
+            <div class="text-green-400">Settings</div>
+          </div>
+        </div>
+
+        <!-- Countdown Checklist -->
+        <div class="space-y-6">
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">T-30: Environment Check</h3>
+            <div class="space-y-2">
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Open Chrome/Edge incognito</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Navigate to galaxyco.ai</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Log in and verify correct workspace</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Enable dark mode</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Zoom level at 100%</span>
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">T-25: Data Verification</h3>
+            <div class="space-y-2">
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>CRM > Contacts: 5+ contacts visible</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>CRM > Deals: 3+ deals in pipeline</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Dashboard shows recent activity</span>
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">T-20: Neptune Test</h3>
+            <div class="space-y-2">
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Open Neptune chat</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Type: "What can you help me with?"</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Verify response in &lt;3 seconds</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Clear chat history if needed</span>
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">T-15: Network & System</h3>
+            <div class="space-y-2">
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Close all unnecessary tabs</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Close Slack/Discord/email</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Disable system notifications</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Mute phone</span>
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">T-5: Final Prep</h3>
+            <div class="space-y-2">
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Cheat sheet open on second screen</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Water nearby</span>
+              </label>
+              <label class="checklist-item flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-nebula-void/50" onclick="this.classList.toggle('checked')">
+                <span class="w-6 h-6 border-2 border-nebula-teal rounded flex items-center justify-center flex-shrink-0"></span>
+                <span>Take a deep breath</span>
+              </label>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Meeting Script -->
+    <div id="script" class="tab-content">
+      <div class="bg-nebula-deep rounded-xl p-8 border border-nebula-violet/20">
+        <h2 class="text-3xl font-bold text-nebula-teal mb-6">Meeting Script</h2>
+        <p class="text-nebula-frost/70 mb-8">30-minute team recruitment demo</p>
+
+        <div class="space-y-8">
+
+          <!-- Timeline Overview -->
+          <div class="bg-nebula-void rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-nebula-violet mb-4">Timeline Overview</h3>
+            <div class="grid grid-cols-7 gap-2 text-center text-sm">
+              <div class="bg-nebula-teal/20 p-3 rounded">
+                <div class="font-bold">Opening</div>
+                <div class="text-nebula-frost/60">3 min</div>
+              </div>
+              <div class="bg-nebula-violet/20 p-3 rounded">
+                <div class="font-bold">Problem</div>
+                <div class="text-nebula-frost/60">2 min</div>
+              </div>
+              <div class="bg-nebula-teal/20 p-3 rounded">
+                <div class="font-bold">Neptune</div>
+                <div class="text-nebula-frost/60">7 min</div>
+              </div>
+              <div class="bg-nebula-violet/20 p-3 rounded">
+                <div class="font-bold">Platform</div>
+                <div class="text-nebula-frost/60">6 min</div>
+              </div>
+              <div class="bg-nebula-teal/20 p-3 rounded">
+                <div class="font-bold">Technical</div>
+                <div class="text-nebula-frost/60">5 min</div>
+              </div>
+              <div class="bg-nebula-violet/20 p-3 rounded">
+                <div class="font-bold">The Ask</div>
+                <div class="text-nebula-frost/60">2 min</div>
+              </div>
+              <div class="bg-nebula-rose/20 p-3 rounded">
+                <div class="font-bold">Q&A</div>
+                <div class="text-nebula-frost/60">5 min</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Opening -->
+          <section class="border-l-4 border-nebula-teal pl-6">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-nebula-teal text-nebula-void px-3 py-1 rounded-full text-sm font-bold">0:00 - 3:00</span>
+              <h3 class="text-xl font-semibold text-nebula-teal">Opening</h3>
+            </div>
+            <div class="bg-nebula-void/50 rounded-lg p-4">
+              <p class="text-nebula-frost/90 leading-relaxed italic">
+                "Thanks for taking this meeting. [Investor name] brought us together because they believe what we're building at GalaxyCo is special, and I think you'll see why in the next 25 minutes.
+                <br><br>
+                Here's what I want to show you today:
+                <br><br>
+                1. <strong>The Problem</strong> - why businesses are drowning in fragmented tools<br>
+                2. <strong>Neptune</strong> - our AI assistant that actually does things, not just talks<br>
+                3. <strong>The Platform</strong> - unified CRM, Finance, Marketing, Knowledge in one system<br>
+                4. <strong>The Architecture</strong> - for the engineers: why this is technically interesting
+                <br><br>
+                Then we'll have time for questions. Let's dive in."
+              </p>
+            </div>
+          </section>
+
+          <!-- Problem -->
+          <section class="border-l-4 border-nebula-violet pl-6">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-nebula-violet text-nebula-void px-3 py-1 rounded-full text-sm font-bold">3:00 - 5:00</span>
+              <h3 class="text-xl font-semibold text-nebula-violet">The Problem</h3>
+            </div>
+            <div class="bg-nebula-void/50 rounded-lg p-4">
+              <p class="text-nebula-frost/90 font-medium mb-3">Tool Fragmentation</p>
+              <ul class="text-nebula-frost/80 text-sm space-y-2 mb-4">
+                <li>• Average business uses 6-10 disconnected tools (CRM, accounting, marketing, docs, calendar)</li>
+                <li>• Data lives in silos - no single source of truth</li>
+                <li>• Integrations are brittle and expensive to maintain</li>
+              </ul>
+
+              <p class="text-nebula-frost/90 font-medium mb-3">Manual Overhead</p>
+              <ul class="text-nebula-frost/80 text-sm space-y-2 mb-4">
+                <li>• Teams copy-paste data between systems</li>
+                <li>• Follow-ups fall through cracks</li>
+                <li>• Context is lost when switching tools</li>
+                <li>• You hire ops people just to manage the tools, not the business</li>
+              </ul>
+
+              <p class="text-nebula-frost/90 font-medium mb-3">AI Bolted On, Not Built In</p>
+              <ul class="text-nebula-frost/80 text-sm space-y-2 mb-4">
+                <li>• Most "AI features" are chatbots that can't actually do anything</li>
+                <li>• They suggest - they don't execute</li>
+                <li>• No memory, no context, no orchestration across systems</li>
+              </ul>
+
+              <p class="text-nebula-frost/90 font-medium mb-3">Real Examples</p>
+              <div class="space-y-3">
+                <div class="bg-nebula-deep rounded p-3 border-l-2 border-nebula-violet">
+                  <p class="text-nebula-violet text-sm font-medium">Agency Owner</p>
+                  <p class="text-nebula-frost/70 text-xs mt-1">"I manage 12 clients across Notion, HubSpot, Slack, and Google Drive. I spend 2 hours a day just updating statuses and chasing invoices. Last month I missed a renewal because the reminder was buried in my inbox."</p>
+                </div>
+                <div class="bg-nebula-deep rounded p-3 border-l-2 border-nebula-violet">
+                  <p class="text-nebula-violet text-sm font-medium">B2B Sales Rep</p>
+                  <p class="text-nebula-frost/70 text-xs mt-1">"I have 200 leads in Salesforce but no idea which ones to call first. I manually log every call, every email. By the time I update the CRM, I've forgotten half the context from the conversation."</p>
+                </div>
+                <div class="bg-nebula-deep rounded p-3 border-l-2 border-nebula-violet">
+                  <p class="text-nebula-violet text-sm font-medium">Startup Founder</p>
+                  <p class="text-nebula-frost/70 text-xs mt-1">"I'm the CEO, sales, and ops. I can't afford a $50K/year ops hire just to keep my tools in sync. I need software that works for me, not software I work for."</p>
+                </div>
+              </div>
+            </div>
+            <p class="text-nebula-teal mt-3 font-medium">Transition: "We built GalaxyCo to solve this. Let me show you Neptune."</p>
+          </section>
+
+          <!-- Demo 1: Neptune -->
+          <section class="border-l-4 border-nebula-teal pl-6">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-nebula-teal text-nebula-void px-3 py-1 rounded-full text-sm font-bold">5:00 - 12:00</span>
+              <h3 class="text-xl font-semibold text-nebula-teal">Demo 1: Neptune in Action</h3>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-teal mb-2">Step 1: Simple command with real execution</p>
+                <div class="flex justify-between items-start">
+                  <pre class="text-sm text-nebula-frost/80 flex-1">"Add Sarah Chen from TechFlow as a new contact. She's the VP of Engineering, email sarah@techflow.io, and we met at the AI Summit last week."</pre>
+                  <button onclick="copyToClipboard(this, 'neptune1')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs ml-4">Copy</button>
+                </div>
+                <p id="neptune1" class="hidden">Add Sarah Chen from TechFlow as a new contact. She's the VP of Engineering, email sarah@techflow.io, and we met at the AI Summit last week.</p>
+                <p class="text-nebula-frost/60 text-sm mt-2">Point out: Neptune parses natural language, creates contact immediately, &lt;3 sec response</p>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-teal mb-2">Step 2: Multi-step orchestration</p>
+                <div class="flex justify-between items-start">
+                  <pre class="text-sm text-nebula-frost/80 flex-1">"Now schedule a discovery call with Sarah for next Tuesday at 2pm, and draft a meeting agenda focused on their engineering team's workflow pain points."</pre>
+                  <button onclick="copyToClipboard(this, 'neptune2')" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs ml-4">Copy</button>
+                </div>
+                <p id="neptune2" class="hidden">Now schedule a discovery call with Sarah for next Tuesday at 2pm, and draft a meeting agenda focused on their engineering team's workflow pain points.</p>
+                <p class="text-nebula-frost/60 text-sm mt-2">Point out: Multiple actions from one request, context carries over, 37+ tools working together</p>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-teal mb-2">Step 3: Context memory</p>
+                <pre class="text-sm text-nebula-frost/80">"What did I just ask you to do?"</pre>
+                <p class="text-nebula-frost/60 text-sm mt-2">Point out: Session context memory - most AI assistants don't do this well</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="bg-nebula-teal/10 border border-nebula-teal/30 rounded-lg p-4">
+                  <p class="font-semibold text-nebula-teal text-sm mb-2">For Engineers, say:</p>
+                  <p class="text-nebula-frost/70 text-sm">"Under the hood, this is streaming responses from GPT-4 or Claude, with a tool orchestration layer that can chain 37 different actions."</p>
+                </div>
+                <div class="bg-nebula-violet/10 border border-nebula-violet/30 rounded-lg p-4">
+                  <p class="font-semibold text-nebula-violet text-sm mb-2">For Designers, say:</p>
+                  <p class="text-nebula-frost/70 text-sm">"Notice the progressive disclosure. We don't overwhelm users with options. Neptune surfaces capabilities as you need them."</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Demo 2: Platform -->
+          <section class="border-l-4 border-nebula-violet pl-6">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-nebula-violet text-nebula-void px-3 py-1 rounded-full text-sm font-bold">12:00 - 18:00</span>
+              <h3 class="text-xl font-semibold text-nebula-violet">Demo 2: Unified Platform</h3>
+            </div>
+            <div class="space-y-3">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-violet">1. CRM Quick Tour</p>
+                <p class="text-nebula-frost/70 text-sm">Navigate to CRM > Contacts. Show Sarah Chen. Point out activity timeline and lead scoring.</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-violet">2. Finance Connection</p>
+                <p class="text-nebula-frost/70 text-sm">Navigate to Finance Dashboard. "Finance is built in. No QuickBooks export hell."</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-violet">3. Knowledge Base</p>
+                <p class="text-nebula-frost/70 text-sm">Show documents, run a search query. "This uses RAG with vector embeddings."</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-violet">4. Orchestration Point</p>
+                <p class="text-nebula-frost/70 text-sm italic">"The magic is these aren't separate products duct-taped together. One system."</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Demo 3: Technical -->
+          <section class="border-l-4 border-nebula-teal pl-6">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-nebula-teal text-nebula-void px-3 py-1 rounded-full text-sm font-bold">18:00 - 23:00</span>
+              <h3 class="text-xl font-semibold text-nebula-teal">Demo 3: Technical Depth</h3>
+            </div>
+            <div class="bg-nebula-void/50 rounded-lg p-4">
+              <p class="text-nebula-frost/90 leading-relaxed italic">
+                "Let me speak to the architecture for a minute, because this is where it gets interesting if you're an engineer."
+              </p>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <div class="space-y-2 text-sm">
+                <p><span class="text-nebula-teal font-semibold">Stack:</span> Next.js 16, React 19, TypeScript strict - zero errors across 130K lines</p>
+                <p><span class="text-nebula-teal font-semibold">Multi-tenancy:</span> Row-level security in Postgres. Enterprise-grade from day one.</p>
+                <p><span class="text-nebula-teal font-semibold">AI:</span> Multi-model support. Neptune's tool system is extensible.</p>
+              </div>
+              <div class="space-y-2 text-sm">
+                <p><span class="text-nebula-teal font-semibold">Real-time:</span> Pusher for WebSocket. Liveblocks configured for collab editing.</p>
+                <p><span class="text-nebula-teal font-semibold">The challenge:</span> "Making features work together seamlessly while keeping UX simple."</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- The Ask -->
+          <section class="border-l-4 border-nebula-rose pl-6">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-nebula-rose text-nebula-void px-3 py-1 rounded-full text-sm font-bold">23:00 - 25:00</span>
+              <h3 class="text-xl font-semibold text-nebula-rose">The Ask</h3>
+            </div>
+            <div class="bg-nebula-rose/10 border border-nebula-rose/30 rounded-lg p-6">
+              <p class="text-nebula-frost/90 leading-relaxed italic">
+                "So that's GalaxyCo.ai. What we're building is ambitious - a unified AI-native operating system for business.
+                <br><br>
+                We're looking for founding engineers and designers who want to work on genuinely interesting problems:
+                <br><br>
+                <strong>For engineers:</strong> AI orchestration, real-time collaboration, building a platform that scales
+                <br>
+                <strong>For designers:</strong> Defining what AI-native UX looks like, making complex workflows feel simple
+                <br><br>
+                [Investor name] is backing this because they see the opportunity. But I know you need more than an opportunity - you need a team you respect and problems worth solving.
+                <br><br>
+                I'd love to answer questions and talk about what working together could look like."
+              </p>
+            </div>
+          </section>
+
+          <!-- Q&A -->
+          <section class="border-l-4 border-nebula-frost/30 pl-6">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="bg-nebula-frost/20 text-nebula-frost px-3 py-1 rounded-full text-sm font-bold">25:00 - 30:00</span>
+              <h3 class="text-xl font-semibold">Q&A Prep</h3>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-teal text-sm mb-2">"What's your background?"</p>
+                <p class="text-nebula-frost/60 text-sm">[Prepare your 30-second founder story]</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-teal text-sm mb-2">"How far along is this?"</p>
+                <p class="text-nebula-frost/60 text-sm">"90% feature complete. Private beta prep. Infrastructure production-ready."</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-teal text-sm mb-2">"Who else is on the team?"</p>
+                <p class="text-nebula-frost/60 text-sm">"Right now it's me and AI-assisted dev. That's exactly why this meeting matters."</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <p class="font-semibold text-nebula-teal text-sm mb-2">"Why should I join this early?"</p>
+                <p class="text-nebula-frost/60 text-sm">"Employee #1-3. Founding equity. Real ownership. Build something that ships."</p>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 5: Cheat Sheet -->
+    <div id="cheatsheet" class="tab-content">
+      <div class="bg-nebula-deep rounded-xl p-8 border border-nebula-violet/20">
+        <h2 class="text-3xl font-bold text-nebula-teal mb-6">Cheat Sheet</h2>
+        <p class="text-nebula-frost/70 mb-8">Keep this visible during demo</p>
+
+        <div class="grid grid-cols-2 gap-6">
+
+          <!-- Timing -->
+          <div class="bg-nebula-void rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-nebula-violet mb-4">Timing (30 min)</h3>
+            <table class="w-full text-sm">
+              <tr class="border-b border-nebula-frost/10">
+                <td class="py-2">Opening</td>
+                <td class="py-2 text-right text-nebula-teal">3 min</td>
+                <td class="py-2 text-right text-nebula-frost/50">1:03</td>
+              </tr>
+              <tr class="border-b border-nebula-frost/10">
+                <td class="py-2">Problem</td>
+                <td class="py-2 text-right text-nebula-teal">2 min</td>
+                <td class="py-2 text-right text-nebula-frost/50">1:05</td>
+              </tr>
+              <tr class="border-b border-nebula-frost/10">
+                <td class="py-2">Neptune Demo</td>
+                <td class="py-2 text-right text-nebula-teal">7 min</td>
+                <td class="py-2 text-right text-nebula-frost/50">1:12</td>
+              </tr>
+              <tr class="border-b border-nebula-frost/10">
+                <td class="py-2">Platform</td>
+                <td class="py-2 text-right text-nebula-teal">6 min</td>
+                <td class="py-2 text-right text-nebula-frost/50">1:18</td>
+              </tr>
+              <tr class="border-b border-nebula-frost/10">
+                <td class="py-2">Technical</td>
+                <td class="py-2 text-right text-nebula-teal">5 min</td>
+                <td class="py-2 text-right text-nebula-frost/50">1:23</td>
+              </tr>
+              <tr class="border-b border-nebula-frost/10">
+                <td class="py-2">The Ask</td>
+                <td class="py-2 text-right text-nebula-teal">2 min</td>
+                <td class="py-2 text-right text-nebula-frost/50">1:25</td>
+              </tr>
+              <tr>
+                <td class="py-2">Q&A</td>
+                <td class="py-2 text-right text-nebula-rose">5 min</td>
+                <td class="py-2 text-right text-nebula-frost/50">1:30</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Key Stats -->
+          <div class="bg-nebula-void rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-nebula-violet mb-4">Key Stats</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p class="text-nebula-frost/50">Lines of Code</p>
+                <p class="text-2xl font-bold text-nebula-teal">130,000+</p>
+              </div>
+              <div>
+                <p class="text-nebula-frost/50">API Endpoints</p>
+                <p class="text-2xl font-bold text-nebula-teal">259</p>
+              </div>
+              <div>
+                <p class="text-nebula-frost/50">Neptune Tools</p>
+                <p class="text-2xl font-bold text-nebula-teal">37+</p>
+              </div>
+              <div>
+                <p class="text-nebula-frost/50">TypeScript Errors</p>
+                <p class="text-2xl font-bold text-green-400">0</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Neptune Commands -->
+          <div class="bg-nebula-void rounded-lg p-6 col-span-2">
+            <h3 class="text-lg font-semibold text-nebula-violet mb-4">Neptune Demo Commands</h3>
+            <div class="space-y-3">
+              <div class="flex items-center gap-4">
+                <span class="bg-nebula-teal text-nebula-void w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                <code class="flex-1 text-sm bg-nebula-deep p-2 rounded">Add Sarah Chen from TechFlow as a new contact. She's the VP of Engineering, email sarah@techflow.io, and we met at the AI Summit last week.</code>
+                <button onclick="copyCode(this)" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="bg-nebula-teal text-nebula-void w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                <code class="flex-1 text-sm bg-nebula-deep p-2 rounded">Schedule a discovery call with Sarah for next Tuesday at 2pm, and draft a meeting agenda focused on their engineering team's workflow pain points.</code>
+                <button onclick="copyCode(this)" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="bg-nebula-teal text-nebula-void w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                <code class="flex-1 text-sm bg-nebula-deep p-2 rounded">What did I just ask you to do?</code>
+                <button onclick="copyCode(this)" class="copy-btn bg-nebula-violet/20 hover:bg-nebula-violet/40 px-3 py-1 rounded text-xs">Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Engineer Q&A -->
+          <div class="bg-nebula-void rounded-lg p-6 col-span-2">
+            <h3 class="text-lg font-semibold text-nebula-teal mb-4">10 Questions Engineers Will Ask</h3>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">1. "Why Next.js over a separate frontend/backend?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- Server Components reduce client bundle</li>
+                  <li>- Streaming for Neptune responses</li>
+                  <li>- API routes colocated with pages</li>
+                  <li>- One deploy, one repo, one team</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">2. "How do you handle multi-tenancy?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- Every table has workspace_id</li>
+                  <li>- Drizzle query builders enforce scoping</li>
+                  <li>- Application-level, not DB row-level security</li>
+                  <li>- Middleware extracts tenant from auth</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">3. "Why Drizzle instead of Prisma?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- Type inference without codegen</li>
+                  <li>- SQL-like syntax, not abstracted away</li>
+                  <li>- Better edge runtime support</li>
+                  <li>- Lighter weight, faster cold starts</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">4. "How do you add new AI capabilities?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- Single file: Zod schema + execute function</li>
+                  <li>- Export from domain index</li>
+                  <li>- Neptune auto-discovers tools</li>
+                  <li>- No core changes required</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">5. "What happens when OpenAI is down?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- Multi-model: OpenAI, Anthropic, Google</li>
+                  <li>- Model router can failover</li>
+                  <li>- Each model configured for specific tasks</li>
+                  <li>- Response caching reduces dependency</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">6. "How do you handle real-time updates?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- Pusher for WebSocket connections</li>
+                  <li>- Channel per workspace for isolation</li>
+                  <li>- SWR revalidation on events</li>
+                  <li>- Optimistic UI where appropriate</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">7. "What's your testing strategy?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- Vitest for unit tests</li>
+                  <li>- Playwright for E2E</li>
+                  <li>- TypeScript strict mode catches type bugs</li>
+                  <li>- 63% coverage, targeting 80%+</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">8. "What technical debt exists?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- 4 caching implementations (consolidating Q1)</li>
+                  <li>- Multiple context builders (unifying Q1)</li>
+                  <li>- API could be more RESTful (Q2)</li>
+                  <li>- We track and plan for debt openly</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">9. "How does the AI tool system work?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- 37+ tools with Zod-validated schemas</li>
+                  <li>- Neptune parses intent, selects tools</li>
+                  <li>- Tools execute with workspace context</li>
+                  <li>- Results aggregated, streamed back</li>
+                </ul>
+              </div>
+
+              <div class="bg-nebula-deep rounded p-3">
+                <p class="font-semibold text-nebula-teal mb-2">10. "How would I onboard to this codebase?"</p>
+                <ul class="text-nebula-frost/70 space-y-1 text-xs">
+                  <li>- ARCHITECTURE.md explains system design</li>
+                  <li>- TypeScript types are self-documenting</li>
+                  <li>- Clear module boundaries (CRM, Finance, etc.)</li>
+                  <li>- Start with one tool file to learn patterns</li>
+                </ul>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Recovery Phrases -->
+          <div class="bg-nebula-rose/10 border border-nebula-rose/30 rounded-lg p-6 col-span-2">
+            <h3 class="text-lg font-semibold text-nebula-rose mb-4">If Things Break</h3>
+            <div class="grid grid-cols-3 gap-4 text-sm">
+              <p class="text-nebula-frost/80 italic">"Let me show you something else while that loads."</p>
+              <p class="text-nebula-frost/80 italic">"This actually demonstrates our error handling."</p>
+              <p class="text-nebula-frost/80 italic">"What would you like to see more of?"</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 6: Technical Overview -->
+    <div id="technical" class="tab-content">
+      <div class="bg-nebula-deep rounded-xl p-8 border border-nebula-violet/20">
+        <h2 class="text-3xl font-bold text-nebula-teal mb-2">Technical Overview</h2>
+        <p class="text-nebula-frost/70 mb-8">Engineering & Design Team Documentation</p>
+
+        <!-- Quick Nav -->
+        <div class="flex flex-wrap gap-2 mb-8">
+          <a href="#tech-product" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">1. Product</a>
+          <a href="#tech-demo" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">2. Live Demo</a>
+          <a href="#tech-billing" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">3. Billing</a>
+          <a href="#tech-core" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">4. Core Tech</a>
+          <a href="#tech-data" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">5. Data</a>
+          <a href="#tech-security" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">6. Security</a>
+          <a href="#tech-ops" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">7. Operations</a>
+          <a href="#tech-roadmap" class="bg-nebula-void px-3 py-1 rounded text-sm hover:bg-nebula-teal/20">8. Roadmap</a>
+        </div>
+
+        <div class="space-y-12">
+
+          <!-- Section 1: Product Overview -->
+          <section id="tech-product">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">1. Product Overview</h3>
+
+            <div class="space-y-6">
+              <div>
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Platform Architecture</h4>
+                <div class="bg-nebula-void rounded-lg p-6">
+                  <p class="text-nebula-frost/80 mb-4">Hub-and-spoke architecture with Neptune (AI assistant) as the central orchestration hub:</p>
+                  <pre class="text-sm text-nebula-frost/70 font-mono">
+                    ┌─────────────┐
+                    │   Neptune   │
+                    │  (AI Hub)   │
+                    └──────┬──────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+   ┌────┴────┐       ┌─────┴─────┐      ┌────┴────┐
+   │   CRM   │       │  Finance  │      │ Content │
+   └────┬────┘       └─────┬─────┘      └────┬────┘
+        │                  │                  │
+   ┌────┴────┐       ┌─────┴─────┐      ┌────┴────┐
+   │Knowledge│       │  Agents   │      │  Comms  │
+   └─────────┘       └───────────┘      └─────────┘</pre>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Unified OS Core</h4>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-nebula-void">
+                      <tr>
+                        <th class="text-left p-3">Layer</th>
+                        <th class="text-left p-3">Technology</th>
+                        <th class="text-left p-3">Purpose</th>
+                      </tr>
+                    </thead>
+                    <tbody class="text-nebula-frost/70">
+                      <tr class="border-b border-nebula-frost/10"><td class="p-3">Presentation</td><td class="p-3">Next.js 16 App Router</td><td class="p-3">SSR/SSG hybrid rendering</td></tr>
+                      <tr class="border-b border-nebula-frost/10"><td class="p-3">State</td><td class="p-3">React 19 + SWR</td><td class="p-3">Client-side with real-time sync</td></tr>
+                      <tr class="border-b border-nebula-frost/10"><td class="p-3">API</td><td class="p-3">Next.js API Routes</td><td class="p-3">259 RESTful endpoints</td></tr>
+                      <tr class="border-b border-nebula-frost/10"><td class="p-3">Data Access</td><td class="p-3">Drizzle ORM</td><td class="p-3">Type-safe PostgreSQL queries</td></tr>
+                      <tr><td class="p-3">AI</td><td class="p-3">Custom Layer</td><td class="p-3">Multi-model LLM routing</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Feature Ecosystem</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-nebula-void rounded-lg p-4">
+                    <p class="font-semibold text-nebula-violet mb-2">Business Intelligence</p>
+                    <ul class="text-sm text-nebula-frost/70 space-y-1">
+                      <li>Revenue Dashboard (Live)</li>
+                      <li>Pipeline Analytics (Live)</li>
+                      <li>AI Lead Scoring (Live)</li>
+                      <li>Custom Reports (Roadmap Q2)</li>
+                    </ul>
+                  </div>
+                  <div class="bg-nebula-void rounded-lg p-4">
+                    <p class="font-semibold text-nebula-violet mb-2">Communications</p>
+                    <ul class="text-sm text-nebula-frost/70 space-y-1">
+                      <li>Email Integration (Live)</li>
+                      <li>SMS/Voice via SignalWire (Live)</li>
+                      <li>Calendar Sync (Live)</li>
+                      <li>Conversation Threading (Live)</li>
+                    </ul>
+                  </div>
+                  <div class="bg-nebula-void rounded-lg p-4">
+                    <p class="font-semibold text-nebula-violet mb-2">Enterprise</p>
+                    <ul class="text-sm text-nebula-frost/70 space-y-1">
+                      <li>Multi-Tenant Core (Live)</li>
+                      <li>Role-Based Access (Live)</li>
+                      <li>SSO via Clerk (Live)</li>
+                      <li>Audit Logging (Live)</li>
+                    </ul>
+                  </div>
+                  <div class="bg-nebula-void rounded-lg p-4">
+                    <p class="font-semibold text-nebula-violet mb-2">Developer Portal</p>
+                    <ul class="text-sm text-nebula-frost/70 space-y-1">
+                      <li>REST API (Live)</li>
+                      <li>Webhooks (Live)</li>
+                      <li>OAuth Apps (Live)</li>
+                      <li>SDK (Roadmap Q2)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Role-Based Access</h4>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead class="bg-nebula-void">
+                      <tr>
+                        <th class="text-left p-3">Role</th>
+                        <th class="text-left p-3">Permissions</th>
+                      </tr>
+                    </thead>
+                    <tbody class="text-nebula-frost/70">
+                      <tr class="border-b border-nebula-frost/10"><td class="p-3 font-semibold">Owner</td><td class="p-3">Full access, billing, team management, delete workspace</td></tr>
+                      <tr class="border-b border-nebula-frost/10"><td class="p-3 font-semibold">Admin</td><td class="p-3">Full access except billing and workspace deletion</td></tr>
+                      <tr class="border-b border-nebula-frost/10"><td class="p-3 font-semibold">Member</td><td class="p-3">CRUD on assigned records, view team data</td></tr>
+                      <tr><td class="p-3 font-semibold">Viewer</td><td class="p-3">Read-only access to permitted modules</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 2: Live Demo Features -->
+          <section id="tech-demo">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">2. Live Demo Capabilities</h3>
+
+            <div class="grid grid-cols-2 gap-6">
+              <div class="bg-nebula-void rounded-lg p-6">
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">CRM Walkthrough</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-2">
+                  <li><strong>Contact Management:</strong> Full CRUD, custom fields, activity timeline</li>
+                  <li><strong>Lead Management:</strong> AI scoring, routing, qualification</li>
+                  <li><strong>Sales Automation:</strong> Pipeline stages, forecasting, task automation</li>
+                  <li><strong>Marketing:</strong> Campaign management, email sequences</li>
+                </ul>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-6">
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Billing & POS</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-2">
+                  <li><strong>Transactions:</strong> Stripe integration, invoice generation</li>
+                  <li><strong>Payments:</strong> Cards, ACH, Apple/Google Pay</li>
+                  <li><strong>Inventory:</strong> Shopify sync (native module roadmap)</li>
+                </ul>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-6">
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Reporting & Analytics</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-2">
+                  <li><strong>Revenue:</strong> MRR/ARR, cash flow, forecasting</li>
+                  <li><strong>Performance:</strong> Conversion rates, cycle length, velocity</li>
+                  <li><strong>Custom:</strong> Report builder (roadmap Q2)</li>
+                </ul>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-6">
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Mobile</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-2">
+                  <li><strong>Current:</strong> Responsive web, PWA support</li>
+                  <li><strong>Roadmap Q3:</strong> React Native apps (iOS/Android)</li>
+                  <li><strong>Roadmap Q4:</strong> Offline capabilities</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 3: Billing Engine -->
+          <section id="tech-billing">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">3. Billing Engine</h3>
+
+            <div class="space-y-6">
+              <div class="grid grid-cols-3 gap-4">
+                <div class="bg-nebula-void rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Billing Capabilities</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>Recurring billing (Stripe)</li>
+                    <li>Invoice generation</li>
+                    <li>Dunning management</li>
+                    <li>Usage-based (roadmap)</li>
+                  </ul>
+                </div>
+                <div class="bg-nebula-void rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Payment Providers</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>Stripe (primary)</li>
+                    <li>QuickBooks (sync)</li>
+                    <li>Shopify (sync)</li>
+                    <li>Multi-PSP routing (roadmap)</li>
+                  </ul>
+                </div>
+                <div class="bg-nebula-void rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Security</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>PCI via Stripe</li>
+                    <li>TLS 1.3 transport</li>
+                    <li>Tokenization</li>
+                    <li>Stripe Radar fraud</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 4: Core Technology -->
+          <section id="tech-core">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">4. Core Technology</h3>
+
+            <div class="space-y-6">
+              <div>
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Technology Stack</h4>
+                <div class="grid grid-cols-3 gap-4">
+                  <div class="bg-nebula-void rounded-lg p-4">
+                    <p class="font-semibold text-nebula-violet mb-2">Frontend</p>
+                    <ul class="text-sm text-nebula-frost/70 space-y-1">
+                      <li>Next.js 16</li>
+                      <li>React 19</li>
+                      <li>TypeScript 5.7 (strict)</li>
+                      <li>Tailwind CSS 4.0</li>
+                      <li>Radix UI</li>
+                      <li>Framer Motion</li>
+                    </ul>
+                  </div>
+                  <div class="bg-nebula-void rounded-lg p-4">
+                    <p class="font-semibold text-nebula-violet mb-2">Backend</p>
+                    <ul class="text-sm text-nebula-frost/70 space-y-1">
+                      <li>Next.js API Routes</li>
+                      <li>Drizzle ORM</li>
+                      <li>Clerk Auth</li>
+                      <li>Pusher (real-time)</li>
+                      <li>Trigger.dev (jobs)</li>
+                      <li>Resend (email)</li>
+                    </ul>
+                  </div>
+                  <div class="bg-nebula-void rounded-lg p-4">
+                    <p class="font-semibold text-nebula-violet mb-2">Database</p>
+                    <ul class="text-sm text-nebula-frost/70 space-y-1">
+                      <li>PostgreSQL (Neon)</li>
+                      <li>Upstash Vector (RAG)</li>
+                      <li>Upstash Redis (cache)</li>
+                      <li>Vercel Blob (files)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-lg font-semibold text-nebula-teal mb-3">Third-Party Integrations</h4>
+                <div class="grid grid-cols-4 gap-2 text-sm">
+                  <div class="bg-nebula-void p-2 rounded text-center">Google</div>
+                  <div class="bg-nebula-void p-2 rounded text-center">Microsoft</div>
+                  <div class="bg-nebula-void p-2 rounded text-center">Stripe</div>
+                  <div class="bg-nebula-void p-2 rounded text-center">QuickBooks</div>
+                  <div class="bg-nebula-void p-2 rounded text-center">Shopify</div>
+                  <div class="bg-nebula-void p-2 rounded text-center">SignalWire</div>
+                  <div class="bg-nebula-void p-2 rounded text-center">OpenAI</div>
+                  <div class="bg-nebula-void p-2 rounded text-center">Anthropic</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 5: Data Architecture -->
+          <section id="tech-data">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">5. Data Architecture</h3>
+
+            <div class="space-y-6">
+              <div class="grid grid-cols-2 gap-6">
+                <div class="bg-nebula-void rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Cloud Deployment</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li><strong>Application:</strong> Vercel (Edge)</li>
+                    <li><strong>Database:</strong> Neon (US-East-1)</li>
+                    <li><strong>Cache:</strong> Upstash (Global)</li>
+                    <li><strong>Files:</strong> Vercel Blob (Edge)</li>
+                  </ul>
+                </div>
+                <div class="bg-nebula-void rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Data Structure</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>50+ tables, 8,881 lines schema</li>
+                    <li>3NF with strategic denorm</li>
+                    <li>Full referential integrity</li>
+                    <li>Optimized indexes</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <h4 class="font-semibold text-nebula-teal mb-2">Backup & Retention</h4>
+                <div class="grid grid-cols-4 gap-4 text-sm text-nebula-frost/70">
+                  <div><strong>Transactional:</strong> Indefinite</div>
+                  <div><strong>Audit Logs:</strong> 7 years</div>
+                  <div><strong>Files:</strong> Until deleted</div>
+                  <div><strong>Analytics:</strong> 2 years</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 6: Security -->
+          <section id="tech-security">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">6. Security & Privacy</h3>
+
+            <div class="grid grid-cols-2 gap-6">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <h4 class="font-semibold text-nebula-teal mb-2">Authentication</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-1">
+                  <li>Clerk-powered (MFA, SSO)</li>
+                  <li>OAuth providers</li>
+                  <li>SAML for enterprise</li>
+                  <li>Session management</li>
+                </ul>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <h4 class="font-semibold text-nebula-teal mb-2">Encryption</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-1">
+                  <li>TLS 1.3 in transit</li>
+                  <li>AES-256 at rest</li>
+                  <li>Hashed API keys</li>
+                  <li>Encrypted secrets</li>
+                </ul>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <h4 class="font-semibold text-nebula-teal mb-2">GDPR Compliance</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-1">
+                  <li>Right to access (export)</li>
+                  <li>Right to erasure (delete)</li>
+                  <li>Data portability</li>
+                  <li>Consent management</li>
+                </ul>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <h4 class="font-semibold text-nebula-teal mb-2">Monitoring</h4>
+                <ul class="text-sm text-nebula-frost/70 space-y-1">
+                  <li>Sentry error tracking</li>
+                  <li>Vercel analytics</li>
+                  <li>Upstash metrics</li>
+                  <li>Custom dashboards</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 7: Operations -->
+          <section id="tech-ops">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">7. Operations & Team</h3>
+
+            <div class="space-y-6">
+              <div class="grid grid-cols-2 gap-6">
+                <div class="bg-nebula-void rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Customer Migration</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>Self-service onboarding</li>
+                    <li>CSV import (live)</li>
+                    <li>Salesforce/HubSpot (roadmap Q2)</li>
+                    <li>Guided onboarding (roadmap)</li>
+                  </ul>
+                </div>
+                <div class="bg-nebula-void rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Target Team Structure</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>Engineering Lead</li>
+                    <li>2x Full-Stack Engineers</li>
+                    <li>AI/ML Engineer</li>
+                    <li>Design Lead</li>
+                    <li>Customer Success</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section 8: Roadmap -->
+          <section id="tech-roadmap">
+            <h3 class="text-2xl font-bold text-nebula-violet mb-6 pb-2 border-b border-nebula-violet/30">8. Product Roadmap</h3>
+
+            <div class="space-y-6">
+              <div class="grid grid-cols-2 gap-6">
+                <div class="bg-nebula-teal/10 border border-nebula-teal/30 rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-teal mb-2">Q1 2026</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>Neptune Autonomy v2</li>
+                    <li>Liveblocks Integration</li>
+                    <li>Advanced RAG</li>
+                    <li>Mobile PWA Polish</li>
+                  </ul>
+                </div>
+                <div class="bg-nebula-violet/10 border border-nebula-violet/30 rounded-lg p-4">
+                  <h4 class="font-semibold text-nebula-violet mb-2">Q2 2026</h4>
+                  <ul class="text-sm text-nebula-frost/70 space-y-1">
+                    <li>Custom Report Builder</li>
+                    <li>Multi-PSP Routing</li>
+                    <li>Salesforce Import</li>
+                    <li>Developer SDK</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="bg-nebula-void rounded-lg p-4">
+                <h4 class="font-semibold text-nebula-teal mb-2">Milestone Targets</h4>
+                <div class="grid grid-cols-4 gap-4 text-sm text-nebula-frost/70 text-center">
+                  <div>
+                    <p class="font-bold text-nebula-teal">Q1 2026</p>
+                    <p>Private Beta Launch</p>
+                  </div>
+                  <div>
+                    <p class="font-bold text-nebula-violet">Q2 2026</p>
+                    <p>Public Beta</p>
+                  </div>
+                  <div>
+                    <p class="font-bold text-nebula-teal">Q3 2026</p>
+                    <p>GA Release</p>
+                  </div>
+                  <div>
+                    <p class="font-bold text-nebula-rose">Q4 2026</p>
+                    <p>Enterprise Launch</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Appendix -->
+          <section class="bg-nebula-void rounded-lg p-6">
+            <h3 class="text-xl font-bold text-nebula-frost mb-4">Quick Reference</h3>
+            <div class="grid grid-cols-4 gap-6 text-center">
+              <div>
+                <p class="text-3xl font-bold text-nebula-teal">130K+</p>
+                <p class="text-sm text-nebula-frost/60">Lines of Code</p>
+              </div>
+              <div>
+                <p class="text-3xl font-bold text-nebula-teal">259</p>
+                <p class="text-sm text-nebula-frost/60">API Endpoints</p>
+              </div>
+              <div>
+                <p class="text-3xl font-bold text-nebula-teal">37+</p>
+                <p class="text-sm text-nebula-frost/60">Neptune Tools</p>
+              </div>
+              <div>
+                <p class="text-3xl font-bold text-green-400">0</p>
+                <p class="text-sm text-nebula-frost/60">TS Errors</p>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 7: Architecture -->
+    <div id="architecture" class="tab-content">
+      <div class="bg-nebula-deep rounded-xl p-8 border border-nebula-violet/20">
+        <h2 class="text-3xl font-bold text-nebula-teal mb-2">Architecture Overview</h2>
+        <p class="text-nebula-frost/70 mb-8">Key decisions and system design - reference during technical questions</p>
+
+        <div class="space-y-8">
+
+          <!-- Core Principles -->
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Core Design Principles</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-nebula-void rounded-lg p-4 border-l-4 border-nebula-teal">
+                <p class="font-semibold text-nebula-teal">1. Multi-tenant from Day One</p>
+                <p class="text-nebula-frost/70 text-sm mt-1">Every table has workspace_id. Every query is scoped. No exceptions. Retrofitting multi-tenancy is expensive - we paid the cost upfront.</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4 border-l-4 border-nebula-teal">
+                <p class="font-semibold text-nebula-teal">2. AI as Orchestration Layer</p>
+                <p class="text-nebula-frost/70 text-sm mt-1">Neptune isn't a chatbot bolted on. The platform is designed around AI orchestration. Modules expose tools, Neptune chains them.</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4 border-l-4 border-nebula-teal">
+                <p class="font-semibold text-nebula-teal">3. Type Safety as Documentation</p>
+                <p class="text-nebula-frost/70 text-sm mt-1">TypeScript strict mode, zero errors. Types are the source of truth. Self-documenting code with compile-time bug prevention.</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4 border-l-4 border-nebula-teal">
+                <p class="font-semibold text-nebula-teal">4. Progressive Disclosure</p>
+                <p class="text-nebula-frost/70 text-sm mt-1">Features surface as users need them. New users see simplicity. Power users see depth. Complex software doesn't have to feel complex.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Architecture Diagram -->
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">System Architecture</h3>
+            <div class="bg-nebula-void rounded-lg p-6 font-mono text-xs overflow-x-auto">
+              <pre class="text-nebula-frost/80">
+┌─────────────────────────────────────────────────────────────────┐
+│                        CLIENT LAYER                              │
+│   Next.js App Router  │  React 19  │  Tailwind  │  Radix UI     │
+│                              │                                   │
+│                    SWR + Real-time (Pusher)                      │
+└──────────────────────────────┼───────────────────────────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         API LAYER                                │
+│              Next.js API Routes + Clerk Auth                     │
+│   /assistant  │  /crm  │  /finance  │  /knowledge  │  /admin    │
+└──────────────────────────────┼───────────────────────────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     BUSINESS LOGIC                               │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                    NEPTUNE (AI Hub)                      │    │
+│  │   Context Builder → Model Router → Tool Executor         │    │
+│  │                    37+ Executable Tools                  │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│     CRM Service  │  Finance Service  │  Knowledge Service       │
+└──────────────────────────────┼───────────────────────────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        DATA LAYER                                │
+│                  Drizzle ORM (Type-safe)                         │
+│      PostgreSQL  │  Upstash Vector  │  Redis  │  Blob Storage   │
+└─────────────────────────────────────────────────────────────────┘</pre>
+            </div>
+          </section>
+
+          <!-- Key Decisions -->
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Key Technical Decisions</h3>
+            <div class="space-y-3">
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="font-semibold text-nebula-teal">Drizzle ORM over Prisma</p>
+                    <p class="text-nebula-frost/70 text-sm mt-1">Type inference from schema without code generation. SQL-like syntax. Lighter weight. Better edge runtime support.</p>
+                  </div>
+                  <span class="text-nebula-frost/50 text-xs bg-nebula-deep px-2 py-1 rounded">Trade-off: Smaller ecosystem</span>
+                </div>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="font-semibold text-nebula-teal">Multi-model AI (OpenAI + Anthropic + Google)</p>
+                    <p class="text-nebula-frost/70 text-sm mt-1">Provider redundancy. Model selection based on task. Cost optimization. Future flexibility.</p>
+                  </div>
+                  <span class="text-nebula-frost/50 text-xs bg-nebula-deep px-2 py-1 rounded">Trade-off: More complex prompts</span>
+                </div>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="font-semibold text-nebula-teal">Tool-based AI over Prompt-only</p>
+                    <p class="text-nebula-frost/70 text-sm mt-1">Reliable execution (tools have schemas). Composable. Auditable. Adding a capability is a single file.</p>
+                  </div>
+                  <span class="text-nebula-frost/50 text-xs bg-nebula-deep px-2 py-1 rounded">Trade-off: More upfront work</span>
+                </div>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-4">
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="font-semibold text-nebula-teal">Serverless Postgres (Neon)</p>
+                    <p class="text-nebula-frost/70 text-sm mt-1">Scale to zero for cost efficiency. Branching for previews. Standard Postgres compatibility. Autoscaling without ops.</p>
+                  </div>
+                  <span class="text-nebula-frost/50 text-xs bg-nebula-deep px-2 py-1 rounded">Trade-off: Cold starts</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Module Boundaries -->
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Module Boundaries</h3>
+            <div class="grid grid-cols-4 gap-3 text-sm">
+              <div class="bg-nebula-void rounded-lg p-3">
+                <p class="font-semibold text-nebula-teal">CRM</p>
+                <p class="text-nebula-frost/60 text-xs mt-1">Owns: contacts, orgs, deals</p>
+                <p class="text-nebula-frost/60 text-xs">Exposes: /api/crm/*, tools</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-3">
+                <p class="font-semibold text-nebula-teal">Finance</p>
+                <p class="text-nebula-frost/60 text-xs mt-1">Owns: invoices, expenses</p>
+                <p class="text-nebula-frost/60 text-xs">Depends: CRM, Stripe</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-3">
+                <p class="font-semibold text-nebula-teal">Knowledge</p>
+                <p class="text-nebula-frost/60 text-xs mt-1">Owns: docs, embeddings</p>
+                <p class="text-nebula-frost/60 text-xs">Exposes: RAG search</p>
+              </div>
+              <div class="bg-nebula-void rounded-lg p-3">
+                <p class="font-semibold text-nebula-teal">Neptune</p>
+                <p class="text-nebula-frost/60 text-xs mt-1">Owns: conversations</p>
+                <p class="text-nebula-frost/60 text-xs">Orchestrates: ALL</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Technical Debt (Honest) -->
+          <section>
+            <h3 class="text-xl font-semibold text-nebula-violet mb-4">Acknowledged Technical Debt</h3>
+            <p class="text-nebula-frost/60 text-sm mb-3">We track what needs improvement. Being honest about this signals maturity.</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-nebula-void">
+                  <tr>
+                    <th class="text-left p-3">Area</th>
+                    <th class="text-left p-3">Debt</th>
+                    <th class="text-left p-3">Plan</th>
+                  </tr>
+                </thead>
+                <tbody class="text-nebula-frost/70">
+                  <tr class="border-b border-nebula-frost/10">
+                    <td class="p-3">Caching</td>
+                    <td class="p-3">4 separate implementations</td>
+                    <td class="p-3 text-nebula-teal">Consolidate Q1</td>
+                  </tr>
+                  <tr class="border-b border-nebula-frost/10">
+                    <td class="p-3">Context builders</td>
+                    <td class="p-3">Multiple similar functions</td>
+                    <td class="p-3 text-nebula-teal">Unify Q1</td>
+                  </tr>
+                  <tr class="border-b border-nebula-frost/10">
+                    <td class="p-3">API surface</td>
+                    <td class="p-3">Could be more RESTful</td>
+                    <td class="p-3 text-nebula-teal">Consolidate Q2</td>
+                  </tr>
+                  <tr>
+                    <td class="p-3">Test coverage</td>
+                    <td class="p-3">63% - want 80%+</td>
+                    <td class="p-3 text-nebula-teal">Ongoing</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Talking Points -->
+          <section class="bg-nebula-teal/10 border border-nebula-teal/30 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-nebula-teal mb-4">When Engineers Ask "Why?"</h3>
+            <div class="space-y-3 text-sm">
+              <div class="flex items-start gap-3">
+                <span class="text-nebula-teal font-bold">Q:</span>
+                <div>
+                  <p class="text-nebula-frost/90">"Why Drizzle over Prisma?"</p>
+                  <p class="text-nebula-frost/60 mt-1">"Type inference without code generation, SQL-like syntax our team knows, and better edge runtime support. Trade-off is smaller ecosystem, but we accepted that."</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="text-nebula-teal font-bold">Q:</span>
+                <div>
+                  <p class="text-nebula-frost/90">"How do you handle multi-tenancy?"</p>
+                  <p class="text-nebula-frost/60 mt-1">"Every table has workspace_id. Every query is scoped through Drizzle's query builder. It's not row-level security in Postgres - it's application-level, but enforced consistently."</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="text-nebula-teal font-bold">Q:</span>
+                <div>
+                  <p class="text-nebula-frost/90">"How do you add new AI capabilities?"</p>
+                  <p class="text-nebula-frost/60 mt-1">"Single file with a Zod schema and execute function. Export it from the domain index. Neptune picks it up automatically. No core changes needed."</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="text-nebula-teal font-bold">Q:</span>
+                <div>
+                  <p class="text-nebula-frost/90">"What technical debt exists?"</p>
+                  <p class="text-nebula-frost/60 mt-1">"We have 4 caching implementations that should be one. We know it, it's documented, and consolidation is planned for Q1. We track debt openly."</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- What We Won't Compromise -->
+          <section class="bg-nebula-rose/10 border border-nebula-rose/30 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-nebula-rose mb-3">What We Won't Compromise</h3>
+            <div class="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <p class="font-semibold text-white">Multi-tenant isolation</p>
+                <p class="text-nebula-frost/60">Every query scoped, no exceptions</p>
+              </div>
+              <div>
+                <p class="font-semibold text-white">Type safety</p>
+                <p class="text-nebula-frost/60">Zero TypeScript errors policy</p>
+              </div>
+              <div>
+                <p class="font-semibold text-white">Tool reliability</p>
+                <p class="text-nebula-frost/60">AI tools must be auditable</p>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-nebula-deep border-t border-nebula-violet/20 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center text-nebula-frost/50 text-sm">
+      <p>GalaxyCo.ai Demo Prep | January 26, 2026</p>
+      <p class="mt-2 italic">You've built something real. Now show them.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching
+    function showTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      // Remove active from all nav buttons
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      // Show selected tab
+      document.getElementById(tabId).classList.add('active');
+      // Activate nav button
+      event.target.classList.add('active');
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(button, elementId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+        setTimeout(() => {
+          button.textContent = 'Copy';
+          button.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Copy code from adjacent element
+    function copyCode(button) {
+      const code = button.previousElementSibling.textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        button.textContent = 'Copied!';
+        button.classList.add('copied');
+        setTimeout(() => {
+          button.textContent = 'Copy';
+          button.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Countdown timer
+    function updateCountdown() {
+      const now = new Date();
+      const target = new Date();
+      target.setHours(13, 0, 0, 0); // 1:00 PM
+
+      // If it's past 1pm, show for tomorrow
+      if (now > target) {
+        target.setDate(target.getDate() + 1);
+      }
+
+      const diff = target - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('countdown').textContent =
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    // Checklist persistence
+    document.querySelectorAll('.checklist-item').forEach((item, index) => {
+      const key = `checklist-${index}`;
+      if (localStorage.getItem(key) === 'checked') {
+        item.classList.add('checked');
+      }
+      item.addEventListener('click', () => {
+        if (item.classList.contains('checked')) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, 'checked');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

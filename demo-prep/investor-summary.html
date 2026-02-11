@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GalaxyCo.ai - Investor Summary</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #ffffff;
+      font-size: 11pt;
+    }
+
+    .page {
+      max-width: 8.5in;
+      margin: 0 auto;
+      padding: 0.5in 0.6in;
+      page-break-after: always;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #5B8A8A;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 24pt;
+      font-weight: 700;
+      color: #5B8A8A;
+    }
+
+    .logo span {
+      color: #7C6B9E;
+    }
+
+    .date {
+      color: #666;
+      font-size: 10pt;
+    }
+
+    /* Typography */
+    h1 {
+      font-size: 22pt;
+      color: #1a1a2e;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    h2 {
+      font-size: 14pt;
+      color: #5B8A8A;
+      margin: 24px 0 12px 0;
+      font-weight: 600;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 6px;
+    }
+
+    h3 {
+      font-size: 11pt;
+      color: #7C6B9E;
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .subtitle {
+      font-size: 12pt;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    /* Lists */
+    ul {
+      margin: 8px 0 16px 20px;
+    }
+
+    li {
+      margin-bottom: 6px;
+      color: #444;
+    }
+
+    /* Cards */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .card {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card-title {
+      font-weight: 600;
+      color: #5B8A8A;
+      margin-bottom: 8px;
+      font-size: 10pt;
+    }
+
+    .card p, .card li {
+      font-size: 9pt;
+      margin-bottom: 4px;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 12px;
+      background: linear-gradient(135deg, #5B8A8A10, #7C6B9E10);
+      border-radius: 8px;
+    }
+
+    .stat-value {
+      font-size: 20pt;
+      font-weight: 700;
+      color: #5B8A8A;
+    }
+
+    .stat-label {
+      font-size: 8pt;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 9pt;
+    }
+
+    th {
+      background: #5B8A8A;
+      color: white;
+      padding: 8px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    /* Highlight box */
+    .highlight {
+      background: linear-gradient(135deg, #5B8A8A15, #7C6B9E15);
+      border-left: 4px solid #5B8A8A;
+      padding: 16px;
+      margin: 16px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .highlight-title {
+      font-weight: 600;
+      color: #5B8A8A;
+      margin-bottom: 8px;
+    }
+
+    /* Quote */
+    .quote {
+      background: #f8f9fa;
+      border-left: 3px solid #7C6B9E;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-style: italic;
+      color: #555;
+      font-size: 10pt;
+    }
+
+    .quote-author {
+      font-style: normal;
+      font-weight: 600;
+      color: #7C6B9E;
+      font-size: 9pt;
+      margin-top: 8px;
+    }
+
+    /* Architecture diagram */
+    .diagram {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 8pt;
+      line-height: 1.4;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 16px 0;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 30px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+      color: #888;
+      font-size: 9pt;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        font-size: 10pt;
+      }
+
+      .page {
+        padding: 0;
+        margin: 0;
+      }
+
+      .no-print {
+        display: none;
+      }
+    }
+
+    /* Two column layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    /* Persona cards */
+    .persona {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .persona-title {
+      font-weight: 600;
+      color: #7C6B9E;
+      font-size: 10pt;
+    }
+
+    .persona-quote {
+      font-size: 9pt;
+      color: #555;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    /* CTA */
+    .cta {
+      background: #5B8A8A;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 24px 0;
+    }
+
+    .cta h3 {
+      color: white;
+      margin: 0 0 8px 0;
+      font-size: 14pt;
+    }
+
+    .cta p {
+      color: rgba(255,255,255,0.9);
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE 1: Overview -->
+  <div class="page">
+    <div class="header">
+      <div class="logo">Galaxy<span>Co.ai</span></div>
+      <div class="date">January 2026 | Confidential</div>
+    </div>
+
+    <h1>AI-Native Business Operating System</h1>
+    <p class="subtitle">Unified CRM, Finance, Marketing, and Knowledge - orchestrated by AI</p>
+
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="stat-value">90%</div>
+        <div class="stat-label">Feature Complete</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">37+</div>
+        <div class="stat-label">AI Tools</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">0</div>
+        <div class="stat-label">TypeScript Errors</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">&lt;3s</div>
+        <div class="stat-label">AI Response</div>
+      </div>
+    </div>
+
+    <h2>The Problem</h2>
+
+    <div class="two-col">
+      <div>
+        <h3>Tool Fragmentation</h3>
+        <ul>
+          <li>Businesses use 6-10 disconnected tools</li>
+          <li>Data lives in silos with no single source of truth</li>
+          <li>Integrations are brittle and expensive</li>
+        </ul>
+
+        <h3>Manual Overhead</h3>
+        <ul>
+          <li>Teams copy-paste data between systems</li>
+          <li>Follow-ups fall through cracks</li>
+          <li>Context lost when switching tools</li>
+        </ul>
+      </div>
+      <div>
+        <h3>AI That Can't Execute</h3>
+        <ul>
+          <li>Most "AI features" are chatbots that suggest but don't do</li>
+          <li>No memory across sessions</li>
+          <li>No orchestration across systems</li>
+        </ul>
+
+        <div class="persona">
+          <div class="persona-title">Agency Owner</div>
+          <div class="persona-quote">"I spend 2 hours a day updating statuses across 4 tools. Last month I missed a client renewal because the reminder was buried in my inbox."</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>The Solution: Neptune</h2>
+
+    <div class="highlight">
+      <div class="highlight-title">AI That Actually Executes</div>
+      <p style="margin-bottom:0">Neptune isn't a chatbot. It's an AI assistant with 37+ executable tools that can create contacts, schedule meetings, draft proposals, send invoices, and orchestrate across every module - all from natural language.</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Unified Platform</div>
+        <ul style="margin-left:16px">
+          <li>CRM with AI lead scoring</li>
+          <li>Finance with invoicing & payments</li>
+          <li>Marketing automation</li>
+          <li>Knowledge base with RAG search</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">AI Orchestration</div>
+        <ul style="margin-left:16px">
+          <li>Multi-step task execution</li>
+          <li>Context memory across sessions</li>
+          <li>Learns user preferences</li>
+          <li>Proactive suggestions</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: Technical & Roadmap -->
+  <div class="page">
+    <div class="header">
+      <div class="logo">Galaxy<span>Co.ai</span></div>
+      <div class="date">Technical Overview</div>
+    </div>
+
+    <h2>Architecture</h2>
+
+    <div class="diagram">                         CLIENT LAYER
+       Next.js 16  |  React 19  |  TypeScript Strict  |  Tailwind
+                              |
+                        API LAYER
+                   259 RESTful Endpoints + Clerk Auth
+                              |
+                       NEPTUNE (AI Hub)
+          Context Builder -> Model Router -> Tool Executor
+                        37+ Executable Tools
+                              |
+         CRM Service  |  Finance Service  |  Knowledge Service
+                              |
+                        DATA LAYER
+           PostgreSQL  |  Vector DB  |  Redis  |  Blob Storage</div>
+
+    <h2>Key Technical Decisions</h2>
+
+    <table>
+      <tr>
+        <th>Decision</th>
+        <th>Choice</th>
+        <th>Why</th>
+      </tr>
+      <tr>
+        <td>Multi-tenancy</td>
+        <td>Application-level, day one</td>
+        <td>Every query scoped by workspace - not bolted on later</td>
+      </tr>
+      <tr>
+        <td>ORM</td>
+        <td>Drizzle over Prisma</td>
+        <td>Type inference without codegen, better edge support</td>
+      </tr>
+      <tr>
+        <td>AI Models</td>
+        <td>Multi-provider</td>
+        <td>OpenAI + Anthropic + Google for redundancy</td>
+      </tr>
+      <tr>
+        <td>Tool System</td>
+        <td>Schema-validated</td>
+        <td>Adding capability = single file, no core changes</td>
+      </tr>
+    </table>
+
+    <h2>Target Market</h2>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Primary Verticals</div>
+        <ul style="margin-left:16px">
+          <li>B2B SaaS (Seed to Series B)</li>
+          <li>Marketing & Creative Agencies</li>
+          <li>Consultants & Coaches</li>
+          <li>Professional Services</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Why They Buy</div>
+        <ul style="margin-left:16px">
+          <li>Replace 4-6 tools with one</li>
+          <li>AI that does, not just suggests</li>
+          <li>No ops hire needed</li>
+          <li>First value in 5 minutes</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Roadmap</h2>
+
+    <table>
+      <tr>
+        <th>Phase</th>
+        <th>Timeline</th>
+        <th>Milestones</th>
+      </tr>
+      <tr>
+        <td>Private Beta</td>
+        <td>Q1 2026</td>
+        <td>Neptune v2, real-time collaboration, first 50 users</td>
+      </tr>
+      <tr>
+        <td>Public Beta</td>
+        <td>Q2 2026</td>
+        <td>Self-service onboarding, SDK, 500 users</td>
+      </tr>
+      <tr>
+        <td>GA Launch</td>
+        <td>Q3 2026</td>
+        <td>Mobile apps, enterprise features, $50K MRR</td>
+      </tr>
+      <tr>
+        <td>Scale</td>
+        <td>Q4 2026</td>
+        <td>Enterprise sales, international, $150K MRR</td>
+      </tr>
+    </table>
+
+    <div class="cta">
+      <h3>Seed Round: $500K</h3>
+      <p>18 months runway | Founding team (3-4) | Product-market fit</p>
+    </div>
+
+    <div class="footer">
+      Confidential | GalaxyCo.ai | January 2026
+    </div>
+  </div>
+
+</body>
+</html>
