@@ -5,6 +5,32 @@ import * as RechartsPrimitive from "recharts";
 
 import { cn } from "../../lib/utils";
 
+// Chart color constants for direct use
+export const CHART_COLORS = {
+  chart1: 'var(--chart-1)',
+  chart2: 'var(--chart-2)',
+  chart3: 'var(--chart-3)',
+  chart4: 'var(--chart-4)',
+  chart5: 'var(--chart-5)',
+} as const;
+
+// Semantic color mapping for insight types
+export const INSIGHT_TYPE_COLORS = {
+  opportunity: CHART_COLORS.chart4, // Teal
+  warning: CHART_COLORS.chart3, // Orange
+  suggestion: CHART_COLORS.chart2, // Blue
+  achievement: CHART_COLORS.chart1, // Purple
+} as const;
+
+// Semantic color mapping for categories
+export const CATEGORY_COLORS = {
+  sales: CHART_COLORS.chart4, // Teal
+  marketing: CHART_COLORS.chart1, // Purple
+  operations: CHART_COLORS.chart2, // Blue
+  finance: CHART_COLORS.chart3, // Orange
+  content: CHART_COLORS.chart5, // Violet
+} as const;
+
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const;
 
