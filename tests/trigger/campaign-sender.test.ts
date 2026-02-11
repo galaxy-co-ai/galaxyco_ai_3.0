@@ -1,6 +1,6 @@
 /**
  * Tests for Campaign Sender Trigger Jobs
- * 
+ *
  * Tests Trigger.dev background jobs for email campaign sending including:
  * - sendCampaignTask - Send campaign to recipients
  * - scheduleCampaignTask - Schedule campaign for future send
@@ -13,11 +13,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { sendCampaignTask, scheduleCampaignTask } from '@/trigger/campaign-sender';
 import { db } from '@/lib/db';
-import { 
-  sendBulkEmails, 
-  isEmailConfigured, 
-  getCampaignEmailTemplate 
-} from '@/lib/email';
+import { sendBulkEmails, isEmailConfigured, getCampaignEmailTemplate } from '@/lib/email';
 import { logger } from '@/lib/logger';
 
 // Mock dependencies
@@ -124,30 +120,30 @@ describe('trigger/campaign-sender', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Default email configured
     vi.mocked(isEmailConfigured).mockReturnValue(true);
-    
+
     // Default campaign query
     vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as any);
-    
+
     // Default recipients
     vi.mocked(db.query.prospects.findMany).mockResolvedValue(mockProspects as any);
     vi.mocked(db.query.contacts.findMany).mockResolvedValue(mockContacts as any);
-    
+
     // Default workspace tier
     vi.mocked(db.query.workspaces.findFirst).mockResolvedValue({
       id: mockWorkspaceId,
       subscriptionTier: 'pro',
     } as any);
-    
+
     // Default email template
     vi.mocked(getCampaignEmailTemplate).mockReturnValue({
       subject: 'Introducing Our New Product',
       html: '<p>Hi there, check out our amazing new product!</p>',
       text: 'Hi there, check out our amazing new product!',
     });
-    
+
     // Default bulk send success
     vi.mocked(sendBulkEmails).mockResolvedValue({
       sent: 3,
@@ -169,12 +165,12 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(true);
       expect(result.sent).toBe(3);
       expect(result.failed).toBe(0);
       expect(result.total).toBe(3);
-      
+
       expect(logger.info).toHaveBeenCalledWith(
         'Starting campaign send via background job',
         expect.any(Object)
@@ -192,7 +188,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Email service not configured');
     });
@@ -204,7 +200,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: 'nonexistent',
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Campaign not found');
     });
@@ -219,7 +215,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Campaign already sent');
     });
@@ -229,7 +225,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(db.update).toHaveBeenCalled();
     });
 
@@ -243,7 +239,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Campaign missing subject or body');
     });
@@ -258,7 +254,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Campaign missing subject or body');
     });
@@ -268,12 +264,10 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(db.query.prospects.findMany).toHaveBeenCalled();
       expect(sendBulkEmails).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ to: 'prospect1@example.com' }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ to: 'prospect1@example.com' })]),
         expect.any(Number),
         expect.any(Number)
       );
@@ -284,14 +278,14 @@ describe('trigger/campaign-sender', () => {
         ...mockCampaign,
         tags: ['new_leads'],
       } as any);
-      
+
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([mockProspects[0]] as any);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.total).toBe(1);
     });
 
@@ -300,16 +294,17 @@ describe('trigger/campaign-sender', () => {
         ...mockCampaign,
         tags: ['qualified_leads'],
       } as any);
-      
-      vi.mocked(db.query.prospects.findMany).mockResolvedValue(
-        [mockProspects[1], mockProspects[2]] as any
-      );
+
+      vi.mocked(db.query.prospects.findMany).mockResolvedValue([
+        mockProspects[1],
+        mockProspects[2],
+      ] as any);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.total).toBe(2);
     });
 
@@ -323,12 +318,10 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(db.query.contacts.findMany).toHaveBeenCalled();
       expect(sendBulkEmails).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ to: 'contact1@example.com' }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ to: 'contact1@example.com' })]),
         expect.any(Number),
         expect.any(Number)
       );
@@ -341,7 +334,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('No recipients found');
     });
@@ -356,7 +349,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.total).toBe(3); // Should skip empty email
     });
 
@@ -366,14 +359,14 @@ describe('trigger/campaign-sender', () => {
         name: `Prospect ${i}`,
         stage: 'new',
       }));
-      
+
       vi.mocked(db.query.prospects.findMany).mockResolvedValue(manyProspects as any);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.total).toBe(1000);
     });
 
@@ -382,7 +375,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(sendBulkEmails).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
@@ -399,7 +392,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(sendBulkEmails).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
@@ -420,7 +413,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(sendBulkEmails).toHaveBeenCalledWith(
         expect.any(Array),
         10, // batch size
@@ -433,7 +426,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(db.update).toHaveBeenCalled();
     });
 
@@ -442,7 +435,7 @@ describe('trigger/campaign-sender', () => {
         ...mockCampaign,
         tags: ['all_contacts'],
       } as any);
-      
+
       vi.mocked(db.query.contacts.findMany).mockResolvedValue([
         {
           email: 'noname@example.com',
@@ -455,7 +448,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.total).toBe(1);
       expect(sendBulkEmails).toHaveBeenCalledWith(
         expect.arrayContaining([
@@ -478,7 +471,7 @@ describe('trigger/campaign-sender', () => {
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
       });
-      
+
       expect(result.success).toBe(true);
       expect(result.sent).toBe(2);
       expect(result.failed).toBe(1);
@@ -494,15 +487,15 @@ describe('trigger/campaign-sender', () => {
 
     it('should schedule campaign for future send', async () => {
       const { wait } = await import('@trigger.dev/sdk/v3');
-      
+
       vi.mocked(wait.until).mockResolvedValue();
-      
+
       // Mock triggerAndWait
       const mockTriggerAndWait = vi.fn().mockResolvedValue({
         ok: true,
         output: { sent: 3, failed: 0 },
       });
-      
+
       (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
 
       const result = await scheduleCampaignTask.run({
@@ -510,7 +503,7 @@ describe('trigger/campaign-sender', () => {
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       expect(result.success).toBe(true);
       expect(wait.until).toHaveBeenCalled();
       expect(mockTriggerAndWait).toHaveBeenCalled();
@@ -525,7 +518,7 @@ describe('trigger/campaign-sender', () => {
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       expect(db.update).toHaveBeenCalled();
     });
 
@@ -538,7 +531,7 @@ describe('trigger/campaign-sender', () => {
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       expect(wait.until).toHaveBeenCalledWith({
         date: expect.any(Date),
         throwIfInThePast: false,
@@ -548,17 +541,25 @@ describe('trigger/campaign-sender', () => {
     it('should not wait if scheduled time is in the past', async () => {
       const { wait } = await import('@trigger.dev/sdk/v3');
       const pastDate = new Date(Date.now() - 3600000).toISOString(); // 1 hour ago
-      
+
       vi.mocked(wait.until).mockResolvedValue();
+
+      const mockTriggerAndWait = vi.fn().mockResolvedValue({
+        ok: true,
+        output: { sent: 3 },
+      });
+
+      (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
 
       await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
         scheduledFor: pastDate,
       });
-      
-      // Should still call wait.until but with throwIfInThePast: false
-      expect(wait.until).toHaveBeenCalled();
+
+      // Should not call wait.until if time is in the past (check skipped in implementation)
+      // Implementation has: if (sendTime.getTime() > Date.now())
+      expect(wait.until).not.toHaveBeenCalled();
     });
 
     it('should re-fetch campaign after waiting', async () => {
@@ -570,7 +571,7 @@ describe('trigger/campaign-sender', () => {
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       // Should query campaign twice: once at start, once after wait
       expect(db.query.campaigns.findFirst).toHaveBeenCalled();
     });
@@ -578,83 +579,102 @@ describe('trigger/campaign-sender', () => {
     it('should cancel if campaign was completed while waiting', async () => {
       const { wait } = await import('@trigger.dev/sdk/v3');
       vi.mocked(wait.until).mockResolvedValue();
-      
-      // Return completed status on second query
-      vi.mocked(db.query.campaigns.findFirst)
-        .mockResolvedValueOnce(mockCampaign as any)
-        .mockResolvedValueOnce({
-          ...mockCampaign,
-          status: 'completed',
-        } as any);
+
+      // The implementation queries the campaign after wait.until()
+      // First query is implicit from default mock, second query after wait returns completed
+      vi.mocked(db.query.campaigns.findFirst).mockResolvedValueOnce({
+        ...mockCampaign,
+        status: 'completed',
+      } as any);
 
       const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       expect(result.success).toBe(false);
-      expect(result.error).toContain('cancelled or already sent');
+      expect(result.error).toBe('Campaign was cancelled or already sent');
     });
 
     it('should cancel if campaign was paused while waiting', async () => {
       const { wait } = await import('@trigger.dev/sdk/v3');
       vi.mocked(wait.until).mockResolvedValue();
-      
-      vi.mocked(db.query.campaigns.findFirst)
-        .mockResolvedValueOnce(mockCampaign as any)
-        .mockResolvedValueOnce({
-          ...mockCampaign,
-          status: 'paused',
-        } as any);
+
+      // The implementation checks campaign status after waiting
+      // Set it to return paused status
+      vi.mocked(db.query.campaigns.findFirst).mockResolvedValueOnce({
+        ...mockCampaign,
+        status: 'paused',
+      } as any);
 
       const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       expect(result.success).toBe(false);
+      expect(result.error).toBe('Campaign was cancelled or already sent');
     });
 
     it('should use workspace tier for queue options', async () => {
       const { wait } = await import('@trigger.dev/sdk/v3');
       const { buildWorkspaceQueueOptions } = await import('@/trigger/queues');
-      
+
       vi.mocked(wait.until).mockResolvedValue();
+
+      // Set up triggerAndWait mock to avoid the test calling the real implementation
+      const mockTriggerAndWait = vi.fn().mockResolvedValue({
+        ok: true,
+        output: { sent: 3 },
+      });
+
+      (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
+
+      // Ensure campaign query works
+      vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as any);
 
       await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       expect(db.query.workspaces.findFirst).toHaveBeenCalled();
-      expect(buildWorkspaceQueueOptions).toHaveBeenCalledWith(
-        mockWorkspaceId,
-        'pro'
-      );
+      expect(buildWorkspaceQueueOptions).toHaveBeenCalledWith(mockWorkspaceId, 'pro');
     });
 
     it('should use idempotency key for send task', async () => {
       const { wait } = await import('@trigger.dev/sdk/v3');
       vi.mocked(wait.until).mockResolvedValue();
-      
+
+      // Set up mock BEFORE the test runs
       const mockTriggerAndWait = vi.fn().mockResolvedValue({
         ok: true,
-        output: { sent: 3 },
+        output: { sent: 3, failed: 0, total: 3 },
       });
-      
+
+      // Must set this before calling scheduleCampaignTask.run
       (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
 
-      await scheduleCampaignTask.run({
+      // Ensure campaign query returns valid campaign
+      vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as any);
+
+      const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
+      // Should have succeeded
+      expect(result.success).toBe(true);
+
       expect(mockTriggerAndWait).toHaveBeenCalledWith(
-        expect.any(Object),
+        expect.objectContaining({
+          campaignId: mockCampaignId,
+          workspaceId: mockWorkspaceId,
+        }),
         expect.objectContaining({
           idempotencyKey: `campaign-${mockCampaignId}-send`,
         })
@@ -664,12 +684,12 @@ describe('trigger/campaign-sender', () => {
     it('should handle send task failure', async () => {
       const { wait } = await import('@trigger.dev/sdk/v3');
       vi.mocked(wait.until).mockResolvedValue();
-      
+
       const mockTriggerAndWait = vi.fn().mockResolvedValue({
         ok: false,
         error: 'Send failed',
       });
-      
+
       (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
 
       const result = await scheduleCampaignTask.run({
@@ -677,7 +697,7 @@ describe('trigger/campaign-sender', () => {
         workspaceId: mockWorkspaceId,
         scheduledFor: mockScheduledFor,
       });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toBe('Send failed');
     });

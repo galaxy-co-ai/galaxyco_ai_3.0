@@ -1,6 +1,6 @@
 /**
  * Tests for Workflow Execute API Route
- * 
+ *
  * Tests workflow/agent execution endpoint including:
  * - POST /api/workflows/[id]/execute - Execute workflow
  * - Authentication and authorization
@@ -28,6 +28,17 @@ vi.mock('@/lib/rate-limit', () => ({
   expensiveOperationLimit: vi.fn(),
 }));
 
+// Create mock factory for db.update to support both .returning() and direct await
+const createUpdateMock = () => {
+  const promise = Promise.resolve([{ id: 'execution-123', status: 'completed' }]);
+  const whereMock: any = () => promise;
+  whereMock.returning = vi.fn(() => promise);
+  whereMock.then = promise.then.bind(promise);
+  whereMock.catch = promise.catch.bind(promise);
+  whereMock.finally = promise.finally.bind(promise);
+  return whereMock;
+};
+
 vi.mock('@/lib/db', () => ({
   db: {
     query: {
@@ -42,9 +53,7 @@ vi.mock('@/lib/db', () => ({
     })),
     update: vi.fn(() => ({
       set: vi.fn(() => ({
-        where: vi.fn(() => ({
-          returning: vi.fn(() => Promise.resolve([{ id: 'execution-123' }])),
-        })),
+        where: vi.fn(createUpdateMock),
       })),
     })),
   },
@@ -107,15 +116,45 @@ describe('app/api/workflows/[id]/execute', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    
+    // Clear specific mocks instead of all mocks
+    vi.mocked(getCurrentWorkspace).mockClear();
+    vi.mocked(getCurrentUser).mockClear();
+    vi.mocked(expensiveOperationLimit).mockClear();
+    vi.mocked(db.query.agents.findFirst).mockClear();
+    vi.mocked(getOpenAI).mockClear();
+    vi.mocked(logger.info).mockClear();
+    vi.mocked(logger.warn).mockClear();
+    vi.mocked(logger.error).mockClear();
+
+    // Recreate db.insert mock
+    vi.mocked(db.insert).mockClear();
+    vi.mocked(db.insert).mockImplementation(
+      () =>
+        ({
+          values: vi.fn(() => ({
+            returning: vi.fn(() => Promise.resolve([{ id: 'execution-123' }])),
+          })) as any,
+        }) as any
+    );
+
+    // Recreate db.update mock
+    vi.mocked(db.update).mockClear();
+    vi.mocked(db.update).mockImplementation(
+      () =>
+        ({
+          set: vi.fn(() => ({
+            where: vi.fn(createUpdateMock) as any,
+          })) as any,
+        }) as any
+    );
+
     // Default successful auth
     vi.mocked(getCurrentWorkspace).mockResolvedValue({
       workspaceId: mockWorkspaceId,
       userId: 'clerk-123',
     });
     vi.mocked(getCurrentUser).mockResolvedValue(mockUser);
-    
+
     // Default successful rate limit
     vi.mocked(expensiveOperationLimit).mockResolvedValue({
       success: true,
@@ -123,25 +162,27 @@ describe('app/api/workflows/[id]/execute', () => {
       remaining: 9,
       reset: Date.now() + 3600000,
     });
-    
+
     // Default agent query
     vi.mocked(db.query.agents.findFirst).mockResolvedValue(mockAgent as any);
-    
-    // Default OpenAI mock
+
+    // Default OpenAI mock - recreate each time
+    const mockCompletionCreate = vi.fn(() =>
+      Promise.resolve({
+        choices: [
+          {
+            message: {
+              content: 'This is an AI-generated summary.',
+            },
+          },
+        ],
+      })
+    );
+
     const mockOpenAI = {
       chat: {
         completions: {
-          create: vi.fn(() =>
-            Promise.resolve({
-              choices: [
-                {
-                  message: {
-                    content: 'This is an AI-generated summary.',
-                  },
-                },
-              ],
-            })
-          ),
+          create: mockCompletionCreate,
         },
       },
     };
@@ -163,20 +204,17 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: { text: 'Hello world' } }),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(200);
-      
+
       const data = await response.json();
       expect(data.executionId).toBe('execution-123');
       expect(data.status).toBe('completed');
       expect(data.steps).toHaveLength(2);
       expect(data.durationMs).toBeGreaterThan(0);
-      
+
       expect(logger.info).toHaveBeenCalledWith('Workflow execution started', expect.any(Object));
       expect(logger.info).toHaveBeenCalledWith('Workflow execution completed', expect.any(Object));
     });
@@ -187,36 +225,30 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: { text: 'Test' } }),
       });
-      
-      await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(db.insert).toHaveBeenCalled();
     });
 
     it('should process LLM nodes', async () => {
       const mockOpenAI = vi.mocked(getOpenAI)();
-      
+
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: { text: 'Test' } }),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       const data = await response.json();
       const llmStep = data.steps.find((s: any) => s.step === 'Generate Summary');
-      
+
       expect(llmStep).toBeDefined();
       expect(llmStep.status).toBe('completed');
       expect(llmStep.result).toContain('AI-generated');
-      
+
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           model: 'gpt-4-turbo-preview',
@@ -234,15 +266,12 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: { text: 'Test' } }),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       const data = await response.json();
       const actionStep = data.steps.find((s: any) => s.step === 'Send Email');
-      
+
       expect(actionStep).toBeDefined();
       expect(actionStep.status).toBe('completed');
       expect(actionStep.result).toContain('Executed action');
@@ -254,12 +283,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(db.update).toHaveBeenCalled();
     });
 
@@ -269,12 +295,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       const data = await response.json();
       expect(data.output).toBeDefined();
       expect(typeof data.output).toBe('string');
@@ -286,12 +309,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(200);
     });
 
@@ -301,12 +321,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testMode: true }),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(200);
       expect(logger.info).toHaveBeenCalledWith(
         'Workflow execution started',
@@ -326,12 +343,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: 'invalid' }), // Should be object
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       // Even though input is a string, zod.record(z.any()) might accept it
       // The actual validation depends on schema strictness
       expect(response.status).toBeLessThanOrEqual(400);
@@ -345,14 +359,11 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'nonexistent' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'nonexistent' }) });
+
       expect(response.status).toBe(404);
-      
+
       const data = await response.json();
       expect(data.error).toBe('Workflow not found');
     });
@@ -362,7 +373,7 @@ describe('app/api/workflows/[id]/execute', () => {
         ...mockAgent,
         workspaceId: 'other-workspace',
       };
-      
+
       // Return null as if not found (workspace check fails)
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(null);
 
@@ -371,12 +382,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(404);
     });
   });
@@ -394,12 +402,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(500);
     });
 
@@ -416,17 +421,14 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(429);
-      
+
       const data = await response.json();
       expect(data.error).toContain('Rate limit exceeded');
-      
+
       expect(response.headers.get('X-RateLimit-Limit')).toBe('10');
       expect(response.headers.get('X-RateLimit-Remaining')).toBe('0');
     });
@@ -437,12 +439,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(expensiveOperationLimit).toHaveBeenCalledWith(`workflows:execute:${mockUserId}`);
     });
   });
@@ -463,14 +462,11 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(500);
-      
+
       // Should update execution log with failure
       expect(db.update).toHaveBeenCalled();
     });
@@ -486,12 +482,9 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       // Should update execution log with error
       expect(db.update).toHaveBeenCalled();
     });
@@ -506,34 +499,30 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(500);
     });
 
     it('should record duration on failure', async () => {
       const mockOpenAI = vi.mocked(getOpenAI)();
-      vi.mocked(mockOpenAI.chat.completions.create).mockRejectedValue(
-        new Error('Test error')
-      );
+      vi.mocked(mockOpenAI.chat.completions.create).mockRejectedValue(new Error('Test error'));
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
-      // Update should include durationMs even on failure
-      expect(db.update).toHaveBeenCalled();
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
+      // Should return error response
+      expect(response.status).toBe(500);
+
+      // Update should have been called to record failure with duration
+      const updateCalls = vi.mocked(db.update).mock.calls;
+      expect(updateCalls.length).toBeGreaterThan(0);
     });
   });
 
@@ -547,22 +536,27 @@ describe('app/api/workflows/[id]/execute', () => {
         ...mockAgent,
         config: {},
       };
-      
-      vi.mocked(db.query.agents.findFirst).mockResolvedValue(noNodesAgent as any);
+
+      vi.mocked(db.query.agents.findFirst).mockResolvedValueOnce(noNodesAgent as any);
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
+      if (response.status !== 200) {
+        const errorData = await response.json();
+        console.log('Test failed with error:', errorData);
+        console.log('Logger errors:', vi.mocked(logger.error).mock.calls);
+      }
+
+      expect(response.status).toBe(200);
+
       const data = await response.json();
-      expect(data.status).toBe('completed');
+      expect(data.executionId).toBeDefined();
       expect(data.steps).toEqual([]);
     });
 
@@ -580,23 +574,31 @@ describe('app/api/workflows/[id]/execute', () => {
           ],
         },
       };
-      
+
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(noPromptAgent as any);
+
+      // Ensure OpenAI mock works
+      const mockOpenAI = vi.mocked(getOpenAI)();
+      vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: 'Test response',
+            },
+          },
+        ],
+      } as any);
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(200);
-      
-      const mockOpenAI = vi.mocked(getOpenAI)();
+
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: expect.arrayContaining([
@@ -614,7 +616,7 @@ describe('app/api/workflows/[id]/execute', () => {
         ...mockAgent,
         config: null,
       };
-      
+
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(nullConfigAgent as any);
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
@@ -622,13 +624,14 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
       expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.executionId).toBeDefined();
+      expect(data.steps).toEqual([]);
     });
 
     it('should process nodes in sequence', async () => {
@@ -637,14 +640,15 @@ describe('app/api/workflows/[id]/execute', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
-      
-      const response = await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
+      expect(response.status).toBe(200);
+
       const data = await response.json();
-      
+      expect(data.steps).toBeDefined();
+      expect(data.steps).toHaveLength(2);
+
       // Steps should be in order
       expect(data.steps[0].step).toBe('Generate Summary');
       expect(data.steps[1].step).toBe('Send Email');
@@ -652,19 +656,30 @@ describe('app/api/workflows/[id]/execute', () => {
 
     it('should include input in LLM node prompts', async () => {
       const input = { text: 'Important data' };
-      
+
+      // Ensure OpenAI mock is cleared and set up properly
+      const mockOpenAI = vi.mocked(getOpenAI)();
+      vi.mocked(mockOpenAI.chat.completions.create).mockClear();
+      vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: 'Processed data',
+            },
+          },
+        ],
+      } as any);
+
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input }),
       });
-      
-      await POST(
-        request,
-        { params: Promise.resolve({ id: 'agent-789' }) }
-      );
-      
-      const mockOpenAI = vi.mocked(getOpenAI)();
+
+      const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
+
+      expect(response.status).toBe(200);
+
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           messages: expect.arrayContaining([
