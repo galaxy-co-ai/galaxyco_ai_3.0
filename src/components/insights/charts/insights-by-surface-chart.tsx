@@ -2,7 +2,6 @@
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { CATEGORY_COLORS } from '@/components/ui/chart';
-import { cn } from '@/lib/utils';
 
 interface InsightsBySurfaceChartProps {
   data: {
@@ -107,7 +106,7 @@ export function InsightsBySurfaceChart({
           <Bar
             dataKey="value"
             radius={[0, 4, 4, 0]}
-            onClick={(data) => onBarClick?.(data.category)}
+            onClick={(data) => onBarClick?.((data as unknown as { category: string }).category)}
             style={{ cursor: onBarClick ? 'pointer' : 'default' }}
           >
             {chartData.map((entry, index) => (

@@ -1,8 +1,6 @@
 'use client';
 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { CHART_COLORS } from '@/components/ui/chart';
-import { cn } from '@/lib/utils';
 
 interface ConfidenceDistributionChartProps {
   data: {
@@ -102,7 +100,7 @@ export function ConfidenceDistributionChart({
           <Bar
             dataKey="count"
             radius={[4, 4, 0, 0]}
-            onClick={(data) => onBucketClick?.(data.bucket)}
+            onClick={(data) => onBucketClick?.((data as unknown as { bucket: string }).bucket)}
             style={{ cursor: onBucketClick ? 'pointer' : 'default' }}
           >
             {chartData.map((entry, index) => (
