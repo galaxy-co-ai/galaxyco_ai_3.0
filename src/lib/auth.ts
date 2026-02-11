@@ -21,6 +21,14 @@ const SYSTEM_ADMIN_EMAILS: string[] = [
   'aryan@heizen.work', // Heizen demo access
 ];
 
+const isDevBypassEnabled = () => process.env.ALLOW_DEV_BYPASS === 'true';
+
+const assertDevBypassAllowed = () => {
+  if (isDevBypassEnabled() && process.env.NODE_ENV === 'production') {
+    throw new Error('ALLOW_DEV_BYPASS cannot be enabled in production');
+  }
+};
+
 /**
  * Checks if the current user is a system administrator
  *
@@ -114,11 +122,12 @@ export async function getAdminContext() {
  * ```
  */
 export const getCurrentWorkspace = cache(async () => {
+  assertDevBypassAllowed();
   const { userId, orgId, orgSlug: _orgSlug } = await auth();
 
   // TEMPORARY: Development bypass for testing
   // Use explicit environment variable instead of NODE_ENV to prevent accidental production deployment
-  if (!userId && process.env.ALLOW_DEV_BYPASS === 'true') {
+  if (!userId && isDevBypassEnabled()) {
     logger.warn('⚠️ DEV BYPASS ACTIVE - Remove before production!');
 
     // Get or create test workspace
@@ -404,11 +413,12 @@ export const getCurrentWorkspace = cache(async () => {
  * ```
  */
 export async function getCurrentUser() {
+  assertDevBypassAllowed();
   const { userId } = await auth();
 
   // TEMPORARY: Development bypass for testing
   // Use explicit environment variable instead of NODE_ENV to prevent accidental production deployment
-  if (!userId && process.env.ALLOW_DEV_BYPASS === 'true') {
+  if (!userId && isDevBypassEnabled()) {
     logger.warn('⚠️ DEV BYPASS ACTIVE - Remove before production!');
 
     // Return a test user object

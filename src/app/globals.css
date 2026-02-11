@@ -109,12 +109,12 @@
   --sidebar-border: rgba(0, 0, 0, 0.08);
   --sidebar-ring: var(--accent-cyan);
 
-  /* Chart Colors */
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /* Chart Colors - Vibrant Fusedash-style palette */
+  --chart-1: hsl(262, 83%, 58%);  /* Purple - primary */
+  --chart-2: hsl(221, 83%, 53%);  /* Blue */
+  --chart-3: hsl(24, 95%, 53%);   /* Orange */
+  --chart-4: hsl(173, 80%, 40%);  /* Teal */
+  --chart-5: hsl(280, 65%, 60%);  /* Violet */
 
   /* Status Colors */
   --status-success: #34C759;
