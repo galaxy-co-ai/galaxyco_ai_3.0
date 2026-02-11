@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-02-10 (e4ed167)  
+**Updated Through:** 2026-02-10 (2ad8874)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,8 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-02-10 2ad8874 chore: auto-fix lint errors and remove unused imports
+- 2026-02-10 faf8239 fix(insights): resolve TypeScript errors in chart click handlers
 - 2026-02-10 e4ed167 docs: add CLAUDE.md and INDEX.md for AI-assisted development
 - 2026-02-10 d6eaf18 docs: add demo preparation materials and archive old status
 - 2026-02-10 d138537 test: refactor assistant, workflow execution, and campaign tests
@@ -45,8 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-01-26 8dd65c7 chore: remove dead code and add architecture documentation
 - 2026-01-26 7b9beb6 fix: add missing Drizzle relations for integrations tables
 - 2026-01-21 8f0145e fix(web): update feature card bullet points
-- 2026-01-21 f8660f9 feat(web): update landing page hero and feature cards
-- 2026-01-21 8b19354 fix(api): make pageContext optional in Neptune chat schema
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
