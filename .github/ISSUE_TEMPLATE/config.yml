@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://docs.galaxyco.ai
+    about: Check our documentation for guides and API references
+  - name: Support
+    url: mailto:hello@galaxyco.ai
+    about: Contact support for account or billing issues
