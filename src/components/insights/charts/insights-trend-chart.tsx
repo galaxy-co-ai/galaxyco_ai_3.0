@@ -69,7 +69,7 @@ export function InsightsTrendChart({
           margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
           onClick={(e) => {
             if (e?.activeLabel) {
-              onPointClick?.(e.activeLabel);
+              onPointClick?.(String(e.activeLabel));
             }
           }}
           style={{ cursor: onPointClick ? 'pointer' : 'default' }}
