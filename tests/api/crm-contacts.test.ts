@@ -175,7 +175,7 @@ describe('POST /api/crm/contacts', () => {
           createdAt: new Date(),
         }])),
       })),
-    } as any);
+    } as unknown as ReturnType<typeof db.insert>);
 
     const request = new NextRequest('http://localhost:3000/api/crm/contacts', {
       method: 'POST',
@@ -209,7 +209,7 @@ describe('POST /api/crm/contacts', () => {
           createdAt: new Date(),
         }])),
       })),
-    } as any);
+    } as unknown as ReturnType<typeof db.insert>);
 
     const request = new NextRequest('http://localhost:3000/api/crm/contacts', {
       method: 'POST',

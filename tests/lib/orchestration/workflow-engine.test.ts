@@ -52,7 +52,7 @@ vi.mock('@/lib/logger', () => ({
 
 vi.mock('@/lib/orchestration/message-bus', () => {
   return {
-    AgentMessageBus: vi.fn(function (this: any, workspaceId: string) {
+    AgentMessageBus: vi.fn(function (this: unknown, workspaceId: string) {
       return {
         workspaceId,
         subscribe: vi.fn(),
@@ -66,7 +66,7 @@ vi.mock('@/lib/orchestration/message-bus', () => {
 
 vi.mock('@/lib/orchestration/memory', () => {
   return {
-    AgentMemoryService: vi.fn(function (this: any, workspaceId: string) {
+    AgentMemoryService: vi.fn(function (this: unknown, workspaceId: string) {
       return {
         workspaceId,
         store: vi.fn(() => Promise.resolve()),
@@ -138,7 +138,7 @@ describe('orchestration/workflow-engine', () => {
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue({
         ...mockWorkflow,
         status: 'draft',
-      } as any);
+      } as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -156,7 +156,7 @@ describe('orchestration/workflow-engine', () => {
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue({
         ...mockWorkflow,
         steps: [],
-      } as any);
+      } as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -172,7 +172,7 @@ describe('orchestration/workflow-engine', () => {
 
     it('should create execution record and start workflow', async () => {
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -194,19 +194,19 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       const mockAgent = {
         id: 'agent-1',
         name: 'Test Agent',
         systemPrompt: 'You are a test agent',
       };
-      vi.mocked(db.query.agents.findFirst).mockResolvedValue(mockAgent as any);
+      vi.mocked(db.query.agents.findFirst).mockResolvedValue(mockAgent as never);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue({
         ...mockExecution,
         completedSteps: 1,
-      } as any);
+      } as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -215,7 +215,7 @@ describe('orchestration/workflow-engine', () => {
         initialContext: { userId: 'user-123' },
       };
 
-      const result = await workflowEngine.execute(options);
+      const _result = await workflowEngine.execute(options);
 
       expect(mockInsert).toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalledWith(
@@ -226,7 +226,7 @@ describe('orchestration/workflow-engine', () => {
 
     it('should store execution context in memory', async () => {
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -248,16 +248,16 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-1',
-      } as any);
+      } as never);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue({
         ...mockExecution,
         completedSteps: 1,
-      } as any);
+      } as never);
 
       const mockMemoryService = {
         store: vi.fn(() => Promise.resolve()),
@@ -266,11 +266,11 @@ describe('orchestration/workflow-engine', () => {
       };
       
       // Override the mock for this specific test
-      const MockMemoryConstructor = vi.fn(function (this: any) {
+      const MockMemoryConstructor = vi.fn(function (this: unknown) {
         return mockMemoryService;
-      }) as any;
-      
-      vi.mocked(AgentMemoryService).mockImplementation(MockMemoryConstructor);
+      });
+
+      vi.mocked(AgentMemoryService).mockImplementation(MockMemoryConstructor as never);
 
       const engine = new WorkflowEngine('workspace-123');
 
@@ -293,7 +293,7 @@ describe('orchestration/workflow-engine', () => {
 
     it('should update workflow metrics after execution', async () => {
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -315,21 +315,21 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-1',
-      } as any);
+      } as never);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue({
         ...mockExecution,
         completedSteps: 1,
-      } as any);
+      } as never);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -371,7 +371,7 @@ describe('orchestration/workflow-engine', () => {
 
     it('should include trigger data in execution context', async () => {
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -394,16 +394,16 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-1',
-      } as any);
+      } as never);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue({
         ...mockExecution,
         completedSteps: 1,
-      } as any);
+      } as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -449,7 +449,7 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue(
-        mockExecution as any
+        mockExecution as never
       );
 
       const result = await workflowEngine.resume('exec-1');
@@ -474,7 +474,7 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue(
-        mockExecution as any
+        mockExecution as never
       );
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(null);
 
@@ -522,27 +522,27 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst)
-        .mockResolvedValueOnce(mockExecution as any)
+        .mockResolvedValueOnce(mockExecution as never)
         .mockResolvedValueOnce({
           ...mockExecution,
           status: 'completed',
           completedSteps: 2,
-        } as any);
+        } as never);
 
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-2',
-      } as any);
+      } as never);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as never);
 
-      const result = await workflowEngine.resume('exec-1');
+      const _result = await workflowEngine.resume('exec-1');
 
       expect(mockUpdate).toHaveBeenCalled();
       expect(mockSet).toHaveBeenCalledWith(
@@ -603,10 +603,10 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue(
-        mockExecution as any
+        mockExecution as never
       );
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const result = await workflowEngine.resume('exec-1');
@@ -658,7 +658,7 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -680,16 +680,16 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-1',
-      } as any);
+      } as never);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue({
         ...mockExecution,
         completedSteps: 1,
-      } as any);
+      } as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -722,7 +722,7 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -744,13 +744,13 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       // Agent not found simulates timeout/error
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(null);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue(
-        mockExecution as any
+        mockExecution as never
       );
 
       const options: ExecuteWorkflowOptions = {
@@ -782,7 +782,7 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -804,12 +804,12 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(null);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue(
-        mockExecution as any
+        mockExecution as never
       );
 
       const options: ExecuteWorkflowOptions = {
@@ -845,7 +845,7 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -867,21 +867,21 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-1',
-      } as any);
+      } as never);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue({
         ...mockExecution,
         completedSteps: 1,
-      } as any);
+      } as never);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -913,7 +913,7 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       const mockExecution = {
@@ -938,16 +938,16 @@ describe('orchestration/workflow-engine', () => {
           returning: vi.fn(() => Promise.resolve([mockExecution])),
         })),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as never);
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-1',
-      } as any);
+      } as never);
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst).mockResolvedValue({
         ...mockExecution,
         completedSteps: 1,
-      } as any);
+      } as never);
 
       const options: ExecuteWorkflowOptions = {
         workflowId: 'workflow-1',
@@ -1006,25 +1006,25 @@ describe('orchestration/workflow-engine', () => {
       };
 
       vi.mocked(db.query.agentWorkflowExecutions.findFirst)
-        .mockResolvedValueOnce(mockExecution as any)
+        .mockResolvedValueOnce(mockExecution as never)
         .mockResolvedValueOnce({
           ...mockExecution,
           status: 'completed',
           completedSteps: 2,
-        } as any);
+        } as never);
 
       vi.mocked(db.query.agentWorkflows.findFirst).mockResolvedValue(
-        mockWorkflow as any
+        mockWorkflow as never
       );
 
       vi.mocked(db.query.agents.findFirst).mockResolvedValue({
         id: 'agent-2',
-      } as any);
+      } as never);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as never);
 
       const result = await workflowEngine.resume('exec-1');
 

@@ -622,7 +622,7 @@ describe('serializePageContext', () => {
     const serialized = serializePageContext(context);
 
     expect(serialized.selectedCount).toBe(10);
-    expect((serialized.selectedItems as any[]).length).toBe(5);
+    expect((serialized.selectedItems as unknown[]).length).toBe(5);
   });
 
   it('should serialize focused item', () => {
@@ -644,7 +644,7 @@ describe('serializePageContext', () => {
       name: 'Test Lead',
     });
     // Metadata should not be included
-    expect((serialized.focusedItem as any)?.metadata).toBeUndefined();
+    expect((serialized.focusedItem as Record<string, unknown>)?.metadata).toBeUndefined();
   });
 
   it('should serialize wizard state', () => {
@@ -666,7 +666,7 @@ describe('serializePageContext', () => {
       name: 'Design',
     });
     // Full data should not be included
-    expect((serialized.wizardState as any)?.data).toBeUndefined();
+    expect((serialized.wizardState as Record<string, unknown>)?.data).toBeUndefined();
   });
 
   it('should include search query', () => {

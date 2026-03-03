@@ -64,7 +64,7 @@ test.describe('Marketing Campaigns', () => {
     const url = page.url();
     if (!url.includes('sign-in')) {
       // Neptune chat interface should be visible
-      const neptuneChat = page.locator('[data-testid="neptune-chat"]').first();
+      const _neptuneChat = page.locator('[data-testid="neptune-chat"]').first();
       const chatInput = page.locator('input[placeholder*="campaign" i], textarea[placeholder*="campaign" i]').first();
       
       if (await chatInput.isVisible({ timeout: 3000 }).catch(() => false)) {

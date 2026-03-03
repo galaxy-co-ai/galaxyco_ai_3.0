@@ -86,7 +86,7 @@ test.describe('Knowledge Base', () => {
         
         if (await fileInput.isVisible().catch(() => false)) {
           // Create a test PDF file (simple text file with .pdf extension for testing)
-          const testFilePath = path.join(__dirname, '../fixtures/test-document.pdf');
+          const _testFilePath = path.join(__dirname, '../fixtures/test-document.pdf');
           
           // In real tests, you'd have an actual PDF file in fixtures
           // For now, we'll just check if the input accepts files
@@ -366,7 +366,7 @@ test.describe('Knowledge Base', () => {
           
           // Progress indicator should appear
           const progressBar = page.locator('[role="progressbar"]').first();
-          const hasProgress = await progressBar.isVisible({ timeout: 1000 }).catch(() => false);
+          const _hasProgress = await progressBar.isVisible({ timeout: 1000 }).catch(() => false);
           
           // Wait for upload to complete
           await page.waitForTimeout(3000);

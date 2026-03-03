@@ -53,10 +53,10 @@ vi.mock('sonner', () => ({
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
+    div: ({ children, ...props }: Record<string, unknown>) => <div {...props}>{children}</div>,
+    button: ({ children, ...props }: Record<string, unknown>) => <button {...props}>{children}</button>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock components that might cause issues
@@ -151,14 +151,14 @@ describe('MarketingDashboard', () => {
     global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ 
+        json: () => Promise.resolve({
           id: 'new-campaign',
           name: 'New Campaign',
           type: 'email',
           status: 'draft',
         }),
       })
-    ) as any;
+    ) as unknown as typeof fetch;
 
     render(<MarketingDashboard {...defaultProps} />);
     
@@ -181,7 +181,7 @@ describe('MarketingDashboard', () => {
         ok: false,
         json: () => Promise.resolve({ error: 'API Error' }),
       })
-    ) as any;
+    ) as unknown as typeof fetch;
 
     // Component should render without crashing
     render(<MarketingDashboard {...defaultProps} />);
@@ -324,7 +324,7 @@ describe('MarketingDashboard - API Integration', () => {
         ok: true,
         json: () => Promise.resolve({ id: 'new-campaign' }),
       })
-    ) as any;
+    ) as unknown as typeof fetch;
 
     render(<MarketingDashboard {...defaultProps} />);
     

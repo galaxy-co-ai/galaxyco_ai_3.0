@@ -68,7 +68,7 @@ describe('cache', () => {
 
     it('should return null when Redis client is null', async () => {
       vi.mocked(shouldUseRedis).mockReturnValue(true);
-      const mockRedis = redis as any;
+      const mockRedis = redis as unknown as Record<string, unknown>;
       const originalGet = mockRedis.get;
       mockRedis.get = null;
 

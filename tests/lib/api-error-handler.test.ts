@@ -112,7 +112,7 @@ describe('createPaginatedResponse', () => {
   });
 
   it('should handle empty results', async () => {
-    const items: any[] = [];
+    const items: unknown[] = [];
     const pagination = {
       total: 0,
       limit: 10,

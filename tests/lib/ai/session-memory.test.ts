@@ -254,7 +254,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await updateSessionMemory(
         'conv-789',
@@ -350,7 +350,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const messages: Message[] = [
         { role: 'user', content: 'Message 1' },
@@ -401,7 +401,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const messages: Message[] = [
         { role: 'user', content: 'Tell me about marketing' },
@@ -449,7 +449,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const messages: Message[] = [
         { role: 'user', content: 'Tell me about email marketing' },
@@ -496,7 +496,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const messages: Message[] = Array.from({ length: 70 }, (_, i) => ({
         role: i % 2 === 0 ? 'user' : 'assistant',
@@ -551,7 +551,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await updateSessionMemory(
         'conv-789',
@@ -603,7 +603,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await updateSessionMemory(
         'conv-789',
@@ -657,7 +657,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await updateSessionMemory(
         'conv-789',
@@ -699,7 +699,7 @@ describe('ai/session-memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await updateSessionMemory(
         'conv-789',

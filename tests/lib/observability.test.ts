@@ -352,7 +352,7 @@ describe('observability', () => {
   describe('startPerformanceTransaction', () => {
     it('should start a performance span', () => {
       const mockSpan = { id: 'span-123' };
-      vi.mocked(Sentry.startSpan).mockReturnValue(mockSpan as any);
+      vi.mocked(Sentry.startSpan).mockReturnValue(mockSpan as unknown as ReturnType<typeof Sentry.startSpan>);
 
       const result = startPerformanceTransaction(
         'Neptune AI Processing',

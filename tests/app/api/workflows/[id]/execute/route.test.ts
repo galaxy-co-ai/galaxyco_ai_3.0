@@ -17,6 +17,13 @@ import { expensiveOperationLimit } from '@/lib/rate-limit';
 import { db } from '@/lib/db';
 import { getOpenAI } from '@/lib/ai-providers';
 import { logger } from '@/lib/logger';
+import type OpenAI from 'openai';
+
+interface WorkflowStep {
+  step: string;
+  status: string;
+  result?: string;
+}
 
 // Mock dependencies
 vi.mock('@/lib/auth', () => ({
@@ -31,11 +38,12 @@ vi.mock('@/lib/rate-limit', () => ({
 // Create mock factory for db.update to support both .returning() and direct await
 const createUpdateMock = () => {
   const promise = Promise.resolve([{ id: 'execution-123', status: 'completed' }]);
-  const whereMock: any = () => promise;
-  whereMock.returning = vi.fn(() => promise);
-  whereMock.then = promise.then.bind(promise);
-  whereMock.catch = promise.catch.bind(promise);
-  whereMock.finally = promise.finally.bind(promise);
+  const whereMock: ReturnType<typeof vi.fn> & { returning: ReturnType<typeof vi.fn>; then: Promise<unknown>['then']; catch: Promise<unknown>['catch']; finally: Promise<unknown>['finally'] } = Object.assign(vi.fn(() => promise), {
+    returning: vi.fn(() => promise),
+    then: promise.then.bind(promise),
+    catch: promise.catch.bind(promise),
+    finally: promise.finally.bind(promise),
+  });
   return whereMock;
 };
 
@@ -72,7 +80,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 vi.mock('@/lib/api-error-handler', () => ({
-  createErrorResponse: vi.fn((error: any, message: string) => {
+  createErrorResponse: vi.fn((_error: unknown, message: string) => {
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -133,8 +141,8 @@ describe('app/api/workflows/[id]/execute', () => {
         ({
           values: vi.fn(() => ({
             returning: vi.fn(() => Promise.resolve([{ id: 'execution-123' }])),
-          })) as any,
-        }) as any
+          })),
+        }) as unknown as ReturnType<typeof db.insert>
     );
 
     // Recreate db.update mock
@@ -143,9 +151,9 @@ describe('app/api/workflows/[id]/execute', () => {
       () =>
         ({
           set: vi.fn(() => ({
-            where: vi.fn(createUpdateMock) as any,
-          })) as any,
-        }) as any
+            where: vi.fn(createUpdateMock),
+          })),
+        }) as unknown as ReturnType<typeof db.update>
     );
 
     // Default successful auth
@@ -164,7 +172,9 @@ describe('app/api/workflows/[id]/execute', () => {
     });
 
     // Default agent query
-    vi.mocked(db.query.agents.findFirst).mockResolvedValue(mockAgent as any);
+    vi.mocked(db.query.agents.findFirst).mockResolvedValue(
+      mockAgent as unknown as Awaited<ReturnType<typeof db.query.agents.findFirst>>
+    );
 
     // Default OpenAI mock - recreate each time
     const mockCompletionCreate = vi.fn(() =>
@@ -186,7 +196,7 @@ describe('app/api/workflows/[id]/execute', () => {
         },
       },
     };
-    vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+    vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as OpenAI);
   });
 
   afterEach(() => {
@@ -243,7 +253,7 @@ describe('app/api/workflows/[id]/execute', () => {
       const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
 
       const data = await response.json();
-      const llmStep = data.steps.find((s: any) => s.step === 'Generate Summary');
+      const llmStep = data.steps.find((s: WorkflowStep) => s.step === 'Generate Summary');
 
       expect(llmStep).toBeDefined();
       expect(llmStep.status).toBe('completed');
@@ -270,7 +280,7 @@ describe('app/api/workflows/[id]/execute', () => {
       const response = await POST(request, { params: Promise.resolve({ id: 'agent-789' }) });
 
       const data = await response.json();
-      const actionStep = data.steps.find((s: any) => s.step === 'Send Email');
+      const actionStep = data.steps.find((s: WorkflowStep) => s.step === 'Send Email');
 
       expect(actionStep).toBeDefined();
       expect(actionStep.status).toBe('completed');
@@ -369,11 +379,6 @@ describe('app/api/workflows/[id]/execute', () => {
     });
 
     it('should enforce workspace isolation', async () => {
-      const otherWorkspaceAgent = {
-        ...mockAgent,
-        workspaceId: 'other-workspace',
-      };
-
       // Return null as if not found (workspace check fails)
       vi.mocked(db.query.agents.findFirst).mockResolvedValue(null);
 
@@ -537,7 +542,9 @@ describe('app/api/workflows/[id]/execute', () => {
         config: {},
       };
 
-      vi.mocked(db.query.agents.findFirst).mockResolvedValueOnce(noNodesAgent as any);
+      vi.mocked(db.query.agents.findFirst).mockResolvedValueOnce(
+        noNodesAgent as unknown as Awaited<ReturnType<typeof db.query.agents.findFirst>>
+      );
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
@@ -575,7 +582,9 @@ describe('app/api/workflows/[id]/execute', () => {
         },
       };
 
-      vi.mocked(db.query.agents.findFirst).mockResolvedValue(noPromptAgent as any);
+      vi.mocked(db.query.agents.findFirst).mockResolvedValue(
+        noPromptAgent as unknown as Awaited<ReturnType<typeof db.query.agents.findFirst>>
+      );
 
       // Ensure OpenAI mock works
       const mockOpenAI = vi.mocked(getOpenAI)();
@@ -587,7 +596,7 @@ describe('app/api/workflows/[id]/execute', () => {
             },
           },
         ],
-      } as any);
+      } as unknown as OpenAI.Chat.Completions.ChatCompletion);
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
@@ -617,7 +626,9 @@ describe('app/api/workflows/[id]/execute', () => {
         config: null,
       };
 
-      vi.mocked(db.query.agents.findFirst).mockResolvedValue(nullConfigAgent as any);
+      vi.mocked(db.query.agents.findFirst).mockResolvedValue(
+        nullConfigAgent as unknown as Awaited<ReturnType<typeof db.query.agents.findFirst>>
+      );
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',
@@ -668,7 +679,7 @@ describe('app/api/workflows/[id]/execute', () => {
             },
           },
         ],
-      } as any);
+      } as unknown as OpenAI.Chat.Completions.ChatCompletion);
 
       const request = new Request('http://localhost/api/workflows/agent-789/execute', {
         method: 'POST',

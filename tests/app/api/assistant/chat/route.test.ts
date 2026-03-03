@@ -158,7 +158,7 @@ describe('app/api/assistant/chat/route', () => {
     vi.mocked(db.query.workspaces.findFirst).mockResolvedValue({
       id: mockWorkspaceId,
       subscriptionTier: 'pro',
-    } as any);
+    } as unknown as Awaited<ReturnType<typeof db.query.workspaces.findFirst>>);
 
     // Default token limit check
     vi.mocked(checkTokenLimit).mockResolvedValue({ allowed: true });
@@ -169,7 +169,7 @@ describe('app/api/assistant/chat/route', () => {
       user: mockUser,
       recentActivity: [],
       connectedApps: [],
-    } as any);
+    } as unknown as Awaited<ReturnType<typeof gatherAIContext>>);
 
     // Default system prompt
     vi.mocked(generateSystemPrompt).mockReturnValue('You are Neptune, an AI assistant.');
@@ -558,7 +558,7 @@ describe('app/api/assistant/chat/route', () => {
       };
 
       vi.mocked(gatherAIContext).mockClear();
-      vi.mocked(gatherAIContext).mockResolvedValue(mockContext as any);
+      vi.mocked(gatherAIContext).mockResolvedValue(mockContext as unknown as Awaited<ReturnType<typeof gatherAIContext>>);
       vi.mocked(generateSystemPrompt).mockClear();
 
       const request = new Request('http://localhost/api/assistant/chat', {
@@ -636,7 +636,7 @@ describe('app/api/assistant/chat/route', () => {
 
       const reader = response.body?.getReader();
       const { value } = await reader!.read();
-      const text = new TextDecoder().decode(value);
+      const _text = new TextDecoder().decode(value);
 
       // Should handle error gracefully
       expect(response.status).toBe(200); // SSE always returns 200
@@ -669,7 +669,7 @@ describe('app/api/assistant/chat/route', () => {
       vi.mocked(db.query.workspaces.findFirst).mockResolvedValue({
         id: mockWorkspaceId,
         subscriptionTier: 'free',
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof db.query.workspaces.findFirst>>);
 
       const request = new Request('http://localhost/api/assistant/chat', {
         method: 'POST',
@@ -695,7 +695,7 @@ describe('app/api/assistant/chat/route', () => {
       vi.mocked(db.query.workspaces.findFirst).mockResolvedValue({
         id: mockWorkspaceId,
         subscriptionTier: 'pro',
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof db.query.workspaces.findFirst>>);
 
       const request = new Request('http://localhost/api/assistant/chat', {
         method: 'POST',
@@ -719,7 +719,7 @@ describe('app/api/assistant/chat/route', () => {
       vi.mocked(db.query.workspaces.findFirst).mockResolvedValue({
         id: mockWorkspaceId,
         subscriptionTier: null,
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof db.query.workspaces.findFirst>>);
 
       const request = new Request('http://localhost/api/assistant/chat', {
         method: 'POST',

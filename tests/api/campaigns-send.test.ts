@@ -84,6 +84,14 @@ import { rateLimit } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
 import { getCurrentWorkspace } from '@/lib/auth';
 
+// Type aliases for mock return values to avoid verbose casts
+type WorkspaceResult = Awaited<ReturnType<typeof getCurrentWorkspace>>;
+type RateLimitReturn = Awaited<ReturnType<typeof rateLimit>>;
+type CampaignRecord = NonNullable<Awaited<ReturnType<typeof db.query.campaigns.findFirst>>>;
+type ProspectRecords = Awaited<ReturnType<typeof db.query.prospects.findMany>>;
+type ContactRecords = Awaited<ReturnType<typeof db.query.contacts.findMany>>;
+type DbUpdate = typeof db.update;
+
 describe('api/campaigns/[id]/send/route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -92,12 +100,12 @@ describe('api/campaigns/[id]/send/route', () => {
     vi.mocked(getCurrentWorkspace).mockResolvedValue({
       workspaceId: 'workspace-123',
       userId: 'user-456',
-    } as any);
+    } as unknown as WorkspaceResult);
 
     vi.mocked(rateLimit).mockResolvedValue({
       success: true,
       remaining: 4,
-    } as any);
+    } as unknown as RateLimitReturn);
 
     vi.mocked(isEmailConfigured).mockReturnValue(true);
 
@@ -112,7 +120,7 @@ describe('api/campaigns/[id]/send/route', () => {
       vi.mocked(rateLimit).mockResolvedValue({
         success: false,
         remaining: 0,
-      } as any);
+      } as unknown as RateLimitReturn);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -165,7 +173,7 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'completed',
         content: { subject: 'Test', body: 'Test body' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -185,7 +193,7 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'active',
         content: { subject: 'Test', body: 'Test body' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -205,14 +213,14 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { body: 'Test body' }, // Missing subject
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -234,14 +242,14 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Test Subject' }, // Missing body
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -261,7 +269,7 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Test', body: 'Test body' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([]);
 
@@ -270,7 +278,7 @@ describe('api/campaigns/[id]/send/route', () => {
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -292,20 +300,20 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there, welcome!' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'lead1@example.com', name: 'Lead One' },
         { email: 'lead2@example.com', name: 'Lead Two' },
         { email: 'lead3@example.com', name: 'Lead Three' },
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 3,
@@ -361,19 +369,19 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Welcome', body: 'Hi there!' },
         tags: ['new_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'new1@example.com', name: 'New Lead 1', stage: 'new' },
         { email: 'new2@example.com', name: 'New Lead 2', stage: 'new' },
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 2,
@@ -398,19 +406,19 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Premium Offer', body: 'Special for qualified leads' },
         tags: ['qualified_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'qualified1@example.com', name: 'Qualified 1', stage: 'qualified' },
         { email: 'qualified2@example.com', name: 'Qualified 2', stage: 'proposal' },
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 2,
@@ -435,20 +443,20 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there!' },
         tags: ['all_contacts'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.contacts.findMany).mockResolvedValue([
         { email: 'contact1@example.com', firstName: 'John', lastName: 'Doe' },
         { email: 'contact2@example.com', firstName: 'Jane', lastName: 'Smith' },
         { email: 'contact3@example.com', firstName: 'Bob', lastName: null },
-      ] as any);
+      ] as unknown as ContactRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 3,
@@ -479,18 +487,18 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there!' },
         tags: ['all_contacts'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.contacts.findMany).mockResolvedValue([
         { email: 'contact@example.com', firstName: null, lastName: null },
-      ] as any);
+      ] as unknown as ContactRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 1,
@@ -502,7 +510,7 @@ describe('api/campaigns/[id]/send/route', () => {
       });
       const params = Promise.resolve({ id: 'campaign-1' });
 
-      const response = await POST(request, { params });
+      await POST(request, { params });
 
       const emailsCall = vi.mocked(sendBulkEmails).mock.calls[0][0];
       expect(emailsCall[0].html).toContain('Hi there'); // Fallback name
@@ -514,21 +522,21 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there!' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       // Create 1500 prospects
       const manyProspects = Array.from({ length: 1500 }, (_, i) => ({
         email: `lead${i}@example.com`,
         name: `Lead ${i}`,
       }));
-      vi.mocked(db.query.prospects.findMany).mockResolvedValue(manyProspects as any);
+      vi.mocked(db.query.prospects.findMany).mockResolvedValue(manyProspects as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 1000,
@@ -541,7 +549,6 @@ describe('api/campaigns/[id]/send/route', () => {
       const params = Promise.resolve({ id: 'campaign-1' });
 
       const response = await POST(request, { params });
-      const data = await response.json();
 
       expect(response.status).toBe(200);
 
@@ -558,18 +565,18 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there!' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'lead@example.com', name: 'Lead' },
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -592,19 +599,19 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Hello', body: 'Hi there, welcome to our platform!' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'alice@example.com', name: 'Alice' },
         { email: 'bob@example.com', name: 'Bob' },
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       const request = new NextRequest('http://localhost/api/campaigns/campaign-1/send', {
         method: 'POST',
@@ -624,20 +631,20 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there!' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'lead1@example.com', name: 'Lead 1' },
         { email: 'lead2@example.com', name: 'Lead 2' },
         { email: 'lead3@example.com', name: 'Lead 3' },
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 2,
@@ -666,20 +673,20 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there!' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'valid@example.com', name: 'Valid Lead' },
         { email: '', name: 'No Email Lead' }, // Empty email
         { email: null, name: 'Null Email Lead' }, // Null email
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 1,
@@ -691,7 +698,7 @@ describe('api/campaigns/[id]/send/route', () => {
       });
       const params = Promise.resolve({ id: 'campaign-1' });
 
-      const response = await POST(request, { params });
+      await POST(request, { params });
 
       const emailsCall = vi.mocked(sendBulkEmails).mock.calls[0][0];
       expect(emailsCall).toHaveLength(1);
@@ -704,18 +711,18 @@ describe('api/campaigns/[id]/send/route', () => {
         status: 'draft',
         content: { subject: 'Newsletter', body: 'Hi there!' },
         tags: ['all_leads'],
-      } as any);
+      } as unknown as CampaignRecord);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: 'lead@example.com', name: 'Lead' },
-      ] as any);
+      ] as unknown as ProspectRecords);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as DbUpdate);
 
       vi.mocked(sendBulkEmails).mockResolvedValue({
         sent: 1,
@@ -750,7 +757,7 @@ describe('api/campaigns/[id]/send/route', () => {
       });
       const params = Promise.resolve({ id: 'campaign-1' });
 
-      const response = await POST(request, { params });
+      await POST(request, { params });
 
       expect(logger.error).toHaveBeenCalledWith(
         'Campaign send error',

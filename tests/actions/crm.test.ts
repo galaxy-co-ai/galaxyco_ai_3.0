@@ -18,6 +18,8 @@ import { getCacheOrFetch, invalidateCache } from '@/lib/cache';
 import { auth } from '@clerk/nextjs/server';
 import { logger } from '@/lib/logger';
 
+type AuthReturn = Awaited<ReturnType<typeof auth>>;
+
 // Mock dependencies
 vi.mock('@/lib/db', () => ({
   db: {
@@ -79,7 +81,7 @@ describe('crm actions', () => {
 
   describe('getContacts', () => {
     it('should return empty array when user is not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: null } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: null } as unknown as AuthReturn);
 
       const result = await getContacts();
 
@@ -88,7 +90,7 @@ describe('crm actions', () => {
     });
 
     it('should fetch contacts from cache or database', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -123,7 +125,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getContacts();
 
@@ -172,7 +174,7 @@ describe('crm actions', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       vi.mocked(getCacheOrFetch).mockImplementation(async (_key, fetchFn) => {
         return await fetchFn();
@@ -183,7 +185,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockRejectedValue(new Error('Database connection failed')),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getContacts();
 
@@ -195,7 +197,7 @@ describe('crm actions', () => {
     });
 
     it('should limit results to 20 contacts', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       vi.mocked(getCacheOrFetch).mockImplementation(async (_key, fetchFn) => {
         return await fetchFn();
@@ -207,7 +209,7 @@ describe('crm actions', () => {
           limit: limitSpy,
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       await getContacts();
 
@@ -217,7 +219,7 @@ describe('crm actions', () => {
 
   describe('getProjects', () => {
     it('should return empty array when user is not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: null } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: null } as unknown as AuthReturn);
 
       const result = await getProjects();
 
@@ -226,7 +228,7 @@ describe('crm actions', () => {
     });
 
     it('should fetch projects from cache or database', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -256,7 +258,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getProjects();
 
@@ -291,7 +293,7 @@ describe('crm actions', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       vi.mocked(getCacheOrFetch).mockImplementation(async (_key, fetchFn) => {
         return await fetchFn();
@@ -302,7 +304,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockRejectedValue(new Error('Query timeout')),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getProjects();
 
@@ -314,7 +316,7 @@ describe('crm actions', () => {
     });
 
     it('should convert in_progress status to active', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -336,7 +338,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getProjects();
 
@@ -346,7 +348,7 @@ describe('crm actions', () => {
 
   describe('getDeals', () => {
     it('should return empty array when user is not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: null } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: null } as unknown as AuthReturn);
 
       const result = await getDeals();
 
@@ -355,7 +357,7 @@ describe('crm actions', () => {
     });
 
     it('should fetch deals from cache or database', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -385,7 +387,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getDeals();
 
@@ -420,7 +422,7 @@ describe('crm actions', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       vi.mocked(getCacheOrFetch).mockImplementation(async (_key, fetchFn) => {
         return await fetchFn();
@@ -431,7 +433,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockRejectedValue(new Error('Connection lost')),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getDeals();
 
@@ -445,7 +447,7 @@ describe('crm actions', () => {
 
   describe('getInteractions', () => {
     it('should return empty array when user is not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: null } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: null } as unknown as AuthReturn);
 
       const result = await getInteractions();
 
@@ -454,7 +456,7 @@ describe('crm actions', () => {
     });
 
     it('should fetch interactions from cache or database', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -480,7 +482,7 @@ describe('crm actions', () => {
           }),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getInteractions();
 
@@ -519,7 +521,7 @@ describe('crm actions', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       vi.mocked(getCacheOrFetch).mockImplementation(async (_key, fetchFn) => {
         return await fetchFn();
@@ -532,7 +534,7 @@ describe('crm actions', () => {
           }),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getInteractions();
 
@@ -544,7 +546,7 @@ describe('crm actions', () => {
     });
 
     it('should limit results to 10 interactions', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       vi.mocked(getCacheOrFetch).mockImplementation(async (_key, fetchFn) => {
         return await fetchFn();
@@ -558,7 +560,7 @@ describe('crm actions', () => {
           }),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       await getInteractions();
 
@@ -566,7 +568,7 @@ describe('crm actions', () => {
     });
 
     it('should order interactions by startTime descending', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       vi.mocked(getCacheOrFetch).mockImplementation(async (_key, fetchFn) => {
         return await fetchFn();
@@ -580,7 +582,7 @@ describe('crm actions', () => {
           orderBy: orderBySpy,
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       await getInteractions();
 
@@ -591,7 +593,7 @@ describe('crm actions', () => {
 
   describe('cache integration', () => {
     it('should use 5-minute TTL for all CRM data', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
       vi.mocked(getCacheOrFetch).mockResolvedValue([]);
 
       await getContacts();
@@ -607,7 +609,7 @@ describe('crm actions', () => {
     });
 
     it('should use crm prefix for all cache keys', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
       vi.mocked(getCacheOrFetch).mockResolvedValue([]);
 
       await getContacts();
@@ -624,7 +626,7 @@ describe('crm actions', () => {
 
   describe('data transformation', () => {
     it('should handle missing optional fields in contacts', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -648,7 +650,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getContacts();
 
@@ -661,7 +663,7 @@ describe('crm actions', () => {
     });
 
     it('should format contact names correctly', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -685,7 +687,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getContacts();
 
@@ -693,7 +695,7 @@ describe('crm actions', () => {
     });
 
     it('should convert budget from cents to dollars', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -715,7 +717,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getProjects();
 
@@ -723,7 +725,7 @@ describe('crm actions', () => {
     });
 
     it('should convert deal value from cents to dollars', async () => {
-      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as any);
+      vi.mocked(auth).mockResolvedValue({ userId: 'user-123' } as unknown as AuthReturn);
 
       const mockDbData = [
         {
@@ -745,7 +747,7 @@ describe('crm actions', () => {
           limit: vi.fn().mockResolvedValue(mockDbData),
         }),
       });
-      vi.mocked(db.select).mockImplementation(mockSelect as any);
+      vi.mocked(db.select).mockImplementation(mockSelect as unknown as typeof db.select);
 
       const result = await getDeals();
 

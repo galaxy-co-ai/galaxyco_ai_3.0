@@ -20,6 +20,12 @@ import { db } from '@/lib/db';
 import { searchKnowledge, isVectorConfigured, deleteKnowledgeDocument } from '@/lib/vector';
 import { logger } from '@/lib/logger';
 
+// Type helpers for mock data (Drizzle relational query types are complex)
+type CollectionQueryResult = Awaited<ReturnType<typeof db.query.knowledgeCollections.findMany>>;
+type ItemQueryResult = Awaited<ReturnType<typeof db.query.knowledgeItems.findMany>>;
+type ItemFindFirstResult = Awaited<ReturnType<typeof db.query.knowledgeItems.findFirst>>;
+type SearchKnowledgeResult = Awaited<ReturnType<typeof searchKnowledge>>;
+
 // Mock dependencies
 vi.mock('@/lib/auth', () => ({
   getCurrentWorkspace: vi.fn(),
@@ -61,7 +67,7 @@ vi.mock('@/lib/logger', () => ({
 }));
 
 vi.mock('@/lib/api-error-handler', () => ({
-  createErrorResponse: vi.fn((error: any, message: string) => {
+  createErrorResponse: vi.fn((error: unknown, message: string) => {
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -71,7 +77,7 @@ vi.mock('@/lib/api-error-handler', () => ({
 
 describe('app/api/knowledge', () => {
   const mockWorkspaceId = 'workspace-123';
-  const mockUserId = 'user-456';
+  const _mockUserId = 'user-456';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -161,8 +167,8 @@ describe('app/api/knowledge', () => {
     ];
 
     it('should return collections and items', async () => {
-      vi.mocked(db.query.knowledgeCollections.findMany).mockResolvedValue(mockCollections as any);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockItems as any);
+      vi.mocked(db.query.knowledgeCollections.findMany).mockResolvedValue(mockCollections as unknown as CollectionQueryResult);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockItems as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge');
       const response = await GET(request);
@@ -177,8 +183,8 @@ describe('app/api/knowledge', () => {
     });
 
     it('should filter items by collection ID', async () => {
-      vi.mocked(db.query.knowledgeCollections.findMany).mockResolvedValue(mockCollections as any);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([mockItems[0]] as any);
+      vi.mocked(db.query.knowledgeCollections.findMany).mockResolvedValue(mockCollections as unknown as CollectionQueryResult);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([mockItems[0]] as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge?collectionId=col-1');
       const response = await GET(request);
@@ -202,7 +208,7 @@ describe('app/api/knowledge', () => {
 
     it('should format file sizes correctly', async () => {
       vi.mocked(db.query.knowledgeCollections.findMany).mockResolvedValue([]);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockItems as any);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockItems as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge');
       const response = await GET(request);
@@ -219,7 +225,7 @@ describe('app/api/knowledge', () => {
       };
       
       vi.mocked(db.query.knowledgeCollections.findMany).mockResolvedValue([]);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([recentItem] as any);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([recentItem] as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge');
       const response = await GET(request);
@@ -280,7 +286,7 @@ describe('app/api/knowledge', () => {
       };
       
       vi.mocked(db.query.knowledgeCollections.findMany).mockResolvedValue([]);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([itemNoName] as any);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([itemNoName] as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge');
       const response = await GET(request);
@@ -302,7 +308,7 @@ describe('app/api/knowledge', () => {
     };
 
     it('should delete knowledge item successfully', async () => {
-      vi.mocked(db.query.knowledgeItems.findFirst).mockResolvedValue(mockItem as any);
+      vi.mocked(db.query.knowledgeItems.findFirst).mockResolvedValue(mockItem as unknown as ItemFindFirstResult);
       vi.mocked(deleteKnowledgeDocument).mockResolvedValue();
 
       const request = new Request('http://localhost/api/knowledge/item-123', {
@@ -342,11 +348,6 @@ describe('app/api/knowledge', () => {
     });
 
     it('should enforce workspace isolation', async () => {
-      const otherWorkspaceItem = {
-        ...mockItem,
-        workspaceId: 'other-workspace',
-      };
-      
       vi.mocked(db.query.knowledgeItems.findFirst).mockResolvedValue(null);
 
       const request = new Request('http://localhost/api/knowledge/item-123', {
@@ -362,7 +363,7 @@ describe('app/api/knowledge', () => {
     });
 
     it('should continue when vector deletion fails', async () => {
-      vi.mocked(db.query.knowledgeItems.findFirst).mockResolvedValue(mockItem as any);
+      vi.mocked(db.query.knowledgeItems.findFirst).mockResolvedValue(mockItem as unknown as ItemFindFirstResult);
       vi.mocked(deleteKnowledgeDocument).mockRejectedValue(new Error('Vector DB error'));
 
       const request = new Request('http://localhost/api/knowledge/item-123', {
@@ -471,8 +472,8 @@ describe('app/api/knowledge', () => {
     });
 
     it('should perform hybrid search successfully', async () => {
-      vi.mocked(searchKnowledge).mockResolvedValue(mockSearchResults as any);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockDbItems as any);
+      vi.mocked(searchKnowledge).mockResolvedValue(mockSearchResults as unknown as SearchKnowledgeResult);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockDbItems as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge/search', {
         method: 'POST',
@@ -526,7 +527,7 @@ describe('app/api/knowledge', () => {
     });
 
     it('should accept optional limit parameter', async () => {
-      vi.mocked(searchKnowledge).mockResolvedValue({ results: [] } as any);
+      vi.mocked(searchKnowledge).mockResolvedValue({ results: [] } as unknown as SearchKnowledgeResult);
       vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([]);
 
       const request = new Request('http://localhost/api/knowledge/search', {
@@ -547,7 +548,7 @@ describe('app/api/knowledge', () => {
     });
 
     it('should filter by collection ID', async () => {
-      vi.mocked(searchKnowledge).mockResolvedValue({ results: [] } as any);
+      vi.mocked(searchKnowledge).mockResolvedValue({ results: [] } as unknown as SearchKnowledgeResult);
       vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([]);
 
       const request = new Request('http://localhost/api/knowledge/search', {
@@ -566,7 +567,7 @@ describe('app/api/knowledge', () => {
 
     it('should fallback to keyword search when vector search fails', async () => {
       vi.mocked(searchKnowledge).mockRejectedValue(new Error('Vector DB error'));
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockDbItems as any);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockDbItems as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge/search', {
         method: 'POST',
@@ -585,7 +586,7 @@ describe('app/api/knowledge', () => {
 
     it('should skip vector search when not configured', async () => {
       vi.mocked(isVectorConfigured).mockReturnValue(false);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockDbItems as any);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(mockDbItems as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge/search', {
         method: 'POST',
@@ -608,11 +609,11 @@ describe('app/api/knowledge', () => {
             chunk: 'Relevant chunk',
           },
         ],
-      } as any);
-      
+      } as unknown as SearchKnowledgeResult);
+
       vi.mocked(db.query.knowledgeItems.findMany)
-        .mockResolvedValueOnce(mockDbItems as any) // Vector items lookup
-        .mockResolvedValueOnce([mockDbItems[0], mockDbItems[1]] as any); // Keyword search
+        .mockResolvedValueOnce(mockDbItems as unknown as ItemQueryResult) // Vector items lookup
+        .mockResolvedValueOnce([mockDbItems[0], mockDbItems[1]] as unknown as ItemQueryResult); // Keyword search
 
       const request = new Request('http://localhost/api/knowledge/search', {
         method: 'POST',
@@ -625,7 +626,7 @@ describe('app/api/knowledge', () => {
       const data = await response.json();
       
       // Should boost items that match both vector and keyword
-      const hybridMatch = data.results.find((r: any) => r.matchType === 'hybrid');
+      const hybridMatch = data.results.find((r: Record<string, unknown>) => r.matchType === 'hybrid');
       expect(hybridMatch).toBeDefined();
     });
 
@@ -635,10 +636,10 @@ describe('app/api/knowledge', () => {
           { itemId: 'item-1', score: 0.95, chunk: 'High score' },
           { itemId: 'item-2', score: 0.60, chunk: 'Low score' },
         ],
-      } as any);
+      } as unknown as SearchKnowledgeResult);
       
       vi.mocked(db.query.knowledgeItems.findMany)
-        .mockResolvedValueOnce(mockDbItems as any);
+        .mockResolvedValueOnce(mockDbItems as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge/search', {
         method: 'POST',
@@ -659,8 +660,8 @@ describe('app/api/knowledge', () => {
         content: 'a'.repeat(500),
       };
       
-      vi.mocked(searchKnowledge).mockResolvedValue({ results: [] } as any);
-      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([longContentItem] as any);
+      vi.mocked(searchKnowledge).mockResolvedValue({ results: [] } as unknown as SearchKnowledgeResult);
+      vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue([longContentItem] as unknown as ItemQueryResult);
 
       const request = new Request('http://localhost/api/knowledge/search', {
         method: 'POST',
@@ -717,12 +718,12 @@ describe('app/api/knowledge', () => {
         chunk: `Chunk ${i}`,
       }));
       
-      vi.mocked(searchKnowledge).mockResolvedValue({ results: manyResults } as any);
+      vi.mocked(searchKnowledge).mockResolvedValue({ results: manyResults } as unknown as SearchKnowledgeResult);
       vi.mocked(db.query.knowledgeItems.findMany).mockResolvedValue(
         Array.from({ length: 15 }, (_, i) => ({
           ...mockDbItems[0],
           id: `item-${i}`,
-        })) as any
+        })) as unknown as ItemQueryResult
       );
 
       const request = new Request('http://localhost/api/knowledge/search', {

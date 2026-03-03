@@ -482,7 +482,7 @@ describe('Agent Personality and Context', () => {
         content: 'Nice to meet you, Alice!',
         createdAt: new Date(),
       },
-    ] as any);
+    ] as unknown as Awaited<ReturnType<typeof db.query.aiMessages.findMany>>);
 
     const request = new NextRequest('http://localhost:3000/api/agents/agent-1/chat', {
       method: 'POST',

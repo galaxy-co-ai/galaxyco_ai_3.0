@@ -502,7 +502,6 @@ describe('Input Sanitization', () => {
     });
 
     const response = await CREATE_CONTACT(request);
-    const data = await response.json();
 
     // Data should be trimmed
     expect(response.status).toBeLessThan(500);
@@ -529,7 +528,7 @@ describe('Rate Limiting & Security Headers', () => {
 
 describe('JSON Parsing Security', () => {
   it('should handle deeply nested JSON', async () => {
-    let deeplyNested: any = { value: 'test' };
+    let deeplyNested: Record<string, unknown> = { value: 'test' };
     for (let i = 0; i < 100; i++) {
       deeplyNested = { nested: deeplyNested };
     }

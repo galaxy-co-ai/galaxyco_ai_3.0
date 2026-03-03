@@ -101,7 +101,7 @@ describe('ai/memory', () => {
           content: 'Hi there',
           createdAt: new Date(),
         },
-      ] as any);
+      ] as unknown[]);
 
       const result = await analyzeConversationForLearning(
         'conv-1',
@@ -143,7 +143,7 @@ describe('ai/memory', () => {
           content: 'Summary provided',
           createdAt: new Date(),
         },
-      ] as any);
+      ] as unknown[]);
 
       const mockOpenAI = {
         chat: {
@@ -175,7 +175,7 @@ describe('ai/memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await analyzeConversationForLearning(
         'conv-1',
@@ -211,7 +211,7 @@ describe('ai/memory', () => {
         { id: '2', role: 'assistant', content: 'Hi', createdAt: new Date() },
         { id: '3', role: 'user', content: 'How are you', createdAt: new Date() },
         { id: '4', role: 'assistant', content: 'Good', createdAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const mockOpenAI = {
         chat: {
@@ -220,7 +220,7 @@ describe('ai/memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await analyzeConversationForLearning(
         'conv-1',
@@ -241,7 +241,7 @@ describe('ai/memory', () => {
         { id: '2', role: 'assistant', content: 'Response', createdAt: new Date() },
         { id: '3', role: 'user', content: 'More', createdAt: new Date() },
         { id: '4', role: 'assistant', content: 'Data', createdAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const mockOpenAI = {
         chat: {
@@ -252,7 +252,7 @@ describe('ai/memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await analyzeConversationForLearning(
         'conv-1',
@@ -270,7 +270,7 @@ describe('ai/memory', () => {
         { id: '2', role: 'assistant', content: 'Response', createdAt: new Date() },
         { id: '3', role: 'user', content: 'More', createdAt: new Date() },
         { id: '4', role: 'assistant', content: 'Data', createdAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const mockOpenAI = {
         chat: {
@@ -281,7 +281,7 @@ describe('ai/memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await analyzeConversationForLearning(
         'conv-1',
@@ -326,12 +326,12 @@ describe('ai/memory', () => {
         frequentQuestions: [],
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const insights: LearningInsight[] = [
         {
@@ -358,12 +358,12 @@ describe('ai/memory', () => {
         id: 'pref-1',
         communicationStyle: 'concise',
         topicsOfInterest: [],
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const insights: LearningInsight[] = [
         {
@@ -388,12 +388,12 @@ describe('ai/memory', () => {
         id: 'pref-1',
         communicationStyle: 'balanced',
         topicsOfInterest: ['CRM'],
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const insights: LearningInsight[] = [
         {
@@ -418,14 +418,14 @@ describe('ai/memory', () => {
         id: 'pref-1',
         communicationStyle: 'balanced',
         topicsOfInterest: ['CRM', 'Marketing'],
-      } as any);
+      } as unknown);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const insights: LearningInsight[] = [
         {
@@ -448,12 +448,12 @@ describe('ai/memory', () => {
         id: 'pref-1',
         communicationStyle: 'balanced',
         topicsOfInterest: existingTopics,
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const insights: LearningInsight[] = [
         {
@@ -477,7 +477,7 @@ describe('ai/memory', () => {
         id: 'pref-1',
         communicationStyle: 'balanced',
         topicsOfInterest: [],
-      } as any);
+      } as unknown);
 
       const insights: LearningInsight[] = [
         {
@@ -523,12 +523,12 @@ describe('ai/memory', () => {
         workspaceId: 'workspace-123',
         userId: 'user-456',
         corrections: [],
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       await recordCorrection(
         'workspace-123',
@@ -563,12 +563,12 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         corrections: existingCorrections,
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       await recordCorrection(
         'workspace-123',
@@ -587,12 +587,12 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         corrections: [],
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const longText = 'a'.repeat(300);
 
@@ -641,12 +641,12 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         frequentQuestions: [],
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       await trackFrequentQuestion(
         'workspace-123',
@@ -671,7 +671,7 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         frequentQuestions: ['How do I export CRM data?'],
-      } as any);
+      } as unknown);
 
       await trackFrequentQuestion(
         'workspace-123',
@@ -695,12 +695,12 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         frequentQuestions: existingQuestions,
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       await trackFrequentQuestion(
         'workspace-123',
@@ -718,12 +718,12 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         frequentQuestions: [],
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const longQuestion = 'a'.repeat(150) + '?';
 
@@ -769,7 +769,7 @@ describe('ai/memory', () => {
       const mockInsert = vi.fn(() => ({
         values: vi.fn(() => Promise.resolve()),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as unknown as typeof db.insert);
 
       const result = await recordMessageFeedback(
         'msg-123',
@@ -790,7 +790,7 @@ describe('ai/memory', () => {
       const mockInsert = vi.fn(() => ({
         values: vi.fn(() => Promise.resolve()),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as unknown as typeof db.insert);
 
       vi.mocked(db.query.aiMessages.findFirst).mockResolvedValue({
         id: 'msg-123',
@@ -798,19 +798,19 @@ describe('ai/memory', () => {
         conversationId: 'conv-1',
         role: 'assistant',
         createdAt: new Date(),
-      } as any);
+      } as unknown);
 
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         corrections: [],
-      } as any);
+      } as unknown);
 
       const mockUpdate = vi.fn(() => ({
         set: vi.fn(() => ({
           where: vi.fn(() => Promise.resolve()),
         })),
       }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       const result = await recordMessageFeedback(
         'msg-123',
@@ -828,7 +828,7 @@ describe('ai/memory', () => {
       const mockInsert = vi.fn(() => ({
         values: vi.fn(() => Promise.reject(new Error('Duplicate'))),
       }));
-      vi.mocked(db.insert).mockImplementation(mockInsert as any);
+      vi.mocked(db.insert).mockImplementation(mockInsert as unknown as typeof db.insert);
 
       const result = await recordMessageFeedback(
         'msg-123',
@@ -850,7 +850,7 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiMessages.findMany).mockResolvedValue([
         { id: '1', role: 'user', content: 'Hi', createdAt: new Date() },
         { id: '2', role: 'assistant', content: 'Hello', createdAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const result = await summarizeConversation('conv-1');
 
@@ -873,7 +873,7 @@ describe('ai/memory', () => {
           content: 'Export them to CSV',
           createdAt: new Date(),
         },
-      ] as any);
+      ] as unknown[]);
 
       const mockOpenAI = {
         chat: {
@@ -890,7 +890,7 @@ describe('ai/memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await summarizeConversation('conv-1');
 
@@ -909,7 +909,7 @@ describe('ai/memory', () => {
         { id: '1', role: 'user', content: 'Test', createdAt: new Date() },
         { id: '2', role: 'assistant', content: 'Response', createdAt: new Date() },
         { id: '3', role: 'user', content: 'More', createdAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const mockOpenAI = {
         chat: {
@@ -918,7 +918,7 @@ describe('ai/memory', () => {
           },
         },
       };
-      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as any);
+      vi.mocked(getOpenAI).mockReturnValue(mockOpenAI as unknown as ReturnType<typeof getOpenAI>);
 
       const result = await summarizeConversation('conv-1');
 
@@ -941,7 +941,7 @@ describe('ai/memory', () => {
         { id: 'conv-2', title: 'Marketing campaign setup', lastMessageAt: new Date() },
         { id: 'conv-3', title: 'CRM contact management', lastMessageAt: new Date() },
         { id: 'conv-4', title: 'Finance report generation', lastMessageAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const result = await getRelevantHistory(
         'workspace-123',
@@ -959,7 +959,7 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiConversations.findMany).mockResolvedValue([
         { id: 'conv-1', title: 'Finance reports', lastMessageAt: new Date() },
         { id: 'conv-2', title: 'Marketing campaigns', lastMessageAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const result = await getRelevantHistory(
         'workspace-123',
@@ -977,7 +977,7 @@ describe('ai/memory', () => {
         { id: 'conv-2', title: 'Data analysis methods', lastMessageAt: new Date() },
         { id: 'conv-3', title: 'Data visualization', lastMessageAt: new Date() },
         { id: 'conv-4', title: 'Data transformation', lastMessageAt: new Date() },
-      ] as any);
+      ] as unknown[]);
 
       const result = await getRelevantHistory(
         'workspace-123',
@@ -1022,7 +1022,7 @@ describe('ai/memory', () => {
       };
 
       vi.mocked(db.query.workspaceIntelligence.findFirst).mockResolvedValue(
-        mockIntelligence as any
+        mockIntelligence as unknown
       );
 
       const result = await getWorkspaceIntelligence('workspace-123');
@@ -1058,12 +1058,12 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         communicationStyle: 'balanced',
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       await updateCommunicationStyle('workspace-123', 'user-456', 'concise');
 
@@ -1080,12 +1080,12 @@ describe('ai/memory', () => {
       vi.mocked(db.query.aiUserPreferences.findFirst).mockResolvedValue({
         id: 'pref-1',
         communicationStyle: 'concise',
-      } as any);
+      } as unknown);
 
       const mockWhere = vi.fn(() => Promise.resolve());
       const mockSet = vi.fn(() => ({ where: mockWhere }));
       const mockUpdate = vi.fn(() => ({ set: mockSet }));
-      vi.mocked(db.update).mockImplementation(mockUpdate as any);
+      vi.mocked(db.update).mockImplementation(mockUpdate as unknown as typeof db.update);
 
       await updateCommunicationStyle('workspace-123', 'user-456', 'detailed');
 

@@ -16,6 +16,41 @@ import { db } from '@/lib/db';
 import { sendBulkEmails, isEmailConfigured, getCampaignEmailTemplate } from '@/lib/email';
 import { logger } from '@/lib/logger';
 
+// --------------------------------------------------------------------------
+// Mock type helpers
+// --------------------------------------------------------------------------
+
+interface MockCampaign {
+  id: string;
+  workspaceId: string;
+  name: string;
+  status: string;
+  tags: string[];
+  content: Record<string, unknown>;
+}
+
+interface MockProspect {
+  email: string;
+  name: string;
+  stage: string;
+}
+
+interface MockContact {
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+interface MockWorkspace {
+  id: string;
+  subscriptionTier: string;
+}
+
+type TriggerAndWaitFn = (
+  payload: { campaignId: string; workspaceId: string },
+  options?: Record<string, unknown>,
+) => Promise<{ ok: boolean; output?: Record<string, unknown>; error?: string }>;
+
 // Mock dependencies
 vi.mock('@trigger.dev/sdk/v3', () => ({
   task: vi.fn((config) => ({
@@ -125,17 +160,17 @@ describe('trigger/campaign-sender', () => {
     vi.mocked(isEmailConfigured).mockReturnValue(true);
 
     // Default campaign query
-    vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as any);
+    vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as unknown as MockCampaign & Record<string, unknown>);
 
     // Default recipients
-    vi.mocked(db.query.prospects.findMany).mockResolvedValue(mockProspects as any);
-    vi.mocked(db.query.contacts.findMany).mockResolvedValue(mockContacts as any);
+    vi.mocked(db.query.prospects.findMany).mockResolvedValue(mockProspects as unknown as MockProspect[]);
+    vi.mocked(db.query.contacts.findMany).mockResolvedValue(mockContacts as unknown as MockContact[]);
 
     // Default workspace tier
     vi.mocked(db.query.workspaces.findFirst).mockResolvedValue({
       id: mockWorkspaceId,
       subscriptionTier: 'pro',
-    } as any);
+    } as unknown as MockWorkspace);
 
     // Default email template
     vi.mocked(getCampaignEmailTemplate).mockReturnValue({
@@ -209,7 +244,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValue({
         ...mockCampaign,
         status: 'completed',
-      } as any);
+      } as unknown as MockCampaign);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -233,7 +268,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValue({
         ...mockCampaign,
         content: { body: 'Test body' },
-      } as any);
+      } as unknown as MockCampaign);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -248,7 +283,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValue({
         ...mockCampaign,
         content: { subject: 'Test subject' },
-      } as any);
+      } as unknown as MockCampaign);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -277,9 +312,9 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValue({
         ...mockCampaign,
         tags: ['new_leads'],
-      } as any);
+      } as unknown as MockCampaign);
 
-      vi.mocked(db.query.prospects.findMany).mockResolvedValue([mockProspects[0]] as any);
+      vi.mocked(db.query.prospects.findMany).mockResolvedValue([mockProspects[0]] as unknown as MockProspect[]);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -293,12 +328,12 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValue({
         ...mockCampaign,
         tags: ['qualified_leads'],
-      } as any);
+      } as unknown as MockCampaign);
 
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         mockProspects[1],
         mockProspects[2],
-      ] as any);
+      ] as unknown as MockProspect[]);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -312,7 +347,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValue({
         ...mockCampaign,
         tags: ['all_contacts'],
-      } as any);
+      } as unknown as MockCampaign);
 
       await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -343,7 +378,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.prospects.findMany).mockResolvedValue([
         { email: '', name: 'No Email', stage: 'new' },
         ...mockProspects,
-      ] as any);
+      ] as unknown as MockProspect[]);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -360,7 +395,7 @@ describe('trigger/campaign-sender', () => {
         stage: 'new',
       }));
 
-      vi.mocked(db.query.prospects.findMany).mockResolvedValue(manyProspects as any);
+      vi.mocked(db.query.prospects.findMany).mockResolvedValue(manyProspects as unknown as MockProspect[]);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -434,7 +469,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValue({
         ...mockCampaign,
         tags: ['all_contacts'],
-      } as any);
+      } as unknown as MockCampaign);
 
       vi.mocked(db.query.contacts.findMany).mockResolvedValue([
         {
@@ -442,7 +477,7 @@ describe('trigger/campaign-sender', () => {
           firstName: null,
           lastName: null,
         },
-      ] as any);
+      ] as unknown as MockContact[]);
 
       const result = await sendCampaignTask.run({
         campaignId: mockCampaignId,
@@ -496,7 +531,7 @@ describe('trigger/campaign-sender', () => {
         output: { sent: 3, failed: 0 },
       });
 
-      (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
+      (sendCampaignTask as unknown as { triggerAndWait: TriggerAndWaitFn }).triggerAndWait = mockTriggerAndWait;
 
       const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
@@ -549,7 +584,7 @@ describe('trigger/campaign-sender', () => {
         output: { sent: 3 },
       });
 
-      (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
+      (sendCampaignTask as unknown as { triggerAndWait: TriggerAndWaitFn }).triggerAndWait = mockTriggerAndWait;
 
       await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
@@ -585,7 +620,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValueOnce({
         ...mockCampaign,
         status: 'completed',
-      } as any);
+      } as unknown as MockCampaign);
 
       const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
@@ -606,7 +641,7 @@ describe('trigger/campaign-sender', () => {
       vi.mocked(db.query.campaigns.findFirst).mockResolvedValueOnce({
         ...mockCampaign,
         status: 'paused',
-      } as any);
+      } as unknown as MockCampaign);
 
       const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
@@ -630,10 +665,10 @@ describe('trigger/campaign-sender', () => {
         output: { sent: 3 },
       });
 
-      (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
+      (sendCampaignTask as unknown as { triggerAndWait: TriggerAndWaitFn }).triggerAndWait = mockTriggerAndWait;
 
       // Ensure campaign query works
-      vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as any);
+      vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as unknown as MockCampaign);
 
       await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
@@ -656,10 +691,10 @@ describe('trigger/campaign-sender', () => {
       });
 
       // Must set this before calling scheduleCampaignTask.run
-      (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
+      (sendCampaignTask as unknown as { triggerAndWait: TriggerAndWaitFn }).triggerAndWait = mockTriggerAndWait;
 
       // Ensure campaign query returns valid campaign
-      vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as any);
+      vi.mocked(db.query.campaigns.findFirst).mockResolvedValue(mockCampaign as unknown as MockCampaign);
 
       const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,
@@ -690,7 +725,7 @@ describe('trigger/campaign-sender', () => {
         error: 'Send failed',
       });
 
-      (sendCampaignTask as any).triggerAndWait = mockTriggerAndWait;
+      (sendCampaignTask as unknown as { triggerAndWait: TriggerAndWaitFn }).triggerAndWait = mockTriggerAndWait;
 
       const result = await scheduleCampaignTask.run({
         campaignId: mockCampaignId,

@@ -123,9 +123,9 @@ vi.mock('@/lib/ai-providers', () => ({
                 ],
               };
             },
-          } as AsyncIterable<any>;
+          } as AsyncIterable<unknown>;
 
-          return stream as any;
+          return stream as unknown;
         }),
       },
     },
@@ -226,12 +226,12 @@ describe('POST /api/assistant/chat (streaming)', () => {
       },
     });
 
-    const response = await POST(request as any);
+    const response = await POST(request as unknown as Request);
 
     expect(response.status).toBe(200);
     expect(response.headers.get('Content-Type')).toBe('text/event-stream');
 
-    const bodyText = await readStream(response.body as any);
+    const bodyText = await readStream(response.body as ReadableStream<Uint8Array> | null);
 
     expect(bodyText).toContain('conversationId');
     expect(bodyText).toContain('Hello from stream');
@@ -252,8 +252,8 @@ describe('POST /api/assistant/chat (streaming)', () => {
       },
     });
 
-    const response = await POST(request as any);
-    const bodyText = await readStream(response.body as any);
+    const response = await POST(request as unknown as Request);
+    const bodyText = await readStream(response.body as ReadableStream<Uint8Array> | null);
 
     expect(bodyText).toContain('Please sign in to use Neptune.');
     expect(bodyText).toContain('[DONE]');
@@ -270,8 +270,8 @@ describe('POST /api/assistant/chat (streaming)', () => {
       },
     });
 
-    const response = await POST(request as any);
-    const bodyText = await readStream(response.body as any);
+    const response = await POST(request as unknown as Request);
+    const bodyText = await readStream(response.body as ReadableStream<Uint8Array> | null);
 
     expect(bodyText).toContain('Invalid request');
     expect(bodyText).toContain('Message is required');
@@ -297,8 +297,8 @@ describe('POST /api/assistant/chat (streaming)', () => {
       },
     });
 
-    const response = await POST(request as any);
-    const bodyText = await readStream(response.body as any);
+    const response = await POST(request as unknown as Request);
+    const bodyText = await readStream(response.body as ReadableStream<Uint8Array> | null);
 
     expect(bodyText).toContain('Rate limit exceeded');
     expect(bodyText).toContain('[DONE]');

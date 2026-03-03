@@ -75,7 +75,7 @@ test.describe('Authentication Flow', () => {
     }
   });
 
-  test('should persist session after page reload', async ({ page, context }) => {
+  test('should persist session after page reload', async ({ page, context: _context }) => {
     // This test assumes user is already signed in
     await page.goto('http://localhost:3000/dashboard');
     
