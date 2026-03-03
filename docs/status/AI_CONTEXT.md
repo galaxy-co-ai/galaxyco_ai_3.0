@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-02 (5c30850)  
+**Updated Through:** 2026-03-03 (a0d82dd)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,19 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-03 a0d82dd chore(home): remove old dashboard components
+- 2026-03-03 f055f5b feat(home): rename Dashboard to Home in navigation
+- 2026-03-03 fad5e8d feat(home): replace dashboard with Neptune proactive feed
+- 2026-03-03 50f845c feat(home): add NeptuneFeed container and SlidePanel
+- 2026-03-03 5ac80da feat(home): add NeptuneFeedCard with glass effect and inline expansion
+- 2026-03-03 025c94f feat(home): add SmartChipBar component with pill-shaped chip variants
+- 2026-03-03 039f5d7 feat(home): add Swiss glass neumorphism design tokens + fonts
+- 2026-03-02 9d53ed0 feat(home): add POST /api/home/action endpoint with action executor
+- 2026-03-02 9fdac21 feat(home): add GET /api/home/feed endpoint
+- 2026-03-02 3b77efb feat(home): add card prioritization engine
+- 2026-03-02 467a7b7 feat(home): add feed card types and validation schemas
+- 2026-03-02 2a82521 docs: add Home page redesign implementation plan
+- 2026-03-02 0561e6b docs: add Home page redesign design document
 - 2026-03-02 5c30850 test: skip flaky path-traversal test + update test audit numbers
 - 2026-03-02 5937eed chore: re-enable Husky pre-commit hook (lint + typecheck)
 - 2026-03-02 612632c fix(lint): eliminate all 313 lint warnings — 0 remaining
@@ -34,19 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-02 e8bfca3 docs: remove dead references from CLAUDE.md and INDEX.md
 - 2026-03-02 e909ced fix(deps): patch all security vulnerabilities — 0 remaining
 - 2026-03-02 10c0241 feat: add Cosmos unified design system
-- 2026-02-10 209134b fix(lint): eliminate all remaining 212 ESLint warnings
-- 2026-02-10 98ccfe6 fix(lint): eliminate 225 ESLint warnings across codebase
-- 2026-02-10 d4ae88d fix(deps): patch security vulnerabilities in axios, next, lodash, undici
-- 2026-02-10 2ad8874 chore: auto-fix lint errors and remove unused imports
-- 2026-02-10 faf8239 fix(insights): resolve TypeScript errors in chart click handlers
-- 2026-02-10 e4ed167 docs: add CLAUDE.md and INDEX.md for AI-assisted development
-- 2026-02-10 d6eaf18 docs: add demo preparation materials and archive old status
-- 2026-02-10 d138537 test: refactor assistant, workflow execution, and campaign tests
-- 2026-02-10 e6ac792 fix: update global styles and auth helpers
-- 2026-02-10 8b9e898 chore: update CI workflow, docs, and env example
-- 2026-02-10 20eadb3 feat(admin): update mission control and agent management routes
-- 2026-02-10 595b0ad feat(mcp): improve OAuth authorization and add CORS support
-- 2026-02-10 37fa9fe feat(insights): add insights dashboard stats and chart components
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
