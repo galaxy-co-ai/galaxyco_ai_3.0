@@ -271,7 +271,7 @@ Key jobs: campaign sending, document indexing, lead scoring, proactive events, s
 1. **`db:push` is dev-only** — use `db:generate` + `db:migrate` for production schema changes
 2. **Schema is ~8900 lines** — search for table names rather than scrolling. Use `src/db/schema.ts` for main tables, `src/db/workflow-schema.ts` for workflow tables
 3. **MCP feature is experimental** — disabled by default (`MCP_ENABLED=false`), state is in-memory only
-4. **Husky pre-commit hooks are disabled** — run quality checks manually before committing
+4. **Husky pre-commit hook runs lint + typecheck** — commits will fail if either has errors
 5. **4 cache implementations exist** — `src/lib/cache.ts`, `src/lib/llm-cache.ts`, `src/lib/ai/cache.ts`, `src/lib/ai/smart-cache.ts`. Consolidation is a known debt item
 6. **Bundle size matters** — use `npm run analyze` when adding large dependencies. Dynamic imports via `src/lib/code-splitting.tsx`
 7. **Clerk webhooks** need `CLERK_WEBHOOK_SECRET` — endpoint at `/api/webhooks/clerk`
