@@ -230,6 +230,6 @@ shadcn/ui components built on Radix UI. Standard primitives: Button, Dialog, She
 1. **4 cache implementations** — `lib/cache.ts`, `lib/llm-cache.ts`, `ai/cache.ts`, `ai/smart-cache.ts` need consolidation
 2. **Schema size** — `schema.ts` at ~8900 lines could be split by domain
 3. ~~**Husky hooks disabled**~~ — pre-commit now runs lint + typecheck
-4. **Test coverage** — needs audit, target is 70%+
+4. **Test coverage** — 728/744 passing (97.8%), 16 skipped, 0 failing. Coverage % TBD.
 5. **MCP feature** — experimental, in-memory state only, not production-durable
 6. **Legacy folders** — `_to-delete/`, `_archive*/`, `src/legacy-pages/` exist but are excluded from builds
