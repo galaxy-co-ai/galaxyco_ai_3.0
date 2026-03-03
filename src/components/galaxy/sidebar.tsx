@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Home,
   LayoutDashboard,
   Palette,
   BookOpen,
@@ -38,7 +39,7 @@ import {
 
 // Main navigation items
 const mainNavItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", id: "dashboard" },
+  { icon: Home, label: "Home", href: "/dashboard", id: "dashboard" },
   { icon: Bot, label: "My Agents", href: "/activity", id: "activity" },
   { icon: Palette, label: "Creator", href: "/creator", id: "creator" },
   { icon: BookOpen, label: "Library", href: "/library", id: "library" },

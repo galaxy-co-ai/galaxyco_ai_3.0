@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
+  Home,
   Palette,
   BookOpen,
   Users,
@@ -24,7 +24,7 @@ import { useConversationsUnread } from "@/hooks/useConversationsUnread";
 
 // Core navigation items (always visible)
 const coreNavItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", id: "dashboard" },
+  { icon: Home, label: "Home", href: "/dashboard", id: "dashboard" },
   { icon: Bot, label: "My Agents", href: "/activity", id: "activity" },
   { icon: Palette, label: "Creator", href: "/creator", id: "creator" },
   { icon: BookOpen, label: "Library", href: "/library", id: "library" },
