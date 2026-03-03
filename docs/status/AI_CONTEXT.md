@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-02 (612632c)  
+**Updated Through:** 2026-03-02 (5937eed)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-02 5937eed chore: re-enable Husky pre-commit hook (lint + typecheck)
 - 2026-03-02 612632c fix(lint): eliminate all 313 lint warnings — 0 remaining
 - 2026-03-02 2a81708 chore(deps): update all packages within semver range + bump CI actions
 - 2026-03-02 e8bfca3 docs: remove dead references from CLAUDE.md and INDEX.md
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-02-10 595b0ad feat(mcp): improve OAuth authorization and add CORS support
 - 2026-02-10 37fa9fe feat(insights): add insights dashboard stats and chart components
 - 2026-02-10 8fd007e docs: add community and OSS documentation
-- 2026-01-26 31cc6a9 fix(deps): add @rollup/rollup-win32-x64-msvc for Windows test support
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
