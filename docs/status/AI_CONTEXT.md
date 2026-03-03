@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-03 (a0d82dd)  
+**Updated Through:** 2026-03-03 (4c63947)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-03 4c63947 fix: add vercel.json to bypass Tailwind oxide platform mismatch
 - 2026-03-03 a0d82dd chore(home): remove old dashboard components
 - 2026-03-03 f055f5b feat(home): rename Dashboard to Home in navigation
 - 2026-03-03 fad5e8d feat(home): replace dashboard with Neptune proactive feed
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-02 2a81708 chore(deps): update all packages within semver range + bump CI actions
 - 2026-03-02 e8bfca3 docs: remove dead references from CLAUDE.md and INDEX.md
 - 2026-03-02 e909ced fix(deps): patch all security vulnerabilities — 0 remaining
-- 2026-03-02 10c0241 feat: add Cosmos unified design system
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
