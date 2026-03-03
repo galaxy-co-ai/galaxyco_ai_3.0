@@ -148,3 +148,6 @@ Desktop.ini
 
 # Claude Desktop local settings (keep shared settings)
 .claude/settings.local.json
+
+# Windows reserved filename (created by Git Bash redirects)
+NUL
