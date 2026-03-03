@@ -215,7 +215,6 @@ shadcn/ui components built on Radix UI. Standard primitives: Button, Dialog, She
 | Path | Contents |
 |------|----------|
 | `docs/START.md` | Canonical onboarding guide |
-| `docs/ARCHITECTURE.md` | System architecture deep-dive |
 | `docs/guides/` | Neptune capabilities, troubleshooting, deployment |
 | `docs/specs/` | Feature specifications |
 | `docs/assessments/` | Platform health assessments |
@@ -231,6 +230,6 @@ shadcn/ui components built on Radix UI. Standard primitives: Button, Dialog, She
 1. **4 cache implementations** — `lib/cache.ts`, `lib/llm-cache.ts`, `ai/cache.ts`, `ai/smart-cache.ts` need consolidation
 2. **Schema size** — `schema.ts` at ~8900 lines could be split by domain
 3. **Husky hooks disabled** — pre-commit quality gates not enforced
-4. **Test coverage** — 63% pass rate (140/221), target is 70%+
+4. **Test coverage** — needs audit, target is 70%+
 5. **MCP feature** — experimental, in-memory state only, not production-durable
 6. **Legacy folders** — `_to-delete/`, `_archive*/`, `src/legacy-pages/` exist but are excluded from builds

@@ -309,9 +309,7 @@ Squash WIP commits. Call out schema or env changes in PR descriptions. Tag secur
 |-----|---------|
 | `AGENTS.md` | Guidelines for AI coding agents (GitHub Copilot, etc.) |
 | `docs/START.md` | Canonical onboarding guide |
-| `docs/ARCHITECTURE.md` | System design deep-dive |
 | `docs/guides/NEPTUNE_CAPABILITIES.md` | Neptune AI features |
 | `docs/guides/NEPTUNE_TROUBLESHOOTING.md` | Neptune debugging |
 | `docs/status/AI_CONTEXT.md` | Auto-generated project context |
-| `tests/STATUS.md` | Test coverage tracking |
 | `.env.example` | Full env var reference with descriptions |
