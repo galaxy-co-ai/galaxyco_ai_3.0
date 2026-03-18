@@ -67,11 +67,7 @@ vi.mock('@/lib/db', () => {
     // The terminal promise-like object
     const terminal = Promise.resolve(result);
 
-    // .limit() is the last call in the sessions chain
-    const withLimit = { limit: vi.fn(() => terminal) };
-
-    // .orderBy() resolves for messages OR returns withLimit for sessions
-    // We distinguish by inspecting selectCallCount at the time orderBy is called.
+    // .orderBy() resolves for messages OR continues for sessions via .limit()
     const withOrderBy = {
       orderBy: vi.fn(() => {
         // If this orderBy is called on the sessions chain it will be followed
