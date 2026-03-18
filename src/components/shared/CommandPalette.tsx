@@ -14,7 +14,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { 
+import {
   Search,
   Bot,
   Users,
@@ -31,6 +31,7 @@ import {
   Home,
   History,
   ChevronRight,
+  MessageSquare,
 } from 'lucide-react';
 
 interface RecentItem {
@@ -283,6 +284,21 @@ export default function CommandPalette({ workspaceId }: CommandPaletteProps) {
               ))}
             </Command.Group>
           )}
+
+          {/* Neptune */}
+          <Command.Group heading="Neptune" className="mb-2">
+            <Command.Item
+              value="Talk to Neptune"
+              onSelect={() => navigate('/dashboard', 'Talk to Neptune', 'message')}
+              className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm aria-selected:bg-accent aria-selected:text-accent-foreground hover:bg-accent/50"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <MessageSquare className="h-4 w-4" />
+              </div>
+              <span className="flex-1">Talk to Neptune</span>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+            </Command.Item>
+          </Command.Group>
 
           {/* Navigation */}
           <Command.Group heading="Navigation" className="mb-2">
