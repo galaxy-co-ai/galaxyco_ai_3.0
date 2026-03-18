@@ -3,6 +3,16 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ContentBlockRenderer } from '@/components/home/ContentBlockRenderer';
 import type { ContentBlock } from '@/types/neptune-conversation';
 
+vi.mock('@/components/home/InlineVisual', () => ({
+  InlineVisual: ({ spec }: { spec: { chartType: string; title?: string; data: Record<string, unknown> } }) => (
+    <div data-chart-type={spec.chartType}>
+      {spec.title && <span>{spec.title}</span>}
+      {spec.data.value !== undefined && <span>{spec.data.prefix}{Number(spec.data.value).toLocaleString()}</span>}
+      {spec.data.label && <span>{String(spec.data.label)}</span>}
+    </div>
+  ),
+}));
+
 vi.mock('next/link', () => ({
   default: ({ href, children, ...props }: { href: string; children: React.ReactNode; [key: string]: unknown }) => (
     <a href={href} {...props}>
@@ -48,18 +58,17 @@ describe('ContentBlockRenderer', () => {
     expect(onAction).toHaveBeenCalledWith(block.actions[0]);
   });
 
-  it('renders visual block placeholder with data-chart-type', () => {
+  it('renders visual block with data-chart-type', () => {
     const block: ContentBlock = {
       type: 'visual',
       spec: {
-        chartType: 'bar',
-        data: {},
+        chartType: 'metric',
+        data: { value: 4200, label: 'Revenue', prefix: '$' },
         interactive: false,
-        title: 'Revenue by Month',
       },
     };
-    render(<ContentBlockRenderer block={block} />);
-    const el = screen.getByText('Revenue by Month');
-    expect(el.getAttribute('data-chart-type')).toBe('bar');
+    const { container } = render(<ContentBlockRenderer block={block} />);
+    expect(container.querySelector('[data-chart-type="metric"]')).not.toBeNull();
+    expect(screen.getByText('$4,200')).toBeDefined();
   });
 });
