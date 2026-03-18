@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-03 (4c63947)  
+**Updated Through:** 2026-03-18 (d5543c8)  
 **Branch:** main
 
 ## Quick Start
@@ -27,26 +27,26 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
-- 2026-03-03 4c63947 fix: add vercel.json to bypass Tailwind oxide platform mismatch
-- 2026-03-03 a0d82dd chore(home): remove old dashboard components
-- 2026-03-03 f055f5b feat(home): rename Dashboard to Home in navigation
-- 2026-03-03 fad5e8d feat(home): replace dashboard with Neptune proactive feed
-- 2026-03-03 50f845c feat(home): add NeptuneFeed container and SlidePanel
-- 2026-03-03 5ac80da feat(home): add NeptuneFeedCard with glass effect and inline expansion
-- 2026-03-03 025c94f feat(home): add SmartChipBar component with pill-shaped chip variants
-- 2026-03-03 039f5d7 feat(home): add Swiss glass neumorphism design tokens + fonts
-- 2026-03-02 9d53ed0 feat(home): add POST /api/home/action endpoint with action executor
-- 2026-03-02 9fdac21 feat(home): add GET /api/home/feed endpoint
-- 2026-03-02 3b77efb feat(home): add card prioritization engine
-- 2026-03-02 467a7b7 feat(home): add feed card types and validation schemas
-- 2026-03-02 2a82521 docs: add Home page redesign implementation plan
-- 2026-03-02 0561e6b docs: add Home page redesign design document
-- 2026-03-02 5c30850 test: skip flaky path-traversal test + update test audit numbers
-- 2026-03-02 5937eed chore: re-enable Husky pre-commit hook (lint + typecheck)
-- 2026-03-02 612632c fix(lint): eliminate all 313 lint warnings — 0 remaining
-- 2026-03-02 2a81708 chore(deps): update all packages within semver range + bump CI actions
-- 2026-03-02 e8bfca3 docs: remove dead references from CLAUDE.md and INDEX.md
-- 2026-03-02 e909ced fix(deps): patch all security vulnerabilities — 0 remaining
+- 2026-03-18 d5543c8 feat(home): add vision specs, plan, deprecation markers, and ambient CSS
+- 2026-03-18 d472165 fix(home): remove unused userMessage param from buildConversationPrompt
+- 2026-03-18 e059f05 security(home): fix session ownership bypass + add request validation
+- 2026-03-18 2a71c37 fix(home): update ContentBlockRenderer test for InlineVisual integration
+- 2026-03-18 9549c27 feat(home): wire behavioral signals and micro-feedback
+- 2026-03-18 cb3735b feat(home): add behavioral signal collection for learning engine
+- 2026-03-18 538fa3a feat(home): add Neptune actions to command palette
+- 2026-03-18 ea84f90 feat(home): add streaming text animation for Neptune responses
+- 2026-03-18 38a0d5f chore(home): remove unused variable in history test mock
+- 2026-03-18 3cdc558 feat(home): add conversation history endpoint with pagination
+- 2026-03-18 76f2ee7 feat(home): add inline visual component with Recharts
+- 2026-03-18 fa83cf8 feat(home): wire conversational surface with feature flag
+- 2026-03-18 8913eb5 feat(home): add NeptuneConversation main surface with SSE streaming
+- 2026-03-18 85539fa feat(home): add conversation message component
+- 2026-03-18 5a6076f feat(home): add conversation input with ambient pulse
+- 2026-03-18 a664127 feat(home): add content block renderer with action affordances
+- 2026-03-18 47efb18 feat(home): add narrative builder for Neptune's contextual opening
+- 2026-03-18 1500c26 feat(home): add session manager with 30-min idle timeout
+- 2026-03-18 f8b6db5 fix(home): remove unused activeAgentCount destructure in card-engine
+- 2026-03-18 45f3230 refactor(home): extract workspace data fetchers from card-engine
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
