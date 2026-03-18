@@ -1,6 +1,7 @@
 import { logger } from '@/lib/logger';
 import type { FeedActionRequest, FeedActionResponse } from '@/types/home-feed';
 
+/** @deprecated Use the conversational API at /api/home/conversation instead */
 export async function executeCardAction(
   request: FeedActionRequest,
   workspaceId: string,

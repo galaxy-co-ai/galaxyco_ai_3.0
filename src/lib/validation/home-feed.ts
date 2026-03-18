@@ -1,3 +1,4 @@
+/** @deprecated Use schemas from '@/lib/validation/neptune-conversation' */
 import { z } from 'zod';
 
 const feedCardCategories = [

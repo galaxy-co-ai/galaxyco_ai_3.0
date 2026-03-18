@@ -1,3 +1,8 @@
+/**
+ * @deprecated These types support the card-based Home feed.
+ * The conversational Home uses types from '@/types/neptune-conversation'.
+ * These will be removed once NEXT_PUBLIC_HOME_CONVERSATIONAL is the default.
+ */
 export type FeedCardCategory =
   | 'money'
   | 'lead'

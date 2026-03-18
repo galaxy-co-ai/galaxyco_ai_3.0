@@ -153,6 +153,13 @@
   --campaign-active: #34C759;
   --campaign-draft: #8E8E93;
   --campaign-paused: #FF9500;
+
+  /* Neptune Ambient States */
+  --ambient-base-hue: 180;
+  --ambient-warm-hue: 35;
+  --ambient-cool-hue: 220;
+  --ambient-glow-opacity: 0.02;
+  --ambient-glow-radius: 40%;
 }
 
 .dark {
@@ -215,6 +222,13 @@
   /* Neumorphic Shadows (dark — adapted from cb-collab) */
   --shadow-neumorphic: 3px 3px 10px oklch(0.08 0.02 260 / 0.20), -2px -2px 6px oklch(0.30 0.02 260 / 0.15);
   --shadow-neumorphic-hover: 4px 4px 14px oklch(0.06 0.02 260 / 0.25), -3px -3px 8px oklch(0.32 0.02 260 / 0.18);
+
+  /* Neptune Ambient States */
+  --ambient-base-hue: 180;
+  --ambient-warm-hue: 35;
+  --ambient-cool-hue: 220;
+  --ambient-glow-opacity: 0.03;
+  --ambient-glow-radius: 40%;
 }
 
 @theme inline {
@@ -620,6 +634,26 @@
   .glass-input:focus {
     border-color: var(--brand-nebula-teal);
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand-nebula-teal) 20%, transparent);
+  }
+
+  /* Neptune Ambient Environment */
+  .neptune-ambient {
+    position: relative;
+    background: var(--background);
+    transition: background var(--duration-smooth) var(--ease-standard);
+  }
+
+  .neptune-ambient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse var(--ambient-glow-radius) var(--ambient-glow-radius) at 50% 80%,
+      hsla(var(--ambient-base-hue), 40%, 50%, var(--ambient-glow-opacity)),
+      transparent
+    );
+    pointer-events: none;
+    transition: all 1s var(--ease-standard);
   }
 }
 
