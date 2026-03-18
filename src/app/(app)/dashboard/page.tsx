@@ -38,9 +38,11 @@ export default async function DashboardPage() {
     logger.error('Home page error', { error });
   }
 
+  const useConversational = process.env.NEXT_PUBLIC_HOME_CONVERSATIONAL === 'true';
+
   return (
     <ErrorBoundary>
-      <HomePage initialData={initialData} />
+      <HomePage initialData={initialData} useConversational={useConversational} />
     </ErrorBoundary>
   );
 }
