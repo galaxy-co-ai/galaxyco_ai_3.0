@@ -19,7 +19,7 @@ export async function generateFeedCards(
 
   try {
     const snapshot = await fetchWorkspaceSnapshot(workspaceId);
-    const { contactCount, hotContacts, overdueTasks, recentCampaigns, activeAgentCount, integrationCount, isNewUser } = snapshot;
+    const { contactCount, hotContacts, overdueTasks, recentCampaigns, integrationCount, isNewUser } = snapshot;
 
     if (isNewUser) {
       return getOnboardingCards(userName, integrationCount > 0);
