@@ -5,3 +5,5 @@ export { SmartChipBar } from './SmartChipBar';
 export { SlidePanel } from './SlidePanel';
 export { AmbientPulse } from './AmbientPulse';
 export { ConversationInput } from './ConversationInput';
+export { NeptuneConversation } from './NeptuneConversation';
+export { MicroFeedback } from './MicroFeedback';
