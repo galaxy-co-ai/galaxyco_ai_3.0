@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { ContentBlock, ActionOption } from '@/types/neptune-conversation';
 import { ActionAffordance } from './ActionAffordance';
+import { InlineVisual } from './InlineVisual';
 
 interface ContentBlockRendererProps {
   block: ContentBlock;
@@ -24,14 +25,7 @@ export function ContentBlockRenderer({ block, onAction }: ContentBlockRendererPr
       return <p className="text-sm leading-relaxed text-foreground">{block.content}</p>;
 
     case 'visual':
-      return (
-        <div
-          data-chart-type={block.spec.chartType}
-          className="rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground"
-        >
-          {block.spec.title ?? block.spec.chartType}
-        </div>
-      );
+      return <InlineVisual spec={block.spec} />;
 
     case 'action-affordance':
       return (
