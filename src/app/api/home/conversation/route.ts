@@ -49,7 +49,6 @@ function sseEvent(event: StreamEvent): string {
 export function buildConversationPrompt(
   snapshot: WorkspaceSnapshot,
   userName: string,
-  userMessage: string,
 ): string {
   return `You are Neptune, the AI core of an agency operating system. You are in an ongoing conversation with ${userName}.
 
@@ -188,7 +187,7 @@ export async function POST(request: NextRequest) {
         // --- Build prompt ---
         const timeOfDay = getTimeOfDay();
         const prompt = userMessage
-          ? buildConversationPrompt(snapshot, userName, userMessage)
+          ? buildConversationPrompt(snapshot, userName)
           : buildNarrativePrompt(snapshot, userName, timeOfDay);
 
         // --- Call OpenAI (streaming) ---
