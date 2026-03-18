@@ -79,6 +79,15 @@ vi.mock('@/lib/db', () => ({
         where: vi.fn(() => Promise.resolve()),
       })),
     })),
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({
+          limit: vi.fn(() =>
+            Promise.resolve([{ id: '550e8400-e29b-41d4-a716-446655440000', createdAt: new Date('2026-03-18T10:00:00Z') }]),
+          ),
+        })),
+      })),
+    })),
   },
 }));
 
@@ -133,7 +142,7 @@ describe('POST /api/home/conversation', () => {
   it('returns streaming SSE response for a user message', async () => {
     const request = new NextRequest('http://localhost:3000/api/home/conversation', {
       method: 'POST',
-      body: JSON.stringify({ sessionId: 'session-1', message: 'What are my hot leads?' }),
+      body: JSON.stringify({ sessionId: '550e8400-e29b-41d4-a716-446655440000', message: 'What are my hot leads?' }),
       headers: { 'Content-Type': 'application/json' },
     });
 

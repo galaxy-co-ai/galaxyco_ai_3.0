@@ -12,8 +12,12 @@ import {
 } from '@/lib/home/narrative-builder';
 import { db } from '@/lib/db';
 import { neptuneMessages, neptuneConversations } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
+import {
+  ConversationInitRequestSchema,
+  ConversationSendRequestSchema,
+} from '@/lib/validation/neptune-conversation';
 import type { StreamEvent, ConversationMessage } from '@/types/neptune-conversation';
 
 // ---------------------------------------------------------------------------
@@ -56,9 +60,7 @@ Current workspace context:
 - Active agents: ${snapshot.activeAgentCount}
 - Connected integrations: ${snapshot.integrationCount}
 
-The user just said: "${userMessage}"
-
-Respond naturally and helpfully. Be direct, warm, and concise. Use workspace data only when relevant to their question.
+Respond naturally and helpfully to the user's message. Be direct, warm, and concise. Use workspace data only when relevant to their question.
 
 You may use these inline markers where they genuinely add value:
 - [ACTION:{"prompt":"question text","actions":[{"label":"Label","intent":"intent-string"}]}]
@@ -94,14 +96,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
   }
 
-  // --- Parse body ---
+  // --- Parse & validate body ---
   let sessionId: string | undefined;
   let userMessage: string | undefined;
 
   try {
-    const body = (await request.json()) as { sessionId?: string; message?: string };
-    sessionId = body.sessionId;
-    userMessage = body.message;
+    const body = await request.json();
+
+    // Determine which schema to use based on presence of message field
+    if (body.message) {
+      const parsed = ConversationSendRequestSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      }
+      sessionId = parsed.data.sessionId;
+      userMessage = parsed.data.message;
+    } else {
+      const parsed = ConversationInitRequestSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      }
+      sessionId = parsed.data.sessionId;
+    }
   } catch {
     // Empty body is valid (session init)
     sessionId = undefined;
@@ -125,12 +141,30 @@ export async function POST(request: NextRequest) {
           const result = await getOrCreateSession(workspaceId, userId);
           session = result.session;
         } else {
-          // Use provided sessionId directly and touch it
-          await touchSession(sessionId);
+          // Verify session belongs to this user + workspace (multi-tenant safety)
+          const [owned] = await db
+            .select({ id: neptuneConversations.id, createdAt: neptuneConversations.createdAt })
+            .from(neptuneConversations)
+            .where(
+              and(
+                eq(neptuneConversations.id, sessionId),
+                eq(neptuneConversations.workspaceId, workspaceId),
+                eq(neptuneConversations.userId, userId),
+              ),
+            )
+            .limit(1);
+
+          if (!owned) {
+            enqueue({ type: 'error', message: 'Invalid session.' });
+            controller.close();
+            return;
+          }
+
+          await touchSession(sessionId, workspaceId);
           session = {
             id: sessionId,
             conversationId: sessionId,
-            startedAt: new Date().toISOString(),
+            startedAt: owned.createdAt.toISOString(),
             lastActiveAt: new Date().toISOString(),
           };
         }
@@ -161,9 +195,16 @@ export async function POST(request: NextRequest) {
         let responseText: string;
         try {
           const openai = getOpenAI();
+          const messages: Array<{ role: 'system' | 'user'; content: string }> = [
+            { role: 'system', content: prompt },
+          ];
+          if (userMessage) {
+            messages.push({ role: 'user', content: userMessage });
+          }
+
           const completion = await openai.chat.completions.create({
             model: 'gpt-4o',
-            messages: [{ role: 'user', content: prompt }],
+            messages,
             max_tokens: 600,
             temperature: 0.7,
             stream: true,

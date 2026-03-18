@@ -20,9 +20,13 @@ export default async function DashboardPage() {
     cards: [],
     isNewUser: true,
   };
+  let authUserId: string | undefined;
+  let authWorkspaceId: string | undefined;
 
   try {
     const { workspaceId, userId, user } = await getCurrentWorkspace();
+    authUserId = userId;
+    authWorkspaceId = workspaceId;
     const userName =
       `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'there';
 
@@ -42,7 +46,12 @@ export default async function DashboardPage() {
 
   return (
     <ErrorBoundary>
-      <HomePage initialData={initialData} useConversational={useConversational} />
+      <HomePage
+        initialData={initialData}
+        useConversational={useConversational}
+        userId={authUserId}
+        workspaceId={authWorkspaceId}
+      />
     </ErrorBoundary>
   );
 }

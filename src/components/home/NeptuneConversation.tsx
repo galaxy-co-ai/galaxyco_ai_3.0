@@ -41,7 +41,12 @@ async function processStream(
   }
 }
 
-export function NeptuneConversation() {
+interface NeptuneConversationProps {
+  userId?: string;
+  workspaceId?: string;
+}
+
+export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneConversationProps) {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [session, setSession] = useState<ConversationSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,10 +57,10 @@ export function NeptuneConversation() {
 
   // Update signal collector when session is established
   useEffect(() => {
-    if (session) {
-      signalCollector.current = createSignalCollector('current-user', 'current-workspace', session.id);
+    if (session && userId && workspaceId) {
+      signalCollector.current = createSignalCollector(userId, workspaceId, session.id);
     }
-  }, [session]);
+  }, [session, userId, workspaceId]);
 
   // Periodic flush every 30s
   useEffect(() => {

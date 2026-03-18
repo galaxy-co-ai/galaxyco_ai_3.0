@@ -7,13 +7,15 @@ import type { HomeFeedResponse } from '@/types/home-feed';
 interface HomePageProps {
   initialData: HomeFeedResponse;
   useConversational?: boolean;
+  userId?: string;
+  workspaceId?: string;
 }
 
-export function HomePage({ initialData, useConversational }: HomePageProps) {
+export function HomePage({ initialData, useConversational, userId, workspaceId }: HomePageProps) {
   if (useConversational) {
     return (
       <div className="h-full">
-        <NeptuneConversation />
+        <NeptuneConversation userId={userId} workspaceId={workspaceId} />
       </div>
     );
   }

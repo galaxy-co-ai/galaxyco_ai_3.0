@@ -88,10 +88,15 @@ export async function getOrCreateSession(
 
 /**
  * Updates lastActiveAt to now for the given session.
+ * When workspaceId is provided, adds multi-tenant scoping to the update.
  */
-export async function touchSession(sessionId: string): Promise<void> {
+export async function touchSession(sessionId: string, workspaceId?: string): Promise<void> {
+  const whereClause = workspaceId
+    ? and(eq(neptuneConversations.id, sessionId), eq(neptuneConversations.workspaceId, workspaceId))
+    : eq(neptuneConversations.id, sessionId);
+
   await db
     .update(neptuneConversations)
     .set({ lastActiveAt: new Date() })
-    .where(eq(neptuneConversations.id, sessionId));
+    .where(whereClause);
 }
