@@ -45,12 +45,16 @@ export function NeptuneConversation() {
   const [session, setSession] = useState<ConversationSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [streamingText, setStreamingText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleStreamEvent = useCallback((event: StreamEvent) => {
     if (event.type === 'session') {
       setSession(event.session);
+    } else if (event.type === 'text-delta') {
+      setStreamingText((prev) => prev + event.content);
     } else if (event.type === 'message-complete') {
+      setStreamingText('');
       setMessages((prev) => [...prev, event.message]);
     } else if (event.type === 'error') {
       setError(event.message);
@@ -147,7 +151,7 @@ export function NeptuneConversation() {
   );
 
   return (
-    <div data-neptune-conversation className="flex h-full flex-col">
+    <div data-neptune-conversation className="neptune-ambient flex h-full flex-col">
       {/* Scroll container */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-32 pt-8">
         <div className="mx-auto max-w-2xl space-y-6">
@@ -159,6 +163,14 @@ export function NeptuneConversation() {
               </div>
             ))}
           </AnimatePresence>
+          {streamingText && (
+            <div className="space-y-2">
+              <p className="font-[family-name:var(--font-dm-sans)] text-sm leading-relaxed text-foreground">
+                {streamingText}
+                <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-accent-foreground/50" />
+              </p>
+            </div>
+          )}
           {error && <p className="text-sm italic text-muted-foreground">{error}</p>}
         </div>
       </div>

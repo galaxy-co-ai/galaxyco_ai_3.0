@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
           ? buildConversationPrompt(snapshot, userName, userMessage)
           : buildNarrativePrompt(snapshot, userName, timeOfDay);
 
-        // --- Call OpenAI ---
+        // --- Call OpenAI (streaming) ---
         let responseText: string;
         try {
           const openai = getOpenAI();
@@ -166,8 +166,21 @@ export async function POST(request: NextRequest) {
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 600,
             temperature: 0.7,
+            stream: true,
           });
-          responseText = completion.choices[0]?.message?.content ?? '';
+
+          let fullText = '';
+          enqueue({ type: 'block-start', blockType: 'text', index: 0 });
+
+          for await (const chunk of completion) {
+            const delta = chunk.choices[0]?.delta?.content ?? '';
+            if (delta) {
+              fullText += delta;
+              enqueue({ type: 'text-delta', content: delta });
+            }
+          }
+
+          responseText = fullText;
         } catch (llmError) {
           logger.error('home/conversation: LLM call failed', { error: llmError });
           enqueue({ type: 'error', message: FALLBACK_ERROR_MESSAGE });
@@ -178,18 +191,9 @@ export async function POST(request: NextRequest) {
         // --- Parse response into blocks ---
         const blocks = parseNarrativeResponse(responseText);
 
-        // --- Stream blocks ---
+        // --- Emit block-complete events for all parsed blocks ---
         for (let i = 0; i < blocks.length; i++) {
-          const block = blocks[i];
-
-          enqueue({ type: 'block-start', blockType: block.type, index: i });
-
-          // For text blocks, emit as a single delta (streaming per-character is Task 15)
-          if (block.type === 'text') {
-            enqueue({ type: 'text-delta', content: block.content });
-          }
-
-          enqueue({ type: 'block-complete', block, index: i });
+          enqueue({ type: 'block-complete', block: blocks[i], index: i });
         }
 
         // --- Build and emit full message ---
