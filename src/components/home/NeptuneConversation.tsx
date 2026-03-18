@@ -5,6 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 import { ConversationMessage } from './ConversationMessage';
 import { ConversationInput } from './ConversationInput';
 import { MicroFeedback } from './MicroFeedback';
+import { createSignalCollector } from '@/lib/home/behavioral-signals';
 import type {
   ConversationMessage as MessageType,
   ConversationSession,
@@ -47,6 +48,29 @@ export function NeptuneConversation() {
   const [error, setError] = useState<string | null>(null);
   const [streamingText, setStreamingText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const signalCollector = useRef(createSignalCollector('', '', ''));
+
+  // Update signal collector when session is established
+  useEffect(() => {
+    if (session) {
+      signalCollector.current = createSignalCollector('current-user', 'current-workspace', session.id);
+    }
+  }, [session]);
+
+  // Periodic flush every 30s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      signalCollector.current.flush();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Flush on unmount
+  useEffect(() => {
+    return () => {
+      signalCollector.current.flush();
+    };
+  }, []);
 
   const handleStreamEvent = useCallback((event: StreamEvent) => {
     if (event.type === 'session') {
@@ -150,6 +174,14 @@ export function NeptuneConversation() {
     [handleSend],
   );
 
+  const handleFeedback = useCallback((messageId: string, signal: 'more' | 'less') => {
+    signalCollector.current.record({
+      type: 'micro_feedback',
+      messageId,
+      metadata: { signal },
+    });
+  }, []);
+
   return (
     <div data-neptune-conversation className="neptune-ambient flex h-full flex-col">
       {/* Scroll container */}
@@ -159,7 +191,7 @@ export function NeptuneConversation() {
             {messages.map((msg) => (
               <div key={msg.id} className="group/message">
                 <ConversationMessage message={msg} onAction={handleAction} />
-                {msg.role === 'neptune' && <MicroFeedback messageId={msg.id} />}
+                {msg.role === 'neptune' && <MicroFeedback messageId={msg.id} onFeedback={handleFeedback} />}
               </div>
             ))}
           </AnimatePresence>
