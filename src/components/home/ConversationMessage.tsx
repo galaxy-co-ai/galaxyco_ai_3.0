@@ -28,11 +28,18 @@ export function ConversationMessage({ message, onAction }: ConversationMessagePr
       }
     >
       {message.blocks.map((block, index) => (
-        <ContentBlockRenderer
-          key={index}
-          block={block}
-          onAction={onAction}
-        />
+        <motion.div
+          key={`${message.id}-block-${index}`}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.3,
+            delay: index * 0.1,
+            ease: [0.2, 0, 0, 1],
+          }}
+        >
+          <ContentBlockRenderer block={block} onAction={onAction} />
+        </motion.div>
       ))}
     </motion.div>
   );
