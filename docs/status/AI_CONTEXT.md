@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-18 (b420f90)  
+**Updated Through:** 2026-03-18 (35dd617)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-18 35dd617 fix(home): handle Courier non-streaming + missing session gracefully
 - 2026-03-18 b420f90 fix(conversations): use database userId (UUID) for team channel unread query
 - 2026-03-18 a47defe feat(ai): add Mistral as complex reasoning tier, tiered Neptune routing
 - 2026-03-18 2babf47 feat(ai): add Courier OSS as primary Neptune LLM backend
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-18 fa83cf8 feat(home): wire conversational surface with feature flag
 - 2026-03-18 8913eb5 feat(home): add NeptuneConversation main surface with SSE streaming
 - 2026-03-18 85539fa feat(home): add conversation message component
-- 2026-03-18 5a6076f feat(home): add conversation input with ambient pulse
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
