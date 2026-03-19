@@ -16,7 +16,6 @@ import { eq, and, sql } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
 import {
   ConversationInitRequestSchema,
-  ConversationSendRequestSchema,
 } from '@/lib/validation/neptune-conversation';
 import type { StreamEvent, ConversationMessage } from '@/types/neptune-conversation';
 
@@ -104,12 +103,14 @@ export async function POST(request: NextRequest) {
 
     // Determine which schema to use based on presence of message field
     if (body.message) {
-      const parsed = ConversationSendRequestSchema.safeParse(body);
-      if (!parsed.success) {
-        return NextResponse.json({ error: 'Invalid request', details: parsed.error.issues }, { status: 400 });
+      // Accept message with or without sessionId — if session is missing
+      // (e.g. init failed), we'll create one on the fly in the stream handler
+      const message = typeof body.message === 'string' ? body.message.slice(0, 4000) : undefined;
+      if (!message) {
+        return NextResponse.json({ error: 'Message is required' }, { status: 400 });
       }
-      sessionId = parsed.data.sessionId;
-      userMessage = parsed.data.message;
+      sessionId = typeof body.sessionId === 'string' ? body.sessionId : undefined;
+      userMessage = message;
     } else {
       const parsed = ConversationInitRequestSchema.safeParse(body);
       if (!parsed.success) {
@@ -193,10 +194,9 @@ export async function POST(request: NextRequest) {
         // --- Call LLM (Courier → Mistral → OpenAI fallback chain) ---
         let responseText: string;
         try {
-          // Conversational tier for now — complex routing happens when
-          // intent classification is wired in (uses Mistral for reasoning)
           const { client: llm, model: llmModel, provider: llmProvider } = getNeptuneLLM('conversational');
           logger.info('home/conversation: using LLM', { provider: llmProvider, model: llmModel });
+
           const llmMessages: Array<{ role: 'system' | 'user'; content: string }> = [
             { role: 'system', content: prompt },
           ];
@@ -204,26 +204,46 @@ export async function POST(request: NextRequest) {
             llmMessages.push({ role: 'user', content: userMessage });
           }
 
-          const completion = await llm.chat.completions.create({
-            model: llmModel,
-            messages: llmMessages,
-            max_tokens: 600,
-            temperature: 0.7,
-            stream: true,
-          });
+          // Courier doesn't support streaming — use non-streaming and emit all at once.
+          // Mistral/OpenAI support streaming for progressive text rendering.
+          const useStreaming = llmProvider !== 'courier';
 
-          let fullText = '';
-          enqueue({ type: 'block-start', blockType: 'text', index: 0 });
+          if (useStreaming) {
+            const completion = await llm.chat.completions.create({
+              model: llmModel,
+              messages: llmMessages,
+              max_tokens: 600,
+              temperature: 0.7,
+              stream: true,
+            });
 
-          for await (const chunk of completion) {
-            const delta = chunk.choices[0]?.delta?.content ?? '';
-            if (delta) {
-              fullText += delta;
-              enqueue({ type: 'text-delta', content: delta });
+            let fullText = '';
+            enqueue({ type: 'block-start', blockType: 'text', index: 0 });
+
+            for await (const chunk of completion) {
+              const delta = chunk.choices[0]?.delta?.content ?? '';
+              if (delta) {
+                fullText += delta;
+                enqueue({ type: 'text-delta', content: delta });
+              }
             }
-          }
 
-          responseText = fullText;
+            responseText = fullText;
+          } else {
+            // Non-streaming path (Courier)
+            const completion = await llm.chat.completions.create({
+              model: llmModel,
+              messages: llmMessages,
+              max_tokens: 600,
+              temperature: 0.7,
+            });
+
+            responseText = completion.choices[0]?.message?.content ?? '';
+
+            // Emit as a single text delta for the frontend
+            enqueue({ type: 'block-start', blockType: 'text', index: 0 });
+            enqueue({ type: 'text-delta', content: responseText });
+          }
         } catch (llmError) {
           logger.error('home/conversation: LLM call failed', { error: llmError });
           enqueue({ type: 'error', message: FALLBACK_ERROR_MESSAGE });
