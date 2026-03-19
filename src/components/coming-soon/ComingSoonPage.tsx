@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Zap, Brain, Shield, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -476,10 +477,17 @@ export function ComingSoonPage() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
+          className="flex items-center gap-4"
         >
           <span className="text-sm text-gray-400 font-medium">
             Launching 2026
           </span>
+          <Link
+            href="/sign-in"
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors duration-200"
+          >
+            Sign in
+          </Link>
         </motion.div>
       </nav>
 
