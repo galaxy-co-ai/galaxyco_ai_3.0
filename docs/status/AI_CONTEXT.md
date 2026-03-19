@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-18 (2babf47)  
+**Updated Through:** 2026-03-18 (a47defe)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-18 a47defe feat(ai): add Mistral as complex reasoning tier, tiered Neptune routing
 - 2026-03-18 2babf47 feat(ai): add Courier OSS as primary Neptune LLM backend
 - 2026-03-18 ba8308a fix(conversations): surface channel creation errors to user
 - 2026-03-18 e49cbfd feat(landing): add subtle sign-in link to coming soon nav
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-18 85539fa feat(home): add conversation message component
 - 2026-03-18 5a6076f feat(home): add conversation input with ambient pulse
 - 2026-03-18 a664127 feat(home): add content block renderer with action affordances
-- 2026-03-18 47efb18 feat(home): add narrative builder for Neptune's contextual opening
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
