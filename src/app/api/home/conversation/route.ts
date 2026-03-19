@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
-import { getOpenAI } from '@/lib/ai-providers';
+import { getNeptuneLLM } from '@/lib/ai-providers';
 import { getOrCreateSession, touchSession } from '@/lib/home/session-manager';
 import { fetchWorkspaceSnapshot } from '@/lib/home/workspace-data';
 import type { WorkspaceSnapshot } from '@/lib/home/workspace-data';
@@ -190,20 +190,20 @@ export async function POST(request: NextRequest) {
           ? buildConversationPrompt(snapshot, userName)
           : buildNarrativePrompt(snapshot, userName, timeOfDay);
 
-        // --- Call OpenAI (streaming) ---
+        // --- Call LLM (Courier preferred, OpenAI fallback) ---
         let responseText: string;
         try {
-          const openai = getOpenAI();
-          const messages: Array<{ role: 'system' | 'user'; content: string }> = [
+          const { client: llm, model: llmModel } = getNeptuneLLM();
+          const llmMessages: Array<{ role: 'system' | 'user'; content: string }> = [
             { role: 'system', content: prompt },
           ];
           if (userMessage) {
-            messages.push({ role: 'user', content: userMessage });
+            llmMessages.push({ role: 'user', content: userMessage });
           }
 
-          const completion = await openai.chat.completions.create({
-            model: 'gpt-4o',
-            messages,
+          const completion = await llm.chat.completions.create({
+            model: llmModel,
+            messages: llmMessages,
             max_tokens: 600,
             temperature: 0.7,
             stream: true,

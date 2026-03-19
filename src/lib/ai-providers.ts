@@ -3,7 +3,10 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { withTimeout, API_TIMEOUTS } from '@/lib/utils';
 
-export type AIProvider = 'openai' | 'anthropic' | 'google';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'courier';
+
+// Default Courier model for Neptune conversations
+export const COURIER_DEFAULT_MODEL = 'CB_OS_Qwen3.5 35B A3B';
 
 /**
  * Get OpenAI client instance
@@ -42,6 +45,45 @@ export function getGoogleAI() {
 }
 
 /**
+ * Get Courier OSS client instance (OpenAI-compatible, self-hosted inference)
+ * Zero-cost LLM backend — runs on our own hardware via Courier OSS.
+ */
+export function getCourier() {
+  const baseURL = process.env.COURIER_BASE_URL;
+  const apiKey = process.env.COURIER_API_KEY;
+
+  if (!baseURL || !apiKey) {
+    throw new Error('COURIER_BASE_URL and COURIER_API_KEY must be configured');
+  }
+
+  return new OpenAI({
+    baseURL: baseURL.replace(/\/$/, '') + '/v1',
+    apiKey,
+    timeout: API_TIMEOUTS.AI_PROVIDER,
+  });
+}
+
+/**
+ * Get the best available LLM client for Neptune.
+ * Prefers Courier (free, self-hosted) over OpenAI (paid).
+ */
+export function getNeptuneLLM(): { client: OpenAI; model: string } {
+  // Prefer Courier (zero cost) when available
+  if (process.env.COURIER_BASE_URL && process.env.COURIER_API_KEY) {
+    return {
+      client: getCourier(),
+      model: COURIER_DEFAULT_MODEL,
+    };
+  }
+
+  // Fallback to OpenAI (paid)
+  return {
+    client: getOpenAI(),
+    model: 'gpt-4o',
+  };
+}
+
+/**
  * Get any AI provider by name
  */
 export function getAIProvider(provider: AIProvider) {
@@ -52,6 +94,8 @@ export function getAIProvider(provider: AIProvider) {
       return getAnthropic();
     case 'google':
       return getGoogleAI();
+    case 'courier':
+      return getCourier();
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }
@@ -63,6 +107,7 @@ export function getAIProvider(provider: AIProvider) {
 export function getAvailableProviders(): AIProvider[] {
   const providers: AIProvider[] = [];
 
+  if (process.env.COURIER_BASE_URL && process.env.COURIER_API_KEY) providers.push('courier');
   if (process.env.OPENAI_API_KEY) providers.push('openai');
   if (process.env.ANTHROPIC_API_KEY) providers.push('anthropic');
   if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) providers.push('google');
