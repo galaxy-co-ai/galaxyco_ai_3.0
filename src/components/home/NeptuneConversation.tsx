@@ -137,9 +137,17 @@ export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneCo
     };
   }, [handleStreamEvent]);
 
-  // Auto-scroll when messages change
+  // Auto-scroll only for new messages (not history prepend)
+  const prevMessageCountRef = useRef(0);
   useEffect(() => {
-    if (scrollRef.current) {
+    const prevCount = prevMessageCountRef.current;
+    prevMessageCountRef.current = messages.length;
+    // Only scroll down if messages were appended (count grew and last msg is new)
+    if (messages.length > prevCount && prevCount > 0 && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+    // Also scroll on first message load (init)
+    if (prevCount === 0 && messages.length > 0 && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
@@ -197,7 +205,7 @@ export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneCo
   // --- History loading ---
 
   const loadHistory = useCallback(async () => {
-    if (historyLoading || !hasMoreHistory) return;
+    if (historyLoading || !hasMoreHistory || !session) return;
     setHistoryLoading(true);
 
     try {
@@ -233,7 +241,7 @@ export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneCo
     } finally {
       setHistoryLoading(false);
     }
-  }, [historyLoading, hasMoreHistory, oldestCursor]);
+  }, [historyLoading, hasMoreHistory, oldestCursor, session]);
 
   // IntersectionObserver for scroll-to-top history loading
   useEffect(() => {
@@ -251,7 +259,7 @@ export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneCo
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMoreHistory, historyLoading, loadHistory]);
+  }, [hasMoreHistory, historyLoading, loadHistory, session]);
 
   return (
     <div data-neptune-conversation className={`neptune-ambient ${ambientClass} flex h-full flex-col`.trim()}>
