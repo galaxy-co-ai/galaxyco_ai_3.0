@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
+import type OpenAI from 'openai';
 import { getNeptuneLLM } from '@/lib/ai-providers';
 import { getOrCreateSession, touchSession } from '@/lib/home/session-manager';
 import { fetchWorkspaceSnapshot } from '@/lib/home/workspace-data';
@@ -191,61 +192,86 @@ export async function POST(request: NextRequest) {
           ? buildConversationPrompt(snapshot, userName)
           : buildNarrativePrompt(snapshot, userName, timeOfDay);
 
-        // --- Call LLM (Courier → Mistral → OpenAI fallback chain) ---
-        let responseText: string;
-        try {
-          const { client: llm, model: llmModel, provider: llmProvider } = getNeptuneLLM('conversational');
-          logger.info('home/conversation: using LLM', { provider: llmProvider, model: llmModel });
+        // --- Call LLM with automatic fallback (Courier → Mistral → OpenAI) ---
+        let responseText = '';
 
-          const llmMessages: Array<{ role: 'system' | 'user'; content: string }> = [
-            { role: 'system', content: prompt },
-          ];
-          if (userMessage) {
-            llmMessages.push({ role: 'user', content: userMessage });
-          }
+        const llmMessages: Array<{ role: 'system' | 'user'; content: string }> = [
+          { role: 'system', content: prompt },
+        ];
+        if (userMessage) {
+          llmMessages.push({ role: 'user', content: userMessage });
+        }
 
-          // Courier doesn't support streaming — use non-streaming and emit all at once.
-          // Mistral/OpenAI support streaming for progressive text rendering.
-          const useStreaming = llmProvider !== 'courier';
+        // Try primary provider, fall back to next tier if it fails
+        const providers: Array<{ client: OpenAI; model: string; provider: string }> = [];
+        try { providers.push(getNeptuneLLM('conversational')); } catch { /* not configured */ }
+        try { providers.push(getNeptuneLLM('complex')); } catch { /* not configured */ }
 
-          if (useStreaming) {
-            const completion = await llm.chat.completions.create({
-              model: llmModel,
-              messages: llmMessages,
-              max_tokens: 600,
-              temperature: 0.7,
-              stream: true,
-            });
+        // Deduplicate (if both tiers resolve to same provider)
+        const seen = new Set<string>();
+        const uniqueProviders = providers.filter(p => {
+          if (seen.has(p.provider)) return false;
+          seen.add(p.provider);
+          return true;
+        });
 
-            let fullText = '';
-            enqueue({ type: 'block-start', blockType: 'text', index: 0 });
+        let succeeded = false;
+        for (const { client: llm, model: llmModel, provider: llmProvider } of uniqueProviders) {
+          try {
+            logger.info('home/conversation: trying LLM', { provider: llmProvider, model: llmModel });
 
-            for await (const chunk of completion) {
-              const delta = chunk.choices[0]?.delta?.content ?? '';
-              if (delta) {
-                fullText += delta;
-                enqueue({ type: 'text-delta', content: delta });
+            // Courier doesn't support streaming — use non-streaming.
+            // Mistral/OpenAI stream progressively.
+            const useStreaming = llmProvider !== 'courier';
+
+            if (useStreaming) {
+              const completion = await llm.chat.completions.create({
+                model: llmModel,
+                messages: llmMessages,
+                max_tokens: 600,
+                temperature: 0.7,
+                stream: true,
+              });
+
+              let fullText = '';
+              enqueue({ type: 'block-start', blockType: 'text', index: 0 });
+
+              for await (const chunk of completion) {
+                const delta = chunk.choices[0]?.delta?.content ?? '';
+                if (delta) {
+                  fullText += delta;
+                  enqueue({ type: 'text-delta', content: delta });
+                }
               }
+
+              responseText = fullText;
+            } else {
+              // Non-streaming path (Courier)
+              const completion = await llm.chat.completions.create({
+                model: llmModel,
+                messages: llmMessages,
+                max_tokens: 600,
+                temperature: 0.7,
+              });
+
+              responseText = completion.choices[0]?.message?.content ?? '';
+              enqueue({ type: 'block-start', blockType: 'text', index: 0 });
+              enqueue({ type: 'text-delta', content: responseText });
             }
 
-            responseText = fullText;
-          } else {
-            // Non-streaming path (Courier)
-            const completion = await llm.chat.completions.create({
-              model: llmModel,
-              messages: llmMessages,
-              max_tokens: 600,
-              temperature: 0.7,
+            logger.info('home/conversation: LLM succeeded', { provider: llmProvider });
+            succeeded = true;
+            break; // Success — stop trying providers
+          } catch (llmError) {
+            logger.warn('home/conversation: LLM provider failed, trying next', {
+              provider: llmProvider,
+              error: llmError instanceof Error ? llmError.message : String(llmError),
             });
-
-            responseText = completion.choices[0]?.message?.content ?? '';
-
-            // Emit as a single text delta for the frontend
-            enqueue({ type: 'block-start', blockType: 'text', index: 0 });
-            enqueue({ type: 'text-delta', content: responseText });
           }
-        } catch (llmError) {
-          logger.error('home/conversation: LLM call failed', { error: llmError });
+        }
+
+        if (!succeeded) {
+          logger.error('home/conversation: all LLM providers failed');
           enqueue({ type: 'error', message: FALLBACK_ERROR_MESSAGE });
           controller.close();
           return;
