@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-18 (5e87feb)  
+**Updated Through:** 2026-03-19 (b689c56)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,11 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-19 b689c56 docs(home): mark completed phases in original implementation plan
+- 2026-03-19 7e72923 feat(home): wire conversation history with scroll-to-top loading
+- 2026-03-19 e1a743b feat(home): add time-of-day ambient hue shifts
+- 2026-03-19 f862e54 feat(home): add per-block stagger animation for conversation messages
+- 2026-03-19 e700526 feat(home): add useTimeOfDay hook for ambient environment
 - 2026-03-18 5e87feb fix(home): set maxDuration=30s for conversation route
 - 2026-03-18 cebc908 fix(ai): set 5s timeout on Courier so Mistral fallback can run
 - 2026-03-18 59f5163 feat(home): automatic LLM fallback chain — Courier → Mistral → OpenAI
@@ -42,11 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-18 2a71c37 fix(home): update ContentBlockRenderer test for InlineVisual integration
 - 2026-03-18 9549c27 feat(home): wire behavioral signals and micro-feedback
 - 2026-03-18 cb3735b feat(home): add behavioral signal collection for learning engine
-- 2026-03-18 538fa3a feat(home): add Neptune actions to command palette
-- 2026-03-18 ea84f90 feat(home): add streaming text animation for Neptune responses
-- 2026-03-18 38a0d5f chore(home): remove unused variable in history test mock
-- 2026-03-18 3cdc558 feat(home): add conversation history endpoint with pagination
-- 2026-03-18 76f2ee7 feat(home): add inline visual component with Recharts
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
