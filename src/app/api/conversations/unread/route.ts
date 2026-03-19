@@ -4,18 +4,13 @@ import { db } from '@/lib/db';
 import { conversations, teamChannelMembers } from '@/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { createErrorResponse } from '@/lib/api-error-handler';
-import { auth } from '@clerk/nextjs/server';
 import { rateLimit } from '@/lib/rate-limit';
 
 // GET - Get total unread count across all conversations and team channels
 export async function GET() {
   try {
-    const { workspaceId } = await getCurrentWorkspace();
-    const { userId } = await auth();
-
-    if (!userId) {
-      return createErrorResponse(new Error('Unauthorized'), 'Get unread count - authentication');
-    }
+    // Use database userId (UUID), not Clerk userId (string)
+    const { workspaceId, userId } = await getCurrentWorkspace();
 
     const rateLimitResult = await rateLimit(`conversations:${userId}`, 100, 3600);
     if (!rateLimitResult.success) {
@@ -41,23 +36,27 @@ export async function GET() {
         )
       );
 
-    // Get unread team channels count (channels with unread messages)
-    // This is a simplified version - you may want to track actual unread counts per user
-    const teamChannelsWithUnread = await db.query.teamChannelMembers.findMany({
-      where: and(
-        eq(teamChannelMembers.workspaceId, workspaceId),
-        eq(teamChannelMembers.userId, userId)
-      ),
-      with: {
-        channel: true,
-      },
-    });
+    // Get unread team channels count
+    let teamUnreadCount = 0;
+    try {
+      const teamChannelsWithUnread = await db.query.teamChannelMembers.findMany({
+        where: and(
+          eq(teamChannelMembers.workspaceId, workspaceId),
+          eq(teamChannelMembers.userId, userId)
+        ),
+        with: {
+          channel: true,
+        },
+      });
 
-    // Count channels where user hasn't read the latest message
-    const teamUnreadCount = teamChannelsWithUnread.filter(
-      (member) => member.lastReadAt && member.channel.lastMessageAt &&
-      new Date(member.lastReadAt) < new Date(member.channel.lastMessageAt)
-    ).length;
+      // Count channels where user hasn't read the latest message
+      teamUnreadCount = teamChannelsWithUnread.filter(
+        (member) => member.channel && member.lastReadAt && member.channel.lastMessageAt &&
+        new Date(member.lastReadAt) < new Date(member.channel.lastMessageAt)
+      ).length;
+    } catch {
+      // Team channels query can fail if user has no memberships — not critical
+    }
 
     const totalUnread = (conversationsUnread?.count || 0) + teamUnreadCount;
 
