@@ -3,10 +3,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { withTimeout, API_TIMEOUTS } from '@/lib/utils';
 
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'courier';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'courier' | 'mistral';
 
-// Default Courier model for Neptune conversations
+// Neptune model defaults
 export const COURIER_DEFAULT_MODEL = 'CB_OS_Qwen3.5 35B A3B';
+export const MISTRAL_DEFAULT_MODEL = 'mistral-large-latest';
+
+// Neptune complexity tiers
+export type NeptuneTier = 'conversational' | 'complex';
 
 /**
  * Get OpenAI client instance
@@ -64,23 +68,52 @@ export function getCourier() {
 }
 
 /**
- * Get the best available LLM client for Neptune.
- * Prefers Courier (free, self-hosted) over OpenAI (paid).
+ * Get Mistral client instance (OpenAI-compatible API).
+ * Used for complex reasoning, multi-step analysis, and tool orchestration.
  */
-export function getNeptuneLLM(): { client: OpenAI; model: string } {
-  // Prefer Courier (zero cost) when available
-  if (process.env.COURIER_BASE_URL && process.env.COURIER_API_KEY) {
-    return {
-      client: getCourier(),
-      model: COURIER_DEFAULT_MODEL,
-    };
+export function getMistral() {
+  if (!process.env.MISTRAL_API_KEY) {
+    throw new Error('MISTRAL_API_KEY not configured');
+  }
+  return new OpenAI({
+    baseURL: 'https://api.mistral.ai/v1',
+    apiKey: process.env.MISTRAL_API_KEY,
+    timeout: API_TIMEOUTS.AI_PROVIDER,
+  });
+}
+
+/**
+ * Get the best available LLM client for Neptune, routed by complexity tier.
+ *
+ * Conversational (80-90%): greetings, status, Q&A, briefings → Courier (free)
+ * Complex (10-20%): multi-step reasoning, analysis, business decisions → Mistral Large (cheap)
+ *
+ * Fallback chain: Courier → Mistral → OpenAI
+ */
+export function getNeptuneLLM(tier: NeptuneTier = 'conversational'): { client: OpenAI; model: string; provider: string } {
+  if (tier === 'complex') {
+    // Complex reasoning → Mistral Large (strong, cheap)
+    if (process.env.MISTRAL_API_KEY) {
+      return { client: getMistral(), model: MISTRAL_DEFAULT_MODEL, provider: 'mistral' };
+    }
+    // Fallback: try Courier's best model
+    if (process.env.COURIER_BASE_URL && process.env.COURIER_API_KEY) {
+      return { client: getCourier(), model: 'EXAONE 4.0 32B (8bit)', provider: 'courier' };
+    }
   }
 
-  // Fallback to OpenAI (paid)
-  return {
-    client: getOpenAI(),
-    model: 'gpt-4o',
-  };
+  // Conversational → Courier (free, self-hosted)
+  if (process.env.COURIER_BASE_URL && process.env.COURIER_API_KEY) {
+    return { client: getCourier(), model: COURIER_DEFAULT_MODEL, provider: 'courier' };
+  }
+
+  // Fallback: Mistral (cheap)
+  if (process.env.MISTRAL_API_KEY) {
+    return { client: getMistral(), model: MISTRAL_DEFAULT_MODEL, provider: 'mistral' };
+  }
+
+  // Last resort: OpenAI (expensive)
+  return { client: getOpenAI(), model: 'gpt-4o', provider: 'openai' };
 }
 
 /**
@@ -96,6 +129,8 @@ export function getAIProvider(provider: AIProvider) {
       return getGoogleAI();
     case 'courier':
       return getCourier();
+    case 'mistral':
+      return getMistral();
     default:
       throw new Error(`Unknown AI provider: ${provider}`);
   }
@@ -108,6 +143,7 @@ export function getAvailableProviders(): AIProvider[] {
   const providers: AIProvider[] = [];
 
   if (process.env.COURIER_BASE_URL && process.env.COURIER_API_KEY) providers.push('courier');
+  if (process.env.MISTRAL_API_KEY) providers.push('mistral');
   if (process.env.OPENAI_API_KEY) providers.push('openai');
   if (process.env.ANTHROPIC_API_KEY) providers.push('anthropic');
   if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) providers.push('google');

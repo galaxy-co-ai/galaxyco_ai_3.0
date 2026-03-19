@@ -190,10 +190,13 @@ export async function POST(request: NextRequest) {
           ? buildConversationPrompt(snapshot, userName)
           : buildNarrativePrompt(snapshot, userName, timeOfDay);
 
-        // --- Call LLM (Courier preferred, OpenAI fallback) ---
+        // --- Call LLM (Courier → Mistral → OpenAI fallback chain) ---
         let responseText: string;
         try {
-          const { client: llm, model: llmModel } = getNeptuneLLM();
+          // Conversational tier for now — complex routing happens when
+          // intent classification is wired in (uses Mistral for reasoning)
+          const { client: llm, model: llmModel, provider: llmProvider } = getNeptuneLLM('conversational');
+          logger.info('home/conversation: using LLM', { provider: llmProvider, model: llmModel });
           const llmMessages: Array<{ role: 'system' | 'user'; content: string }> = [
             { role: 'system', content: prompt },
           ];
