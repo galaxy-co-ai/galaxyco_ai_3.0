@@ -80,7 +80,7 @@
 - Create: `src/types/neptune-conversation.ts`
 - Test: `tests/types/neptune-conversation.test.ts`
 
-- [ ] **Step 1: Write the type definitions**
+- [x] **Step 1: Write the type definitions**
 
 ```typescript
 // src/types/neptune-conversation.ts
@@ -180,7 +180,7 @@ export type StreamEvent =
   | { type: 'error'; message: string };
 ```
 
-- [ ] **Step 2: Write type validation tests**
+- [x] **Step 2: Write type validation tests**
 
 ```typescript
 // tests/types/neptune-conversation.test.ts
@@ -237,12 +237,12 @@ describe('neptune-conversation types', () => {
 });
 ```
 
-- [ ] **Step 3: Run tests to verify types compile**
+- [x] **Step 3: Run tests to verify types compile**
 
 Run: `npx vitest run tests/types/neptune-conversation.test.ts`
 Expected: PASS — type-level tests verify structure
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/types/neptune-conversation.ts tests/types/neptune-conversation.test.ts
@@ -257,7 +257,7 @@ git commit -m "feat(home): add conversation type definitions (spec Section 10)"
 - Create: `src/lib/validation/neptune-conversation.ts`
 - Test: `tests/lib/validation/neptune-conversation.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/lib/validation/neptune-conversation.test.ts
@@ -347,12 +347,12 @@ describe('neptune-conversation validation', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/lib/validation/neptune-conversation.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write the validation schemas**
+- [x] **Step 3: Write the validation schemas**
 
 ```typescript
 // src/lib/validation/neptune-conversation.ts
@@ -422,12 +422,12 @@ export const ConversationSendRequestSchema = z.object({
 });
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run tests/lib/validation/neptune-conversation.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/validation/neptune-conversation.ts tests/lib/validation/neptune-conversation.test.ts
@@ -445,7 +445,7 @@ git commit -m "feat(home): add conversation validation schemas"
 
 The card-engine has 6 data fetchers that query workspace state (contacts, tasks, campaigns, agents, integrations). These are reused by the narrative builder. Extract them into a dedicated module.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/lib/home/workspace-data.test.ts
@@ -486,12 +486,12 @@ describe('fetchWorkspaceSnapshot', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/lib/home/workspace-data.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Create workspace-data.ts by extracting fetchers from card-engine.ts**
+- [x] **Step 3: Create workspace-data.ts by extracting fetchers from card-engine.ts**
 
 ```typescript
 // src/lib/home/workspace-data.ts
@@ -674,7 +674,7 @@ async function getIntegrationCount(workspaceId: string): Promise<number> {
 }
 ```
 
-- [ ] **Step 4: Update card-engine.ts to import from workspace-data.ts**
+- [x] **Step 4: Update card-engine.ts to import from workspace-data.ts**
 
 Replace the data fetchers in `src/lib/home/card-engine.ts` with imports from the new module. Keep `generateFeedCards` and `generateGreeting` working — they now call `fetchWorkspaceSnapshot()` internally. Add `@deprecated` JSDoc to `generateFeedCards`.
 
@@ -694,17 +694,17 @@ export async function generateFeedCards(
   // ... rest uses snapshot.hotContacts, snapshot.overdueTasks, etc.
 ```
 
-- [ ] **Step 5: Run existing card-engine tests to ensure no regression**
+- [x] **Step 5: Run existing card-engine tests to ensure no regression**
 
 Run: `npx vitest run tests/api/home-feed.test.ts tests/lib/validation/home-feed.test.ts`
 Expected: PASS — existing behavior unchanged
 
-- [ ] **Step 6: Run new workspace-data tests**
+- [x] **Step 6: Run new workspace-data tests**
 
 Run: `npx vitest run tests/lib/home/workspace-data.test.ts`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/lib/home/workspace-data.ts src/lib/home/card-engine.ts tests/lib/home/workspace-data.test.ts
@@ -721,7 +721,7 @@ git commit -m "refactor(home): extract workspace data fetchers from card-engine"
 
 Handles conversation session lifecycle: create new, resume existing, detect idle timeout (30 min per spec Section 7).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/lib/home/session-manager.test.ts
@@ -799,12 +799,12 @@ describe('session-manager', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/lib/home/session-manager.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write the session manager**
+- [x] **Step 3: Write the session manager**
 
 ```typescript
 // src/lib/home/session-manager.ts
@@ -900,12 +900,12 @@ export async function touchSession(sessionId: string): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run tests/lib/home/session-manager.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/home/session-manager.ts tests/lib/home/session-manager.test.ts
@@ -922,7 +922,7 @@ git commit -m "feat(home): add session manager with 30-min idle timeout"
 
 The core intelligence: takes workspace data + user context and produces Neptune's contextual opening as content blocks. Uses LLM for natural language generation with structured output.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/lib/home/narrative-builder.test.ts
@@ -996,12 +996,12 @@ describe('narrative-builder', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/lib/home/narrative-builder.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write the narrative builder**
+- [x] **Step 3: Write the narrative builder**
 
 ```typescript
 // src/lib/home/narrative-builder.ts
@@ -1188,12 +1188,12 @@ export function parseNarrativeResponse(response: string): ContentBlock[] {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run tests/lib/home/narrative-builder.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/home/narrative-builder.ts tests/lib/home/narrative-builder.test.ts
@@ -1210,7 +1210,7 @@ git commit -m "feat(home): add narrative builder for Neptune's contextual openin
 
 SSE streaming endpoint that handles: (1) Session init with contextual opening, (2) User message processing.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/api/home-conversation.test.ts
@@ -1327,12 +1327,12 @@ describe('POST /api/home/conversation', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/api/home-conversation.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write the streaming endpoint**
+- [x] **Step 3: Write the streaming endpoint**
 
 ```typescript
 // src/app/api/home/conversation/route.ts
@@ -1528,12 +1528,12 @@ Rules:
 // alongside other workspace-data imports
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run tests/api/home-conversation.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/api/home/conversation/route.ts tests/api/home-conversation.test.ts
@@ -1552,7 +1552,7 @@ git commit -m "feat(home): add streaming conversation API endpoint"
 
 The core UI primitive: renders a single ContentBlock based on its type discriminator.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/components/home/ContentBlockRenderer.test.tsx
@@ -1605,12 +1605,12 @@ describe('ContentBlockRenderer', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/components/home/ContentBlockRenderer.test.tsx`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write ActionAffordance component**
+- [x] **Step 3: Write ActionAffordance component**
 
 ```tsx
 // src/components/home/ActionAffordance.tsx
@@ -1646,7 +1646,7 @@ export function ActionAffordance({ prompt, actions, onAction }: ActionAffordance
 }
 ```
 
-- [ ] **Step 4: Write SessionDivider component**
+- [x] **Step 4: Write SessionDivider component**
 
 ```tsx
 // src/components/home/SessionDivider.tsx
@@ -1673,7 +1673,7 @@ export function SessionDivider({ date }: SessionDividerProps) {
 }
 ```
 
-- [ ] **Step 5: Write ContentBlockRenderer component**
+- [x] **Step 5: Write ContentBlockRenderer component**
 
 ```tsx
 // src/components/home/ContentBlockRenderer.tsx
@@ -1741,12 +1741,12 @@ export function ContentBlockRenderer({ block, onAction }: ContentBlockRendererPr
 }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 Run: `npx vitest run tests/components/home/ContentBlockRenderer.test.tsx`
 Expected: PASS
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/home/ContentBlockRenderer.tsx src/components/home/ActionAffordance.tsx src/components/home/SessionDivider.tsx tests/components/home/ContentBlockRenderer.test.tsx
@@ -1764,7 +1764,7 @@ git commit -m "feat(home): add content block renderer with action affordances"
 
 The persistent input field at the bottom of the conversational surface with the ambient luminous pulse.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/components/home/ConversationInput.test.tsx
@@ -1823,12 +1823,12 @@ describe('ConversationInput', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/components/home/ConversationInput.test.tsx`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write AmbientPulse component**
+- [x] **Step 3: Write AmbientPulse component**
 
 ```tsx
 // src/components/home/AmbientPulse.tsx
@@ -1865,7 +1865,7 @@ export function AmbientPulse({ isActive = true }: AmbientPulseProps) {
 }
 ```
 
-- [ ] **Step 4: Write ConversationInput component**
+- [x] **Step 4: Write ConversationInput component**
 
 ```tsx
 // src/components/home/ConversationInput.tsx
@@ -1911,12 +1911,12 @@ export function ConversationInput({ onSubmit, isLoading }: ConversationInputProp
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `npx vitest run tests/components/home/ConversationInput.test.tsx`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/home/ConversationInput.tsx src/components/home/AmbientPulse.tsx tests/components/home/ConversationInput.test.tsx
@@ -1939,7 +1939,7 @@ git commit -m "feat(home): add conversation input with ambient pulse"
 
 Renders a single message (neptune or user) as a series of content blocks.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/components/home/ConversationMessage.test.tsx
@@ -1998,12 +1998,12 @@ describe('ConversationMessage', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/components/home/ConversationMessage.test.tsx`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write ConversationMessage component**
+- [x] **Step 3: Write ConversationMessage component**
 
 ```tsx
 // src/components/home/ConversationMessage.tsx
@@ -2051,12 +2051,12 @@ export function ConversationMessage({ message, onAction }: ConversationMessagePr
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run tests/components/home/ConversationMessage.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/components/home/ConversationMessage.tsx tests/components/home/ConversationMessage.test.tsx
@@ -2074,7 +2074,7 @@ git commit -m "feat(home): add conversation message component"
 
 The main conversational surface that replaces NeptuneFeed. Manages SSE connection, message list, and user input.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/components/home/NeptuneConversation.test.tsx
@@ -2123,12 +2123,12 @@ describe('NeptuneConversation', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/components/home/NeptuneConversation.test.tsx`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write MicroFeedback component**
+- [x] **Step 3: Write MicroFeedback component**
 
 ```tsx
 // src/components/home/MicroFeedback.tsx
@@ -2168,7 +2168,7 @@ export function MicroFeedback({ messageId, onFeedback }: MicroFeedbackProps) {
 }
 ```
 
-- [ ] **Step 4: Write NeptuneConversation component**
+- [x] **Step 4: Write NeptuneConversation component**
 
 ```tsx
 // src/components/home/NeptuneConversation.tsx
@@ -2354,12 +2354,12 @@ export function NeptuneConversation() {
 }
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `npx vitest run tests/components/home/NeptuneConversation.test.tsx`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/home/NeptuneConversation.tsx src/components/home/MicroFeedback.tsx tests/components/home/NeptuneConversation.test.tsx
@@ -2377,7 +2377,7 @@ git commit -m "feat(home): add NeptuneConversation main surface with SSE streami
 
 Connect the conversational surface to the page. Use a feature flag (`NEXT_PUBLIC_HOME_CONVERSATIONAL`) to toggle between card and conversation UI.
 
-- [ ] **Step 1: Update HomePage.tsx**
+- [x] **Step 1: Update HomePage.tsx**
 
 ```tsx
 // src/components/home/HomePage.tsx
@@ -2413,7 +2413,7 @@ export function HomePage({ initialData, useConversational }: HomePageProps) {
 }
 ```
 
-- [ ] **Step 2: Update index.ts barrel exports**
+- [x] **Step 2: Update index.ts barrel exports**
 
 ```typescript
 // src/components/home/index.ts
@@ -2436,7 +2436,7 @@ export { SmartChipBar } from './SmartChipBar';
 export { SlidePanel } from './SlidePanel';
 ```
 
-- [ ] **Step 3: Update dashboard page.tsx to pass feature flag**
+- [x] **Step 3: Update dashboard page.tsx to pass feature flag**
 
 ```typescript
 // In src/app/(app)/dashboard/page.tsx, add after initialData construction:
@@ -2450,7 +2450,7 @@ return (
 );
 ```
 
-- [ ] **Step 4: Add env var to .env.example**
+- [x] **Step 4: Add env var to .env.example**
 
 Add to `.env.example`:
 ```
@@ -2458,17 +2458,17 @@ Add to `.env.example`:
 NEXT_PUBLIC_HOME_CONVERSATIONAL=false  # Enable conversational Home (Neptune's Office)
 ```
 
-- [ ] **Step 5: Run typecheck**
+- [x] **Step 5: Run typecheck**
 
 Run: `npm run typecheck`
 Expected: PASS — no type errors
 
-- [ ] **Step 6: Run all home tests**
+- [x] **Step 6: Run all home tests**
 
 Run: `npx vitest run tests/api/home-feed.test.ts tests/api/home-conversation.test.ts tests/components/home/`
 Expected: PASS — all existing + new tests pass
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/components/home/HomePage.tsx src/components/home/index.ts src/app/\(app\)/dashboard/page.tsx .env.example
@@ -2492,7 +2492,7 @@ git commit -m "feat(home): wire conversational surface with feature flag"
 
 Renders `VisualSpec` as interactive Recharts visualizations inline in the conversation.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```tsx
 // tests/components/home/InlineVisual.test.tsx
@@ -2543,12 +2543,12 @@ describe('InlineVisual', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/components/home/InlineVisual.test.tsx`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write InlineVisual component**
+- [x] **Step 3: Write InlineVisual component**
 
 ```tsx
 // src/components/home/InlineVisual.tsx
@@ -2724,7 +2724,7 @@ export function InlineVisual({ spec }: InlineVisualProps) {
 }
 ```
 
-- [ ] **Step 4: Update ContentBlockRenderer to use InlineVisual**
+- [x] **Step 4: Update ContentBlockRenderer to use InlineVisual**
 
 In `src/components/home/ContentBlockRenderer.tsx`, replace the visual case:
 
@@ -2739,12 +2739,12 @@ Add the import at top:
 import { InlineVisual } from './InlineVisual';
 ```
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `npx vitest run tests/components/home/InlineVisual.test.tsx tests/components/home/ContentBlockRenderer.test.tsx`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/home/InlineVisual.tsx src/components/home/ContentBlockRenderer.tsx tests/components/home/InlineVisual.test.tsx
@@ -2761,7 +2761,7 @@ git commit -m "feat(home): add inline visual component with Recharts"
 
 GET endpoint for retrieving past conversation sessions and messages with cursor-based pagination.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/api/home-conversation-history.test.ts
@@ -2813,12 +2813,12 @@ describe('GET /api/home/conversation/history', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/api/home-conversation-history.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write the history endpoint**
+- [x] **Step 3: Write the history endpoint**
 
 ```typescript
 // src/app/api/home/conversation/history/route.ts
@@ -2929,12 +2929,12 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run tests/api/home-conversation-history.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/api/home/conversation/history/route.ts tests/api/home-conversation-history.test.ts
@@ -3167,7 +3167,7 @@ git commit -m "feat(home): add Neptune actions to command palette"
 
 Records behavioral signals per spec Section 6: scroll depth, response timing, topic engagement, visual interaction.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```typescript
 // tests/lib/home/behavioral-signals.test.ts
@@ -3217,12 +3217,12 @@ describe('behavioral-signals', () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run tests/lib/home/behavioral-signals.test.ts`
 Expected: FAIL — module not found
 
-- [ ] **Step 3: Write the behavioral signals module**
+- [x] **Step 3: Write the behavioral signals module**
 
 ```typescript
 // src/lib/home/behavioral-signals.ts
@@ -3298,12 +3298,12 @@ export function createSignalCollector(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 Run: `npx vitest run tests/lib/home/behavioral-signals.test.ts`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/lib/home/behavioral-signals.ts tests/lib/home/behavioral-signals.test.ts
@@ -3319,7 +3319,7 @@ git commit -m "feat(home): add behavioral signal collection for learning engine"
 
 Connect the MicroFeedback component and behavioral signal collector to the conversation surface.
 
-- [ ] **Step 1: Add signal collector to NeptuneConversation**
+- [x] **Step 1: Add signal collector to NeptuneConversation**
 
 ```tsx
 // In NeptuneConversation.tsx, add:
@@ -3352,7 +3352,7 @@ useEffect(() => {
 }, []);
 ```
 
-- [ ] **Step 2: Wire micro-feedback handler**
+- [x] **Step 2: Wire micro-feedback handler**
 
 ```tsx
 const handleFeedback = useCallback((messageId: string, signal: 'more' | 'less') => {
@@ -3367,12 +3367,12 @@ const handleFeedback = useCallback((messageId: string, signal: 'more' | 'less') 
 <MicroFeedback messageId={msg.id} onFeedback={handleFeedback} />
 ```
 
-- [ ] **Step 3: Run tests**
+- [x] **Step 3: Run tests**
 
 Run: `npx vitest run tests/components/home/NeptuneConversation.test.tsx`
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/home/NeptuneConversation.tsx
