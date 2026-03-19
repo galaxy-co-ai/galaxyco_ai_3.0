@@ -6,6 +6,7 @@ import { ConversationMessage } from './ConversationMessage';
 import { ConversationInput } from './ConversationInput';
 import { MicroFeedback } from './MicroFeedback';
 import { createSignalCollector } from '@/lib/home/behavioral-signals';
+import { useTimeOfDay } from '@/lib/hooks/use-time-of-day';
 import type {
   ConversationMessage as MessageType,
   ConversationSession,
@@ -47,6 +48,7 @@ interface NeptuneConversationProps {
 }
 
 export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneConversationProps) {
+  const { ambientClass } = useTimeOfDay();
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [session, setSession] = useState<ConversationSession | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -188,7 +190,7 @@ export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneCo
   }, []);
 
   return (
-    <div data-neptune-conversation className="neptune-ambient flex h-full flex-col">
+    <div data-neptune-conversation className={`neptune-ambient ${ambientClass} flex h-full flex-col`.trim()}>
       {/* Scroll container */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-32 pt-8">
         <div className="mx-auto max-w-2xl space-y-6">

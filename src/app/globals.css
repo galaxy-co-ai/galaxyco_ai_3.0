@@ -655,6 +655,23 @@
     pointer-events: none;
     transition: all 1s var(--ease-standard);
   }
+
+  /* Time-of-day ambient shifts (spec Section 5) */
+  .neptune-ambient--morning::before {
+    background: radial-gradient(
+      ellipse var(--ambient-glow-radius) var(--ambient-glow-radius) at 50% 80%,
+      hsla(var(--ambient-warm-hue), 45%, 55%, calc(var(--ambient-glow-opacity) * 1.3)),
+      transparent
+    );
+  }
+
+  .neptune-ambient--evening::before {
+    background: radial-gradient(
+      ellipse var(--ambient-glow-radius) var(--ambient-glow-radius) at 50% 80%,
+      hsla(var(--ambient-cool-hue), 35%, 45%, calc(var(--ambient-glow-opacity) * 1.2)),
+      transparent
+    );
+  }
 }
 
 /* Prevent Layout Shift */
