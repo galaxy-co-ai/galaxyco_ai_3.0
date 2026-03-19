@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Allow enough time for Courier timeout (5s) + Mistral fallback (15s)
+export const maxDuration = 30;
+
 import { getCurrentWorkspace } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import type OpenAI from 'openai';
