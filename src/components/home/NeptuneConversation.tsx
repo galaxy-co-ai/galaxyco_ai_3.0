@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ConversationMessage } from './ConversationMessage';
 import { ConversationInput } from './ConversationInput';
 import { MicroFeedback } from './MicroFeedback';
+import { SessionDivider } from './SessionDivider';
 import { createSignalCollector } from '@/lib/home/behavioral-signals';
 import { useTimeOfDay } from '@/lib/hooks/use-time-of-day';
 import type {
@@ -54,7 +55,11 @@ export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneCo
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [streamingText, setStreamingText] = useState('');
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(true);
+  const [oldestCursor, setOldestCursor] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const topSentinelRef = useRef<HTMLDivElement>(null);
   const signalCollector = useRef(createSignalCollector('', '', ''));
 
   // Update signal collector when session is established
@@ -189,18 +194,93 @@ export function NeptuneConversation({ userId = '', workspaceId = '' }: NeptuneCo
     });
   }, []);
 
+  // --- History loading ---
+
+  const loadHistory = useCallback(async () => {
+    if (historyLoading || !hasMoreHistory) return;
+    setHistoryLoading(true);
+
+    try {
+      const params = new URLSearchParams();
+      if (oldestCursor) params.set('cursor', oldestCursor);
+
+      const res = await fetch(`/api/home/conversation/history?${params}`);
+      if (!res.ok) throw new Error('Failed to load history');
+
+      const data = await res.json();
+      if (data.messages.length === 0) {
+        setHasMoreHistory(false);
+        return;
+      }
+
+      setOldestCursor(data.cursor ?? null);
+      setHasMoreHistory(data.hasMore ?? false);
+
+      // Prepend older messages, preserving scroll position
+      const container = scrollRef.current;
+      const prevScrollHeight = container?.scrollHeight ?? 0;
+
+      setMessages((prev) => [...data.messages, ...prev]);
+
+      // Restore scroll position after prepend
+      requestAnimationFrame(() => {
+        if (container) {
+          container.scrollTop = container.scrollHeight - prevScrollHeight;
+        }
+      });
+    } catch (error) {
+      console.error('History load failed:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [historyLoading, hasMoreHistory, oldestCursor]);
+
+  // IntersectionObserver for scroll-to-top history loading
+  useEffect(() => {
+    const sentinel = topSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMoreHistory && !historyLoading) {
+          loadHistory();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMoreHistory, historyLoading, loadHistory]);
+
   return (
     <div data-neptune-conversation className={`neptune-ambient ${ambientClass} flex h-full flex-col`.trim()}>
       {/* Scroll container */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 pb-32 pt-8">
         <div className="mx-auto max-w-2xl space-y-6">
+          {/* Sentinel for infinite scroll history loading */}
+          <div ref={topSentinelRef} className="h-1" />
+          {historyLoading && (
+            <div className="flex justify-center py-4">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-accent-foreground/70" />
+            </div>
+          )}
           <AnimatePresence initial={false}>
-            {messages.map((msg) => (
-              <div key={msg.id} className="group/message">
-                <ConversationMessage message={msg} onAction={handleAction} />
-                {msg.role === 'neptune' && <MicroFeedback messageId={msg.id} onFeedback={handleFeedback} />}
-              </div>
-            ))}
+            {messages.map((msg, i) => {
+              const prevMsg = messages[i - 1];
+              const showDivider = prevMsg && prevMsg.sessionId !== msg.sessionId;
+              return (
+                <Fragment key={msg.id}>
+                  {showDivider && <SessionDivider date={msg.timestamp} />}
+                  <div className="group/message">
+                    <ConversationMessage message={msg} onAction={handleAction} />
+                    {msg.role === 'neptune' && (
+                      <MicroFeedback messageId={msg.id} onFeedback={handleFeedback} />
+                    )}
+                  </div>
+                </Fragment>
+              );
+            })}
           </AnimatePresence>
           {streamingText && (
             <div className="space-y-2">
