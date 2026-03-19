@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-18 (cebc908)  
+**Updated Through:** 2026-03-18 (5e87feb)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-18 5e87feb fix(home): set maxDuration=30s for conversation route
 - 2026-03-18 cebc908 fix(ai): set 5s timeout on Courier so Mistral fallback can run
 - 2026-03-18 59f5163 feat(home): automatic LLM fallback chain — Courier → Mistral → OpenAI
 - 2026-03-18 35dd617 fix(home): handle Courier non-streaming + missing session gracefully
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-18 38a0d5f chore(home): remove unused variable in history test mock
 - 2026-03-18 3cdc558 feat(home): add conversation history endpoint with pagination
 - 2026-03-18 76f2ee7 feat(home): add inline visual component with Recharts
-- 2026-03-18 fa83cf8 feat(home): wire conversational surface with feature flag
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
