@@ -88,7 +88,10 @@ interface TeamMessage {
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(data.error || `Failed to fetch: ${res.status}`);
+  }
   return res.json();
 };
 
@@ -107,7 +110,7 @@ export default function TeamChat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch channels
-  const { data: channelsData, mutate: mutateChannels } = useSWR<{ channels: TeamChannel[] }>(
+  const { data: channelsData, error: channelsError, mutate: mutateChannels } = useSWR<{ channels: TeamChannel[] }>(
     "/api/team/channels",
     fetcher
   );
@@ -283,16 +286,16 @@ export default function TeamChat() {
         body: JSON.stringify({ name: newChannelName, type: "general" }),
       });
 
-      if (!res.ok) throw new Error("Failed to create channel");
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to create channel");
+
       setNewChannelName("");
       setShowNewChannel(false);
       await mutateChannels();
       setSelectedChannel(data.channel.id);
       toast.success(`#${newChannelName} created!`);
-    } catch {
-      toast.error("Failed to create channel");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create channel");
     }
   };
 
@@ -436,7 +439,21 @@ export default function TeamChat() {
         {/* Channel List */}
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-0.5">
-            {filteredChannels.length === 0 ? (
+            {channelsError ? (
+              <div className="text-center py-8 px-4">
+                <MessageSquare className="h-8 w-8 mx-auto text-destructive/50 mb-2" />
+                <p className="text-sm text-destructive">Failed to load channels</p>
+                <p className="text-xs text-muted-foreground mt-1">{channelsError.message}</p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => mutateChannels()}
+                  className="mt-1"
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : filteredChannels.length === 0 ? (
               <div className="text-center py-8 px-4">
                 <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">No channels yet</p>
