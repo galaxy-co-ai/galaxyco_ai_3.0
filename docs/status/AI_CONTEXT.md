@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-18 (e49cbfd)  
+**Updated Through:** 2026-03-18 (ba8308a)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-18 ba8308a fix(conversations): surface channel creation errors to user
 - 2026-03-18 e49cbfd feat(landing): add subtle sign-in link to coming soon nav
 - 2026-03-18 d5543c8 feat(home): add vision specs, plan, deprecation markers, and ambient CSS
 - 2026-03-18 d472165 fix(home): remove unused userMessage param from buildConversationPrompt
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-18 a664127 feat(home): add content block renderer with action affordances
 - 2026-03-18 47efb18 feat(home): add narrative builder for Neptune's contextual opening
 - 2026-03-18 1500c26 feat(home): add session manager with 30-min idle timeout
-- 2026-03-18 f8b6db5 fix(home): remove unused activeAgentCount destructure in card-engine
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
