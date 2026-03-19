@@ -52,6 +52,10 @@ export function getGoogleAI() {
  * Get Courier OSS client instance (OpenAI-compatible, self-hosted inference)
  * Zero-cost LLM backend — runs on our own hardware via Courier OSS.
  */
+// Courier gets a short timeout so the fallback chain has room to run
+// within Vercel's function timeout (10s hobby, 60s pro)
+const COURIER_TIMEOUT = 5000;
+
 export function getCourier() {
   const baseURL = process.env.COURIER_BASE_URL;
   const apiKey = process.env.COURIER_API_KEY;
@@ -63,7 +67,7 @@ export function getCourier() {
   return new OpenAI({
     baseURL: baseURL.replace(/\/$/, '') + '/v1',
     apiKey,
-    timeout: API_TIMEOUTS.AI_PROVIDER,
+    timeout: COURIER_TIMEOUT,
   });
 }
 
