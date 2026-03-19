@@ -1,6 +1,6 @@
 # AI_CONTEXT — GalaxyCo.ai 3.0
 
-**Updated Through:** 2026-03-19 (b689c56)  
+**Updated Through:** 2026-03-19 (c5fb5de)  
 **Branch:** main
 
 ## Quick Start
@@ -27,6 +27,7 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 <!-- AI_CONTEXT:STATUS_END -->
 
 ## Changelog (auto, last 20 meaningful commits)
+- 2026-03-19 c5fb5de fix(home): prevent history load from racing with init conversation
 - 2026-03-19 b689c56 docs(home): mark completed phases in original implementation plan
 - 2026-03-19 7e72923 feat(home): wire conversation history with scroll-to-top loading
 - 2026-03-19 e1a743b feat(home): add time-of-day ambient hue shifts
@@ -46,7 +47,6 @@ Next.js 16.0.4, React 19.2.3, TypeScript 5.7.2, Tailwind CSS 4.0.0, Clerk Auth, 
 - 2026-03-18 e059f05 security(home): fix session ownership bypass + add request validation
 - 2026-03-18 2a71c37 fix(home): update ContentBlockRenderer test for InlineVisual integration
 - 2026-03-18 9549c27 feat(home): wire behavioral signals and micro-feedback
-- 2026-03-18 cb3735b feat(home): add behavioral signal collection for learning engine
 
 ## Where to look first (for new AI agents)
 - `docs/guides/ORGANIZATION_GUIDELINES.md`
